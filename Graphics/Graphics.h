@@ -21,13 +21,18 @@
 class Graphics
 {
 public:
+	// Initialize graphics
 	bool Initialize(HWND hwnd, int width, int height);
+
+	// Resize Render TargetView and Backbuffer
+	bool Resize(int width, int height, HWND hwnd);
 
 	// main rendering function
 	void RenderFrame();
 
 	// Add Camera object
 	Camera camera;
+
 private:
 
 	// call by Initialize() funcion

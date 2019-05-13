@@ -54,6 +54,8 @@ void Engine::Update()
 
 	const float cameraSpeed = 0.001f;
 
+
+
 	if (keyboard.KeyIsPressed('W'))
 	{
 		this->gfx.camera.AdjustPosition(this->gfx.camera.GetForwardVector() * cameraSpeed * dt);
@@ -78,6 +80,18 @@ void Engine::Update()
 	{
 		this->gfx.camera.AdjustPosition(0.0f, -cameraSpeed * dt, 0.0f);
 	}
+
+	if (this->resize)
+	{
+		OutputDebugStringA("It is resize!d!");
+		RECT rect;
+		GetWindowRect(this->render_window.GetHWND(), &rect);
+		AdjustWindowRect(&rect, WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU, FALSE);
+		this->gfx.Resize(abs(-rect.right + rect.left), abs(-rect.top + rect.bottom), render_window.GetHWND());
+		OutputDebugStringA("It is resize!d!");
+		this-> resize = false;
+	}
+
 }
 
 void Engine::RenderFrame()

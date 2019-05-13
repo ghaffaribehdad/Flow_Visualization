@@ -7,7 +7,6 @@ bool Graphics::Initialize(HWND hwnd, int width, int height)
 	this->windowWidth = width;
 
 
-	this->fpsTimer.Start();
 
 	if (!InitializeDirectX(hwnd))
 		return false;
@@ -30,12 +29,54 @@ bool Graphics::Initialize(HWND hwnd, int width, int height)
 	ImGui_ImplDX11_Init(this->device.Get(), this->deviceContext.Get());
 	//start the timer 
 
-
-
-
 	return true;
 }
 #pragma endregion Main_Initialization
+
+
+// #################################### Resize ######################
+bool Graphics::Resize(int width, int height, HWND hwnd)
+{
+	this->windowHeight = height;
+	this->windowWidth = width;
+
+	this->deviceContext.Get()->ClearState();
+
+	ImGui::DestroyContext();
+
+	this->fpsTimer.Start();
+
+	if (!InitializeDirectX(hwnd))
+	{
+		exit(-1);
+		return false;
+	}
+	if (!InitializeShaders())
+	{
+		exit(-1);
+		return false;
+	}
+
+	if (!InitializeScene())
+	{
+		exit(-1);
+		return false;
+	}
+
+	//Setup ImGui
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO();
+	// Setup Dear ImGui style
+	ImGui::StyleColorsDark();
+	// Setup Platform/Renderer bindings
+	ImGui_ImplWin32_Init(hwnd);
+	ImGui_ImplDX11_Init(this->device.Get(), this->deviceContext.Get());
+
+	return true;
+}
+
+
 
 
 //########################### Rendering #############################
@@ -101,16 +142,16 @@ void Graphics::RenderFrame()
 #pragma region IMGUI
 	//############# Dear ImGui ####################
 
-	ImGui_ImplDX11_NewFrame();
-	ImGui_ImplWin32_NewFrame();
-	ImGui::NewFrame();
-	//Create ImGui Test Window
-	ImGui::Begin("Test");
-	ImGui::End();
-	//Assemble Together Draw Data
-	ImGui::Render();
-	//Render Draw Data
-	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+	//ImGui_ImplDX11_NewFrame();
+	//ImGui_ImplWin32_NewFrame();
+	//ImGui::NewFrame();
+	////Create ImGui Test Window
+	//ImGui::Begin("Test");
+	//ImGui::End();
+	////Assemble Together Draw Data
+	//ImGui::Render();
+	////Render Draw Data
+	//ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
 #pragma endregion IMGUI
 

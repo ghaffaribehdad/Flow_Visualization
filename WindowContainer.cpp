@@ -136,6 +136,17 @@ LRESULT WindowContainer::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
 			}
 			return 0;
 		}
+
+		// Resize Window
+		case WM_SIZE:
+		{
+			OutputDebugStringA("The Window is maximized");
+			this->resize = true;
+
+			return 0;
+
+		}
+			
 		// mouse raw data
 		case WM_INPUT:
 		{
@@ -157,6 +168,8 @@ LRESULT WindowContainer::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
 
 			return DefWindowProc(hwnd, uMsg, wParam, lParam); //Need to call DefWindowProc for WM_INPUT messages
 		}
+
+
 		// defualt case
 		default:
 			return DefWindowProc(hwnd, uMsg, wParam, lParam);
