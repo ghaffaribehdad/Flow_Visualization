@@ -7,75 +7,25 @@ bool Graphics::Initialize(HWND hwnd, int width, int height)
 	this->windowWidth = width;
 
 
-
 	if (!InitializeDirectX(hwnd))
 		return false;
+
 	if (!InitializeShaders())
 		return false;
+
 
 	if (!InitializeScene())
 		return false;
 
+	//this->InitializeImGui(hwnd);
 
-	//Setup ImGui
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO();
-
-	// Setup Dear ImGui style
-	ImGui::StyleColorsDark();
-	// Setup Platform/Renderer bindings
-	ImGui_ImplWin32_Init(hwnd);
-	ImGui_ImplDX11_Init(this->device.Get(), this->deviceContext.Get());
 	//start the timer 
+	fpsTimer.Start();
+
 
 	return true;
 }
 #pragma endregion Main_Initialization
-
-
-// #################################### Resize ######################
-bool Graphics::Resize(int width, int height, HWND hwnd)
-{
-	this->windowHeight = height;
-	this->windowWidth = width;
-
-	this->deviceContext.Get()->ClearState();
-
-	ImGui::DestroyContext();
-
-	this->fpsTimer.Start();
-
-	if (!InitializeDirectX(hwnd))
-	{
-		exit(-1);
-		return false;
-	}
-	if (!InitializeShaders())
-	{
-		exit(-1);
-		return false;
-	}
-
-	if (!InitializeScene())
-	{
-		exit(-1);
-		return false;
-	}
-
-	//Setup ImGui
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO();
-	// Setup Dear ImGui style
-	ImGui::StyleColorsDark();
-	// Setup Platform/Renderer bindings
-	ImGui_ImplWin32_Init(hwnd);
-	ImGui_ImplDX11_Init(this->device.Get(), this->deviceContext.Get());
-
-	return true;
-}
-
 
 
 
@@ -136,28 +86,27 @@ void Graphics::RenderFrame()
 		DirectX::Colors::White, 0.0f, DirectX::XMFLOAT2(1.0, 1.0), DirectX::XMFLOAT2(1.0, 1.0));
 	this->spriteBatch->End();
 
-
-
-
 #pragma region IMGUI
-	//############# Dear ImGui ####################
+	////############# Dear ImGui ####################
 
-	//ImGui_ImplDX11_NewFrame();
-	//ImGui_ImplWin32_NewFrame();
-	//ImGui::NewFrame();
-	////Create ImGui Test Window
-	//ImGui::Begin("Test");
-	//ImGui::End();
+
+
+	//Create ImGui Test Window
+//	ImGui::Begin("Test");
+//	ImGui::End();
+
 	////Assemble Together Draw Data
-	//ImGui::Render();
+//	ImGui::Render();
 	////Render Draw Data
-	//ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+//	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
 #pragma endregion IMGUI
 
 	// Present the backbuffer
 	this->swapchain->Present(0, NULL);
 }
+
+
 
 #pragma region DirectX_Initialization
 // ################################### Initialize DirectX ################################
@@ -208,11 +157,13 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 		NULL,					// supported feature level
 		this->deviceContext.GetAddressOf() // Pointer to the address of device context
 		);
+
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log(hr, "Failed to Create Device and Swapchain");
 		return false;
 	}
+
 
 	//create and bind the backbuffer
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> backbuffer;
@@ -230,6 +181,8 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 		ErrorLogger::Log(hr, "Failed to Create RenderTargetView");
 		return false;
 	}
+	//test memory
+	backbuffer.Get()->Release();
 
 	// Describe our Depth/Stencil Buffer
 	D3D11_TEXTURE2D_DESC depthStencilDesc;
@@ -329,6 +282,7 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 		return false;
 	}
 
+
 	return true;
 }
 #pragma endregion DirectX_Initialization
@@ -369,7 +323,7 @@ bool Graphics::InitializeShaders()
 		return false;
 	}
 
-	if (!pixelshader.Initialize(device, shaderfolder + L"pixelshader.cso"))
+	if (!pixelshader.Initialize(this->device, shaderfolder + L"pixelshader.cso"))
 	{
 		return false;
 	}
@@ -448,4 +402,92 @@ bool Graphics::InitializeScene()
 
 	return true;
 }
+bool Graphics::InitializeImGui(HWND hwnd)
+{
+	if (this->IsImGui == false)
+	{
+		
+		IMGUI_CHECKVERSION();
+		this->imcontext = ImGui::CreateContext();
+		ImGuiIO& io = ImGui::GetIO();
+		// Setup Dear ImGui style
+		
+		ImGui_ImplWin32_Init(hwnd);
+		ImGui_ImplDX11_Init(this->device.Get(), this->deviceContext.Get());
+
+		ImGui::StyleColorsDark();
+		OutputDebugStringA("ImGui is created!!!\n");
+		this->IsImGui = true;
+
+		return true;
+	}
+
+	if (this->IsImGui == true)
+	{
+		ImGui::SetCurrentContext(this->imcontext);
+		OutputDebugStringA("ImGui is created again!!!\n");
+
+		return true;
+	}
+	
+	return true;
+}
+
+
+void Graphics::Resize(HWND hwnd, int width, int height)
+{
+	this->windowWidth = width;
+	this->windowHeight = height;
+
+
+	this->deviceContext.Get()->OMSetRenderTargets(0, 0, 0);
+
+	// Release all outstanding references to the swap chain's buffers.
+	this->renderTargetView.Get()->Release();
+
+	HRESULT hr;
+	// Preserve the existing buffer count and format.
+	// Automatically choose the width and height to match the client rect for HWNDs.
+	hr = this->swapchain.Get()->ResizeBuffers(1, windowWidth, windowHeight, DXGI_FORMAT_UNKNOWN, 0);
+	// Perform error handling here!
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Resize the Buffer");
+	}
+	// Get buffer and create a render-target-view.
+	ID3D11Texture2D* pBuffer;
+	hr = this->swapchain.Get()->GetBuffer(0, __uuidof(ID3D11Texture2D),
+		(void**)&pBuffer);
+	// Perform error handling here!
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Filed to Get Buffer");
+	}
+
+
+	hr = this->device.Get()->CreateRenderTargetView(pBuffer, NULL,
+		this->renderTargetView.GetAddressOf());
+	// Perform error handling here!
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to Create RenderTargetView");
+	}
+	pBuffer->Release();
+
+	this->deviceContext.Get()->OMSetRenderTargets(1, this->renderTargetView.GetAddressOf(), NULL);
+
+	// Set up the viewport.
+	D3D11_VIEWPORT vp;
+	vp.Width = width;
+	vp.Height = height;
+	vp.MinDepth = 0.0f;
+	vp.MaxDepth = 1.0f;
+	vp.TopLeftX = 0;
+	vp.TopLeftY = 0;
+	this->deviceContext.Get()->RSSetViewports(1, &vp);
+
+}
 #pragma endregion Scene_Initialization
+
+
+

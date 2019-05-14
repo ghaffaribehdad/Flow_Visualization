@@ -24,14 +24,15 @@ public:
 	// Initialize graphics
 	bool Initialize(HWND hwnd, int width, int height);
 
-	// Resize Render TargetView and Backbuffer
-	bool Resize(int width, int height, HWND hwnd);
-
 	// main rendering function
 	void RenderFrame();
 
+	void Resize(HWND hwnd, int width, int height);
+
 	// Add Camera object
 	Camera camera;
+
+
 
 private:
 
@@ -39,12 +40,16 @@ private:
 	bool InitializeDirectX(HWND hwnd);
 	bool InitializeShaders();
 	bool InitializeScene();
+	bool InitializeImGui(HWND hwnd);
 
 	// directx resources
 	Microsoft::WRL::ComPtr<ID3D11Device>			device;// use to creat buffers
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext>		deviceContext; //use to set resources for rendering
 	Microsoft::WRL::ComPtr<IDXGISwapChain>			swapchain; // use to swap out our frame
 	Microsoft::WRL::ComPtr<ID3D11RenderTargetView>	renderTargetView; // where we are going to render our buffer
+
+	// ImGui resoureces
+	ImGuiContext * imcontext;
 
 	// Shaders
 	VertexShader vertexshader;
@@ -77,6 +82,11 @@ private:
 	int windowHeight = 0;
 
 	Timer fpsTimer;
+
+	// Is ImGui Running
+	bool IsImGui = false;
+
+	bool Initialized = false;
 
 
 };

@@ -83,7 +83,7 @@ bool RenderWindow::ProcessMessages()
 	return true;
 }
 
-HWND RenderWindow::GetHWND() const
+HWND RenderWindow::GetHWND() const 
 {
 	return this->handle;
 }
@@ -122,6 +122,7 @@ LRESULT CALLBACK HandleMessageSetup(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
 	{
 	case WM_NCCREATE:
 	{
+
 		const CREATESTRUCTW* const pCreate = reinterpret_cast<CREATESTRUCTW*>(lParam);
 		WindowContainer * pWindow = reinterpret_cast<WindowContainer*>(pCreate->lpCreateParams);
 		if (pWindow == nullptr) //Sanity check

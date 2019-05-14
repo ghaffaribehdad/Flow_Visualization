@@ -13,6 +13,8 @@ bool Engine::Initialize(HINSTANCE hInstance, std::string window_title, std::stri
 	{
 		return false;
 	}
+
+	OutputDebugStringA("First Initialization!\n");
 	return true;
 
 }
@@ -83,15 +85,13 @@ void Engine::Update()
 
 	if (this->resize)
 	{
-		OutputDebugStringA("It is resize!d!");
+		OutputDebugStringA("It is resized!\n");
 		RECT rect;
 		GetWindowRect(this->render_window.GetHWND(), &rect);
 		AdjustWindowRect(&rect, WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU, FALSE);
-		this->gfx.Resize(abs(-rect.right + rect.left), abs(-rect.top + rect.bottom), render_window.GetHWND());
-		OutputDebugStringA("It is resize!d!");
+		this->gfx.Resize((this->render_window.GetHWND()),abs(-rect.right + rect.left), abs(-rect.top + rect.bottom));
 		this-> resize = false;
 	}
-
 }
 
 void Engine::RenderFrame()
