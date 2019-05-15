@@ -2,7 +2,7 @@
 #include "Engine.h"
 
 // Create Error Logging for GPU
-//#define gpuErrchk(ans) { ErrorLogger::Log((ans), __FILE__, __LINE__); }
+#define gpuErrchk(ans) { ErrorLogger::Log((ans), __FILE__, __LINE__); }
 
 
 

@@ -27,6 +27,7 @@ public:
 	// main rendering function
 	void RenderFrame();
 
+	//  Resize the window
 	void Resize(HWND hwnd, int width, int height);
 
 	// Add Camera object
@@ -38,6 +39,7 @@ private:
 
 	// call by Initialize() funcion
 	bool InitializeDirectX(HWND hwnd);
+	bool InitializeResources();
 	bool InitializeShaders();
 	bool InitializeScene();
 	bool InitializeImGui(HWND hwnd);
@@ -49,7 +51,8 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11RenderTargetView>	renderTargetView; // where we are going to render our buffer
 
 	// ImGui resoureces
-	ImGuiContext * imcontext;
+	ImGuiContext * ImGuicontext = nullptr;
+	
 
 	// Shaders
 	VertexShader vertexshader;
@@ -83,10 +86,6 @@ private:
 
 	Timer fpsTimer;
 
-	// Is ImGui Running
-	bool IsImGui = false;
-
-	bool Initialized = false;
 
 
 };
