@@ -7,17 +7,20 @@ bool Graphics::Initialize(HWND hwnd, int width, int height)
 	this->windowWidth = width;
 
 
-	if (!InitializeDirectX(hwnd))
+	if (!this->InitializeDirectX(hwnd))
 		return false;
 
-	if (!InitializeResources())
+	if (!this->InitializeCUDA())
 		return false;
 
-	if (!InitializeShaders())
+	if (!this->InitializeResources())
+		return false;
+
+	if (!this->InitializeShaders())
 		return false;
 
 
-	if (!InitializeScene())
+	if (!this->InitializeScene())
 		return false;
 
 	if (!this->InitializeImGui(hwnd))
@@ -312,6 +315,20 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 
 	return true;
 }
+bool Graphics::InitializeCUDA()
+{	
+	int deviceCount = 0;
+	int* pdeviceCount = & deviceCount;
+
+	gpuErrchk(cudaGetDeviceCount(pdeviceCount));
+
+	std::vector<AdapterData> adapters = AdapterReader::GetAdapters();
+
+
+	gpuErrchk(cudaD3D11GetDevice(pdeviceCount, adapters[0].pAdapter));
+
+	return true;
+}
 #pragma endregion DirectX_Initialization
 
 //########################### Shader Initialization #####################
@@ -385,32 +402,48 @@ bool Graphics::InitializeScene()
 #pragma endregion Create_Indices
 
 #pragma region Create_Vertex_Buffer
+
+
+	HRESULT hr;
+
 	// Initialize Vertex Buffer
-	HRESULT hr = this->vertexBuffer.Initialize(this->device.Get(), v, ARRAYSIZE(v));
-	if (FAILED(hr))
+	if (this->vertexBuffer.Get() == nullptr)
 	{
-		ErrorLogger::Log(hr, "Failed to Create Vertex Buffer.");
-		return false;
+		hr = this->vertexBuffer.Initialize(this->device.Get(), v, ARRAYSIZE(v));
+		if (FAILED(hr))
+		{
+			ErrorLogger::Log(hr, "Failed to Create Vertex Buffer.");
+			return false;
+		}
 	}
+
 #pragma endregion Create_Vertex_Buffer
 
 #pragma region Create_Index_Buffer
-	hr = this->indexBuffer.Initialize(this->device.Get(),indices,ARRAYSIZE(indices));
-	if (FAILED(hr))
+	if (this->indexBuffer.Get() == nullptr)
 	{
-		ErrorLogger::Log(hr, "Failed to Create Index Buffer.");
-		return false;
+		hr = this->indexBuffer.Initialize(this->device.Get(), indices, ARRAYSIZE(indices));
+		if (FAILED(hr))
+		{
+			ErrorLogger::Log(hr, "Failed to Create Index Buffer.");
+			return false;
+		}
 	}
+
 #pragma endregion Create_Index_Buffer
 
 #pragma region Create_Texture
 	// Create Texture View
-	hr = DirectX::CreateWICTextureFromFile(this->device.Get(), L"Data\\Textures\\test.jpg", nullptr, this->myTexture.GetAddressOf());
-	if (FAILED(hr))
+	if (this->myTexture.Get() == nullptr)
 	{
-		ErrorLogger::Log(hr, "Failed to Create Texture from file.");
-		return false;
+		hr = DirectX::CreateWICTextureFromFile(this->device.Get(), L"Data\\Textures\\test.jpg", nullptr, this->myTexture.GetAddressOf());
+		if (FAILED(hr))
+		{
+			ErrorLogger::Log(hr, "Failed to Create Texture from file.");
+			return false;
+		}
 	}
+
 #pragma endregion Create_Texture
 
 #pragma region Create_Constant_Buffer
@@ -484,8 +517,7 @@ void Graphics::Resize(HWND hwnd)
 	
 	// Reinitialize Resources and Scene accordingly
 	this->InitializeResources();
-	this->InitializeImGui(hwnd);
-	this->InitializeScene();
+	this->InitializeScene(); 
 
 }
 #pragma endregion Scene_Initialization

@@ -1,6 +1,7 @@
 #include "ErrorLogger.h"
 #include <comdef.h> //com error data type
 
+
 void ErrorLogger::Log(std::string message)
 {
 	std::string error_message = "Error: " + message;
@@ -34,7 +35,6 @@ void ErrorLogger::Log(cudaError_t code, const char * file, int line, bool abort)
 		error_message += ", ";
 		error_message += std::to_string(line);
 		MessageBoxW(NULL, StringConverter::StringToWide(error_message).c_str(), L"Error", MB_ICONERROR);
-		//if (abort) exit(code);
 	}
 }
 

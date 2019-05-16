@@ -17,6 +17,7 @@ protected:
 	KeyboardClass keyboard;
 	MouseClass mouse;
 	Graphics gfx;
+	
 
 	bool resize = false;
 private:

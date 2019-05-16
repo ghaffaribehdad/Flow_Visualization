@@ -1,10 +1,6 @@
+
 #include <Windows.h>
 #include "Engine.h"
-
-// Create Error Logging for GPU
-#define gpuErrchk(ans) { ErrorLogger::Log((ans), __FILE__, __LINE__); }
-
-
 
 int APIENTRY wWinMain(
 	_In_ HINSTANCE hInstance,\

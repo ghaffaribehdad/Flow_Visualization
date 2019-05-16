@@ -39,17 +39,14 @@
     <Filter Include="Source Files\Graphics\ImGui">
       <UniqueIdentifier>{eecefbad-126f-42df-93e3-65f0d9e2d10a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="CUDA">
-      <UniqueIdentifier>{6b1936db-fae5-4e2d-a821-56f2063a5e1c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="CUDA\Source Files">
-      <UniqueIdentifier>{8d68e69d-b73b-454c-a76b-fe6c531ce9cb}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="CUDA\Header Files">
-      <UniqueIdentifier>{cf905be3-8757-4ce4-bdcb-d2018fe37d7d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\Helper">
       <UniqueIdentifier>{b1c1e0c7-e174-46ce-9551-9ead12a346de}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Cuda">
+      <UniqueIdentifier>{5dd15d1b-b487-42da-9f0f-6e3473e841dc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Cuda">
+      <UniqueIdentifier>{ddc67f02-09b3-403e-b543-8511092689fb}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -83,9 +80,6 @@
     <ClCompile Include="Mouse\MouseEvent.cpp">
       <Filter>Source Files\Mouse</Filter>
     </ClCompile>
-    <ClCompile Include="Graphics\Graphics.cpp">
-      <Filter>Source Files\Graphics</Filter>
-    </ClCompile>
     <ClCompile Include="Graphics\AdapterReader.cpp">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
@@ -112,6 +106,12 @@
     </ClCompile>
     <ClCompile Include="Graphics\ImGui\imgui_widgets.cpp">
       <Filter>Source Files\Graphics\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\Graphics.cpp">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Cuda\CudaSolver.cpp">
+      <Filter>Source Files\Cuda</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -198,6 +198,12 @@
     </ClInclude>
     <ClInclude Include="linearIndex.cuh">
       <Filter>Header Files\Helper</Filter>
+    </ClInclude>
+    <ClInclude Include="CUDA\CudaDevice.h">
+      <Filter>Header Files\Cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="CUDA\CudaSolver.h">
+      <Filter>Header Files\Cuda</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

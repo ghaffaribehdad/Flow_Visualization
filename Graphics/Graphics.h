@@ -15,6 +15,7 @@
 #include "ImGui/imgui.h"
 #include "ImGui/imgui_impl_win32.h"
 #include "ImGui/imgui_impl_dx11.h"
+#include "..\Cuda\CudaSolver.h"
 
 
 
@@ -39,6 +40,7 @@ private:
 
 	// call by Initialize() funcion
 	bool InitializeDirectX(HWND hwnd);
+	bool InitializeCUDA();
 	bool InitializeResources();
 	bool InitializeShaders();
 	bool InitializeScene();
@@ -53,7 +55,6 @@ private:
 	// ImGui resoureces
 	ImGuiContext * ImGuicontext = nullptr;
 	
-
 	// Shaders
 	VertexShader vertexshader;
 	PixelShader pixelshader;
@@ -67,6 +68,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilView>		depthStencilView;
 	Microsoft::WRL::ComPtr<ID3D11Texture2D>				depthStencilBuffer;
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilState>		depthStencilState;
+
 
 	// Resterizer com pointer
 	Microsoft::WRL::ComPtr<ID3D11RasterizerState> rasterizerstate;
