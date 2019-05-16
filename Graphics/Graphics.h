@@ -28,7 +28,7 @@ public:
 	void RenderFrame();
 
 	//  Resize the window
-	void Resize(HWND hwnd, int width, int height);
+	void Resize(HWND hwnd);
 
 	// Add Camera object
 	Camera camera;

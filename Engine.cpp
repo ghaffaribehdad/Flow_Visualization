@@ -86,10 +86,7 @@ void Engine::Update()
 	if (this->resize)
 	{
 		OutputDebugStringA("It is resized!\n");
-		RECT rect;
-		GetWindowRect(this->render_window.GetHWND(), &rect);
-		AdjustWindowRect(&rect, WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU, FALSE);
-		this->gfx.Resize((this->render_window.GetHWND()),abs(-rect.right + rect.left), abs(-rect.top + rect.bottom));
+		this->gfx.Resize(this->render_window.GetHWND());
 		this-> resize = false;
 	}
 }

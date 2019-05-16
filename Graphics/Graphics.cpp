@@ -117,11 +117,28 @@ bool Graphics::InitializeResources()
 
 	HRESULT hr;
 
+	//create and bind the backbuffer
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> backbuffer;
+	hr = this->swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(backbuffer.GetAddressOf()));
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to Get Back buffer");
+	}
+
+	// Create Render targe view
+	hr = this->device->CreateRenderTargetView(backbuffer.Get(), NULL, this->renderTargetView.GetAddressOf());
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to Create RenderTargetView");
+	}
+
+
+	this->deviceContext->OMSetRenderTargets(1, renderTargetView.GetAddressOf(), NULL);
+
 
 	if (this->depthStencilBuffer.Get() != nullptr)
 	{
 		depthStencilBuffer->Release();
-		depthStencilView->Release();
 	}
 
 	// Describe our Depth/Stencil Buffer
@@ -291,29 +308,6 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 		ErrorLogger::Log(hr, "Failed to Create Device and Swapchain");
 		return false;
 	}
-
-
-	//create and bind the backbuffer
-	Microsoft::WRL::ComPtr<ID3D11Texture2D> backbuffer;
-	hr = this->swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(backbuffer.GetAddressOf()));
-	if (FAILED(hr))
-	{
-		ErrorLogger::Log(hr, "Failed to Get Back buffer");
-		return false;
-	}
-
-	// Create Render targe view
-	hr = this->device->CreateRenderTargetView(backbuffer.Get(), NULL, this->renderTargetView.GetAddressOf());
-	if (FAILED(hr))
-	{
-		ErrorLogger::Log(hr, "Failed to Create RenderTargetView");
-		return false;
-	}
-
-
-	///// we are here!
-
-	// Create Depth/Stencil View
 	
 
 	return true;
@@ -458,40 +452,39 @@ bool Graphics::InitializeImGui(HWND hwnd)
 }
 
 
-void Graphics::Resize(HWND hwnd, int width, int height)
+void Graphics::Resize(HWND hwnd)
 {
-	this->windowHeight = height;
-	this->windowWidth = width;
+	// Retrieve the coordinates of a window's client area. 
+	RECT rect;
+	GetClientRect(hwnd, &rect);
+	this->windowWidth = rect.right - rect.left;
+	this->windowHeight = rect.bottom - rect.top;
 
+	// set Render target to NULL
 	this->deviceContext->OMSetRenderTargets(0, 0, 0);
 
+	// Release RenderTarge View nad Depth Stencil View
 	this->renderTargetView->Release();
+	this->depthStencilView->Release();
 
+	// Resize the swapchain
 	HRESULT hr = this->swapchain->ResizeBuffers(1, windowWidth, windowHeight, DXGI_FORMAT_UNKNOWN, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH);
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log(hr, "Failed Resize Swapchain buffers");
 	}
 
-	//create and bind the backbuffer
+	// Create and bind the backbuffer
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> backbuffer;
 	hr = this->swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(backbuffer.GetAddressOf()));
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log(hr, "Failed to Get Back buffer");
 	}
-
-	// Create Render targe view
-	hr = this->device->CreateRenderTargetView(backbuffer.Get(), NULL, this->renderTargetView.GetAddressOf());
-	if (FAILED(hr))
-	{
-		ErrorLogger::Log(hr, "Failed to Create RenderTargetView");
-	}
-
-	this->deviceContext->OMSetRenderTargets(1, renderTargetView.GetAddressOf(), NULL);
+	
+	// Reinitialize Resources and Scene accordingly
 	this->InitializeResources();
 	this->InitializeImGui(hwnd);
-
 	this->InitializeScene();
 
 }
