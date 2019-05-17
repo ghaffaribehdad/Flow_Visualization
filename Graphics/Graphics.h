@@ -21,6 +21,8 @@
 
 class Graphics
 {
+	friend CUDASolver;
+
 public:
 	// Initialize graphics
 	bool Initialize(HWND hwnd, int width, int height);
@@ -40,7 +42,6 @@ private:
 
 	// call by Initialize() funcion
 	bool InitializeDirectX(HWND hwnd);
-	bool InitializeCUDA();
 	bool InitializeResources();
 	bool InitializeShaders();
 	bool InitializeScene();

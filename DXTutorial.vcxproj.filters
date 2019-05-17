@@ -48,6 +48,12 @@
     <Filter Include="Source Files\Cuda">
       <UniqueIdentifier>{ddc67f02-09b3-403e-b543-8511092689fb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\BinaryStream">
+      <UniqueIdentifier>{3f9cfdaf-4e81-4f90-8b02-9ab4c5bef6fa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\BinaryStream">
+      <UniqueIdentifier>{99ceb923-4899-4680-864f-14d9cd432d28}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="StringConverter.cpp">
@@ -112,6 +118,15 @@
     </ClCompile>
     <ClCompile Include="Cuda\CudaSolver.cpp">
       <Filter>Source Files\Cuda</Filter>
+    </ClCompile>
+    <ClCompile Include="Cuda\CudaDevice.cpp">
+      <Filter>Source Files\Cuda</Filter>
+    </ClCompile>
+    <ClCompile Include="BinaryStream\BinaryReader.cpp">
+      <Filter>Source Files\BinaryStream</Filter>
+    </ClCompile>
+    <ClCompile Include="BinaryStream\BinaryWriter.cpp">
+      <Filter>Source Files\BinaryStream</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -204,6 +219,12 @@
     </ClInclude>
     <ClInclude Include="CUDA\CudaSolver.h">
       <Filter>Header Files\Cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="BinaryStream\BinaryReader.h">
+      <Filter>Header Files\BinaryStream</Filter>
+    </ClInclude>
+    <ClInclude Include="BinaryStream\BinaryWriter.h">
+      <Filter>Header Files\BinaryStream</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

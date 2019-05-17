@@ -13,6 +13,10 @@ bool Engine::Initialize(HINSTANCE hInstance, std::string window_title, std::stri
 	{
 		return false;
 	}
+	if (!this->Streamline.Initialize(STREAMLINE, SEED_RANDOM, DEFAULT_INTERPOLATION, 0, 0))
+	{
+		return false;
+	}
 
 	OutputDebugStringA("First Initialization!\n");
 	return true;

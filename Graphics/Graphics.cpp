@@ -10,9 +10,6 @@ bool Graphics::Initialize(HWND hwnd, int width, int height)
 	if (!this->InitializeDirectX(hwnd))
 		return false;
 
-	if (!this->InitializeCUDA())
-		return false;
-
 	if (!this->InitializeResources())
 		return false;
 
@@ -315,20 +312,7 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 
 	return true;
 }
-bool Graphics::InitializeCUDA()
-{	
-	int deviceCount = 0;
-	int* pdeviceCount = & deviceCount;
 
-	gpuErrchk(cudaGetDeviceCount(pdeviceCount));
-
-	std::vector<AdapterData> adapters = AdapterReader::GetAdapters();
-
-
-	gpuErrchk(cudaD3D11GetDevice(pdeviceCount, adapters[0].pAdapter));
-
-	return true;
-}
 #pragma endregion DirectX_Initialization
 
 //########################### Shader Initialization #####################
