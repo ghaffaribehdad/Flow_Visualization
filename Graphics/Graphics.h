@@ -12,10 +12,12 @@
 #include "ConstantBuffer.h"
 #include "Camera.h"
 #include "..\Timer.h"
+#include "..\Cuda\CudaSolver.h"
 #include "ImGui/imgui.h"
 #include "ImGui/imgui_impl_win32.h"
 #include "ImGui/imgui_impl_dx11.h"
-#include "..\Cuda\CudaSolver.h"
+#include "RenderImGui.h"
+
 
 
 
@@ -88,6 +90,11 @@ private:
 	int windowHeight = 0;
 
 	Timer fpsTimer;
+
+	bool streamline = true;
+	bool pathline = false;
+
+	void RenderImGui();
 
 
 

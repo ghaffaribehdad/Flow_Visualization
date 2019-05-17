@@ -1,5 +1,6 @@
 #include "Graphics.h"
 
+
 #pragma region Main_Initialization
 bool Graphics::Initialize(HWND hwnd, int width, int height)
 {
@@ -25,7 +26,6 @@ bool Graphics::Initialize(HWND hwnd, int width, int height)
 
 	//start the timer 
 	fpsTimer.Start();
-
 
 	return true;
 }
@@ -93,17 +93,7 @@ void Graphics::RenderFrame()
 #pragma region IMGUI
 	////############# Dear ImGui ####################
 
-	ImGui_ImplDX11_NewFrame();
-	ImGui_ImplWin32_NewFrame();
-	ImGui::NewFrame();
-	//Create ImGui Test Window
-	ImGui::Begin("Test");
-	ImGui::End();
-
-	////Assemble Together Draw Data
-	ImGui::Render();
-	////Render Draw Data
-	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+	RenderImGui();
 
 #pragma endregion IMGUI
 
@@ -450,9 +440,10 @@ bool Graphics::InitializeImGui(HWND hwnd)
 {
 	if (this->ImGuicontext == nullptr)
 	{
+
 		OutputDebugStringA("ImGui is created!!!\n");
 		IMGUI_CHECKVERSION();
-		this->ImGuicontext= ImGui::CreateContext();
+		this->ImGuicontext = ImGui::CreateContext();
 		ImGuiIO& io = ImGui::GetIO();
 		// Setup Dear ImGui style
 		ImGui_ImplWin32_Init(hwnd);
@@ -508,3 +499,41 @@ void Graphics::Resize(HWND hwnd)
 
 
 
+void Graphics::RenderImGui()
+{
+	ImGui_ImplDX11_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
+
+#pragma region Solver_Option
+
+	ImGui::Begin("Solver Options");
+
+	ImGui::Text("Mode: ");
+	ImGui::SameLine();
+
+	//Solver Mode
+
+
+	if (ImGui::Checkbox("Streamline", &streamline))
+	{
+		pathline = !streamline;
+	}
+	ImGui::SameLine();
+	if (ImGui::Checkbox("Pathline", &pathline))
+	{
+		streamline = !pathline;
+	}
+
+
+	ImGui::End();
+#pragma endregion Solver_Option
+
+
+
+	//Assemble Together Draw Data
+	ImGui::Render();
+
+	//Render Draw Data
+	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+}

@@ -226,6 +226,12 @@
     <ClInclude Include="BinaryStream\BinaryWriter.h">
       <Filter>Header Files\BinaryStream</Filter>
     </ClInclude>
+    <ClInclude Include="Graphics\RenderImGui.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Cuda\StreamlineSolver.h">
+      <Filter>Header Files\Cuda</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="vertexshader.hlsl">

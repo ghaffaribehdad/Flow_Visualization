@@ -2,7 +2,7 @@
 
 #include "WindowContainer.h"
 #include "Timer.h"
-#include "Cuda/CudaSolver.h"
+#include "Cuda/StreamlineSolver.h"
 class Engine : WindowContainer
 {
 public:
@@ -22,7 +22,7 @@ public:
 
 private:
 	Timer timer;
-	CUDASolver Streamline;
 
-
+	StreamlineSolver streamlineSolver;
+	
 };
