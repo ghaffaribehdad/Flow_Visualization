@@ -7,31 +7,28 @@
 #include "../BinaryStream/BinaryWriter.h"
 #include "../ErrorLogger.h"
 #include <DirectXMath.h>
-
-enum SolveMode
-{
-	STREAMLINE = 0,
-	PATHLINE,
-};
+#include "../Particle.cuh"
+#include "../VelocityField.h"
+#include "../SolverOptions.h"
 
 enum SeedingPattern
 {
 	SEED_RANDOM = 0,
-	SEED_REGULAR,
-	SEED_FILE,
+	//SEED_REGULAR,
+	//SEED_FILE,
 };
 
 enum IntegrationMethod
 {
 	EULER_METHOD = 0,
-	MODIFIED_EULER,
-	RK4_METHOD,
-	RK5_METHOD,
+	//MODIFIED_EULER,
+	//RK4_METHOD,
+	//RK5_METHOD,
 };
 
 enum InterpolationMethod
 {
-	DEFAULT_INTERPOLATION,
+	Linear,
 };
 
 class CUDASolver
@@ -39,44 +36,56 @@ class CUDASolver
 public:
 	CUDASolver();
 
+
 	bool Initialize
 	(
-		SolveMode _solveMode, 
 		SeedingPattern _seedingPattern,
 		IntegrationMethod _integrationMethod,
 		InterpolationMethod _interpolationMethod,
-		unsigned int _InitialTimestep,
-		unsigned _intFinalTimestep
+		SolverOptions _solverOptions
 	);
 
-	bool Solve();
+	// Solve must be defined in the derived classes
+	virtual bool solve()
+	{
+		return true;
+	}
 
 protected:
-
+	
+	// Read and copy file into memeory and save a pointer to it
 	bool ReadField(std::vector<char>* p_vec_buffer, std::string fileName);
-	bool SeedFiled(SeedingPattern, DirectX::XMFLOAT3 dimenions, DirectX::XMFLOAT3 seedbox);
-	bool UploadField();
-	bool SolveField(SolveMode mode);
-	bool DrawField();
-	bool DonwloadField();
-	bool WriteField();
 
-	CudaDevice cudaDevice;
-	bool GetDevice();
+	// Upload Field to GPU and returns a pointer to the data on GPU
+	template <class T>
+	T * UploadToGPU(T * host_Data, size_t _size)
+	{
+		T* device_data;
 
-	// Input of Solver
-	DirectX::XMFLOAT3 * seedingBox;
+		gpuErrchk(cudaMalloc((void**)& device_data, _size));
 
-	SolveMode m_solveMode;
+		gpuErrchk(cudaMemcpy(device_data, host_Data, _size, cudaMemcpyHostToDevice));
+
+		return  device_data;
+	}
+
+
+
+	// Particle tracing parameters
+	Particle* h_particles;
 	SeedingPattern m_seedingPattern;
 	IntegrationMethod m_intergrationMehotd;
 	InterpolationMethod m_interpolationMethod;
 	unsigned int m_initialTimestep;
-	unsigned int m_finalTimeStep;
 
+	// Solver Parameters
+	SolverOptions solverOptions;
+
+	void InitializeParticles(int& particle_count, float3& gridDimenstions, SeedingPattern seedingPattern);
 
 	// A COM pointer to the vector Field
 	Microsoft::WRL::ComPtr<ID3D11Texture3D> m_resultTexture;
-	Microsoft::WRL::ComPtr<ID3D11Device>  m_CudaDevice;
-	
+
+	CudaDevice cudaDevice;
+	bool GetDevice();
 };

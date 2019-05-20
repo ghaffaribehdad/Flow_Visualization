@@ -30,9 +30,6 @@
     <Filter Include="Source Files\Graphics">
       <UniqueIdentifier>{92abfd1c-b4dc-4a97-a769-176ad6958fd7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{f6ab76af-48b7-4a38-94f6-338d1309efa3}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\Graphics\ImGui">
       <UniqueIdentifier>{3d2bfa5c-44c9-4e9d-8376-974d449d8827}</UniqueIdentifier>
     </Filter>
@@ -53,6 +50,9 @@
     </Filter>
     <Filter Include="Header Files\BinaryStream">
       <UniqueIdentifier>{99ceb923-4899-4680-864f-14d9cd432d28}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{f6ab76af-48b7-4a38-94f6-338d1309efa3}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -127,6 +127,9 @@
     </ClCompile>
     <ClCompile Include="BinaryStream\BinaryWriter.cpp">
       <Filter>Source Files\BinaryStream</Filter>
+    </ClCompile>
+    <ClCompile Include="VelocityField.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -211,9 +214,6 @@
     <ClInclude Include="Graphics\ImGui\imstb_truetype.h">
       <Filter>Header Files\Graphics\ImGui</Filter>
     </ClInclude>
-    <ClInclude Include="linearIndex.cuh">
-      <Filter>Header Files\Helper</Filter>
-    </ClInclude>
     <ClInclude Include="CUDA\CudaDevice.h">
       <Filter>Header Files\Cuda</Filter>
     </ClInclude>
@@ -229,16 +229,33 @@
     <ClInclude Include="Graphics\RenderImGui.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="Cuda\StreamlineSolver.h">
-      <Filter>Header Files\Cuda</Filter>
+    <ClInclude Include="VelocityField.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SolverOptions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Particle.cuh">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="vertexshader.hlsl">
-      <Filter>Resource Files</Filter>
+      <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="pixelshader.hlsl">
-      <Filter>Resource Files</Filter>
+      <Filter>Shaders</Filter>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="Cuda\StreamlineSolver.cuh">
+      <Filter>Header Files\Cuda</Filter>
+    </CudaCompile>
+    <CudaCompile Include="linearIndex.cuh">
+      <Filter>Header Files\Helper</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Cuda\StreamlineSolver.cu">
+      <Filter>Source Files\Cuda</Filter>
+    </CudaCompile>
   </ItemGroup>
 </Project>

@@ -1,12 +1,13 @@
 #include "Graphics.h"
 
 
+
+
 #pragma region Main_Initialization
 bool Graphics::Initialize(HWND hwnd, int width, int height)
 {
 	this->windowHeight = height;
 	this->windowWidth = width;
-
 
 	if (!this->InitializeDirectX(hwnd))
 		return false;
@@ -90,12 +91,8 @@ void Graphics::RenderFrame()
 		DirectX::Colors::White, 0.0f, DirectX::XMFLOAT2(1.0, 1.0), DirectX::XMFLOAT2(1.0, 1.0));
 	this->spriteBatch->End();
 
-#pragma region IMGUI
-	////############# Dear ImGui ####################
-
+	//######################################### Dear ImGui ######################################
 	RenderImGui();
-
-#pragma endregion IMGUI
 
 	// Present the backbuffer
 	this->swapchain->Present(0, NULL);
@@ -364,6 +361,11 @@ bool Graphics::InitializeScene()
 		Vertex( 0.5f, 0.5f,2.0f,1.0f,0.0f),	// Top right	-[2]
 		Vertex( 0.5f,-0.5f,2.0f,1.0f,1.0f)	// Bottom right	-[3]
 	};
+	Vertex gridLine[] =
+	{
+		Vertex(0.0f,-1.0f,0.0f,0.0f,0.0f),
+		Vertex(0.0f,-1.0f,0.0f,0.0f,0.0f),
+	};
 #pragma endregion Create Vertices
 
 #pragma region Create_Indices
@@ -514,7 +516,6 @@ void Graphics::RenderImGui()
 
 	//Solver Mode
 
-
 	if (ImGui::Checkbox("Streamline", &streamline))
 	{
 		pathline = !streamline;
@@ -526,10 +527,43 @@ void Graphics::RenderImGui()
 	}
 
 
+	// Solver Options
+	if (ImGui::InputText("File Path", this->solverOptions.filePath, sizeof(this->solverOptions.filePath)))
+	{
+	}
+
+	if (ImGui::InputText("File Name", this->solverOptions.fileName, sizeof(this->solverOptions.fileName)))
+	{
+	}
+
+	if (ImGui::InputInt3("Grid Size", this->solverOptions.gridSize, sizeof(this->solverOptions.gridSize)))
+	{
+	}
+	if (ImGui::InputFloat3("Grid Diameter", this->solverOptions.gridDiameter, sizeof(this->solverOptions.gridDiameter)))
+	{
+	}
+
+	if (ImGui::InputInt("precision", &(this->solverOptions.precision)))
+	{
+	
+	}
+	if (ImGui::InputFloat("dt", &(this->solverOptions.dt)))
+	{
+
+	}
+
+	if (ImGui::InputInt("Time Step", &(this->solverOptions.timestep)))
+	{
+
+	}
+
+	if (ImGui::Checkbox("Begin", &this->solverOptions.begin))
+	{
+
+	}
+
 	ImGui::End();
 #pragma endregion Solver_Option
-
-
 
 	//Assemble Together Draw Data
 	ImGui::Render();

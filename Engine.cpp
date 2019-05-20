@@ -88,6 +88,13 @@ void Engine::Update()
 		this->gfx.Resize(this->render_window.GetHWND());
 		this-> resize = false;
 	}
+
+	if (this->gfx.solverOptions.begin)
+	{
+		this->InitializeStreamSolver();
+		this->streamlineSolver.solve();
+		this->gfx.solverOptions.begin = false;
+	}
 }
 
 void Engine::RenderFrame()
@@ -96,5 +103,15 @@ void Engine::RenderFrame()
 }
 
 
+bool Engine::InitializeStreamSolver()
+{
+	return this->streamlineSolver.Initialize(
+		SEED_RANDOM,
+		EULER_METHOD,
+		Linear,
+		this->gfx.solverOptions
+	);
+
+}
 
 

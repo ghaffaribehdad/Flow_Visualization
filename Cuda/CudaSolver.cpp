@@ -1,5 +1,3 @@
-
-
 #include "CudaSolver.h"
 
 CUDASolver::CUDASolver()
@@ -7,21 +5,19 @@ CUDASolver::CUDASolver()
 	std::printf("A solver is created!\n");
 }
 
+// Initilize the solver
 bool CUDASolver::Initialize
-(SolveMode _solveMode, 
+(
 	SeedingPattern _seedingPattern,
 	IntegrationMethod _integrationMethod,
 	InterpolationMethod _interpolationMethod,
-	unsigned int _initialTimestep,
-	unsigned _finalTimestep
+	SolverOptions _solverOptions
 )
 {
-	this->m_solveMode = _solveMode;
 	this->m_seedingPattern = _seedingPattern;
 	this->m_intergrationMehotd = _integrationMethod;
 	this->m_interpolationMethod = _interpolationMethod;
-	this->m_initialTimestep = _initialTimestep;
-	this->m_finalTimeStep = _finalTimestep;
+	this->solverOptions = _solverOptions;
 
 	return true;
 }
@@ -29,6 +25,7 @@ bool CUDASolver::Initialize
 bool CUDASolver::ReadField(std::vector<char>* p_vec_buffer, std::string fileName)
 {
 	// define the istream
+	fileName = "D:\\git_projects\\Flow_Visualization\\Field1.bin";
 	std::ifstream myFile;
 
 	myFile = std::ifstream(fileName, std::ios::binary);
@@ -68,9 +65,27 @@ bool CUDASolver::ReadField(std::vector<char>* p_vec_buffer, std::string fileName
 
 	// close the file
 	myFile.close();
+
+	return true;
 }
 
 bool SeedFiled(SeedingPattern, DirectX::XMFLOAT3 dimenions, DirectX::XMFLOAT3 seedbox)
 {
 	return true;
+}
+
+
+void CUDASolver::InitializeParticles(int& particle_count, float3& gridDiamters, SeedingPattern seedingPattern)
+{
+	this->h_particles = new Particle[particle_count];
+
+	if (seedingPattern == SEED_RANDOM)
+	{
+		for (int i = 0; i < particle_count; i++)
+		{
+			h_particles[i].seedParticle(gridDiamters);
+		}
+	}
+	//TO-DO:: Regular seeding
+
 }

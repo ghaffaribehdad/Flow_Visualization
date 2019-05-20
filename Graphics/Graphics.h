@@ -39,6 +39,9 @@ public:
 	Camera camera;
 
 
+	SolverOptions solverOptions = SolverOptions();
+
+	// Getter Functions
 
 private:
 
@@ -91,11 +94,12 @@ private:
 
 	Timer fpsTimer;
 
-	bool streamline = true;
-	bool pathline = false;
 
 	void RenderImGui();
 
+	// Solver options
+	bool streamline = true;
+	bool pathline = false;
 
 
 };
