@@ -253,6 +253,8 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 		return false;
 	}
 
+	this->adapter = adapters[0].pAdapter;
+
 	// Swapchain description structure
 	DXGI_SWAP_CHAIN_DESC scd;
 	ZeroMemory(&scd,sizeof(DXGI_SWAP_CHAIN_DESC));
@@ -361,11 +363,7 @@ bool Graphics::InitializeScene()
 		Vertex( 0.5f, 0.5f,2.0f,1.0f,0.0f),	// Top right	-[2]
 		Vertex( 0.5f,-0.5f,2.0f,1.0f,1.0f)	// Bottom right	-[3]
 	};
-	Vertex gridLine[] =
-	{
-		Vertex(0.0f,-1.0f,0.0f,0.0f,0.0f),
-		Vertex(0.0f,-1.0f,0.0f,0.0f,0.0f),
-	};
+
 #pragma endregion Create Vertices
 
 #pragma region Create_Indices
@@ -556,6 +554,10 @@ void Graphics::RenderImGui()
 	{
 
 	}
+	if (ImGui::InputInt("Particle Count", &(this->solverOptions.particle_count)))
+	{
+
+	}
 
 	if (ImGui::Checkbox("Begin", &this->solverOptions.begin))
 	{
@@ -570,4 +572,14 @@ void Graphics::RenderImGui()
 
 	//Render Draw Data
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+}
+
+IDXGIAdapter* Graphics::GetAdapter()
+{
+	return adapter;
+}
+
+ID3D11Device* Graphics::GetDevice()
+{
+	return this->device.Get();
 }

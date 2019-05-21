@@ -128,9 +128,6 @@
     <ClCompile Include="BinaryStream\BinaryWriter.cpp">
       <Filter>Source Files\BinaryStream</Filter>
     </ClCompile>
-    <ClCompile Include="VelocityField.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="StringConverter.h">
@@ -229,13 +226,7 @@
     <ClInclude Include="Graphics\RenderImGui.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="VelocityField.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="SolverOptions.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Particle.cuh">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -256,6 +247,15 @@
     </CudaCompile>
     <CudaCompile Include="Cuda\StreamlineSolver.cu">
       <Filter>Source Files\Cuda</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Particle.cuh">
+      <Filter>Header Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="VelocityField.cu">
+      <Filter>Source Files</Filter>
+    </CudaCompile>
+    <CudaCompile Include="VelocityField.cuh">
+      <Filter>Header Files</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

@@ -10,4 +10,5 @@ struct SolverOptions
 	float dt = 0;
 	bool begin = false;
 	int lines_count = 0;
+	int particle_count = 0;
 };

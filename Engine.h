@@ -22,7 +22,6 @@ public:
 
 	void RenderFrame();
 
-	bool InitializeStreamSolver();
 
 private:
 	Timer timer;

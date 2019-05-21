@@ -42,6 +42,9 @@ public:
 	SolverOptions solverOptions = SolverOptions();
 
 	// Getter Functions
+	IDXGIAdapter* GetAdapter();
+	ID3D11Device* GetDevice();
+
 
 private:
 
@@ -88,6 +91,9 @@ private:
 
 	// COM pointer to texture
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> myTexture;
+
+	// Pointer to the adapter
+	IDXGIAdapter* adapter;
 
 	int windowWidth = 0;
 	int windowHeight = 0;

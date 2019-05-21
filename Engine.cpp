@@ -82,6 +82,7 @@ void Engine::Update()
 		this->gfx.camera.AdjustPosition(0.0f, -cameraSpeed * dt, 0.0f);
 	}
 
+	// Resize the window
 	if (this->resize)
 	{
 		OutputDebugStringA("It is resized!\n");
@@ -89,10 +90,18 @@ void Engine::Update()
 		this-> resize = false;
 	}
 
+	// Streamline Solver
 	if (this->gfx.solverOptions.begin)
 	{
-		this->InitializeStreamSolver();
+		this->streamlineSolver.Initialize( //initilize cuda solver
+			SEED_RANDOM,
+			EULER_METHOD,
+			Linear,
+			this->gfx.solverOptions,
+			this->gfx.GetAdapter()
+		);
 		this->streamlineSolver.solve();
+		
 		this->gfx.solverOptions.begin = false;
 	}
 }
@@ -103,15 +112,6 @@ void Engine::RenderFrame()
 }
 
 
-bool Engine::InitializeStreamSolver()
-{
-	return this->streamlineSolver.Initialize(
-		SEED_RANDOM,
-		EULER_METHOD,
-		Linear,
-		this->gfx.solverOptions
-	);
 
-}
 
 

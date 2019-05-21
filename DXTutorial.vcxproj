@@ -185,7 +185,7 @@
     <CudaCompile Include="Cuda\StreamlineSolver.cu">
       <FileType>Document</FileType>
     </CudaCompile>
-    <ClCompile Include="VelocityField.cpp" />
+    <CudaCompile Include="VelocityField.cu" />
     <ClCompile Include="Graphics\ImGui\imgui.cpp" />
     <ClCompile Include="Graphics\ImGui\imgui_draw.cpp" />
     <ClCompile Include="Graphics\ImGui\imgui_impl_dx11.cpp" />
@@ -216,8 +216,8 @@
     <ClInclude Include="BinaryStream\BinaryWriter.h" />
     <CudaCompile Include="Cuda\StreamlineSolver.cuh" />
     <ClInclude Include="SolverOptions.h" />
-    <ClInclude Include="Particle.cuh" />
-    <ClInclude Include="VelocityField.h" />
+    <CudaCompile Include="Particle.cuh" />
+    <CudaCompile Include="VelocityField.cuh" />
     <ClInclude Include="Graphics\RenderImGui.h" />
     <ClInclude Include="Graphics\Graphics.h" />
     <ClInclude Include="Graphics\AdapterReader.h" />

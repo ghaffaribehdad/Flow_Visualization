@@ -8,8 +8,9 @@
 #include "../ErrorLogger.h"
 #include <DirectXMath.h>
 #include "../Particle.cuh"
-#include "../VelocityField.h"
+#include "../VelocityField.cuh"
 #include "../SolverOptions.h"
+#include "CudaDevice.h"
 
 enum SeedingPattern
 {
@@ -42,7 +43,8 @@ public:
 		SeedingPattern _seedingPattern,
 		IntegrationMethod _integrationMethod,
 		InterpolationMethod _interpolationMethod,
-		SolverOptions _solverOptions
+		SolverOptions _solverOptions,
+		IDXGIAdapter* pAdapter
 	);
 
 	// Solve must be defined in the derived classes
@@ -81,11 +83,14 @@ protected:
 	// Solver Parameters
 	SolverOptions solverOptions;
 
-	void InitializeParticles(int& particle_count, float3& gridDimenstions, SeedingPattern seedingPattern);
-
 	// A COM pointer to the vector Field
+	bool InitializeCUDA();
+
+	Microsoft::WRL::ComPtr<ID3D11Device> device;
 	Microsoft::WRL::ComPtr<ID3D11Texture3D> m_resultTexture;
 
-	CudaDevice cudaDevice;
-	bool GetDevice();
+	cudaDeviceProp cuda_device_prop;
+
+	IDXGIAdapter* adapter;
+
 };

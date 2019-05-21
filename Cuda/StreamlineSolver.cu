@@ -1,6 +1,6 @@
 #include "StreamlineSolver.cuh"
 
-__host__ bool StreamlineSolver::InitializeCUDA()
+void StreamlineSolver::InitializeVelocityField()
 {
 	// 1. Read and store Vector Field *OK
 	h_velocityField = new VelocityField;
@@ -33,25 +33,71 @@ __host__ bool StreamlineSolver::InitializeCUDA()
 	gridDiameter.z = this->solverOptions.gridDiameter[2];
 	h_velocityField->setGridDiameter(gridDiameter);
 
-
 	// 3. Upload Velocity Filled to GPU *OK
-
 	this->d_velocityField = UploadToGPU<VelocityField>(h_velocityField, sizeof(h_velocityField));
 
-	// 4. Initialize and Upload Particles
-	int particleCount = 100;
-	this->h_particles = new Particle[particleCount]; // TO-DO: Dynamic size of particle from ImGui
-	this->InitializeParticles(particleCount, gridDiameter, SEED_RANDOM);
+}
+
+
+
+
+__global__ void TracingParticles(Particle* d_particles, VelocityField* d_velocityField, float dt, int timesteps)
+{
+	for (int i = 0; i < timesteps; i++)
+	{
+		int index = blockDim.x * blockIdx.x + threadIdx.x;
+		
+		d_particles[index].getPosition()->x
+
+		d_particles[index].move(dt, d_velocityField);
+	}
+	
+}
+
+void StreamlineSolver::InitializeParticles()
+{
+	// Create an array of particles
+	this->h_particles = new Particle[solverOptions.particle_count];
+
+	float3 gridDiameter;
+	gridDiameter.x = this->solverOptions.gridDiameter[0];
+	gridDiameter.y = this->solverOptions.gridDiameter[1];
+	gridDiameter.z = this->solverOptions.gridDiameter[2];
+
+	// Seed Particles Randomly according to the grid diameters
+	for (int i = 0; i < solverOptions.particle_count; i++)
+	{
+		h_particles[i].seedParticle(gridDiameter);
+		float3 gridDiametrs = { solverOptions.gridDiameter[0],solverOptions.gridDiameter[1], solverOptions.gridDiameter[2]};
+		int3 gridSize = { solverOptions.gridSize[0],solverOptions.gridSize[1], solverOptions.gridSize[2] };
+
+		h_particles[i].updateVelocity(gridDiametrs, gridSize, h_velocityField);
+		OutputDebugStringA("Particles are seeded\n");
+	}
+	
+	// Upload particles to the GPU
 	this->d_particles = UploadToGPU<Particle>(h_particles, sizeof(h_velocityField));
 
-	// 5. Run The Kernel
+	gpuErrchk(cudaDeviceSynchronize());
+
+	// We do not need particles on CPU anymore;
+	delete h_particles;
+}
 
 
 
+
+
+__host__ bool StreamlineSolver::solve()
+{
+	InitializeVelocityField();
+	InitializeParticles();
+	extractStreamlines();
+	
 	return true;
 }
 
-__global__ void TracingParticles(Particle* d_particles, VelocityField* d_velocityField)
+void StreamlineSolver::extractStreamlines()
 {
-	int index = threadIdx.x;
+	TracingParticles << < 1, solverOptions.particle_count >> > (d_particles, d_velocityField, solverOptions.dt, solverOptions.timestep);
 }

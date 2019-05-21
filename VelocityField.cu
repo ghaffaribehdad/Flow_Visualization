@@ -1,5 +1,5 @@
 
-#include "VelocityField.h"
+#include "VelocityField.cuh"
 __device__ __host__ VelocityField::VelocityField()
 {
 	this->m_gridSize = { 0,0,0 };

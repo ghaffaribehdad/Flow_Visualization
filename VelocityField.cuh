@@ -23,7 +23,15 @@ public:
 	__device__ __host__ void setGridDiameter(const float3& gridDiameter);
 	__device__ __host__ void setVelocityField(float* _velocityField);
 
-	
+	// getter
+	__device__ __host__ float3& getGridDiameter()
+	{
+		return m_gridDiameter;
+	}
+	__device__ __host__ int3& getGridSize()
+	{
+		return m_gridSize;
+	}
 private:
 
 	// VelocityField

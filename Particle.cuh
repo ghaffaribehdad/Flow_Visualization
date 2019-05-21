@@ -2,7 +2,7 @@
 
 #include "cuda_runtime.h"
 #include "../linearIndex.cuh"
-#include "VelocityField.h"
+#include "VelocityField.cuh"
 
 
 class Particle
@@ -10,29 +10,30 @@ class Particle
 private:
 	float3 m_position = { 0,0,0 };
 	float3 m_velocity = { 0,0,0 };
+	bool outOfScope = false;
 public:
 
 	// Setter and Getter functions
-	float3* __host__ __device__ getPosition()
+	__device__ __host__ float3* getPosition()
 	{
 		return & m_position;
 	}
-	void __host__ __device__ setPosition(float3& _position)
+	__host__ __device__ void setPosition(float3& _position)
 	{
 		m_position = _position;
 	}
 
-	float3* __host__ __device__ getVelocity()
+	__host__ __device__ float3*  getVelocity()
 	{
 		return &m_velocity;
 	}
-	void __host__ __device__ setVelocity(float3& _velocity)
+	__host__ __device__ void  setVelocity(float3& _velocity)
 	{
 		m_position = _velocity;
 	}
 
 	// seeding particle
-	void __host__ seedParticle(const float3& gridDimenstion)
+	__host__ void  seedParticle(const float3& gridDimenstion)
 	{
 		float x = static_cast <float> (rand()) / static_cast <float> (RAND_MAX/gridDimenstion.x);
 		float y = static_cast <float> (rand()) / static_cast <float> (RAND_MAX/gridDimenstion.y);
@@ -42,42 +43,66 @@ public:
 
 	__device__ __host__ void move(const float& dt, VelocityField * p_velocityField)
 	{
+
+		float3 gridDiameter = p_velocityField->getGridDiameter();
+		int3 gridSize = p_velocityField->getGridSize();
+
 		this->updatePosition(dt);						//checked
-		//this->updateVelocity(volume, p_velocityField);	//checked
+		this->updateVelocity(gridDiameter, gridSize, p_velocityField);	//checked
+		this->checkPosition(gridDiameter);			//check if it is out of scope
 	}
 
+	__device__ __host__ void checkPosition(const float3 & gridDiameter)
+	{
+		
+		if (m_position.x >= gridDiameter.x)
+		{
+			this->outOfScope = true;
+		}
+		if (m_position.y >= gridDiameter.y)
+		{
+			this->outOfScope = true;
+		}
+		if (m_position.z >= gridDiameter.z)
+		{
+			this->outOfScope = true;
+		}
 
+	}
 	__device__ __host__ void updatePosition(const float dt)
 	{
-		this->m_position.x += dt * (this->m_velocity.x);
-		this->m_position.y += dt * (this->m_velocity.y);
-		this->m_position.z += dt * (this->m_velocity.z);
+		if (!outOfScope)
+		{
+			this->m_position.x += dt * (this->m_velocity.x);
+			this->m_position.y += dt * (this->m_velocity.y);
+			this->m_position.z += dt * (this->m_velocity.z);
+		}
 
 	}
 
-	__device__ __host__ void updateVelocity(const float* velocityField)
+	__device__ __host__ void updateVelocity(const float3 & gridDiameter, const int3 & gridSize, VelocityField* p_velocityField)
 	{
-		//int3 index = findIndex(diameter);
+		int3 index = findIndex(gridDiameter, gridSize);
 
-		//dimension of the grid data
-		//int4 dim = { volume.getGridSize().x,volume.getGridSize().y,volume.getGridSize().z,volume.getFieldDim() };
-		//uint mappedIndex_Vx = linearIndex(index.x, index.y, index.z, 0, dim);
-		//float v_x = velocityField[mappedIndex_Vx];
-		//float v_y = velocityField[mappedIndex_Vx + 1];
-		//float v_z = velocityField[mappedIndex_Vx + 2];
-		//float3 velocity = { v_x, v_y, v_z };
-		//this->setVelocity(velocity);
+		int3 dim = { gridSize.x,gridSize.y,gridSize.z};
+		uint mappedIndex_Vx = linearIndex(index.x, index.y, index.z, dim);
+		float v_x = p_velocityField->getVelocityField()[mappedIndex_Vx];
+		float v_y = p_velocityField->getVelocityField()[mappedIndex_Vx + 1];
+		float v_z = p_velocityField->getVelocityField()[mappedIndex_Vx + 2];
+		float3 velocity = { v_x, v_y, v_z };
+		this->setVelocity(velocity);
 	}
-	__device__ __host__ int3 findIndex(float3  )
+	__device__ __host__ int3 findIndex(const float3 & gridDiameter, const int3 & gridSize)
 	{
-		//float relative_x = (this->m_position.x) / (volume.getDiameter().x);
-		//float relative_y = (this->m_position.y) / (volume.getDiameter().y);
-		//float relative_z = (this->m_position.z) / (volume.getDiameter().z);
-
+		float3 relative_position = {
+			(this->m_position.x) / (gridDiameter.x),
+			(this->m_position.y) / (gridDiameter.y),
+			(this->m_position.z) / (gridDiameter.z)
+		};
 		int3 index = { 0,0,0 };
-		//index.x = static_cast<int>(relative_x * (volume.getGridSize().x - 1));
-		//index.y = static_cast<int>(relative_y * (volume.getGridSize().y - 1));
-		//index.z = static_cast<int>(relative_z * (volume.getGridSize().z - 1));
+		index.x = static_cast<int>(relative_position.x * (gridSize.x - 1));
+		index.y = static_cast<int>(relative_position.y * (gridSize.y - 1));
+		index.z = static_cast<int>(relative_position.z * (gridSize.z - 1));
 
 		return index;
 	}

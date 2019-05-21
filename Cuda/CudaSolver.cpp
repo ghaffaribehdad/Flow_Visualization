@@ -11,13 +11,21 @@ bool CUDASolver::Initialize
 	SeedingPattern _seedingPattern,
 	IntegrationMethod _integrationMethod,
 	InterpolationMethod _interpolationMethod,
-	SolverOptions _solverOptions
+	SolverOptions _solverOptions,
+	IDXGIAdapter* pAdapter
 )
 {
 	this->m_seedingPattern = _seedingPattern;
 	this->m_intergrationMehotd = _integrationMethod;
 	this->m_interpolationMethod = _interpolationMethod;
 	this->solverOptions = _solverOptions;
+	this->adapter = pAdapter;
+
+
+	this->InitializeCUDA();
+	
+
+	
 
 	return true;
 }
@@ -75,17 +83,14 @@ bool SeedFiled(SeedingPattern, DirectX::XMFLOAT3 dimenions, DirectX::XMFLOAT3 se
 }
 
 
-void CUDASolver::InitializeParticles(int& particle_count, float3& gridDiamters, SeedingPattern seedingPattern)
-{
-	this->h_particles = new Particle[particle_count];
 
-	if (seedingPattern == SEED_RANDOM)
-	{
-		for (int i = 0; i < particle_count; i++)
-		{
-			h_particles[i].seedParticle(gridDiamters);
-		}
-	}
-	//TO-DO:: Regular seeding
+
+bool CUDASolver::InitializeCUDA()
+{
+	int device;
+	gpuErrchk(cudaD3D11GetDevice(&device,adapter));
+	gpuErrchk(cudaGetDeviceProperties(&this->cuda_device_prop, 0));
+
+	return true;
 
 }
