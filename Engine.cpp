@@ -102,6 +102,9 @@ void Engine::Update()
 		);
 		this->streamlineSolver.solve();
 		
+		this->gfx.setCudaVertex(this->streamlineSolver.getVortices());
+		this->gfx.draw_streamlines = true;
+
 		this->gfx.solverOptions.begin = false;
 	}
 }

@@ -41,18 +41,7 @@ void StreamlineSolver::InitializeVelocityField()
 
 
 
-__global__ void TracingParticles(Particle* d_particles, VelocityField* d_velocityField, float dt, int timesteps)
-{
-	for (int i = 0; i < timesteps; i++)
-	{
-		int index = blockDim.x * blockIdx.x + threadIdx.x;
-		
-		d_particles[index].getPosition()->x
 
-		d_particles[index].move(dt, d_velocityField);
-	}
-	
-}
 
 void StreamlineSolver::InitializeParticles()
 {
@@ -97,7 +86,28 @@ __host__ bool StreamlineSolver::solve()
 	return true;
 }
 
-void StreamlineSolver::extractStreamlines()
+ void StreamlineSolver::extractStreamlines()
 {
-	TracingParticles << < 1, solverOptions.particle_count >> > (d_particles, d_velocityField, solverOptions.dt, solverOptions.timestep);
+	TracingParticles <<< 1, solverOptions.particle_count >>> (d_particles, d_velocityField, solverOptions.dt, solverOptions.timestep,d_vertices);
+}
+
+void StreamlineSolver::InitializeVertices()
+{
+	gpuErrchk(cudaMalloc((void**)& this->d_vertices, sizeof(Vertex) * solverOptions.particle_count * solverOptions.timestep));
+}
+
+__global__ void TracingParticles(Particle* d_particles, VelocityField* d_velocityField, float dt, int timesteps, Vertex* d_vertices)
+{
+	for (int i = 0; i < timesteps; i++)
+	{
+		int index = blockDim.x * blockIdx.x + threadIdx.x;
+
+		d_vertices[index].pos.x = d_particles[index].getPosition()->x;
+		d_vertices[index].pos.y = d_particles[index].getPosition()->y;
+		d_vertices[index].pos.z = d_particles[index].getPosition()->z;
+		d_vertices[index].texCoord.x = .5f;
+		d_vertices[index].texCoord.y = .5f;
+		d_particles[index].move(dt, d_velocityField);
+	}
+
 }
