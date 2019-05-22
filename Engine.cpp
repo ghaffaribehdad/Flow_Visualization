@@ -93,17 +93,13 @@ void Engine::Update()
 	// Streamline Solver
 	if (this->gfx.solverOptions.begin)
 	{
-		this->streamlineSolver.Initialize( //initilize cuda solver
-			SEED_RANDOM,
-			EULER_METHOD,
-			Linear,
-			this->gfx.solverOptions,
-			this->gfx.GetAdapter()
-		);
+		gfx.solverOptions.p_Adapter = this->gfx.GetAdapter();
+		gfx.solverOptions.p_vertexBuffer = this->gfx.GetVertexBuffer();
+
+		// TO-DO: only take solverOptions
+		this->streamlineSolver.Initialize(this->gfx.solverOptions);
 		this->streamlineSolver.solve();
-		
-		this->gfx.setCudaVertex(this->streamlineSolver.getVortices());
-		this->gfx.draw_streamlines = true;
+		this->streamlineSolver.FinalizeCUDA();
 
 		this->gfx.solverOptions.begin = false;
 	}

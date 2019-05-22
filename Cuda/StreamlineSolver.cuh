@@ -2,7 +2,7 @@
 #include "CudaSolver.h"
 #include "cuda_runtime.h"
 #include <device_launch_parameters.h>
-#include "../Graphics/Vertex.h"
+
 
 class StreamlineSolver : public CUDASolver
 {
@@ -10,24 +10,20 @@ class StreamlineSolver : public CUDASolver
 public:
 
 	__host__ bool solve();
-	__host__ Vertex * getVortices()
-	{
-		return d_vertices;
-	}
 
 private:
-	void InitializeVelocityField();
-	void InitializeParticles();
-	void InitializeVertices();
-	void extractStreamlines();
+	__host__ void InitializeVelocityField();
+	__host__ void InitializeParticles();
+	__host__ void extractStreamlines();
 
 	Particle* d_particles;
 
 	VelocityField * h_velocityField;
 	VelocityField * d_velocityField;
-	Vertex* d_vertices;
 	float3* result;
 
 };
 
-__global__ void TracingParticles(Particle* d_particles, VelocityField* d_velocityField, float dt, int timesteps, Vertex* d_vertices);
+// Kernel of the streamlines
+
+__global__ void TracingParticles(Particle* d_particles, VelocityField* d_velocityField, SolverOptions solverOption, Vertex * p_VertexBuffer);

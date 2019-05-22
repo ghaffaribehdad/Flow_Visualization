@@ -1,32 +1,18 @@
 #include "CudaSolver.h"
 
+
+
 CUDASolver::CUDASolver()
 {
 	std::printf("A solver is created!\n");
 }
 
 // Initilize the solver
-bool CUDASolver::Initialize
-(
-	SeedingPattern _seedingPattern,
-	IntegrationMethod _integrationMethod,
-	InterpolationMethod _interpolationMethod,
-	SolverOptions _solverOptions,
-	IDXGIAdapter* pAdapter
-)
+bool CUDASolver::Initialize(SolverOptions _solverOptions)
 {
-	this->m_seedingPattern = _seedingPattern;
-	this->m_intergrationMehotd = _integrationMethod;
-	this->m_interpolationMethod = _interpolationMethod;
 	this->solverOptions = _solverOptions;
-	this->adapter = pAdapter;
-
-
 	this->InitializeCUDA();
 	
-
-	
-
 	return true;
 }
 
@@ -83,13 +69,44 @@ bool SeedFiled(SeedingPattern, DirectX::XMFLOAT3 dimenions, DirectX::XMFLOAT3 se
 }
 
 
-
+bool CUDASolver::FinalizeCUDA()
+{
+	gpuErrchk(cudaGraphicsUnmapResources(
+		1,
+		&this->cudaGraphics
+	));
+	return true;
+}
 
 bool CUDASolver::InitializeCUDA()
 {
+	// Get number of CUDA-Enable devices
 	int device;
-	gpuErrchk(cudaD3D11GetDevice(&device,adapter));
+	gpuErrchk(cudaD3D11GetDevice(&device,solverOptions.p_Adapter));
+
+	// Get properties of the Best(usually at slot 0) card
 	gpuErrchk(cudaGetDeviceProperties(&this->cuda_device_prop, 0));
+
+	// Register Vertex Buffer to map it
+	gpuErrchk(cudaGraphicsD3D11RegisterResource(
+		&this->cudaGraphics,
+		this->solverOptions.p_vertexBuffer,
+		cudaGraphicsRegisterFlagsNone));
+
+	// Map Vertex Buffer
+	gpuErrchk(cudaGraphicsMapResources(
+		1,
+		&this->cudaGraphics
+		));
+
+	// Get Mapped pointer
+	size_t size = 3*std::size_t(sizeof(Vertex));
+
+	gpuErrchk(cudaGraphicsResourceGetMappedPointer(
+		&p_VertexBuffer,
+		&size,
+		this->cudaGraphics
+	));
 
 	return true;
 

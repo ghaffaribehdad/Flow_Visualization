@@ -14,8 +14,12 @@ void StreamlineSolver::InitializeVelocityField()
 
 	std::vector<char>* p_vec_buffer = new std::vector<char>;
 
+
+	// DEBGU:: path is fixed inside ReadField function
 	this->ReadField(p_vec_buffer, fullPath);
+
 	char* p_vec_buffer_temp = &(p_vec_buffer ->at(0));
+
 	this->h_velocityField->setVelocityField(reinterpret_cast<float*> (p_vec_buffer_temp));
 
 	delete p_vec_buffer;
@@ -60,7 +64,7 @@ void StreamlineSolver::InitializeParticles()
 		float3 gridDiametrs = { solverOptions.gridDiameter[0],solverOptions.gridDiameter[1], solverOptions.gridDiameter[2]};
 		int3 gridSize = { solverOptions.gridSize[0],solverOptions.gridSize[1], solverOptions.gridSize[2] };
 
-		h_particles[i].updateVelocity(gridDiametrs, gridSize, h_velocityField);
+		//h_particles[i].updateVelocity(gridDiametrs, gridSize, h_velocityField);
 		OutputDebugStringA("Particles are seeded\n");
 	}
 	
@@ -82,32 +86,29 @@ __host__ bool StreamlineSolver::solve()
 	InitializeVelocityField();
 	InitializeParticles();
 	extractStreamlines();
+
 	
 	return true;
 }
 
- void StreamlineSolver::extractStreamlines()
+ __host__ void StreamlineSolver::extractStreamlines()
 {
-	TracingParticles <<< 1, solverOptions.particle_count >>> (d_particles, d_velocityField, solverOptions.dt, solverOptions.timestep,d_vertices);
+
+	TracingParticles <<< 1, solverOptions.particle_count >>> (d_particles,  d_velocityField, solverOptions,reinterpret_cast<Vertex *>(this->p_VertexBuffer));
 }
 
-void StreamlineSolver::InitializeVertices()
-{
-	gpuErrchk(cudaMalloc((void**)& this->d_vertices, sizeof(Vertex) * solverOptions.particle_count * solverOptions.timestep));
-}
 
-__global__ void TracingParticles(Particle* d_particles, VelocityField* d_velocityField, float dt, int timesteps, Vertex* d_vertices)
+__global__ void TracingParticles(Particle* d_particles, VelocityField* d_velocityField, SolverOptions solverOption, Vertex * p_VertexBuffer)
 {
+	int timesteps = solverOption.timestep;
+	float dt = solverOption.dt;
 	for (int i = 0; i < timesteps; i++)
 	{
 		int index = blockDim.x * blockIdx.x + threadIdx.x;
 
-		d_vertices[index].pos.x = d_particles[index].getPosition()->x;
-		d_vertices[index].pos.y = d_particles[index].getPosition()->y;
-		d_vertices[index].pos.z = d_particles[index].getPosition()->z;
-		d_vertices[index].texCoord.x = .5f;
-		d_vertices[index].texCoord.y = .5f;
 		d_particles[index].move(dt, d_velocityField);
 	}
-
+	p_VertexBuffer[0].pos.x = 0.0;
+	p_VertexBuffer[0].pos.y = 0.0;
+	p_VertexBuffer[0].pos.z = 0.0;
 }

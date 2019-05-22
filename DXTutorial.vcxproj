@@ -215,6 +215,7 @@
     <ClInclude Include="BinaryStream\BinaryReader.h" />
     <ClInclude Include="BinaryStream\BinaryWriter.h" />
     <CudaCompile Include="Cuda\StreamlineSolver.cuh" />
+    <ClInclude Include="Enum.h" />
     <ClInclude Include="SolverOptions.h" />
     <CudaCompile Include="Particle.cuh" />
     <CudaCompile Include="VelocityField.cuh" />

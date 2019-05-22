@@ -47,9 +47,9 @@ public:
 		float3 gridDiameter = p_velocityField->getGridDiameter();
 		int3 gridSize = p_velocityField->getGridSize();
 
-		this->updatePosition(dt);						//checked
-		this->updateVelocity(gridDiameter, gridSize, p_velocityField);	//checked
-		this->checkPosition(gridDiameter);			//check if it is out of scope
+		//this->updatePosition(dt);						//checked
+		//this->updateVelocity(gridDiameter, gridSize, p_velocityField);	//checked
+		//this->checkPosition(gridDiameter);			//check if it is out of scope
 	}
 
 	__device__ __host__ void checkPosition(const float3 & gridDiameter)

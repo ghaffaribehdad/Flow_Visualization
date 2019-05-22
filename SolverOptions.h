@@ -1,4 +1,6 @@
 #pragma once
+#include "Enum.h"
+
 struct SolverOptions
 {
 	char fileName[100] = "";
@@ -11,4 +13,14 @@ struct SolverOptions
 	bool begin = false;
 	int lines_count = 0;
 	int particle_count = 0;
+	SeedingPattern seedingPatter;
+	IntegrationMethod integrationMethod;
+	InterpolationMethod interpolationMethod;
+
+	IDXGIAdapter* p_Adapter;
+	ID3D11Resource* p_vertexBuffer;
+
+	SolverOptions() {};
+
+
 };

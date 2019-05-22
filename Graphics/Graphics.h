@@ -39,11 +39,18 @@ public:
 	Camera camera;
 
 
-	SolverOptions solverOptions = SolverOptions();
+	SolverOptions solverOptions;
 
 	// Getter Functions
 	IDXGIAdapter* GetAdapter();
 	ID3D11Device* GetDevice();
+	ID3D11Buffer* GetVertexBuffer();
+
+	// Setter Functions
+	void setCudaVertex(void * cudaVertex, size_t size)
+	{
+		cudaMemcpy(vertexBuffer.Get(), cudaVertex, size, cudaMemcpyDeviceToDevice);
+	}
 
 
 private:
@@ -106,6 +113,8 @@ private:
 	// Solver options
 	bool streamline = true;
 	bool pathline = false;
+
+	Vertex* CudaVertex = nullptr;
 
 
 };

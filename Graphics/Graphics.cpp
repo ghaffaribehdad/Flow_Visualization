@@ -46,7 +46,7 @@ void Graphics::RenderFrame()
 	this->deviceContext->OMSetDepthStencilState(this->depthStencilState.Get(), 0);	// add depth  stencil state to rendering routin
 	//this->deviceContext->PSSetSamplers(0, 1, this->samplerState.GetAddressOf());	// Set sampler for the pixel shader
 	this->deviceContext->IASetInputLayout(this->vertexshader.GetInputLayout());		// Set the input layout
-	this->deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);// set the primitive topology
+	this->deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_LINESTRIP);// set the primitive topology
 	this->deviceContext->RSSetState(this->rasterizerstate.Get());					// set the rasterizer state
 	this->deviceContext->VSSetShader(vertexshader.GetShader(), NULL, 0);			// set vertex shader
 	this->deviceContext->PSSetShader(pixelshader.GetShader(), NULL, 0);				// set pixel shader
@@ -68,11 +68,16 @@ void Graphics::RenderFrame()
 	 //set the constant buffer
 	this->deviceContext->VSSetConstantBuffers(0, 1, this->constantBuffer.GetAddressOf());
 	
-	// Draw Square using indices
-	//this->deviceContext->PSSetShaderResources(0, 1, this->myTexture.GetAddressOf());
+	/// Draw Square using indices
+	///this->deviceContext->PSSetShaderResources(0, 1, this->myTexture.GetAddressOf());
+
+	
+	
 	this->deviceContext->IASetVertexBuffers(0, 1, this->vertexBuffer.GetAddressOf(), this->vertexBuffer.StridePtr(), &offset);
-	//this->deviceContext->IASetIndexBuffer(this->indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
-	//this->deviceContext->DrawIndexed(this->indexBuffer.GetBuffersize(),0,0);
+
+
+	///this->deviceContext->IASetIndexBuffer(this->indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+	///this->deviceContext->DrawIndexed(this->indexBuffer.GetBuffersize(),0,0);
 	this->deviceContext->Draw(4, 0);
 	// calculatin FPS
 	static int fpsCounter = 0;
@@ -216,27 +221,27 @@ bool Graphics::InitializeResources()
 		this->spriteFont = std::make_unique<DirectX::SpriteFont>(this->device.Get(), L"Data\\Fonts\\comic_sans_ms_16.spritefont");
 	}
 
-	//if (this->samplerState.Get() == nullptr)
-	//{
-	//	// Create Sampler description for sampler state
-	//	D3D11_SAMPLER_DESC sampleDesc;
-	//	ZeroMemory(&sampleDesc, sizeof(D3D11_SAMPLER_DESC));
-	//	sampleDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-	//	sampleDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-	//	sampleDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-	//	sampleDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-	//	sampleDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-	//	sampleDesc.MinLOD = 0;
-	//	sampleDesc.MaxLOD = D3D11_FLOAT32_MAX;
+	///if (this->samplerState.Get() == nullptr)
+	///{
+	///	// Create Sampler description for sampler state
+	///	D3D11_SAMPLER_DESC sampleDesc;
+	///	ZeroMemory(&sampleDesc, sizeof(D3D11_SAMPLER_DESC));
+	///	sampleDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	///	sampleDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	///	sampleDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	///	sampleDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	///	sampleDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+	///	sampleDesc.MinLOD = 0;
+	///	sampleDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
-	//	// Create sampler state
-	//	hr = this->device->CreateSamplerState(&sampleDesc, this->samplerState.GetAddressOf());
-	//	if (FAILED(hr))
-	//	{
-	//		ErrorLogger::Log(hr, "Failed to Create sampler state.");
-	//		return false;
-	//	}
-	//}
+	///	// Create sampler state
+	///	hr = this->device->CreateSamplerState(&sampleDesc, this->samplerState.GetAddressOf());
+	///	if (FAILED(hr))
+	///	{
+	///		ErrorLogger::Log(hr, "Failed to Create sampler state.");
+	///		return false;
+	///}
+	///}
 
 	return true;
 }
@@ -367,16 +372,15 @@ bool Graphics::InitializeScene()
 
 
 
-#pragma endregion Create Vertices
-
-//#pragma region Create_Indices
-//	DWORD indices[] = 
-//	{
-//		0,1,2,
-//		0,2,3
-//	};
-//
-//#pragma endregion Create_Indices
+///#pragma endregion Create Vertices
+///#pragma region Create_Indices
+///	DWORD indices[] = 
+///	{
+///		0,1,2,
+///		0,2,3
+///	};
+///
+///#pragma endregion Create_Indices
 
 #pragma region Create_Vertex_Buffer
 
@@ -394,32 +398,33 @@ bool Graphics::InitializeScene()
 		}
 	}
 
-//#pragma endregion Create_Vertex_Buffer
-//
-//#pragma region Create_Index_Buffer
-//	if (this->indexBuffer.Get() == nullptr)
-//	{
-//		hr = this->indexBuffer.Initialize(this->device.Get(), indices, ARRAYSIZE(indices));
-//		if (FAILED(hr))
-//		{
-//			ErrorLogger::Log(hr, "Failed to Create Index Buffer.");
-//			return false;
-//		}
-//	}
-//
-//#pragma endregion Create_Index_Buffer
+#pragma endregion Create_Vertex_Buffer
+
+
+///#pragma region Create_Index_Buffer
+///	if (this->indexBuffer.Get() == nullptr)
+///	{
+///		hr = this->indexBuffer.Initialize(this->device.Get(), indices, ARRAYSIZE(indices));
+///	/	if (FAILED(hr))
+///		{
+///			ErrorLogger::Log(hr, "Failed to Create Index Buffer.");
+///			return false;
+///		}
+///	}
+///
+///#pragma endregion Create_Index_Buffer
 
 #pragma region Create_Texture
-	// Create Texture View
-	/*if (this->myTexture.Get() == nullptr)
-	{
-		hr = DirectX::CreateWICTextureFromFile(this->device.Get(), L"Data\\Textures\\test.jpg", nullptr, this->myTexture.GetAddressOf());
-		if (FAILED(hr))
-		{
-			ErrorLogger::Log(hr, "Failed to Create Texture from file.");
-			return false;
-		}
-	}*/
+	/// Create Texture View
+	///if (this->myTexture.Get() == nullptr)
+	///{
+	///	hr = DirectX::CreateWICTextureFromFile(this->device.Get(), L"Data\\Textures\\test.jpg", nullptr, this->myTexture.GetAddressOf());
+	///	if (FAILED(hr))
+	///	{
+	///		ErrorLogger::Log(hr, "Failed to Create Texture from file.");
+	///		return false;
+	///	}
+	///}
 
 #pragma endregion Create_Texture
 
@@ -585,4 +590,9 @@ IDXGIAdapter* Graphics::GetAdapter()
 ID3D11Device* Graphics::GetDevice()
 {
 	return this->device.Get();
+}
+
+ID3D11Buffer* Graphics::GetVertexBuffer()
+{
+	return this->vertexBuffer.Get();
 }
