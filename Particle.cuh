@@ -4,7 +4,7 @@
 #include "../linearIndex.cuh"
 #include "VelocityField.cuh"
 
-
+template <class T>
 class Particle
 {
 private:
@@ -29,7 +29,7 @@ public:
 	}
 	__host__ __device__ void  setVelocity(float3& _velocity)
 	{
-		m_position = _velocity;
+		m_velocity = _velocity;
 	}
 
 	// seeding particle
@@ -41,15 +41,15 @@ public:
 	}
 
 
-	__device__ __host__ void move(const float& dt, VelocityField * p_velocityField)
+	__device__ __host__ void move(const float& dt, VelocityField<T> * d_velocityField)
 	{
 
-		float3 gridDiameter = p_velocityField->getGridDiameter();
-		int3 gridSize = p_velocityField->getGridSize();
+		float3 gridDiameter = d_velocityField->getGridDiameter();
+		int3 gridSize = d_velocityField->getGridSize();
 
-		//this->updatePosition(dt);						//checked
-		//this->updateVelocity(gridDiameter, gridSize, p_velocityField);	//checked
-		//this->checkPosition(gridDiameter);			//check if it is out of scope
+		this->updatePosition(dt);										//checked
+		this->checkPosition(gridDiameter);								//check if it is out of scope
+		this->updateVelocity(gridDiameter, gridSize, d_velocityField);	//checked
 	}
 
 	__device__ __host__ void checkPosition(const float3 & gridDiameter)
@@ -80,24 +80,27 @@ public:
 
 	}
 
-	__device__ __host__ void updateVelocity(const float3 & gridDiameter, const int3 & gridSize, VelocityField* p_velocityField)
+
+	__device__ __host__ void updateVelocity(const float3 & gridDiameter, const int3 & gridSize, VelocityField<T>* p_velocityField)
 	{
 		int3 index = findIndex(gridDiameter, gridSize);
 
 		int3 dim = { gridSize.x,gridSize.y,gridSize.z};
 		uint mappedIndex_Vx = linearIndex(index.x, index.y, index.z, dim);
-		float v_x = p_velocityField->getVelocityField()[mappedIndex_Vx];
-		float v_y = p_velocityField->getVelocityField()[mappedIndex_Vx + 1];
-		float v_z = p_velocityField->getVelocityField()[mappedIndex_Vx + 2];
-		float3 velocity = { v_x, v_y, v_z };
+		T v_x = p_velocityField->getVelocityField()[mappedIndex_Vx];
+		T v_y = p_velocityField->getVelocityField()[mappedIndex_Vx + 1];
+		T v_z = p_velocityField->getVelocityField()[mappedIndex_Vx + 2];
+
+		//TO-DO:: Correct the next line
+		float3 velocity = { static_cast<float>(v_x), static_cast<float>(v_y), static_cast<float>(v_z) };
 		this->setVelocity(velocity);
 	}
 	__device__ __host__ int3 findIndex(const float3 & gridDiameter, const int3 & gridSize)
 	{
 		float3 relative_position = {
-			(this->m_position.x) / (gridDiameter.x),
-			(this->m_position.y) / (gridDiameter.y),
-			(this->m_position.z) / (gridDiameter.z)
+			(static_cast<float>(this->m_position.x)) / (gridDiameter.x),
+			(static_cast<float>(this->m_position.y)) / (gridDiameter.y),
+			(static_cast<float>(this->m_position.z)) / (gridDiameter.z)
 		};
 		int3 index = { 0,0,0 };
 		index.x = static_cast<int>(relative_position.x * (gridSize.x - 1));

@@ -1,14 +1,17 @@
 #include "CudaSolver.h"
 
+template class CUDASolver<float>;
+template class CUDASolver<double>;
 
-
-CUDASolver::CUDASolver()
+template <typename T>
+CUDASolver<T>::CUDASolver()
 {
 	std::printf("A solver is created!\n");
 }
 
 // Initilize the solver
-bool CUDASolver::Initialize(SolverOptions _solverOptions)
+template <typename T>
+bool CUDASolver<T>::Initialize(SolverOptions _solverOptions)
 {
 	this->solverOptions = _solverOptions;
 	this->InitializeCUDA();
@@ -16,7 +19,8 @@ bool CUDASolver::Initialize(SolverOptions _solverOptions)
 	return true;
 }
 
-bool CUDASolver::ReadField(std::vector<char>* p_vec_buffer, std::string fileName)
+template <typename T>
+bool CUDASolver<T>::ReadField(std::vector<char>* p_vec_buffer, std::string fileName)
 {
 	// define the istream
 	fileName = "D:\\git_projects\\Flow_Visualization\\Field1.bin";
@@ -63,13 +67,14 @@ bool CUDASolver::ReadField(std::vector<char>* p_vec_buffer, std::string fileName
 	return true;
 }
 
+
 bool SeedFiled(SeedingPattern, DirectX::XMFLOAT3 dimenions, DirectX::XMFLOAT3 seedbox)
 {
 	return true;
 }
 
-
-bool CUDASolver::FinalizeCUDA()
+template <typename T>
+bool CUDASolver<T>::FinalizeCUDA()
 {
 	gpuErrchk(cudaGraphicsUnmapResources(
 		1,
@@ -78,7 +83,8 @@ bool CUDASolver::FinalizeCUDA()
 	return true;
 }
 
-bool CUDASolver::InitializeCUDA()
+template <typename T>
+bool CUDASolver<T>::InitializeCUDA()
 {
 	// Get number of CUDA-Enable devices
 	int device;

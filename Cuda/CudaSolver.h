@@ -13,6 +13,7 @@
 #include "CudaDevice.h"
 #include "../Graphics/Vertex.h"
 
+template <class T1>
 class CUDASolver
 {
 public:
@@ -35,22 +36,19 @@ protected:
 	bool ReadField(std::vector<char>* p_vec_buffer, std::string fileName);
 
 	// Upload Field to GPU and returns a pointer to the data on GPU
-	template <class T>
-	T * UploadToGPU(T * host_Data, size_t _size)
+	template <class T2>
+	void UploadToGPU(T2* d_Data,T2 * h_Data, size_t _size)
 	{
-		T* device_data;
 
-		gpuErrchk(cudaMalloc((void**)& device_data, _size));
+		gpuErrchk(cudaMalloc((void**)& d_Data, _size));
 
-		gpuErrchk(cudaMemcpy(device_data, host_Data, _size, cudaMemcpyHostToDevice));
+		gpuErrchk(cudaMemcpy(d_Data, h_Data, _size, cudaMemcpyHostToDevice));
 
-		return  device_data;
 	}
 
 
-
 	// Particle tracing parameters
-	Particle* h_particles;
+	Particle<T1>* h_particles;
 	// Solver Parameters
 	SolverOptions solverOptions;
 	cudaGraphicsResource* cudaGraphics;

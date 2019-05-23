@@ -1,9 +1,15 @@
 #include "StreamlineSolver.cuh"
 
-void StreamlineSolver::InitializeVelocityField()
+// Explicit instantions
+template class StreamlineSolver<float>;
+template class StreamlineSolver<double>;
+
+
+template<typename T>
+__host__ void StreamlineSolver<T>::InitializeVelocityField()
 {
 	// 1. Read and store Vector Field *OK
-	h_velocityField = new VelocityField;
+	h_velocityField = new VelocityField<T>;
 	
 
 	std::string fullPath = "";
@@ -20,9 +26,7 @@ void StreamlineSolver::InitializeVelocityField()
 
 	char* p_vec_buffer_temp = &(p_vec_buffer ->at(0));
 
-	this->h_velocityField->setVelocityField(reinterpret_cast<float*> (p_vec_buffer_temp));
-
-	delete p_vec_buffer;
+	this->h_velocityField->setVelocityField(reinterpret_cast<T*> (p_vec_buffer_temp));
 
 	// 2. Set the parameter of Vector Field *OK
 	int3 gridSize;
@@ -38,19 +42,17 @@ void StreamlineSolver::InitializeVelocityField()
 	h_velocityField->setGridDiameter(gridDiameter);
 
 	// 3. Upload Velocity Filled to GPU *OK
-	this->d_velocityField = UploadToGPU<VelocityField>(h_velocityField, sizeof(h_velocityField));
+	UploadToGPU<VelocityField<T>>(this->d_velocityField,h_velocityField, sizeof(h_velocityField));
+
+	delete p_vec_buffer;
 
 }
 
-
-
-
-
-
-void StreamlineSolver::InitializeParticles()
+template <typename T>
+void StreamlineSolver<T>::InitializeParticles()
 {
 	// Create an array of particles
-	this->h_particles = new Particle[solverOptions.particle_count];
+	this->h_particles = new Particle<T>[solverOptions.particle_count];
 
 	float3 gridDiameter;
 	gridDiameter.x = this->solverOptions.gridDiameter[0];
@@ -61,15 +63,10 @@ void StreamlineSolver::InitializeParticles()
 	for (int i = 0; i < solverOptions.particle_count; i++)
 	{
 		h_particles[i].seedParticle(gridDiameter);
-		float3 gridDiametrs = { solverOptions.gridDiameter[0],solverOptions.gridDiameter[1], solverOptions.gridDiameter[2]};
-		int3 gridSize = { solverOptions.gridSize[0],solverOptions.gridSize[1], solverOptions.gridSize[2] };
-
-		//h_particles[i].updateVelocity(gridDiametrs, gridSize, h_velocityField);
-		OutputDebugStringA("Particles are seeded\n");
 	}
 	
 	// Upload particles to the GPU
-	this->d_particles = UploadToGPU<Particle>(h_particles, sizeof(h_velocityField));
+	UploadToGPU<Particle<T>>(d_particles, h_particles, sizeof(h_velocityField));
 
 	gpuErrchk(cudaDeviceSynchronize());
 
@@ -80,32 +77,35 @@ void StreamlineSolver::InitializeParticles()
 
 
 
-
-__host__ bool StreamlineSolver::solve()
+template <typename T>
+__host__ bool StreamlineSolver<T>::solve()
 {
 	InitializeVelocityField();
 	InitializeParticles();
-	extractStreamlines();
+	extractStreamlines(this->d_particles,this->d_velocityField);
 
 	
 	return true;
 }
 
- __host__ void StreamlineSolver::extractStreamlines()
+template <typename T>
+ __host__ void StreamlineSolver<T>::extractStreamlines(Particle<T>* d_particles, VelocityField<T>* d_velocityField)
 {
 
-	TracingParticles <<< 1, solverOptions.particle_count >>> (d_particles,  d_velocityField, solverOptions,reinterpret_cast<Vertex *>(this->p_VertexBuffer));
+	TracingParticles <<< 1, solverOptions.particle_count >>> (d_particles, d_velocityField, solverOptions,reinterpret_cast<Vertex *>(this->p_VertexBuffer));
 }
 
 
-__global__ void TracingParticles(Particle* d_particles, VelocityField* d_velocityField, SolverOptions solverOption, Vertex * p_VertexBuffer)
+ template <typename T>
+__global__ void TracingParticles(Particle<T>* d_particles, VelocityField<T>* d_velocityField, SolverOptions solverOption, Vertex * p_VertexBuffer)
 {
+	int index = blockDim.x * blockIdx.x + threadIdx.x;
 	int timesteps = solverOption.timestep;
 	float dt = solverOption.dt;
+
+	
 	for (int i = 0; i < timesteps; i++)
 	{
-		int index = blockDim.x * blockIdx.x + threadIdx.x;
-
 		d_particles[index].move(dt, d_velocityField);
 	}
 	p_VertexBuffer[0].pos.x = 0.0;

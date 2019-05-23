@@ -19,3 +19,9 @@ enum InterpolationMethod
 {
 	Linear,
 };
+
+enum Precision
+{
+	BIT_32,
+	BIT_64
+};

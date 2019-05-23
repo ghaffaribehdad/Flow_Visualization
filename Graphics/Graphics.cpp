@@ -128,7 +128,7 @@ bool Graphics::InitializeResources()
 	this->deviceContext->OMSetRenderTargets(1, renderTargetView.GetAddressOf(), NULL);
 
 
-	if (this->depthStencilBuffer.Get() != nullptr)
+	if (this->depthStencilBuffer != NULL)
 	{
 		depthStencilBuffer->Release();
 	}

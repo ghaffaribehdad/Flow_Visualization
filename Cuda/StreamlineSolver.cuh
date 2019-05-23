@@ -3,8 +3,8 @@
 #include "cuda_runtime.h"
 #include <device_launch_parameters.h>
 
-
-class StreamlineSolver : public CUDASolver
+template <class T>
+class StreamlineSolver : public CUDASolver<T>
 {
 
 public:
@@ -14,16 +14,17 @@ public:
 private:
 	__host__ void InitializeVelocityField();
 	__host__ void InitializeParticles();
-	__host__ void extractStreamlines();
+	__host__ void extractStreamlines(Particle<T>* d_particles, VelocityField<T>* d_velocityField);
 
-	Particle* d_particles;
+	Particle<T>* d_particles;
 
-	VelocityField * h_velocityField;
-	VelocityField * d_velocityField;
+	VelocityField<T> * h_velocityField;
+	VelocityField<T> * d_velocityField;
 	float3* result;
 
 };
 
 // Kernel of the streamlines
+template <class T>
+__global__ void TracingParticles(Particle<T>* d_particles, VelocityField<T> * d_velocityField, SolverOptions solverOption, Vertex * p_VertexBuffer);
 
-__global__ void TracingParticles(Particle* d_particles, VelocityField* d_velocityField, SolverOptions solverOption, Vertex * p_VertexBuffer);

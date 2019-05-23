@@ -97,9 +97,21 @@ void Engine::Update()
 		gfx.solverOptions.p_vertexBuffer = this->gfx.GetVertexBuffer();
 
 		// TO-DO: only take solverOptions
-		this->streamlineSolver.Initialize(this->gfx.solverOptions);
-		this->streamlineSolver.solve();
-		this->streamlineSolver.FinalizeCUDA();
+
+		if (gfx.solverOptions.precision == 32)
+		{
+
+			this->streamlineSolver_float.Initialize(this->gfx.solverOptions);
+			this->streamlineSolver_float.solve();
+			this->streamlineSolver_float.FinalizeCUDA();
+		}
+		else if(gfx.solverOptions.precision == 64)
+		{
+			this->streamlineSolver_double.Initialize(this->gfx.solverOptions);
+			this->streamlineSolver_double.solve();
+			this->streamlineSolver_double.FinalizeCUDA();
+		}
+
 
 		this->gfx.solverOptions.begin = false;
 	}

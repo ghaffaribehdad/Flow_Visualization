@@ -23,7 +23,8 @@
 
 class Graphics
 {
-	friend CUDASolver;
+	friend CUDASolver<float>;
+	friend CUDASolver<double>;
 
 public:
 	// Initialize graphics
