@@ -40,9 +40,9 @@ void Graphics::RenderFrame()
 {
 	float bgcolor[] = { 0.0f,0.0f, 0.0f, 0.0f };
 
-	
+
 	this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), bgcolor);// Clear the target view
-	this->deviceContext->ClearDepthStencilView(this->depthStencilView.Get(), D3D11_CLEAR_DEPTH|D3D11_CLEAR_STENCIL,1.0f,0);// Clear the depth stencil view
+	this->deviceContext->ClearDepthStencilView(this->depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);// Clear the depth stencil view
 	this->deviceContext->OMSetDepthStencilState(this->depthStencilState.Get(), 0);	// add depth  stencil state to rendering routin
 	//this->deviceContext->PSSetSamplers(0, 1, this->samplerState.GetAddressOf());	// Set sampler for the pixel shader
 	this->deviceContext->IASetInputLayout(this->vertexshader.GetInputLayout());		// Set the input layout
@@ -52,8 +52,8 @@ void Graphics::RenderFrame()
 	this->deviceContext->PSSetShader(pixelshader.GetShader(), NULL, 0);				// set pixel shader
 
 	UINT offset = 0;
-//
-	// Set Camera/Eye directions and position
+	//
+		// Set Camera/Eye directions and position
 	DirectX::XMMATRIX world = DirectX::XMMatrixIdentity();
 
 	// Create the Projection Matrix
@@ -65,20 +65,31 @@ void Graphics::RenderFrame()
 	{
 		return;
 	}
-	 //set the constant buffer
+	//set the constant buffer
 	this->deviceContext->VSSetConstantBuffers(0, 1, this->constantBuffer.GetAddressOf());
-	
-	/// Draw Square using indices
-	///this->deviceContext->PSSetShaderResources(0, 1, this->myTexture.GetAddressOf());
 
-	
-	
+	// Draw lines using indices
+	//this->deviceContext->PSSetShaderResources(0, 1, this->myTexture.GetAddressOf());
+
+
+
 	this->deviceContext->IASetVertexBuffers(0, 1, this->vertexBuffer.GetAddressOf(), this->vertexBuffer.StridePtr(), &offset);
 
 
-	///this->deviceContext->IASetIndexBuffer(this->indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
-	///this->deviceContext->DrawIndexed(this->indexBuffer.GetBuffersize(),0,0);
-	this->deviceContext->Draw(4, 0);
+	this->deviceContext->IASetIndexBuffer(this->indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+	if (showStreamline)
+	{
+		for (int i = 0; i < 100; i++)
+		{
+			this->deviceContext->DrawIndexed(100, i*100, 0);
+
+		}
+	}
+	else
+	{
+		this->deviceContext->Draw(0, 0);
+
+	}
 	// calculatin FPS
 	static int fpsCounter = 0;
 	static std::string fpsString = "FPS : 0";
@@ -163,7 +174,7 @@ bool Graphics::InitializeResources()
 	}
 	this->deviceContext->OMSetRenderTargets(1, this->renderTargetView.GetAddressOf(), this->depthStencilView.Get());
 
-	if (this->depthStencilState.Get() == nullptr)
+	if (this->depthStencilState.Get() == NULL)
 	{
 		// Create depth stencil description structure
 		D3D11_DEPTH_STENCIL_DESC depthstencildesc;
@@ -204,6 +215,8 @@ bool Graphics::InitializeResources()
 
 		rasterizerDesc.FillMode = D3D11_FILL_MODE::D3D11_FILL_SOLID;
 		rasterizerDesc.CullMode = D3D11_CULL_MODE::D3D11_CULL_BACK; // CULLING could be set to none
+		rasterizerDesc.MultisampleEnable = false;
+		rasterizerDesc.AntialiasedLineEnable = true;
 		//rasterizerDesc.FrontCounterClockwise = TRUE;//= 1;
 
 		hr = this->device->CreateRasterizerState(&rasterizerDesc, this->rasterizerstate.GetAddressOf());
@@ -372,15 +385,18 @@ bool Graphics::InitializeScene()
 
 
 
-///#pragma endregion Create Vertices
-///#pragma region Create_Indices
-///	DWORD indices[] = 
-///	{
-///		0,1,2,
-///		0,2,3
-///	};
-///
-///#pragma endregion Create_Indices
+#pragma endregion Create Vertices
+
+
+#pragma region Create_Indices
+
+	std::vector<DWORD> indices(10000);
+	for (int i = 0; i < indices.size(); i++)
+	{
+		indices[i] = i;
+	}
+
+#pragma endregion Create_Indices
 
 #pragma region Create_Vertex_Buffer
 
@@ -390,7 +406,7 @@ bool Graphics::InitializeScene()
 	// Initialize Vertex Buffer
 	if (this->vertexBuffer.Get() == nullptr)
 	{
-		hr = this->vertexBuffer.Initialize(this->device.Get(), v, ARRAYSIZE(v));
+		hr = this->vertexBuffer.Initialize(this->device.Get(), NULL, sizeof(Vertex)*10000);
 		if (FAILED(hr))
 		{
 			ErrorLogger::Log(hr, "Failed to Create Vertex Buffer.");
@@ -401,18 +417,18 @@ bool Graphics::InitializeScene()
 #pragma endregion Create_Vertex_Buffer
 
 
-///#pragma region Create_Index_Buffer
-///	if (this->indexBuffer.Get() == nullptr)
-///	{
-///		hr = this->indexBuffer.Initialize(this->device.Get(), indices, ARRAYSIZE(indices));
-///	/	if (FAILED(hr))
-///		{
-///			ErrorLogger::Log(hr, "Failed to Create Index Buffer.");
-///			return false;
-///		}
-///	}
-///
-///#pragma endregion Create_Index_Buffer
+#pragma region Create_Index_Buffer
+if (this->indexBuffer.Get() == NULL)
+	{
+		hr = this->indexBuffer.Initialize(this->device.Get(), &indices.at(0), indices.size());
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to Create Index Buffer.");
+		return false;
+	}
+}
+
+#pragma endregion Create_Index_Buffer
 
 #pragma region Create_Texture
 	/// Create Texture View
@@ -553,6 +569,22 @@ void Graphics::RenderImGui()
 	{
 	
 	}
+
+	if (ImGui::InputInt("First Index", &(this->solverOptions.firstIdx)))
+	{
+
+	}
+	ImGui::SameLine();
+	if (ImGui::InputInt("Last Index", &(this->solverOptions.lastIdx)))
+	{
+
+	}
+	ImGui::SameLine();
+	if (ImGui::InputInt("Current Index", &(this->solverOptions.currentIdx)))
+	{
+
+	}
+
 	if (ImGui::InputFloat("dt", &(this->solverOptions.dt)))
 	{
 

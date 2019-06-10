@@ -122,11 +122,8 @@
     <ClCompile Include="Cuda\CudaDevice.cpp">
       <Filter>Source Files\Cuda</Filter>
     </ClCompile>
-    <ClCompile Include="BinaryStream\BinaryReader.cpp">
-      <Filter>Source Files\BinaryStream</Filter>
-    </ClCompile>
-    <ClCompile Include="BinaryStream\BinaryWriter.cpp">
-      <Filter>Source Files\BinaryStream</Filter>
+    <ClCompile Include="Volume\Volume_IO.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -217,12 +214,6 @@
     <ClInclude Include="CUDA\CudaSolver.h">
       <Filter>Header Files\Cuda</Filter>
     </ClInclude>
-    <ClInclude Include="BinaryStream\BinaryReader.h">
-      <Filter>Header Files\BinaryStream</Filter>
-    </ClInclude>
-    <ClInclude Include="BinaryStream\BinaryWriter.h">
-      <Filter>Header Files\BinaryStream</Filter>
-    </ClInclude>
     <ClInclude Include="Graphics\RenderImGui.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
@@ -230,6 +221,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Enum.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Volume\Volume_IO.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -254,11 +248,6 @@
     <CudaCompile Include="Particle.cuh">
       <Filter>Header Files</Filter>
     </CudaCompile>
-    <CudaCompile Include="VelocityField.cu">
-      <Filter>Source Files</Filter>
-    </CudaCompile>
-    <CudaCompile Include="VelocityField.cuh">
-      <Filter>Header Files</Filter>
-    </CudaCompile>
+    <CudaCompile Include="Cuda\VelocityFieldHelper.cuh" />
   </ItemGroup>
 </Project>

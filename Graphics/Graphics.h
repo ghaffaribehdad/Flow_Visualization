@@ -53,6 +53,7 @@ public:
 		cudaMemcpy(vertexBuffer.Get(), cudaVertex, size, cudaMemcpyDeviceToDevice);
 	}
 
+	bool showStreamline = false;
 
 private:
 

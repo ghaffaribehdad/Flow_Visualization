@@ -13,6 +13,12 @@ private:
 	bool outOfScope = false;
 public:
 
+	__device__ __host__ Particle()
+	{
+		m_position = { 0,0,0 };
+		m_velocity = { 0,0,0 };
+	}
+
 	// Setter and Getter functions
 	__device__ __host__ float3* getPosition()
 	{
@@ -35,41 +41,43 @@ public:
 	// seeding particle
 	__host__ void  seedParticle(const float3& gridDimenstion)
 	{
-		float x = static_cast <float> (rand()) / static_cast <float> (RAND_MAX/gridDimenstion.x);
-		float y = static_cast <float> (rand()) / static_cast <float> (RAND_MAX/gridDimenstion.y);
-		float z = static_cast <float> (rand()) / static_cast <float> (RAND_MAX/gridDimenstion.z);
+		this->m_position.x = static_cast <float> (rand()) / static_cast <float> (RAND_MAX/gridDimenstion.x);
+		this->m_position.y = static_cast <float> (rand()) / static_cast <float> (RAND_MAX/gridDimenstion.y);
+		this->m_position.z = static_cast <float> (rand()) / static_cast <float> (RAND_MAX/gridDimenstion.z);
+
 	}
 
 
-	__device__ __host__ void move(const float& dt, VelocityField<T> * d_velocityField)
+	__device__ void move(const float& dt, T * d_velocityField, int3 gridSize, float3 gridDiameter )
 	{
+;
 
-		float3 gridDiameter = d_velocityField->getGridDiameter();
-		int3 gridSize = d_velocityField->getGridSize();
-
-		this->updatePosition(dt);										//checked
-		this->checkPosition(gridDiameter);								//check if it is out of scope
-		this->updateVelocity(gridDiameter, gridSize, d_velocityField);	//checked
+		updatePosition(dt);										//checked
+		checkPosition(gridDiameter);							//check if it is out of scope
+		updateVelocity(gridDiameter, gridSize, d_velocityField);//checked
 	}
 
-	__device__ __host__ void checkPosition(const float3 & gridDiameter)
+	__device__ void checkPosition(const float3 & gridDiameter)
 	{
 		
 		if (m_position.x >= gridDiameter.x)
 		{
+			m_position.x = gridDiameter.x;
 			this->outOfScope = true;
 		}
 		if (m_position.y >= gridDiameter.y)
 		{
+			m_position.y = gridDiameter.y;
 			this->outOfScope = true;
 		}
 		if (m_position.z >= gridDiameter.z)
 		{
+			m_position.z = gridDiameter.z;
 			this->outOfScope = true;
 		}
 
 	}
-	__device__ __host__ void updatePosition(const float dt)
+	__device__ void updatePosition(const float dt)
 	{
 		if (!outOfScope)
 		{
@@ -81,19 +89,23 @@ public:
 	}
 
 
-	__device__ __host__ void updateVelocity(const float3 & gridDiameter, const int3 & gridSize, VelocityField<T>* p_velocityField)
+	__device__ void updateVelocity(const float3 & gridDiameter, const int3 & gridSize, T * p_velocityField)
 	{
-		int3 index = findIndex(gridDiameter, gridSize);
+		if (!outOfScope)
+		{
+			int3 index = findIndex(gridDiameter, gridSize);
 
-		int3 dim = { gridSize.x,gridSize.y,gridSize.z};
-		uint mappedIndex_Vx = linearIndex(index.x, index.y, index.z, dim);
-		T v_x = p_velocityField->getVelocityField()[mappedIndex_Vx];
-		T v_y = p_velocityField->getVelocityField()[mappedIndex_Vx + 1];
-		T v_z = p_velocityField->getVelocityField()[mappedIndex_Vx + 2];
+			int4 dim = { gridSize.x,gridSize.y,gridSize.z,3 };
+			uint mappedIndex_Vx = linearIndex(index.x, index.y, index.z, 0, dim);
+			T v_x = p_velocityField[mappedIndex_Vx];
+			T v_y = p_velocityField[mappedIndex_Vx + 1];
+			T v_z = p_velocityField[mappedIndex_Vx + 2];
 
-		//TO-DO:: Correct the next line
-		float3 velocity = { static_cast<float>(v_x), static_cast<float>(v_y), static_cast<float>(v_z) };
-		this->setVelocity(velocity);
+			//TO-DO:: Correct the next line
+			float3 velocity = { static_cast<float>(v_x), static_cast<float>(v_y), static_cast<float>(v_z) };
+			this->setVelocity(velocity);
+		}
+
 	}
 	__device__ __host__ int3 findIndex(const float3 & gridDiameter, const int3 & gridSize)
 	{

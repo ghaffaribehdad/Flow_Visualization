@@ -1,6 +1,8 @@
 #pragma once
 
 #include "cuda_runtime.h"
+#include <vector>
+
 template <class T>
 class VelocityField	
 {
@@ -8,15 +10,9 @@ class VelocityField
 
 public:
 
-	// constructor
-	__device__ __host__	VelocityField(float3 _diamter,
-		int3 _gridSize,
-		bool _PBC
-	);
 
 	__device__ __host__ VelocityField();
 
-	__device__ __host__ bool getPBC() const;
 	__device__ __host__ T* getVelocityField();
 
 	// setter
@@ -35,6 +31,7 @@ public:
 	}
 
 private:
+	__host__ std::vector<char>* readVelocityField(unsigned int id = 0);
 
 	// VelocityField
 	T* m_velocityField = nullptr;

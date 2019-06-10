@@ -20,11 +20,6 @@ __device__ __host__ VelocityField<T>::VelocityField(float3 _diamter, int3 _gridS
 	this->m_PBC = _PBC;
 };
 
-template <typename T>
-__device__ __host__ bool VelocityField<T>::getPBC() const
-{
-	return this->m_PBC;
-}
 
 template <typename T>
 __device__ __host__ T* VelocityField<T>::getVelocityField()
@@ -66,4 +61,23 @@ template <typename T>
 __device__ __host__ void VelocityField<T>::setVelocityField(T* _velocityField)
 {
 	this->m_velocityField = _velocityField;
+}
+
+template<typename T>
+__host__ std::vector<char>* VelocityField<T>::readVelocityField(unsigned int id)
+{
+	// 1. Read and store Vector Field *OK
+
+	std::string fullPath = "";
+	fullPath += std::string(this->solverOptions.filePath);
+	fullPath += std::string(this->solverOptions.fileName);
+	fullPath += std::to_string(id);
+	fullPath += ".bin";
+
+	std::vector<char>* p_vec_buffer = new std::vector<char>;
+
+	// DEBGU:: path is fixed inside ReadField function
+	this->ReadField(p_vec_buffer, fullPath);
+
+	return p_vec_buffer;
 }

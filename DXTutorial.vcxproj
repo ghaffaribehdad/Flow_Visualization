@@ -173,19 +173,16 @@
       <CodeGeneration>compute_61,sm_61</CodeGeneration>
     </CudaCompile>
     <CudaLink>
-      <AdditionalDependencies>$(CudaToolkitLibDir)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>cudart.lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cudart.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\lib\x64</AdditionalLibraryDirectories>
     </CudaLink>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Cuda\CudaDevice.cpp" />
     <ClCompile Include="Engine.cpp" />
-    <ClCompile Include="BinaryStream\BinaryReader.cpp" />
-    <ClCompile Include="BinaryStream\BinaryWriter.cpp" />
     <CudaCompile Include="Cuda\StreamlineSolver.cu">
       <FileType>Document</FileType>
     </CudaCompile>
-    <CudaCompile Include="VelocityField.cu" />
     <ClCompile Include="Graphics\ImGui\imgui.cpp" />
     <ClCompile Include="Graphics\ImGui\imgui_draw.cpp" />
     <ClCompile Include="Graphics\ImGui\imgui_impl_dx11.cpp" />
@@ -205,6 +202,7 @@
     <ClCompile Include="Cuda\CudaSolver.cpp" />
     <ClCompile Include="Timer.cpp" />
     <ClCompile Include="StringConverter.cpp" />
+    <ClCompile Include="Volume\Volume_IO.cpp" />
     <ClCompile Include="WindowContainer.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -212,13 +210,11 @@
     <ClInclude Include="CUDA\CudaSolver.h" />
     <ClInclude Include="ErrorLogger.h" />
     <ClInclude Include="Engine.h" />
-    <ClInclude Include="BinaryStream\BinaryReader.h" />
-    <ClInclude Include="BinaryStream\BinaryWriter.h" />
     <CudaCompile Include="Cuda\StreamlineSolver.cuh" />
     <ClInclude Include="Enum.h" />
+    <CudaCompile Include="Cuda\VelocityFieldHelper.cuh" />
     <ClInclude Include="SolverOptions.h" />
     <CudaCompile Include="Particle.cuh" />
-    <CudaCompile Include="VelocityField.cuh" />
     <ClInclude Include="Graphics\RenderImGui.h" />
     <ClInclude Include="Graphics\Graphics.h" />
     <ClInclude Include="Graphics\AdapterReader.h" />
@@ -243,6 +239,7 @@
     <ClInclude Include="Keyboard\KeyboardEvent.h" />
     <ClInclude Include="Graphics\Shaders.h" />
     <ClInclude Include="Graphics\VertexBuffer.h" />
+    <ClInclude Include="Volume\Volume_IO.h" />
     <ClInclude Include="WindowContainer.h" />
     <ClInclude Include="RenderWindow.h" />
     <ClInclude Include="StringConverter.h" />
@@ -257,6 +254,8 @@
     <FxCompile Include="vertexshader.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
     </FxCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -53,7 +53,7 @@ void Engine::Update()
 		}
 	}
 
-	const float cameraSpeed = 0.001f;
+	const float cameraSpeed = 0.005f;
 
 
 
@@ -114,6 +114,7 @@ void Engine::Update()
 
 
 		this->gfx.solverOptions.begin = false;
+		this->gfx.showStreamline = true;
 	}
 }
 

@@ -67,12 +67,21 @@ public:
 		vertexBufferDesc.MiscFlags = 0;
 
 		// Create Vertex buffer Data structure
-		D3D11_SUBRESOURCE_DATA vertexBufferData;
-		ZeroMemory(&vertexBufferData, sizeof(vertexBufferData));
-		vertexBufferData.pSysMem = data;
+		if (data != NULL)
+		{
+			D3D11_SUBRESOURCE_DATA vertexBufferData;
+			ZeroMemory(&vertexBufferData, sizeof(vertexBufferData));
+			vertexBufferData.pSysMem = data;
 
-		// Create Vertex Buffer
-		HRESULT hr = device->CreateBuffer(&vertexBufferDesc, &vertexBufferData, this->buffer.GetAddressOf());
-		return hr;
+			// Create Vertex Buffer
+			HRESULT hr = device->CreateBuffer(&vertexBufferDesc, &vertexBufferData, this->buffer.GetAddressOf());
+			return hr;
+		}
+		else
+		{
+			HRESULT hr = device->CreateBuffer(&vertexBufferDesc, NULL, this->buffer.GetAddressOf());
+			return hr;
+		}
+
 	}
 };
