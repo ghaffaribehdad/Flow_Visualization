@@ -1,7 +1,11 @@
 #pragma once
+
 #include "CudaSolver.h"
-#include "cuda_runtime.h"
-#include <device_launch_parameters.h>
+#include "device_launch_parameters.h"
+#include "texture_fetch_functions.h"
+
+
+
 
 template <class T>
 class StreamlineSolver : public CUDASolver<T>
@@ -13,9 +17,9 @@ public:
 
 private:
 
-	__host__ T* InitializeVelocityField();
+	__host__ void InitializeVelocityField();
 	__host__ void InitializeParticles();
-	__host__ bool InitializeTexture(T* h_VelocityField);
+	__host__ bool InitializeTexture();
 
 	Particle<T>* d_particles;
 
@@ -29,13 +33,14 @@ private:
 
 	Particle<T>* d_Particles;
 	Particle<T>* h_Particles;
+
 	float3* result;
 
 };
 
 // Kernel of the streamlines
 template <typename T>
-__global__ void TracingParticles(Particle<T>* d_particles, T* d_velocityField, SolverOptions solverOptions, Vertex* p_VertexBuffer)
+__global__ void TracingParticles(Particle<T>* d_particles, cudaTextureObject_t t_VelocityField, SolverOptions solverOptions, Vertex* p_VertexBuffer)
 {
 	int index = blockDim.x * blockIdx.x + threadIdx.x;
 	int timesteps = solverOptions.timestep;
@@ -48,6 +53,8 @@ __global__ void TracingParticles(Particle<T>* d_particles, T* d_velocityField, S
 		solverOptions.gridDiameter[2]
 	};
 
+	float4 x = tex3D<float4>(t_VelocityField, 0.0f, 0.0f, 0.0f);
+
 	int3 gridSize =
 	{
 		solverOptions.gridSize[0],
@@ -57,7 +64,7 @@ __global__ void TracingParticles(Particle<T>* d_particles, T* d_velocityField, S
 
 	for (int i = 0; i < timesteps; i++)
 	{
-		d_particles[index].move(dt, d_velocityField,gridSize,gridDiameter);
+		d_particles[index].move(dt,gridSize,gridDiameter, t_VelocityField);
 
 		p_VertexBuffer[index_buffer +i].pos.x = d_particles[index].getPosition()->x;
 		p_VertexBuffer[index_buffer +i].pos.y = d_particles[index].getPosition()->y;
@@ -71,14 +78,8 @@ __global__ void TracingParticles(Particle<T>* d_particles, T* d_velocityField, S
 		}
 	}
 
-
 }
 
 
-// Kernel of the streamlines
-template <typename T>
-__global__ void TracingParticles(Particle<T>* d_particles, cudaTextureObject_t t_VelocityField, SolverOptions solverOptions, Vertex* p_VertexBuffer)
-{
-	//tex3Dfetch(t_VelocityField, 0, 0, 0);
 
-}
+

@@ -226,6 +226,9 @@
     <ClInclude Include="Volume\Volume_IO.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Cuda\StreamlineSolver.cuh">
+      <Filter>Header Files\Cuda</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="vertexshader.hlsl">
@@ -236,18 +239,15 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="Cuda\StreamlineSolver.cuh">
-      <Filter>Header Files\Cuda</Filter>
-    </CudaCompile>
     <CudaCompile Include="linearIndex.cuh">
       <Filter>Header Files\Helper</Filter>
-    </CudaCompile>
-    <CudaCompile Include="Cuda\StreamlineSolver.cu">
-      <Filter>Source Files\Cuda</Filter>
     </CudaCompile>
     <CudaCompile Include="Particle.cuh">
       <Filter>Header Files</Filter>
     </CudaCompile>
     <CudaCompile Include="Cuda\VelocityFieldHelper.cuh" />
+    <CudaCompile Include="Cuda\StreamlineSolver.cu">
+      <Filter>Source Files\Cuda</Filter>
+    </CudaCompile>
   </ItemGroup>
 </Project>

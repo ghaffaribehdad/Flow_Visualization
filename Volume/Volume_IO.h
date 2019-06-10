@@ -4,6 +4,8 @@
 #include <string>
 #include <fstream>
 #include "../ErrorLogger.h"
+#include "../SolverOptions.h"
+
 class Volume_IO
 {
 private:
@@ -12,17 +14,20 @@ private:
 	std::string filePath = "";
 	std::string fullName = "";
 	std::vector<unsigned int> index;
-	std::vector<char>* p_buffer;
+	std::vector<char> buffer;
 public:
 	
+	void Initialize(SolverOptions& solverOption);
 	void setFileName(std::string _fileName);
 	void setFilePath(std::string _filePath);
-	void setIndex(unsigned int _first, unsigned int _last);
 
-	std::vector<char>* readVolume(unsigned int idx);
+	bool readVolume(unsigned int idx);
 
+	std::vector<char>* flushBuffer();
+
+	void release();
 protected:
 
-	bool Read(std::vector<char>* p_buffer);
+	bool Read();
 
 };

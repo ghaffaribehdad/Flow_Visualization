@@ -1,40 +1,45 @@
 #include "StreamlineSolver.cuh"
 
-
 // Explicit instantions
 template class StreamlineSolver<float>;
 template class StreamlineSolver<double>;
 
 
+template <typename T>
+__host__ bool StreamlineSolver<T>::solve()
+{
+	this->volume_IO.Initialize(this->solverOptions);
+
+	// TO-DO: Define streamlinesolver for double precision
+	InitializeVelocityField();
+
+	this->InitializeTexture();
+
+	this->InitializeParticles();
+
+	TracingParticles<T> << <1, solverOptions.lines_count >> > (d_Particles, t_VelocityField, solverOptions, reinterpret_cast<Vertex*>(this->p_VertexBuffer));
+	//TracingParticles<T> << < 1, solverOptions.particle_count >> > (d_Particles, t_VelocityField, solverOptions, reinterpret_cast<Vertex*>(this->p_VertexBuffer));
+
+	cudaFree(d_Particles);
+	cudaFree(d_VelocityField);
+	return true;
+}
 
 template<typename T>
-__host__ T* StreamlineSolver<T>::InitializeVelocityField()
+__host__ void StreamlineSolver<T>::InitializeVelocityField()
 {
-	std::vector<char>* p_vec_buffer = this->volume_IO.readVolume(0);
-
+	this->volume_IO.readVolume(solverOptions.currentIdx);
+	std::vector<char>* p_vec_buffer = volume_IO.flushBuffer();
 	char* p_vec_buffer_temp = &(p_vec_buffer->at(0));
 
 	this->h_VelocityField = reinterpret_cast<T*> (p_vec_buffer_temp);
-
-	size_t velocityField_byte =
-		solverOptions.gridSize[0] *
-		solverOptions.gridSize[1] *
-		solverOptions.gridSize[2] * 3 * sizeof(T);
-
-	// Allocate memory on Device
-	gpuErrchk(cudaMalloc((void**)& d_VelocityField, velocityField_byte));
-
-	// Upload Velocity Filled to GPU 
-	gpuErrchk(cudaMemcpy(d_VelocityField, h_VelocityField, velocityField_byte, cudaMemcpyHostToDevice));
-
-	return h_VelocityField;
 }
 
 template <typename T>
 void StreamlineSolver<T>::InitializeParticles()
 {
 	// Create an array of particles
-	this->h_Particles = new Particle<T>[solverOptions.particle_count];
+	this->h_Particles = new Particle<T>[solverOptions.lines_count];
 
 	float3 gridDiameter =
 	{
@@ -43,12 +48,12 @@ void StreamlineSolver<T>::InitializeParticles()
 		solverOptions.gridDiameter[2]
 	};
 	// Seed Particles Randomly according to the grid diameters
-	for (int i = 0; i < solverOptions.particle_count; i++)
+	for (int i = 0; i < solverOptions.lines_count; i++)
 	{
 		h_Particles[i].seedParticle(gridDiameter);
 	}
-	
-	size_t Particles_byte = sizeof(*h_Particles) * solverOptions.particle_count;
+
+	size_t Particles_byte = sizeof(*h_Particles) * solverOptions.lines_count;
 
 	// Upload Velocity Filled to GPU 
 
@@ -61,23 +66,7 @@ void StreamlineSolver<T>::InitializeParticles()
 
 
 template <typename T>
-__host__ bool StreamlineSolver<T>::solve()
-{
-	float * h_VelocityField = InitializeVelocityField();
-	this->InitializeTexture(h_VelocityField);
-	this->InitializeParticles();
-
-	TracingParticles<T> << < 1, solverOptions.particle_count >> > (d_Particles, d_VelocityField, solverOptions, reinterpret_cast<Vertex*>(this->p_VertexBuffer));
-	//TracingParticles<T> << < 1, solverOptions.particle_count >> > (d_Particles, t_VelocityField, solverOptions, reinterpret_cast<Vertex*>(this->p_VertexBuffer));
-
-	cudaFree(d_Particles);
-	cudaFree(d_VelocityField);
-	return true;
-}
-
-
-template <typename T>
-__host__ bool StreamlineSolver<T>::InitializeTexture(T* h_VelocityField)
+__host__ bool StreamlineSolver<T>::InitializeTexture()
 {
 
 	// Cuda 3D array of velocities
@@ -85,11 +74,11 @@ __host__ bool StreamlineSolver<T>::InitializeTexture(T* h_VelocityField)
 
 
 	// define the size of the velocity field
-	cudaExtent extent = 
-	{ 
-		solverOptions.gridSize[0],
-		solverOptions.gridSize[1],
-		solverOptions.gridSize[2] 
+	cudaExtent extent =
+	{
+		static_cast<size_t>(solverOptions.gridSize[0]),
+		static_cast<size_t>(solverOptions.gridSize[1]),
+		static_cast<size_t>(solverOptions.gridSize[2])
 	};
 
 
@@ -102,7 +91,7 @@ __host__ bool StreamlineSolver<T>::InitializeTexture(T* h_VelocityField)
 	// set copy parameters to copy from velocity field to array
 	cudaMemcpy3DParms cpyParams = { 0 };
 
-	cpyParams.srcPtr = make_cudaPitchedPtr((void*)h_VelocityField, extent.width * sizeof(float4), extent.height, extent.depth);
+	cpyParams.srcPtr = make_cudaPitchedPtr((void*)this->h_VelocityField, extent.width * sizeof(float4), extent.height, extent.depth);
 	cpyParams.dstArray = cuArray_velocity;
 	cpyParams.kind = cudaMemcpyHostToDevice;
 	cpyParams.extent = extent;
@@ -110,11 +99,11 @@ __host__ bool StreamlineSolver<T>::InitializeTexture(T* h_VelocityField)
 
 	// Copy velocities to 3D Array
 	gpuErrchk(cudaMemcpy3D(&cpyParams));
+	// might need sync before release the host memory
 
+	// Release the Volume while it is copied on GPU
+	this->volume_IO.release();
 
-
-	//// Create a texture
-	cudaTextureObject_t t_VelocityField = 0;
 
 	// Set Texture Description
 	cudaTextureDesc texDesc;
@@ -132,7 +121,7 @@ __host__ bool StreamlineSolver<T>::InitializeTexture(T* h_VelocityField)
 
 	// Texture Description
 	texDesc.normalizedCoords = true;
-	texDesc.filterMode = cudaFilterModeLi;
+	texDesc.filterMode = cudaFilterModeLinear;
 	texDesc.addressMode[0] = cudaAddressModeClamp;
 	texDesc.addressMode[1] = cudaAddressModeClamp;
 	texDesc.addressMode[2] = cudaAddressModeClamp;
@@ -140,9 +129,10 @@ __host__ bool StreamlineSolver<T>::InitializeTexture(T* h_VelocityField)
 
 
 
-	gpuErrchk(cudaCreateTextureObject(&t_VelocityField, &resDesc, &texDesc, NULL));
+	// Create the texture and bind it to the array
+	gpuErrchk(cudaCreateTextureObject(&this->t_VelocityField, &resDesc, &texDesc, NULL));
 
-	//cudaDestroyTextureObject(t_VelocityField);
+	cudaDestroyTextureObject(t_VelocityField);
 	return true;
 
 }

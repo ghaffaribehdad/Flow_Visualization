@@ -31,6 +31,9 @@ template <typename T>
 bool CUDASolver<T>::FinalizeCUDA()
 {
 	gpuErrchk(cudaGraphicsUnmapResources(1,	&this->cudaGraphics	));
+
+	gpuErrchk(cudaGraphicsUnregisterResource(this->cudaGraphics));
+
 	return true;
 }
 
@@ -56,8 +59,8 @@ bool CUDASolver<T>::InitializeCUDA()
 		&this->cudaGraphics
 		));
 
-	// Get Mapped pointer (why 3?)
-	size_t size = 3*std::size_t(sizeof(Vertex));
+	// Get Mapped pointer
+	size_t size = static_cast<size_t>(solverOptions.lines_count)* static_cast<size_t>(solverOptions.lineLength)*sizeof(Vertex);
 
 	gpuErrchk(cudaGraphicsResourceGetMappedPointer(
 		&p_VertexBuffer,
@@ -65,15 +68,5 @@ bool CUDASolver<T>::InitializeCUDA()
 		this->cudaGraphics
 	));
 
-	return true;
-}
-
-
-template <typename T>
-bool CUDASolver<T>::InitializeVolumeIO()
-{
-	this->volume_IO.setFileName(this->solverOptions.fileName);
-	this->volume_IO.setFilePath(this->solverOptions.filePath);
-	this->volume_IO.setIndex(this->solverOptions.firstIdx, this->solverOptions.lastIdx);
 	return true;
 }

@@ -96,8 +96,6 @@ void Engine::Update()
 		gfx.solverOptions.p_Adapter = this->gfx.GetAdapter();
 		gfx.solverOptions.p_vertexBuffer = this->gfx.GetVertexBuffer();
 
-		// TO-DO: only take solverOptions
-
 		if (gfx.solverOptions.precision == 32)
 		{
 
@@ -105,6 +103,7 @@ void Engine::Update()
 			this->streamlineSolver_float.solve();
 			this->streamlineSolver_float.FinalizeCUDA();
 		}
+		// under construction
 		else if(gfx.solverOptions.precision == 64)
 		{
 			this->streamlineSolver_double.Initialize(this->gfx.solverOptions);

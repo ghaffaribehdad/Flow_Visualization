@@ -20,11 +20,9 @@ public:
 	int lines_count = 0;
 	float line_thickness = 0.0f;
 
-	int firstIdx;
-	int lastIdx;
-	int currentIdx;
-
-	int particle_count = 10;
+	int firstIdx = 1;
+	int lastIdx = 1;
+	int currentIdx = 1;
 
 	SeedingPattern seedingPatter;
 	IntegrationMethod integrationMethod;

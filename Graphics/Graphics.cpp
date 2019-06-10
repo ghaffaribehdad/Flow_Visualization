@@ -569,7 +569,7 @@ void Graphics::RenderImGui()
 	{
 	
 	}
-
+	ImGui::PushItemWidth(75);
 	if (ImGui::InputInt("First Index", &(this->solverOptions.firstIdx)))
 	{
 
@@ -579,12 +579,11 @@ void Graphics::RenderImGui()
 	{
 
 	}
-	ImGui::SameLine();
-	if (ImGui::InputInt("Current Index", &(this->solverOptions.currentIdx)))
+	if (ImGui::DragInt("Current Index", &(this->solverOptions.currentIdx), 1.0f, 0, solverOptions.lastIdx, "%d"))
 	{
 
 	}
-
+	ImGui::PopItemWidth();
 	if (ImGui::InputFloat("dt", &(this->solverOptions.dt)))
 	{
 
@@ -594,10 +593,15 @@ void Graphics::RenderImGui()
 	{
 
 	}
-	if (ImGui::InputInt("Particle Count", &(this->solverOptions.particle_count)))
+	if (ImGui::InputInt("Lines", &(this->solverOptions.lines_count)))
 	{
 
 	}
+	if (ImGui::InputInt("Line Length", &(this->solverOptions.lineLength)))
+	{
+
+	}
+
 
 	if (ImGui::Checkbox("Begin", &this->solverOptions.begin))
 	{

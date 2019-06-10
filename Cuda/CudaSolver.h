@@ -36,17 +36,17 @@ public:
 
 protected:
 
-	cudaGraphicsResource* cudaGraphics;
+	cudaGraphicsResource* cudaGraphics = NULL;
 
 	// A COM pointer to the vector Field
 	bool InitializeCUDA();
-	bool InitializeVolumeIO();
+
 	cudaDeviceProp cuda_device_prop;
-	IDXGIAdapter* adapter;
-	ID3D11Device* device;
+	IDXGIAdapter* adapter = NULL;
+	ID3D11Device* device = NULL;
 
 	Volume_IO volume_IO;
 
 
-	void* p_VertexBuffer;
+	void* p_VertexBuffer = NULL;
 };
