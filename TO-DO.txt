@@ -1,0 +1,7 @@
+
+[]	Add texture to streamline
+[]	Add interaction to streamline
+[]	Restart graphics in case of user interaction
+[]	Add Pathline solver
+[]	Geometry shader
+[]	Adopt raycaster
