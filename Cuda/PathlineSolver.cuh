@@ -25,9 +25,6 @@ public:
 
 private:
 
-	__host__ void InitializeVelocityField();
-	__host__ void InitializeParticles();
-	__host__ bool InitializeTexture();
 
 	Particle<T>* d_particles;
 
@@ -37,7 +34,8 @@ private:
 
 	// https://devblogs.nvidia.com/cuda-pro-tip-kepler-texture-objects-improve-performance-and-flexibility/
 	// Reference to Velocity Field as a Texture 
-	cudaTextureObject_t t_VelocityField[3]; // we need three timesteps for RK4
+	// we need three timesteps for RK4
+	cudaTextureObject_t t_VelocityField[3]; 
 
 
 	float3* result;
@@ -46,7 +44,7 @@ private:
 
 // Kernel of the streamlines
 template <typename T>
-__global__ void TracingParticles(Particle<T>* d_particles, cudaTextureObject_t  t_VelocityField, SolverOptions solverOptions, Vertex* p_VertexBuffer);
+__global__ void TracingPath(Particle<T>* d_particles, cudaTextureObject_t * t_VelocityField, SolverOptions solverOptions, Vertex* p_VertexBuffer);
 
 
 

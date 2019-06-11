@@ -58,5 +58,7 @@ protected:
 	Particle<T1>* d_Particles;
 	Particle<T1>* h_Particles;
 
+	virtual void release(){}
+
 	void* p_VertexBuffer = NULL;
 };

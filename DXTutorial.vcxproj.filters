@@ -235,9 +235,11 @@
     <ClInclude Include="Cuda\StreamlineSolver.cuh">
       <Filter>Header Files\Cuda</Filter>
     </ClInclude>
-    <ClInclude Include="Particle.cuh" />
     <ClInclude Include="Cuda\PathlineSolver.cuh">
       <Filter>Header Files\Cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="Particle.cuh">
+      <Filter>Source Files\Particle</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -252,7 +254,6 @@
     <CudaCompile Include="linearIndex.cuh">
       <Filter>Header Files\Helper</Filter>
     </CudaCompile>
-    <CudaCompile Include="Cuda\VelocityFieldHelper.cuh" />
     <CudaCompile Include="Cuda\StreamlineSolver.cu">
       <Filter>Source Files\Cuda</Filter>
     </CudaCompile>
@@ -262,5 +263,6 @@
     <CudaCompile Include="Cuda\PathlineSolver.cu">
       <Filter>Source Files\Cuda</Filter>
     </CudaCompile>
+    <CudaCompile Include="Cuda\CudaHelper.cuh" />
   </ItemGroup>
 </Project>

@@ -210,7 +210,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="Enum.h" />
-    <CudaCompile Include="Cuda\VelocityFieldHelper.cuh" />
+    <CudaCompile Include="Cuda\CudaHelper.cuh" />
     <ClInclude Include="Cuda\PathlineSolver.cuh" />
     <ClInclude Include="SolverOptions.h" />
     <CudaCompile Include="Particle.cu" />

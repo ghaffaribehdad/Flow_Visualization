@@ -4,11 +4,12 @@
 template class StreamlineSolver<float>;
 template class StreamlineSolver<double>;
 
-
+// Kernel of the streamlines, TO-DO: Divide kernel into seprate functions
 template <typename T>
-__global__ void TracingParticles(Particle<T>* d_particles, cudaTextureObject_t t_VelocityField, SolverOptions solverOptions, Vertex* p_VertexBuffer)
+__global__ void TracingStream(Particle<T>* d_particles, cudaTextureObject_t t_VelocityField, SolverOptions solverOptions, Vertex* p_VertexBuffer)
 {
 	int index = blockDim.x * blockIdx.x + threadIdx.x;
+
 	if (index < solverOptions.lines_count)
 	{
 		int lineLength = solverOptions.lineLength;
@@ -94,7 +95,7 @@ __host__ bool StreamlineSolver<T>::solve()
 	int blockDim = 256;
 	int thread = (this->solverOptions.lines_count / blockDim)+1;
 	
-	TracingParticles<T> << <blockDim , thread >> > (this->d_Particles, t_VelocityField, solverOptions, reinterpret_cast<Vertex*>(this->p_VertexBuffer));
+	TracingStream<T> << <blockDim , thread >> > (this->d_Particles, t_VelocityField, solverOptions, reinterpret_cast<Vertex*>(this->p_VertexBuffer));
 
 	this->release();
 

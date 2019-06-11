@@ -20,12 +20,11 @@ bool CUDASolver<T>::Initialize(SolverOptions _solverOptions)
 }
 
 
-
-
 bool SeedFiled(SeedingPattern, DirectX::XMFLOAT3 dimenions, DirectX::XMFLOAT3 seedbox)
 {
 	return true;
 }
+
 
 template <typename T>
 bool CUDASolver<T>::FinalizeCUDA()

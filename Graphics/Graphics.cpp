@@ -614,11 +614,13 @@ void Graphics::RenderImGui()
 	if (ImGui::InputInt("Lines", &(this->solverOptions.lines_count)))
 	{
 		this->InitializeScene();
+
 	}
 
 	if (ImGui::InputInt("Line Length", &(this->solverOptions.lineLength)))
 	{
 		this->InitializeScene();
+		
 	}
 
 	if (ImGui::ListBox("Color Mode",&this->solverOptions.colorMode,ColorModeList,4))

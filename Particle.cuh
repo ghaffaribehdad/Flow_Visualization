@@ -38,54 +38,19 @@ public:
 	}
 
 	// seeding particle
-	__host__ void  seedParticle(const float3& gridDimenstion)
-	{
-		this->m_position.x = static_cast <float> (rand()) / static_cast <float> (RAND_MAX/gridDimenstion.x);
-		this->m_position.y = static_cast <float> (rand()) / static_cast <float> (RAND_MAX/gridDimenstion.y);
-		this->m_position.z = static_cast <float> (rand()) / static_cast <float> (RAND_MAX/gridDimenstion.z);
-
-	}
+	__host__ void  seedParticle(const float3& gridDimenstion);
 
 
 	__device__ void move(const float& dt, int3 gridSize, float3 gridDiameter, cudaTextureObject_t t_VelocityField )
 	{
-;
-
 		updatePosition(dt);										//checked
 		checkPosition(gridDiameter);							//check if it is out of scope
 		updateVelocity(gridDiameter, gridSize, t_VelocityField);//checked
 	}
 
-	__device__ void checkPosition(const float3 & gridDiameter)
-	{
-		
-		if (m_position.x >= gridDiameter.x)
-		{
-			m_position.x = gridDiameter.x;
-			this->outOfScope = true;
-		}
-		if (m_position.y >= gridDiameter.y)
-		{
-			m_position.y = gridDiameter.y;
-			this->outOfScope = true;
-		}
-		if (m_position.z >= gridDiameter.z)
-		{
-			m_position.z = gridDiameter.z;
-			this->outOfScope = true;
-		}
+	__device__ void checkPosition(const float3& gridDiameter);
 
-	}
-	__device__ void updatePosition(const float dt)
-	{
-		if (!outOfScope)
-		{
-			this->m_position.x += dt * (this->m_velocity.x);
-			this->m_position.y += dt * (this->m_velocity.y);
-			this->m_position.z += dt * (this->m_velocity.z);
-		}
-
-	}
+	__device__ void updatePosition(const float dt);
 
 
 	__device__ void updateVelocity
