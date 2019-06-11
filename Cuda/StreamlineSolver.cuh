@@ -25,9 +25,6 @@ public:
 
 private:
 
-	__host__ void InitializeParticles();
-	__host__ bool InitializeTexture();
-
 	Particle<T>* d_particles;
 
 
@@ -38,8 +35,6 @@ private:
 	// Reference to Velocity Field as a Texture 
 	cudaTextureObject_t t_VelocityField = NULL;
 
-	Particle<T>* d_Particles;
-	Particle<T>* h_Particles;
 
 	float3* result;
 

@@ -3,17 +3,8 @@
 // Explicit instantions
 template class PathlineSolver<float>;
 //template class PathlineSolver<double>;
-//
-//
-//template<typename T>
-//__host__ void PathlineSolver<T>::InitializeVelocityField()
-//{
-//	this->volume_IO.readVolume(solverOptions.currentIdx);
-//	std::vector<char>* p_vec_buffer = volume_IO.flushBuffer();
-//	char* p_vec_buffer_temp = &(p_vec_buffer->at(0));
-//
-//	this->h_VelocityField = reinterpret_cast<T*> (p_vec_buffer_temp);
-//}
+
+
 //
 //template <typename T>
 //void PathlineSolver<T>::InitializeParticles()

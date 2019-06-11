@@ -39,8 +39,6 @@ private:
 	// Reference to Velocity Field as a Texture 
 	cudaTextureObject_t t_VelocityField[3]; // we need three timesteps for RK4
 
-	Particle<T>* d_Particles;
-	Particle<T>* h_Particles;
 
 	float3* result;
 

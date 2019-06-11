@@ -39,6 +39,10 @@ public:
 
 protected:
 
+	__host__ bool InitializeTexture(T1* h_source, cudaTextureObject_t& texture);
+	
+	__host__ void InitializeParticles();
+
 	cudaGraphicsResource* cudaGraphics = NULL;
 
 	// A COM pointer to the vector Field
@@ -50,6 +54,9 @@ protected:
 
 	Volume_IO volume_IO;
 
+	// The probe particles
+	Particle<T1>* d_Particles;
+	Particle<T1>* h_Particles;
 
 	void* p_VertexBuffer = NULL;
 };
