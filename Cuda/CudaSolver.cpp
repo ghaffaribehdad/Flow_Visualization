@@ -70,3 +70,14 @@ bool CUDASolver<T>::InitializeCUDA()
 
 	return true;
 }
+
+template<typename T>
+__host__ T* CUDASolver<T>::InitializeVelocityField(int ID)
+{
+	this->volume_IO.readVolume(ID);
+	std::vector<char>* p_vec_buffer = volume_IO.flushBuffer();
+	char* p_vec_buffer_temp = &(p_vec_buffer->at(0));
+
+
+	return reinterpret_cast<T*>(p_vec_buffer_temp);
+}

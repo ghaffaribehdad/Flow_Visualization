@@ -4,7 +4,8 @@
 bool Volume_IO::readVolume(unsigned int idx)
 {
 	// Generate absolute path of the file
-	this->fullName = filePath + fileName + "idx" + ".bin";
+	this->fullName = "";
+	this->fullName = filePath + fileName + std::to_string(idx) + ".bin";
 
 	// Read volume into the buffer
 	return Read();

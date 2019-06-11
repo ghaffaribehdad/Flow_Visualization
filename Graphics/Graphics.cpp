@@ -8,6 +8,7 @@ bool Graphics::Initialize(HWND hwnd, int width, int height)
 {
 	this->windowHeight = height;
 	this->windowWidth = width;
+	strcpy(log, "Initialized");
 
 	if (!this->InitializeDirectX(hwnd))
 		return false;
@@ -77,11 +78,11 @@ void Graphics::RenderFrame()
 
 
 	this->deviceContext->IASetIndexBuffer(this->indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
-	if (showStreamline)
+	if (showLines)
 	{
-		for (int i = 0; i < 100; i++)
+		for (int i = 0; i < solverOptions.lines_count; i++)
 		{
-			this->deviceContext->DrawIndexed(100, i*100, 0);
+			this->deviceContext->DrawIndexed(solverOptions.lineLength, i* solverOptions.lineLength, 0);
 
 		}
 	}
@@ -348,6 +349,8 @@ bool Graphics::InitializeShaders()
 		{"POSITION",0,DXGI_FORMAT::DXGI_FORMAT_R32G32B32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,\
 		D3D11_INPUT_CLASSIFICATION::D3D11_INPUT_PER_VERTEX_DATA,0},
 		{"VELOCITY",0,DXGI_FORMAT::DXGI_FORMAT_R32G32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,\
+		D3D11_INPUT_CLASSIFICATION::D3D11_INPUT_PER_VERTEX_DATA,0},
+		{"TANGENT",0,DXGI_FORMAT::DXGI_FORMAT_R32G32B32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,\
 		D3D11_INPUT_CLASSIFICATION::D3D11_INPUT_PER_VERTEX_DATA,0}
 
 	};
@@ -374,14 +377,14 @@ bool Graphics::InitializeScene()
 #pragma region Create Vertices
 	// Square]
 
-	Vertex v[] =
-	{
-		// left triangle
-		Vertex(-0.5f,-0.5f,1.0f,0.1f,1.0f), // Bottom left	-[0]
-		Vertex(-0.5f, 0.5f,0.0f,0.50f,0.0f),	// Top left		-[1]
-		Vertex(0.7f, 0.5f,1.0f,1.0f,0.0f),	// Top right	-[2]
-		Vertex(0.5f,-0.5f,1.0f,1.0f,1.0f)	// Bottom right	-[3]
-	};
+	//Vertex v[] =
+	//{
+	//	// left triangle
+	//	Vertex(-0.5f,-0.5f,1.0f,0.1f,1.0f), // Bottom left	-[0]
+	//	Vertex(-0.5f, 0.5f,0.0f,0.50f,0.0f),	// Top left		-[1]
+	//	Vertex(0.7f, 0.5f,1.0f,1.0f,0.0f),	// Top right	-[2]
+	//	Vertex(0.5f,-0.5f,1.0f,1.0f,1.0f)	// Bottom right	-[3]
+	//};
 
 
 
@@ -390,7 +393,7 @@ bool Graphics::InitializeScene()
 
 #pragma region Create_Indices
 
-	std::vector<DWORD> indices(10000);
+	std::vector<DWORD> indices(solverOptions.lineLength*solverOptions.lines_count);
 	for (int i = 0; i < indices.size(); i++)
 	{
 		indices[i] = i;
@@ -404,9 +407,18 @@ bool Graphics::InitializeScene()
 	HRESULT hr;
 
 	// Initialize Vertex Buffer
-	if (this->vertexBuffer.Get() == nullptr)
+	if (this->vertexBuffer.Get() == NULL)
 	{
-		hr = this->vertexBuffer.Initialize(this->device.Get(), NULL, sizeof(Vertex)*10000);
+		hr = this->vertexBuffer.Initialize(this->device.Get(), NULL, sizeof(Vertex)*solverOptions.lineLength * solverOptions.lines_count);
+		if (FAILED(hr))
+		{
+			ErrorLogger::Log(hr, "Failed to Create Vertex Buffer.");
+			return false;
+		}
+	}
+	else
+	{
+		hr = this->vertexBuffer.Initialize(this->device.Get(), NULL, sizeof(Vertex) * solverOptions.lineLength * solverOptions.lines_count);
 		if (FAILED(hr))
 		{
 			ErrorLogger::Log(hr, "Failed to Create Vertex Buffer.");
@@ -418,15 +430,25 @@ bool Graphics::InitializeScene()
 
 
 #pragma region Create_Index_Buffer
-if (this->indexBuffer.Get() == NULL)
-	{
-		hr = this->indexBuffer.Initialize(this->device.Get(), &indices.at(0), indices.size());
-	if (FAILED(hr))
-	{
-		ErrorLogger::Log(hr, "Failed to Create Index Buffer.");
-		return false;
+	if (this->indexBuffer.Get() == NULL)
+		{
+			hr = this->indexBuffer.Initialize(this->device.Get(), &indices.at(0), indices.size());
+		if (FAILED(hr))
+		{
+			ErrorLogger::Log(hr, "Failed to Create Index Buffer.");
+			return false;
+		}
 	}
-}
+	else
+	{
+
+		hr = this->indexBuffer.Initialize(this->device.Get(), &indices.at(0), indices.size());
+		if (FAILED(hr))
+		{
+			ErrorLogger::Log(hr, "Failed to Create Index Buffer.");
+			return false;
+		}
+	}
 
 #pragma endregion Create_Index_Buffer
 
@@ -589,27 +611,59 @@ void Graphics::RenderImGui()
 
 	}
 
-	if (ImGui::InputInt("Time Step", &(this->solverOptions.timestep)))
-	{
-
-	}
 	if (ImGui::InputInt("Lines", &(this->solverOptions.lines_count)))
 	{
-
+		this->InitializeScene();
 	}
+
 	if (ImGui::InputInt("Line Length", &(this->solverOptions.lineLength)))
 	{
-
+		this->InitializeScene();
 	}
 
-
-	if (ImGui::Checkbox("Begin", &this->solverOptions.begin))
+	if (ImGui::ListBox("Color Mode",&this->solverOptions.colorMode,ColorModeList,4))
 	{
 
 	}
 
+	if (this->streamline)
+	{
+		if (ImGui::Checkbox("Render Streamlines", &this->solverOptions.beginStream))
+		{
+			strcpy(log, "It is running!");
+		}
+
+	}
+	else
+	{
+		if (ImGui::Checkbox("Render Pathlines", &this->solverOptions.beginPath))
+		{
+			strcpy(log, "It is running!");
+		}
+	}
+
+
+
 	ImGui::End();
-#pragma endregion Solver_Option
+#pragma endregion Solver_Options
+
+#pragma region Log
+
+	ImGui::Begin("Log");
+	
+
+	if (ImGui::InputTextMultiline("Log",this->log,1000))
+	{
+
+	}
+
+
+
+
+
+	ImGui::End();
+#pragma endregion Log
+
 
 	//Assemble Together Draw Data
 	ImGui::Render();

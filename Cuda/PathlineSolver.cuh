@@ -15,7 +15,7 @@
 
 
 template <class T>
-class StreamlineSolver : public CUDASolver<T>
+class PathlineSolver : public CUDASolver<T>
 {
 
 public:
@@ -25,18 +25,19 @@ public:
 
 private:
 
+	__host__ void InitializeVelocityField();
 	__host__ void InitializeParticles();
 	__host__ bool InitializeTexture();
 
 	Particle<T>* d_particles;
 
 
-	T * h_VelocityField;
-	T * d_VelocityField;
-	
+	T* h_VelocityField;
+	T* d_VelocityField;
+
 	// https://devblogs.nvidia.com/cuda-pro-tip-kepler-texture-objects-improve-performance-and-flexibility/
 	// Reference to Velocity Field as a Texture 
-	cudaTextureObject_t t_VelocityField = NULL;
+	cudaTextureObject_t t_VelocityField[3]; // we need three timesteps for RK4
 
 	Particle<T>* d_Particles;
 	Particle<T>* h_Particles;
@@ -47,7 +48,7 @@ private:
 
 // Kernel of the streamlines
 template <typename T>
-__global__ void TracingParticles(Particle<T>* d_particles, cudaTextureObject_t t_VelocityField, SolverOptions solverOptions, Vertex* p_VertexBuffer);
+__global__ void TracingParticles(Particle<T>* d_particles, cudaTextureObject_t  t_VelocityField, SolverOptions solverOptions, Vertex* p_VertexBuffer);
 
 
 

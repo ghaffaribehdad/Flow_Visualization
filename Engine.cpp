@@ -91,7 +91,7 @@ void Engine::Update()
 	}
 
 	// Streamline Solver
-	if (this->gfx.solverOptions.begin)
+	if (this->gfx.solverOptions.beginStream)
 	{
 		gfx.solverOptions.p_Adapter = this->gfx.GetAdapter();
 		gfx.solverOptions.p_vertexBuffer = this->gfx.GetVertexBuffer();
@@ -106,14 +106,33 @@ void Engine::Update()
 		// under construction
 		else if(gfx.solverOptions.precision == 64)
 		{
-			this->streamlineSolver_double.Initialize(this->gfx.solverOptions);
-			this->streamlineSolver_double.solve();
-			this->streamlineSolver_double.FinalizeCUDA();
+		}
+
+		this->gfx.solverOptions.beginStream = false;
+		this->gfx.showLines = true;
+	}
+
+	// Pathline Solver
+	if (this->gfx.solverOptions.beginPath)
+	{
+		gfx.solverOptions.p_Adapter = this->gfx.GetAdapter();
+		gfx.solverOptions.p_vertexBuffer = this->gfx.GetVertexBuffer();
+
+		if (gfx.solverOptions.precision == 32)
+		{
+
+			this->streamlineSolver_float.Initialize(this->gfx.solverOptions);
+			this->streamlineSolver_float.solve();
+			this->streamlineSolver_float.FinalizeCUDA();
+		}
+		// under construction
+		else if (gfx.solverOptions.precision == 64)
+		{
 		}
 
 
-		this->gfx.solverOptions.begin = false;
-		this->gfx.showStreamline = true;
+		this->gfx.solverOptions.beginPath = false;
+		this->gfx.showLines = true;
 	}
 }
 

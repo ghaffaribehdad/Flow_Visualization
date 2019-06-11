@@ -54,6 +54,12 @@
     <Filter Include="Shaders">
       <UniqueIdentifier>{f6ab76af-48b7-4a38-94f6-338d1309efa3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Particle">
+      <UniqueIdentifier>{9e05e0fe-b4fe-43ad-be3a-16941c7f25f0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Particle">
+      <UniqueIdentifier>{2adac3f8-8269-4fb1-9ee0-1140c635d565}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="StringConverter.cpp">
@@ -229,6 +235,10 @@
     <ClInclude Include="Cuda\StreamlineSolver.cuh">
       <Filter>Header Files\Cuda</Filter>
     </ClInclude>
+    <ClInclude Include="Particle.cuh" />
+    <ClInclude Include="Cuda\PathlineSolver.cuh">
+      <Filter>Header Files\Cuda</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="vertexshader.hlsl">
@@ -242,11 +252,14 @@
     <CudaCompile Include="linearIndex.cuh">
       <Filter>Header Files\Helper</Filter>
     </CudaCompile>
-    <CudaCompile Include="Particle.cuh">
-      <Filter>Header Files</Filter>
-    </CudaCompile>
     <CudaCompile Include="Cuda\VelocityFieldHelper.cuh" />
     <CudaCompile Include="Cuda\StreamlineSolver.cu">
+      <Filter>Source Files\Cuda</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Particle.cu">
+      <Filter>Source Files\Particle</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Cuda\PathlineSolver.cu">
       <Filter>Source Files\Cuda</Filter>
     </CudaCompile>
   </ItemGroup>

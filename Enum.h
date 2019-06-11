@@ -15,6 +15,10 @@ enum IntegrationMethod
 	//RK5_METHOD,
 };
 
+
+
+static const char* const ColorModeList[] = {"V", "Vx", "Vy", "Vz"};
+
 enum InterpolationMethod
 {
 	Linear,

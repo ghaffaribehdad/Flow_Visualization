@@ -53,7 +53,7 @@ public:
 		cudaMemcpy(vertexBuffer.Get(), cudaVertex, size, cudaMemcpyDeviceToDevice);
 	}
 
-	bool showStreamline = false;
+	bool showLines = false;
 
 private:
 
@@ -115,6 +115,9 @@ private:
 	// Solver options
 	bool streamline = true;
 	bool pathline = false;
+
+	// Log pointer
+	char* log = new char[1000];
 
 	Vertex* CudaVertex = nullptr;
 

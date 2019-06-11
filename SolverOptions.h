@@ -4,20 +4,19 @@
 struct SolverOptions
 {
 public:
-	char fileName[100] = "";
-	char  filePath[100] = "";
+	char fileName[100] = "FieldP";
+	char  filePath[100] = "D:\\test_Flow_VisualizationTool\\";
 
 	int gridSize[3] = { 192,192,192 };
 	float gridDiameter[3] = { 10,10,10 };
 
 	int precision = 32;
 
-	int timestep = 1;
 	float dt = 0.1f;
 	float advectTime = 0.0f;
 
-	int lineLength;
-	int lines_count = 0;
+	int lineLength = 1;
+	int lines_count = 1;
 	float line_thickness = 0.0f;
 
 	int firstIdx = 1;
@@ -28,9 +27,10 @@ public:
 	IntegrationMethod integrationMethod;
 	InterpolationMethod interpolationMethod;
 
+	int colorMode = 0;
 
-	bool begin = false;
-
+	bool beginStream = false;
+	bool beginPath = false;
 
 	IDXGIAdapter* p_Adapter;
 	ID3D11Resource* p_vertexBuffer;

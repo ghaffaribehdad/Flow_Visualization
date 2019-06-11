@@ -3,6 +3,7 @@
 #include "WindowContainer.h"
 #include "Timer.h"
 #include "Cuda/StreamlineSolver.cuh"
+#include "Cuda/PathlineSolver.cuh"
 
 
 
@@ -26,7 +27,7 @@ private:
 	Timer timer;
 
 	StreamlineSolver<float> streamlineSolver_float;
-	StreamlineSolver<double> streamlineSolver_double;
+	PathlineSolver<float> pathlineSolver_float;
 
 	//TO-DO:: implement Pathline Solver
 
