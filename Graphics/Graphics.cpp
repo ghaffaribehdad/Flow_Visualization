@@ -563,11 +563,15 @@ void Graphics::RenderImGui()
 	if (ImGui::Checkbox("Streamline", &streamline))
 	{
 		pathline = !streamline;
+		this->solverOptions.lineLength = solverOptions.lastIdx - solverOptions.firstIdx;
+		this->InitializeScene();
 	}
 	ImGui::SameLine();
 	if (ImGui::Checkbox("Pathline", &pathline))
 	{
 		streamline = !pathline;
+		this->solverOptions.lineLength = solverOptions.lastIdx - solverOptions.firstIdx;
+		this->InitializeScene();
 	}
 
 
@@ -613,16 +617,19 @@ void Graphics::RenderImGui()
 
 	if (ImGui::InputInt("Lines", &(this->solverOptions.lines_count)))
 	{
+		this->solverOptions.lineLength = solverOptions.lastIdx - solverOptions.firstIdx;
 		this->InitializeScene();
 
-	}
 
-	if (ImGui::InputInt("Line Length", &(this->solverOptions.lineLength)))
+	}
+	if (this->streamline)
 	{
-		this->InitializeScene();
-		
-	}
+		if (ImGui::InputInt("Line Length", &(this->solverOptions.lineLength)))
+		{
+			this->InitializeScene();
 
+		}
+	}
 	if (ImGui::ListBox("Color Mode",&this->solverOptions.colorMode,ColorModeList,4))
 	{
 

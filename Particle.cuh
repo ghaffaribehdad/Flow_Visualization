@@ -1,7 +1,7 @@
 #pragma once
 
 #include "cuda_runtime.h"
-
+#include "Cuda//CudaHelper.cuh"
 
 template <class T>
 class Particle
@@ -32,6 +32,12 @@ public:
 	{
 		return &m_velocity;
 	}
+
+	__device__ bool isOut()
+	{
+		return this->outOfScope;
+	}
+
 	__host__ __device__ void  setVelocity(float3& _velocity)
 	{
 		m_velocity = _velocity;
@@ -46,6 +52,12 @@ public:
 		updatePosition(dt);										//checked
 		checkPosition(gridDiameter);							//check if it is out of scope
 		updateVelocity(gridDiameter, gridSize, t_VelocityField);//checked
+	}
+
+	// In case of multiple (=2) fields
+	__device__ void move(const float& dt, int3 gridSize, float3 gridDiameter, cudaTextureObject_t * t_VelocityField)
+	{
+		
 	}
 
 	__device__ void checkPosition(const float3& gridDiameter);

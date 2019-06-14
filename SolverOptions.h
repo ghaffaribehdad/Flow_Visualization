@@ -19,6 +19,7 @@ public:
 	int lines_count = 1;
 	float line_thickness = 0.0f;
 
+
 	int firstIdx = 1;
 	int lastIdx = 1;
 	int currentIdx = 1;

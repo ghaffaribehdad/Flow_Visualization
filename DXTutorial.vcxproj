@@ -204,15 +204,21 @@
   <ItemGroup>
     <ClInclude Include="CUDA\CudaDevice.h" />
     <ClInclude Include="CUDA\CudaSolver.h" />
+    <ClInclude Include="VolumeTexture\VolumeTexture.h" />
+    <ClInclude Include="Cuda\helper_math.cuh" />
     <ClInclude Include="ErrorLogger.h" />
     <ClInclude Include="Engine.h" />
     <ClInclude Include="Cuda\StreamlineSolver.cuh">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="Enum.h" />
-    <CudaCompile Include="Cuda\CudaHelper.cuh" />
+    <CudaCompile Include="Cuda\CudaHelper.cu">
+      <FileType>Document</FileType>
+    </CudaCompile>
     <ClInclude Include="Cuda\PathlineSolver.cuh" />
     <ClInclude Include="SolverOptions.h" />
+    <ClInclude Include="Cuda\CudaHelper.cuh" />
+    <CudaCompile Include="VolumeTexture\VolumeTexture.cu" />
     <CudaCompile Include="Particle.cu" />
     <ClInclude Include="Particle.cuh" />
     <ClInclude Include="Graphics\RenderImGui.h" />

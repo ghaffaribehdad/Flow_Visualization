@@ -1,6 +1,6 @@
 #include "StreamlineSolver.cuh"
 
-// Explicit instantions
+// Explicit instantiation
 template class StreamlineSolver<float>;
 template class StreamlineSolver<double>;
 

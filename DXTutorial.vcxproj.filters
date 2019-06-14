@@ -60,6 +60,12 @@
     <Filter Include="Header Files\Particle">
       <UniqueIdentifier>{2adac3f8-8269-4fb1-9ee0-1140c635d565}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\VolumeTexture">
+      <UniqueIdentifier>{c67bdb99-b03d-466c-933d-c22616702d81}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\VolumeTexture">
+      <UniqueIdentifier>{a42de083-1331-40b9-82cb-637a7768d853}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="StringConverter.cpp">
@@ -241,6 +247,15 @@
     <ClInclude Include="Particle.cuh">
       <Filter>Source Files\Particle</Filter>
     </ClInclude>
+    <ClInclude Include="Cuda\CudaHelper.cuh">
+      <Filter>Header Files\Cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="Cuda\helper_math.cuh">
+      <Filter>Header Files\Cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="VolumeTexture\VolumeTexture.h">
+      <Filter>Header Files\VolumeTexture</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="vertexshader.hlsl">
@@ -263,6 +278,14 @@
     <CudaCompile Include="Cuda\PathlineSolver.cu">
       <Filter>Source Files\Cuda</Filter>
     </CudaCompile>
-    <CudaCompile Include="Cuda\CudaHelper.cuh" />
+    <CudaCompile Include="Cuda\CudaHelper.cuh">
+      <Filter>Header Files\Cuda</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Cuda\CudaHelper.cu">
+      <Filter>Source Files\Cuda</Filter>
+    </CudaCompile>
+    <CudaCompile Include="VolumeTexture\VolumeTexture.cu">
+      <Filter>Source Files\VolumeTexture</Filter>
+    </CudaCompile>
   </ItemGroup>
 </Project>

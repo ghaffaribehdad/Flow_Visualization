@@ -11,83 +11,20 @@ void PathlineSolver<T>::release()
 {
 	cudaFree(this->d_Particles);
 	cudaFree(this->d_VelocityField);
-	cudaDestroyTextureObject(this->t_VelocityField[0]);
-	cudaDestroyTextureObject(this->t_VelocityField[1]);
-	cudaDestroyTextureObject(this->t_VelocityField[2]);
+	cudaDestroyTextureObject(this->t_VelocityField_0);
+	cudaDestroyTextureObject(this->t_VelocityField_1);
+
 }
 
-//template <typename T>
-//__global__ void TracingParticles(Particle<T>* d_particles, cudaTextureObject_t t_VelocityField, SolverOptions solverOptions, Vertex* p_VertexBuffer)
-//{
-//	int index = blockDim.x * blockIdx.x + threadIdx.x;
-//	if (index < solverOptions.lineLength)
-//	{
-//		int lineLength = solverOptions.lineLength;
-//		int index_buffer = index * lineLength;
-//		float dt = solverOptions.dt;
-//		float3 gridDiameter =
-//		{
-//			solverOptions.gridDiameter[0],
-//			solverOptions.gridDiameter[1],
-//			solverOptions.gridDiameter[2]
-//		};
-//
-//		int3 gridSize =
-//		{
-//			solverOptions.gridSize[0],
-//			solverOptions.gridSize[1],
-//			solverOptions.gridSize[2]
-//		};
-//
-//		for (int i = 0; i < lineLength; i++)
-//		{
-//			d_particles[index].move(dt, gridSize, gridDiameter, t_VelocityField);
-//
-//			p_VertexBuffer[index_buffer + i].pos.x = d_particles[index].getPosition()->x;
-//			p_VertexBuffer[index_buffer + i].pos.y = d_particles[index].getPosition()->y;
-//			p_VertexBuffer[index_buffer + i].pos.z = d_particles[index].getPosition()->z;
-//
-//			switch (solverOptions.colorMode)
-//			{
-//			case 0: // Velocity
-//			{
-//				float3* velocity = d_particles[index].getVelocity();
-//				double norm = norm3d(velocity->x, velocity->y, velocity->z);
-//				p_VertexBuffer[index_buffer + i].colorID.x = norm;
-//				p_VertexBuffer[index_buffer + i].colorID.y = index;
-//
-//			}
-//			case 1: // Vx
-//			{
-//				float velocity = d_particles[index].getVelocity()->x;
-//				p_VertexBuffer[index_buffer + i].colorID.x = velocity;
-//				p_VertexBuffer[index_buffer + i].colorID.y = index;
-//			}
-//			case 2: // Vx
-//			{
-//				float velocity = d_particles[index].getVelocity()->y;
-//				p_VertexBuffer[index_buffer + i].colorID.x = velocity;
-//				p_VertexBuffer[index_buffer + i].colorID.y = index;
-//			}
-//			case 3: // Vx
-//			{
-//				float velocity = d_particles[index].getVelocity()->z;
-//				p_VertexBuffer[index_buffer + i].colorID.x = velocity;
-//				p_VertexBuffer[index_buffer + i].colorID.y = index;
-//			}
-//			}
-//
-//
-//		}
-//	}
-//
-//}
+
 
 template <typename T>
 __host__ bool PathlineSolver<T>::solve()
 {
-	if (solverOptions.lastIdx - solverOptions.firstIdx < 3)
-		return false; //At least three timestep is needed
+	//At least two timesteps is needed
+	int timeSteps = solverOptions.lastIdx - solverOptions.firstIdx;
+	if (solverOptions.lastIdx - solverOptions.firstIdx < 2)
+		return false; 
 
 	// Initialize Volume IO (Save file path and file names)
 	this->volume_IO.Initialize(this->solverOptions);
@@ -97,28 +34,41 @@ __host__ bool PathlineSolver<T>::solve()
 
 	int blockDim = 256;
 	int thread = (this->solverOptions.lines_count / blockDim) + 1;
+	
+	solverOptions.lineLength = timeSteps;
+	bool odd = true;
 
-	for (int timeStep = solverOptions.firstIdx; timeStep <= solverOptions.lastIdx; timeStep++)
+	for (int timeStep = 0; timeStep < timeSteps-2; timeStep++)
 	{
-		// For the very first step we need to initialize all three textures
 		if (timeStep == 0)
 		{
-			for (int i = 0; i++; i < 3)
-			{
-				this->h_VelocityField = this->InitializeVelocityField(timeStep + i);
-				this->InitializeTexture(this->h_VelocityField, this->t_VelocityField[i]);
+			// For the first timestep we need to load two fields
+			this->h_VelocityField = this->InitializeVelocityField(solverOptions.firstIdx);
+			this->InitializeTexture(this->h_VelocityField, this->t_VelocityField_0);
+			this->h_VelocityField = this->InitializeVelocityField(solverOptions.firstIdx+1);
+			this->InitializeTexture(this->h_VelocityField, this->t_VelocityField_1);
 
-			}
-			//Run the kernel for the first step
+			odd = false;
+
 		}
-
-		else // for the rest only one of the textures has to be updated
+		// for the even timesteps we need to reload only one field (tn+1 in the first texture)
+		else if (timeStep %2 == 0)
 		{
-			//update texture
-			//Run kernel
+			this->h_VelocityField = this->h_VelocityField = this->InitializeVelocityField(solverOptions.firstIdx + 1);
+			this->InitializeTexture(this->h_VelocityField, this->t_VelocityField_0);
+			
 		}
 
-		this->release();
+		// for the odd timesteps we need to reload only one field (tn+1 in the second texture)
+		else if (timeStep % 2 != 0)
+		{
+			this->h_VelocityField = this->h_VelocityField = this->InitializeVelocityField(solverOptions.firstIdx +1);
+			this->InitializeTexture(this->h_VelocityField, this->t_VelocityField_1);
+		}
+
+		TracingPath<T> << <blockDim, thread >> > (this->d_Particles, t_VelocityField_0,t_VelocityField_1, solverOptions, reinterpret_cast<Vertex*>(this->p_VertexBuffer),odd, timeStep);
+
+
 	}  	
 
 	return true;
@@ -126,15 +76,16 @@ __host__ bool PathlineSolver<T>::solve()
 
 
 template <typename T>
-__global__ void TracingPath(Particle<T>* d_particles, cudaTextureObject_t* t_VelocityField, SolverOptions solverOptions, Vertex* p_VertexBuffer)
+__global__ void TracingPath(Particle<T>* d_particles, cudaTextureObject_t t_VelocityField_0, cudaTextureObject_t t_VelocityField_1, SolverOptions solverOptions, Vertex* p_VertexBuffer, bool odd, int step)
 {
 	int index = blockDim.x * blockIdx.x + threadIdx.x;
 
+
 	if (index < solverOptions.lines_count)
 	{
-		int lineLength = solverOptions.lineLength;		//
-		int index_buffer = index * lineLength;			//
-		float dt = solverOptions.dt;					//
+		// needs to be modified
+		int index_buffer = index * solverOptions.lineLength;
+		float dt = solverOptions.dt;
 		float3 gridDiameter =
 		{
 			solverOptions.gridDiameter[0],
@@ -142,53 +93,83 @@ __global__ void TracingPath(Particle<T>* d_particles, cudaTextureObject_t* t_Vel
 			solverOptions.gridDiameter[2]
 		};
 
-		int3 gridSize =
+
+		float3 newPosition = { 0.0f,0.0f,0.0f };
+
+		if (odd )
 		{
-			solverOptions.gridSize[0],
-			solverOptions.gridSize[1],
-			solverOptions.gridSize[2]
-		};
-
-		for (int i = 0; i < lineLength; i++)
-		{
-			d_particles[index].move(dt, gridSize, gridDiameter, t_VelocityField);
-
-			p_VertexBuffer[index_buffer + i].pos.x = d_particles[index].getPosition()->x;
-			p_VertexBuffer[index_buffer + i].pos.y = d_particles[index].getPosition()->y;
-			p_VertexBuffer[index_buffer + i].pos.z = d_particles[index].getPosition()->z;
-
-			switch (solverOptions.colorMode)
+			if (d_particles[index].isOut())
 			{
+				newPosition =
+				{
+					d_particles[index].getPosition()->x,
+					d_particles[index].getPosition()->y,
+					d_particles[index].getPosition()->z
+				};
+			}
+			else
+			{
+				newPosition = RK4Odd(t_VelocityField_0, t_VelocityField_1, d_particles[index].getPosition(), gridDiameter, dt);
+			}
+			
+		}
+		else //Even
+		{
+			if (d_particles[index].isOut())
+			{
+				newPosition =
+				{
+					d_particles[index].getPosition()->x,
+					d_particles[index].getPosition()->y,
+					d_particles[index].getPosition()->z
+				};
+			}
+			else
+			{
+				newPosition = RK4Even(t_VelocityField_0, t_VelocityField_1, d_particles[index].getPosition(), gridDiameter, dt);
+			}
+		}
+		
+		d_particles[index].setPosition(newPosition);
+		if (!d_particles[index].isOut())
+		{
+			d_particles[index].checkPosition(gridDiameter);
+		}
+
+		// Write into the Vertex BUffer
+		p_VertexBuffer[index_buffer + step].pos.x = d_particles[index].getPosition()->x;
+		p_VertexBuffer[index_buffer + step].pos.y = d_particles[index].getPosition()->y;
+		p_VertexBuffer[index_buffer + step].pos.z = d_particles[index].getPosition()->z;
+
+		switch (solverOptions.colorMode)
+		{
 			case 0: // Velocity
 			{
 				float3* velocity = d_particles[index].getVelocity();
 				double norm = norm3d(velocity->x, velocity->y, velocity->z);
-				p_VertexBuffer[index_buffer + i].colorID.x = norm;
-				p_VertexBuffer[index_buffer + i].colorID.y = index;
+				p_VertexBuffer[index_buffer + step].colorID.x = norm;
+				p_VertexBuffer[index_buffer + step].colorID.y = index;
 
 			}
 			case 1: // Vx
 			{
 				float velocity = d_particles[index].getVelocity()->x;
-				p_VertexBuffer[index_buffer + i].colorID.x = velocity;
-				p_VertexBuffer[index_buffer + i].colorID.y = index;
+				p_VertexBuffer[index_buffer + step].colorID.x = velocity;
+				p_VertexBuffer[index_buffer + step].colorID.y = index;
 			}
 			case 2: // Vx
 			{
 				float velocity = d_particles[index].getVelocity()->y;
-				p_VertexBuffer[index_buffer + i].colorID.x = velocity;
-				p_VertexBuffer[index_buffer + i].colorID.y = index;
+				p_VertexBuffer[index_buffer + step].colorID.x = velocity;
+				p_VertexBuffer[index_buffer + step].colorID.y = index;
 			}
 			case 3: // Vx
 			{
 				float velocity = d_particles[index].getVelocity()->z;
-				p_VertexBuffer[index_buffer + i].colorID.x = velocity;
-				p_VertexBuffer[index_buffer + i].colorID.y = index;
+				p_VertexBuffer[index_buffer + step].colorID.x = velocity;
+				p_VertexBuffer[index_buffer + step].colorID.y = index;
 			}
-			}
-
-
 		}
-	}
 
+	}
 }

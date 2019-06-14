@@ -120,17 +120,14 @@ void Engine::Update()
 
 		if (gfx.solverOptions.precision == 32)
 		{
-
-			this->streamlineSolver_float.Initialize(this->gfx.solverOptions);
-			this->streamlineSolver_float.solve();
-			this->streamlineSolver_float.FinalizeCUDA();
+			this->pathlineSolver_float.Initialize(this->gfx.solverOptions);
+			this->pathlineSolver_float.solve();
+			this->pathlineSolver_float.FinalizeCUDA();
 		}
 		// under construction
 		else if (gfx.solverOptions.precision == 64)
 		{
 		}
-
-
 		this->gfx.solverOptions.beginPath = false;
 		this->gfx.showLines = true;
 	}
