@@ -38,39 +38,48 @@ __host__ bool PathlineSolver<T>::solve()
 	solverOptions.lineLength = timeSteps;
 	bool odd = true;
 
-	for (int timeStep = 0; timeStep < timeSteps-2; timeStep++)
+	for (int step = 0; step < timeSteps; step++)
 	{
-		if (timeStep == 0)
+		if (step == 0)
 		{
 			// For the first timestep we need to load two fields
 			this->h_VelocityField = this->InitializeVelocityField(solverOptions.firstIdx);
 			this->InitializeTexture(this->h_VelocityField, this->t_VelocityField_0);
+			volume_IO.release();
+
 			this->h_VelocityField = this->InitializeVelocityField(solverOptions.firstIdx+1);
 			this->InitializeTexture(this->h_VelocityField, this->t_VelocityField_1);
+			volume_IO.release();
 
 			odd = false;
 
 		}
 		// for the even timesteps we need to reload only one field (tn+1 in the first texture)
-		else if (timeStep %2 == 0)
+		else if (step %2 == 0)
 		{
-			this->h_VelocityField = this->h_VelocityField = this->InitializeVelocityField(solverOptions.firstIdx + 1);
+			this->h_VelocityField = this->InitializeVelocityField(solverOptions.firstIdx + 1);
+			cudaDestroyTextureObject(this->t_VelocityField_0);
 			this->InitializeTexture(this->h_VelocityField, this->t_VelocityField_0);
+			volume_IO.release();
+
 			
 		}
 
 		// for the odd timesteps we need to reload only one field (tn+1 in the second texture)
-		else if (timeStep % 2 != 0)
+		else if (step % 2 != 0)
 		{
-			this->h_VelocityField = this->h_VelocityField = this->InitializeVelocityField(solverOptions.firstIdx +1);
+			this->h_VelocityField = this->InitializeVelocityField(solverOptions.firstIdx +1);
+			cudaDestroyTextureObject(this->t_VelocityField_1);
 			this->InitializeTexture(this->h_VelocityField, this->t_VelocityField_1);
+			volume_IO.release();
 		}
 
-		TracingPath<T> << <blockDim, thread >> > (this->d_Particles, t_VelocityField_0,t_VelocityField_1, solverOptions, reinterpret_cast<Vertex*>(this->p_VertexBuffer),odd, timeStep);
+		TracingPath<T> << <blockDim, thread >> > (this->d_Particles, t_VelocityField_0,t_VelocityField_1, solverOptions, reinterpret_cast<Vertex*>(this->p_VertexBuffer),odd, step);
+
 
 
 	}  	
-
+	this->release();
 	return true;
 }
 
@@ -96,7 +105,7 @@ __global__ void TracingPath(Particle<T>* d_particles, cudaTextureObject_t t_Velo
 
 		float3 newPosition = { 0.0f,0.0f,0.0f };
 
-		if (odd )
+		if (odd)
 		{
 			if (d_particles[index].isOut())
 			{
@@ -131,6 +140,7 @@ __global__ void TracingPath(Particle<T>* d_particles, cudaTextureObject_t t_Velo
 		}
 		
 		d_particles[index].setPosition(newPosition);
+
 		if (!d_particles[index].isOut())
 		{
 			d_particles[index].checkPosition(gridDiameter);

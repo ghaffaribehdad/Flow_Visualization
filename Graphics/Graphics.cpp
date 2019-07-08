@@ -375,7 +375,6 @@ bool Graphics::InitializeShaders()
 bool Graphics::InitializeScene()
 {
 #pragma region Create Vertices
-	// Square]
 
 	//Vertex v[] =
 	//{
