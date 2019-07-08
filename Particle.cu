@@ -10,7 +10,7 @@ __device__  void Particle<T>::updateVelocity(const float3& gridDiameter, const i
 	if (!outOfScope)
 	{
 		float3 relativePos = findRelative(gridDiameter);
-		float4 velocity4D = tex3D<float4>(t_VelocityField, relativePos.x, relativePos.y, relativePos.z);
+		float4 velocity4D = tex3D<float4>(t_VelocityField, relativePos.z, relativePos.y, relativePos.x);
 		float3 velocity = { velocity4D.x,velocity4D.y,velocity4D.z };
 		this->setVelocity(velocity);
 	}

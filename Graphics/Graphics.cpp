@@ -53,8 +53,8 @@ void Graphics::RenderFrame()
 	this->deviceContext->PSSetShader(pixelshader.GetShader(), NULL, 0);				// set pixel shader
 
 	UINT offset = 0;
-	//
-		// Set Camera/Eye directions and position
+	
+	// Set Camera/Eye directions and position
 	DirectX::XMMATRIX world = DirectX::XMMatrixIdentity();
 
 	// Create the Projection Matrix
@@ -478,7 +478,7 @@ bool Graphics::InitializeScene()
 	// set camera properties
 	camera.SetPosition(0.0f, 0.0f, 0.0f);
 	camera.SetProjectionValues(90.0f, static_cast<float>(this->windowWidth) / static_cast<float>(this->windowHeight), \
-		0.1f, 1000.0f);
+		0.1f, 100.0f);
 
 	return true;
 }
@@ -617,7 +617,10 @@ void Graphics::RenderImGui()
 
 	if (ImGui::InputInt("Lines", &(this->solverOptions.lines_count)))
 	{
-		this->solverOptions.lineLength = solverOptions.lastIdx - solverOptions.firstIdx;
+		if(this->pathline)
+		{
+			this->solverOptions.lineLength = solverOptions.lastIdx - solverOptions.firstIdx;
+		}
 		this->InitializeScene();
 
 

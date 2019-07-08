@@ -44,26 +44,26 @@ __global__ void TracingStream(Particle<T>* d_particles, cudaTextureObject_t t_Ve
 					float3* velocity = d_particles[index].getVelocity();
 					double norm = norm3d(velocity->x, velocity->y, velocity->z);
 					p_VertexBuffer[index_buffer + i].colorID.x = norm;
-					p_VertexBuffer[index_buffer + i].colorID.y = index;
+					p_VertexBuffer[index_buffer + i].colorID.y = float(index) / float(solverOptions.lines_count);
 
 				}
 				case 1: // Vx
 				{
 					float velocity = d_particles[index].getVelocity()->x;
 					p_VertexBuffer[index_buffer + i].colorID.x = velocity;
-					p_VertexBuffer[index_buffer + i].colorID.y = index;
+					p_VertexBuffer[index_buffer + i].colorID.y = float(index) / float(solverOptions.lines_count);
 				}
 				case 2: // Vx
 				{
 					float velocity = d_particles[index].getVelocity()->y;
 					p_VertexBuffer[index_buffer + i].colorID.x = velocity;
-					p_VertexBuffer[index_buffer + i].colorID.y = index;
+					p_VertexBuffer[index_buffer + i].colorID.y = float(index) / float(solverOptions.lines_count);
 				}
 				case 3: // Vx
 				{
 					float velocity = d_particles[index].getVelocity()->z;
 					p_VertexBuffer[index_buffer + i].colorID.x = velocity;
-					p_VertexBuffer[index_buffer + i].colorID.y = index;
+					p_VertexBuffer[index_buffer + i].colorID.y = float(index)/ float(solverOptions.lines_count);
 				}
 			}
 
