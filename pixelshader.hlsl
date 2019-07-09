@@ -1,7 +1,7 @@
 struct PS_INPUT
 {
     float4 inPosition : SV_POSITION;
-    float2 inVelocity : VELOCITY;
+	float2 inVelocity : VELOCITY;
 	float3 inTangent: TANGENT;
 };
 

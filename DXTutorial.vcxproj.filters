@@ -256,6 +256,12 @@
     <ClInclude Include="VolumeTexture\VolumeTexture.h">
       <Filter>Header Files\VolumeTexture</Filter>
     </ClInclude>
+    <ClInclude Include="Cuda\cudaSurface.cuh">
+      <Filter>Header Files\Cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="Cuda\Interoperability.cuh">
+      <Filter>Header Files\Cuda</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="vertexshader.hlsl">
@@ -278,14 +284,14 @@
     <CudaCompile Include="Cuda\PathlineSolver.cu">
       <Filter>Source Files\Cuda</Filter>
     </CudaCompile>
-    <CudaCompile Include="Cuda\CudaHelper.cuh">
-      <Filter>Header Files\Cuda</Filter>
-    </CudaCompile>
     <CudaCompile Include="Cuda\CudaHelper.cu">
       <Filter>Source Files\Cuda</Filter>
     </CudaCompile>
     <CudaCompile Include="VolumeTexture\VolumeTexture.cu">
       <Filter>Source Files\VolumeTexture</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Cuda\cudaSurface.cu">
+      <Filter>Source Files\Cuda</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

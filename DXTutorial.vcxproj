@@ -202,8 +202,10 @@
     <ClCompile Include="WindowContainer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Cuda\cudaSurface.cuh" />
     <ClInclude Include="CUDA\CudaDevice.h" />
     <ClInclude Include="CUDA\CudaSolver.h" />
+    <ClInclude Include="Cuda\Interoperability.cuh" />
     <ClInclude Include="VolumeTexture\VolumeTexture.h" />
     <ClInclude Include="Cuda\helper_math.cuh" />
     <ClInclude Include="ErrorLogger.h" />
@@ -218,6 +220,7 @@
     <ClInclude Include="Cuda\PathlineSolver.cuh" />
     <ClInclude Include="SolverOptions.h" />
     <ClInclude Include="Cuda\CudaHelper.cuh" />
+    <CudaCompile Include="Cuda\cudaSurface.cu" />
     <CudaCompile Include="VolumeTexture\VolumeTexture.cu" />
     <CudaCompile Include="Particle.cu" />
     <ClInclude Include="Particle.cuh" />

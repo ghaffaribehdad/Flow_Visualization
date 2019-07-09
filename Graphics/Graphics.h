@@ -63,12 +63,18 @@ private:
 	bool InitializeShaders();
 	bool InitializeScene();
 	bool InitializeImGui(HWND hwnd);
+	bool InitializeBoundingBoxRendering();
 
 	// directx resources
 	Microsoft::WRL::ComPtr<ID3D11Device>			device;// use to creat buffers
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext>		deviceContext; //use to set resources for rendering
 	Microsoft::WRL::ComPtr<IDXGISwapChain>			swapchain; // use to swap out our frame
 	Microsoft::WRL::ComPtr<ID3D11RenderTargetView>	renderTargetView; // where we are going to render our buffer
+
+	// Render Target view for the bounding boxes
+	Microsoft::WRL::ComPtr<ID3D11RenderTargetView>	frontTargetView;	// bounding box front target view
+	Microsoft::WRL::ComPtr<ID3D11RenderTargetView>	backTargetView;		// bounding box back target view
+
 
 	// ImGui resoureces
 	ImGuiContext * ImGuicontext = nullptr;
@@ -98,8 +104,10 @@ private:
 	// COM pointer to sampler state
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> samplerState;
 
-	// COM pointer to texture
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> myTexture;
+	// COM pointer to texture to store rendered bounding box
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> frontTex;	//front-face
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> backTex;	//back-face
+
 
 	// Pointer to the adapter
 	IDXGIAdapter* adapter;
@@ -117,7 +125,7 @@ private:
 	bool pathline = false;
 
 	// Log pointer
-	char* log = new char[1000];
+	char* log = new char[100];
 
 	Vertex* CudaVertex = nullptr;
 

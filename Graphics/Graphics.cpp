@@ -26,6 +26,9 @@ bool Graphics::Initialize(HWND hwnd, int width, int height)
 	if (!this->InitializeImGui(hwnd))
 		return false;
 
+	if (!this->InitializeBoundingBoxRendering())
+		return false;
+
 	//start the timer 
 	fpsTimer.Start();
 
@@ -33,7 +36,39 @@ bool Graphics::Initialize(HWND hwnd, int width, int height)
 }
 #pragma endregion Main_Initialization
 
+bool Graphics::InitializeBoundingBoxRendering()
+{
+	D3D11_TEXTURE2D_DESC textureDesc;
+	ZeroMemory(&textureDesc, sizeof(textureDesc));
 
+	textureDesc.ArraySize = 1;
+	textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+	textureDesc.CPUAccessFlags = 0;
+	textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	textureDesc.Height = windowWidth;
+	textureDesc.Width = windowWidth;
+	textureDesc.MipLevels = 1;
+	textureDesc.MiscFlags = 0;
+	textureDesc.SampleDesc.Count = 1;
+	textureDesc.SampleDesc.Quality = 0;
+	textureDesc.Usage = D3D11_USAGE_DEFAULT;
+
+	HRESULT hr = this->device->CreateTexture2D(&textureDesc, nullptr, this->frontTex.GetAddressOf());
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to Create Front Texture");
+	}
+
+
+	// Create and bind texture to the target view (FRONT)
+	hr = this->device->CreateRenderTargetView(this->frontTex.Get(), NULL, this->frontTargetView.GetAddressOf());
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to Create RenderTargetView");
+	}
+
+	return true;
+}
 
 //########################### Rendering #############################
 
@@ -78,6 +113,8 @@ void Graphics::RenderFrame()
 
 
 	this->deviceContext->IASetIndexBuffer(this->indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+
+
 	if (showLines)
 	{
 		for (int i = 0; i < solverOptions.lines_count; i++)
@@ -348,9 +385,9 @@ bool Graphics::InitializeShaders()
 	{
 		{"POSITION",0,DXGI_FORMAT::DXGI_FORMAT_R32G32B32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,\
 		D3D11_INPUT_CLASSIFICATION::D3D11_INPUT_PER_VERTEX_DATA,0},
-		{"VELOCITY",0,DXGI_FORMAT::DXGI_FORMAT_R32G32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,\
+		{"VELOCITY",0,DXGI_FORMAT::DXGI_FORMAT_R32G32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,
 		D3D11_INPUT_CLASSIFICATION::D3D11_INPUT_PER_VERTEX_DATA,0},
-		{"TANGENT",0,DXGI_FORMAT::DXGI_FORMAT_R32G32B32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,\
+		{"TANGENT",0,DXGI_FORMAT::DXGI_FORMAT_R32G32B32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,
 		D3D11_INPUT_CLASSIFICATION::D3D11_INPUT_PER_VERTEX_DATA,0}
 
 	};
@@ -406,40 +443,18 @@ bool Graphics::InitializeScene()
 	HRESULT hr;
 
 	// Initialize Vertex Buffer
-	if (this->vertexBuffer.Get() == NULL)
+
+	hr = this->vertexBuffer.Initialize(this->device.Get(), NULL, sizeof(Vertex)*solverOptions.lineLength * solverOptions.lines_count);
+	if (FAILED(hr))
 	{
-		hr = this->vertexBuffer.Initialize(this->device.Get(), NULL, sizeof(Vertex)*solverOptions.lineLength * solverOptions.lines_count);
-		if (FAILED(hr))
-		{
-			ErrorLogger::Log(hr, "Failed to Create Vertex Buffer.");
-			return false;
-		}
-	}
-	else
-	{
-		hr = this->vertexBuffer.Initialize(this->device.Get(), NULL, sizeof(Vertex) * solverOptions.lineLength * solverOptions.lines_count);
-		if (FAILED(hr))
-		{
-			ErrorLogger::Log(hr, "Failed to Create Vertex Buffer.");
-			return false;
-		}
+		ErrorLogger::Log(hr, "Failed to Create Vertex Buffer.");
+		return false;
 	}
 
 #pragma endregion Create_Vertex_Buffer
 
 
 #pragma region Create_Index_Buffer
-	if (this->indexBuffer.Get() == NULL)
-		{
-			hr = this->indexBuffer.Initialize(this->device.Get(), &indices.at(0), indices.size());
-		if (FAILED(hr))
-		{
-			ErrorLogger::Log(hr, "Failed to Create Index Buffer.");
-			return false;
-		}
-	}
-	else
-	{
 
 		hr = this->indexBuffer.Initialize(this->device.Get(), &indices.at(0), indices.size());
 		if (FAILED(hr))
@@ -447,7 +462,7 @@ bool Graphics::InitializeScene()
 			ErrorLogger::Log(hr, "Failed to Create Index Buffer.");
 			return false;
 		}
-	}
+
 
 #pragma endregion Create_Index_Buffer
 

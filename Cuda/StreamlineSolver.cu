@@ -87,9 +87,9 @@ __host__ bool StreamlineSolver<T>::solve()
 
 	// TO-DO: Define streamlinesolver for double precision
 	this->h_VelocityField = InitializeVelocityField(this->solverOptions.currentIdx);
-
 	this->InitializeTexture(h_VelocityField, t_VelocityField);
 
+	volume_IO.release();
 	this->InitializeParticles();
 	
 	int blockDim = 256;

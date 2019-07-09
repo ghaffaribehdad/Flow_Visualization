@@ -180,6 +180,6 @@ void CUDASolver<T1>::InitializeParticles()
 
 	gpuErrchk(cudaMemcpy(this->d_Particles, this->h_Particles, Particles_byte, cudaMemcpyHostToDevice));
 
-	delete this->h_Particles;
+	delete[] this->h_Particles;
 }
 

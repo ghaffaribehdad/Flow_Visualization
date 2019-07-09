@@ -7,17 +7,17 @@ cbuffer mycBuffer : register(b0)
 struct VS_INPUT
 {
     float3 inPos : POSITION;
-    float2 inVelocity : VELOCITY;
+	float2 inVelocity : VELOCITY;
 	float3 inTangent : TANGENT;
-
 };
 
 
 struct VS_OUTPUT
 {
     float4 outPosition : SV_POSITION;
-    float2 outVelocity : VELOCITY;
+	float2 outVelocity : VELOCITY;
 	float3 outTangent : TANGENT;
+
 };
 
 VS_OUTPUT main(VS_INPUT input)

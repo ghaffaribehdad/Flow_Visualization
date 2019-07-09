@@ -38,6 +38,8 @@ __host__ bool PathlineSolver<T>::solve()
 	solverOptions.lineLength = timeSteps;
 	bool odd = true;
 
+	// we go through each time step and solve RK4 for even time steps the first texture is updated,
+	// while the second texture is updated for odd time steps
 	for (int step = 0; step < timeSteps; step++)
 	{
 		if (step == 0)
