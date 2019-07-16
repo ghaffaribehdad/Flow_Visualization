@@ -17,6 +17,8 @@
 #include "ImGui/imgui_impl_win32.h"
 #include "ImGui/imgui_impl_dx11.h"
 #include "RenderImGui.h"
+#include "..\\Cuda\Interoperability.cuh"
+#include <d3d11.h>
 
 
 
@@ -38,6 +40,11 @@ public:
 
 	// Add Camera object
 	Camera camera;
+
+	// Get the camera position and directions
+	const float3 upVector();
+	const float3 eyePosition();
+	const float3 viewDir();
 
 
 	SolverOptions solverOptions;
@@ -63,7 +70,9 @@ private:
 	bool InitializeShaders();
 	bool InitializeScene();
 	bool InitializeImGui(HWND hwnd);
-	bool InitializeBoundingBoxRendering();
+	bool InitializeRayCastingTexture();
+	bool InitializeRaytracingInteroperability();
+
 
 	// directx resources
 	Microsoft::WRL::ComPtr<ID3D11Device>			device;// use to creat buffers
@@ -71,11 +80,7 @@ private:
 	Microsoft::WRL::ComPtr<IDXGISwapChain>			swapchain; // use to swap out our frame
 	Microsoft::WRL::ComPtr<ID3D11RenderTargetView>	renderTargetView; // where we are going to render our buffer
 
-	// Render Target view for the bounding boxes
-	Microsoft::WRL::ComPtr<ID3D11RenderTargetView>	frontTargetView;	// bounding box front target view
-	Microsoft::WRL::ComPtr<ID3D11RenderTargetView>	backTargetView;		// bounding box back target view
-
-
+	
 	// ImGui resoureces
 	ImGuiContext * ImGuicontext = nullptr;
 	
@@ -102,12 +107,11 @@ private:
 	std::unique_ptr<DirectX::SpriteFont>	spriteFont;
 
 	// COM pointer to sampler state
-	Microsoft::WRL::ComPtr<ID3D11SamplerState> samplerState;
+	//Microsoft::WRL::ComPtr<ID3D11SamplerState> samplerState;
 
 	// COM pointer to texture to store rendered bounding box
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> frontTex;	//front-face
-	Microsoft::WRL::ComPtr<ID3D11Texture2D> backTex;	//back-face
-
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> frontTexResource;
 
 	// Pointer to the adapter
 	IDXGIAdapter* adapter;
@@ -128,6 +132,9 @@ private:
 	char* log = new char[100];
 
 	Vertex* CudaVertex = nullptr;
+
+	Interoperability cudaRayTracingInteroperability;
+
 
 
 };

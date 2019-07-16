@@ -177,6 +177,9 @@
     </CudaLink>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <CudaCompile Include="Cuda\BoundingBox.cu">
+      <FileType>Document</FileType>
+    </CudaCompile>
     <ClCompile Include="Cuda\CudaDevice.cpp" />
     <ClCompile Include="Engine.cpp" />
     <ClCompile Include="Graphics\ImGui\imgui.cpp" />
@@ -202,10 +205,12 @@
     <ClCompile Include="WindowContainer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Cuda\BoundingBox.cuh" />
     <ClInclude Include="Cuda\cudaSurface.cuh" />
     <ClInclude Include="CUDA\CudaDevice.h" />
     <ClInclude Include="CUDA\CudaSolver.h" />
     <ClInclude Include="Cuda\Interoperability.cuh" />
+    <ClInclude Include="Cuda\Ray.cuh" />
     <ClInclude Include="VolumeTexture\VolumeTexture.h" />
     <ClInclude Include="Cuda\helper_math.cuh" />
     <ClInclude Include="ErrorLogger.h" />

@@ -8,8 +8,9 @@ struct Interoperability_desc
 	cudaDeviceProp cuda_device_prop;
 	IDXGIAdapter* p_adapter = NULL;
 	ID3D11Device* p_device = NULL;
-	ID3D11Resource* pD3DResource = NULL;
 	size_t size;
+	cudaGraphicsRegisterFlags flag = cudaGraphicsRegisterFlagsNone;
+	ID3D11Resource* pD3DResource = NULL;
 };
 
 class Interoperability
@@ -17,8 +18,9 @@ class Interoperability
 
 private:
 
-	Interoperability_desc interoperability_desc;
 	cudaGraphicsResource* cudaGraphics = NULL;
+	Interoperability_desc interoperability_desc;
+	
 
 public:
 
@@ -27,16 +29,19 @@ public:
 		IDXGIAdapter* _adapter,
 		ID3D11Device* _device,
 		ID3D11Resource* _pD3DResource,
-		size_t _size)
+		size_t _size,
+		cudaGraphicsRegisterFlags _flag
+	)
 	{
 		interoperability_desc.cuda_device_prop = _cuda_device_prop;
 		interoperability_desc.p_adapter = _adapter;
 		interoperability_desc.p_device = _device;
 		interoperability_desc.pD3DResource = _pD3DResource;
 		interoperability_desc.size = _size;
+		interoperability_desc.flag = _flag;
 	}
 
-	void setInteroperability_desc(Interoperability_desc& _interoperability_desc)
+	void setInteroperability_desc(const Interoperability_desc & _interoperability_desc)
 	{
 		interoperability_desc = _interoperability_desc;
 	}
@@ -44,18 +49,12 @@ public:
 
 	bool InitializeResource()
 	{
-		// Get number of CUDA-Enable devices
-		int device;
-		gpuErrchk(cudaD3D11GetDevice(&device, solverOptions.this->adapter));
 
-		// Get properties of the Best(usually at slot 0) card
-		gpuErrchk(cudaGetDeviceProperties(&this->cuda_device_prop, 0));
-
-		// Register Vertex Buffer to map it
+		// Register DX Resource to map it
 		gpuErrchk(cudaGraphicsD3D11RegisterResource(
 			&this->cudaGraphics,
 			this->interoperability_desc.pD3DResource,
-			cudaGraphicsRegisterFlagsNone));
+			this->interoperability_desc.flag));
 
 		// Map Vertex Buffer
 		gpuErrchk(cudaGraphicsMapResources(
@@ -63,18 +62,31 @@ public:
 			&this->cudaGraphics
 		));
 
-		// Get Mapped pointer
-		size_t size = //size of the resource
-
-		gpuErrchk(cudaGraphicsResourceGetMappedPointer(
-			&p_VertexBuffer,
-			&size,
-			this->cudaGraphics
-		));
-
 		return true;
 	}
 	
 
-	void release();
+	void release()
+	{
+		gpuErrchk(cudaGraphicsUnmapResources(1, &this->cudaGraphics));
+
+		gpuErrchk(cudaGraphicsUnregisterResource(this->cudaGraphics));
+	}
+
+	void getMappedArray(cudaArray_t cuda_Array)
+	{
+		gpuErrchk(cudaGraphicsSubResourceGetMappedArray(&cuda_Array, this->cudaGraphics, 0, 0));
+	}
+
+	void getMappedPointer(void * p_resource)
+	{
+		gpuErrchk(cudaGraphicsResourceGetMappedPointer(
+			&p_resource,
+			&interoperability_desc.size,
+			this->cudaGraphics
+		));
+	}
+
+	
 };
+

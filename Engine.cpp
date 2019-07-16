@@ -131,6 +131,11 @@ void Engine::Update()
 		this->gfx.solverOptions.beginPath = false;
 		this->gfx.showLines = true;
 	}
+
+	if (this->gfx.solverOptions.interOperation)
+	{
+
+	}
 }
 
 void Engine::RenderFrame()

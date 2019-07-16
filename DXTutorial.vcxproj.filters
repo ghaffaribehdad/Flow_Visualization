@@ -137,6 +137,9 @@
     <ClCompile Include="Volume\Volume_IO.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Cuda\BoundingBox.cu">
+      <Filter>Source Files\Cuda</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="StringConverter.h">
@@ -260,6 +263,12 @@
       <Filter>Header Files\Cuda</Filter>
     </ClInclude>
     <ClInclude Include="Cuda\Interoperability.cuh">
+      <Filter>Header Files\Cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="Cuda\BoundingBox.cuh">
+      <Filter>Header Files\Cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="Cuda\Ray.cuh">
       <Filter>Header Files\Cuda</Filter>
     </ClInclude>
   </ItemGroup>

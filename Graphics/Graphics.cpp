@@ -26,7 +26,7 @@ bool Graphics::Initialize(HWND hwnd, int width, int height)
 	if (!this->InitializeImGui(hwnd))
 		return false;
 
-	if (!this->InitializeBoundingBoxRendering())
+	if (!this->InitializeRayCastingTexture())
 		return false;
 
 	//start the timer 
@@ -36,7 +36,7 @@ bool Graphics::Initialize(HWND hwnd, int width, int height)
 }
 #pragma endregion Main_Initialization
 
-bool Graphics::InitializeBoundingBoxRendering()
+bool Graphics::InitializeRayCastingTexture()
 {
 	D3D11_TEXTURE2D_DESC textureDesc;
 	ZeroMemory(&textureDesc, sizeof(textureDesc));
@@ -44,8 +44,8 @@ bool Graphics::InitializeBoundingBoxRendering()
 	textureDesc.ArraySize = 1;
 	textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
 	textureDesc.CPUAccessFlags = 0;
-	textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	textureDesc.Height = windowWidth;
+	textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	textureDesc.Height = windowHeight;
 	textureDesc.Width = windowWidth;
 	textureDesc.MipLevels = 1;
 	textureDesc.MiscFlags = 0;
@@ -59,15 +59,8 @@ bool Graphics::InitializeBoundingBoxRendering()
 		ErrorLogger::Log(hr, "Failed to Create Front Texture");
 	}
 
-
-	// Create and bind texture to the target view (FRONT)
-	hr = this->device->CreateRenderTargetView(this->frontTex.Get(), NULL, this->frontTargetView.GetAddressOf());
-	if (FAILED(hr))
-	{
-		ErrorLogger::Log(hr, "Failed to Create RenderTargetView");
-	}
-
 	return true;
+	
 }
 
 //########################### Rendering #############################
@@ -113,8 +106,13 @@ void Graphics::RenderFrame()
 
 
 	this->deviceContext->IASetIndexBuffer(this->indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+	
 
-
+	//////////////////////////////////////////////////////////////////////////////
+	//																			//
+	//	this->deviceContext->CopyResource(backbuffer.Get(), frontTex.Get());	//
+	//																			//
+	//////////////////////////////////////////////////////////////////////////////
 	if (showLines)
 	{
 		for (int i = 0; i < solverOptions.lines_count; i++)
@@ -148,8 +146,19 @@ void Graphics::RenderFrame()
 	//######################################### Dear ImGui ######################################
 	RenderImGui();
 
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> backbuffer;
+
+	HRESULT hr = this->swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(backbuffer.GetAddressOf()));
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to Get Back buffer");
+	}
+	
+
 	// Present the backbuffer
 	this->swapchain->Present(0, NULL);
+
+	
 }
 
 
@@ -272,27 +281,27 @@ bool Graphics::InitializeResources()
 		this->spriteFont = std::make_unique<DirectX::SpriteFont>(this->device.Get(), L"Data\\Fonts\\comic_sans_ms_16.spritefont");
 	}
 
-	///if (this->samplerState.Get() == nullptr)
-	///{
-	///	// Create Sampler description for sampler state
-	///	D3D11_SAMPLER_DESC sampleDesc;
-	///	ZeroMemory(&sampleDesc, sizeof(D3D11_SAMPLER_DESC));
-	///	sampleDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-	///	sampleDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-	///	sampleDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-	///	sampleDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-	///	sampleDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-	///	sampleDesc.MinLOD = 0;
-	///	sampleDesc.MaxLOD = D3D11_FLOAT32_MAX;
+	//if (this->samplerState.Get() == nullptr)
+	//{
+	//	// Create Sampler description for sampler state
+	//	D3D11_SAMPLER_DESC sampleDesc;
+	//	ZeroMemory(&sampleDesc, sizeof(D3D11_SAMPLER_DESC));
+	//	sampleDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	//	sampleDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	//	sampleDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	//	sampleDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	//	sampleDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+	//	sampleDesc.MinLOD = 0;
+	//	sampleDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
-	///	// Create sampler state
-	///	hr = this->device->CreateSamplerState(&sampleDesc, this->samplerState.GetAddressOf());
-	///	if (FAILED(hr))
-	///	{
-	///		ErrorLogger::Log(hr, "Failed to Create sampler state.");
-	///		return false;
-	///}
-	///}
+	//	// Create sampler state
+	//	hr = this->device->CreateSamplerState(&sampleDesc, this->samplerState.GetAddressOf());
+	//	if (FAILED(hr))
+	//	{
+	//		ErrorLogger::Log(hr, "Failed to Create sampler state.");
+	//		return false;
+	//	}
+	//}
 
 	return true;
 }
@@ -389,7 +398,6 @@ bool Graphics::InitializeShaders()
 		D3D11_INPUT_CLASSIFICATION::D3D11_INPUT_PER_VERTEX_DATA,0},
 		{"TANGENT",0,DXGI_FORMAT::DXGI_FORMAT_R32G32B32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,
 		D3D11_INPUT_CLASSIFICATION::D3D11_INPUT_PER_VERTEX_DATA,0}
-
 	};
 	UINT numElements = ARRAYSIZE(layout);
 
@@ -466,19 +474,8 @@ bool Graphics::InitializeScene()
 
 #pragma endregion Create_Index_Buffer
 
-#pragma region Create_Texture
-	/// Create Texture View
-	///if (this->myTexture.Get() == nullptr)
-	///{
-	///	hr = DirectX::CreateWICTextureFromFile(this->device.Get(), L"Data\\Textures\\test.jpg", nullptr, this->myTexture.GetAddressOf());
-	///	if (FAILED(hr))
-	///	{
-	///		ErrorLogger::Log(hr, "Failed to Create Texture from file.");
-	///		return false;
-	///	}
-	///}
 
-#pragma endregion Create_Texture
+
 
 #pragma region Create_Constant_Buffer
 	hr = this->constantBuffer.Initialize(this->device.Get(), this->deviceContext.Get());
@@ -492,7 +489,7 @@ bool Graphics::InitializeScene()
 	// set camera properties
 	camera.SetPosition(0.0f, 0.0f, 0.0f);
 	camera.SetProjectionValues(90.0f, static_cast<float>(this->windowWidth) / static_cast<float>(this->windowHeight), \
-		0.1f, 100.0f);
+		1.0f, 100.0f);
 
 	return true;
 }
@@ -532,8 +529,9 @@ void Graphics::Resize(HWND hwnd)
 	this->deviceContext->OMSetRenderTargets(0, 0, 0);
 
 	// Release RenderTarge View nad Depth Stencil View
-	this->renderTargetView->Release();
 	this->depthStencilView->Release();
+	this->renderTargetView->Release();
+
 
 	// Resize the swapchain
 	HRESULT hr = this->swapchain->ResizeBuffers(1, windowWidth, windowHeight, DXGI_FORMAT_UNKNOWN, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH);
@@ -543,7 +541,9 @@ void Graphics::Resize(HWND hwnd)
 	}
 
 	// Create and bind the backbuffer
+
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> backbuffer;
+
 	hr = this->swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(backbuffer.GetAddressOf()));
 	if (FAILED(hr))
 	{
@@ -553,6 +553,7 @@ void Graphics::Resize(HWND hwnd)
 	// Reinitialize Resources and Scene accordingly
 	this->InitializeResources();
 	this->InitializeScene(); 
+	this->InitializeRayCastingTexture();
 
 }
 #pragma endregion Scene_Initialization
@@ -668,6 +669,11 @@ void Graphics::RenderImGui()
 		}
 	}
 
+	if (ImGui::Checkbox("test_interoperation", &this->solverOptions.interOperation))
+	{
+		strcpy(log, "testing inter operation!");
+	}
+
 
 
 	ImGui::End();
@@ -711,4 +717,52 @@ ID3D11Device* Graphics::GetDevice()
 ID3D11Buffer* Graphics::GetVertexBuffer()
 {
 	return this->vertexBuffer.Get();
+}
+
+
+
+
+const float3 Graphics::upVector()
+{
+	XMFLOAT3 upDir = this->camera.GetUpVector();
+	float3 up = { upDir.x,upDir.y,upDir.z };
+	
+	return up;
+}
+const float3 Graphics::eyePosition()
+{
+	XMFLOAT3 eyePosition = this->camera.GetPositionFloat3();
+	float3 eye = { eyePosition.x,eyePosition.y,eyePosition.z };
+
+	return eye;
+}
+const float3 Graphics::viewDir()
+{
+	XMFLOAT3 viewDir;
+	XMStoreFloat3(&viewDir, this->camera.GetForwardVector());
+	float3 view = { viewDir.x,viewDir.y,viewDir.z };
+
+	return view;
+}
+
+bool Graphics::InitializeRaytracingInteroperability()
+{
+	// define interoperation descriptor and set it to zero
+	Interoperability_desc interoperability_desc;
+	memset(&interoperability_desc, 0, sizeof(interoperability_desc));
+
+	// set interoperation descriptor
+	interoperability_desc.flag = cudaGraphicsRegisterFlagsSurfaceLoadStore;
+	interoperability_desc.p_adapter = this->adapter;
+	interoperability_desc.p_device = this->device.Get();
+	interoperability_desc.size = static_cast<size_t>(32) *\
+		static_cast<size_t>(this->windowWidth) * \
+		static_cast<size_t>(this->windowHeight);
+	interoperability_desc.pD3DResource = frontTex.Get();
+
+	// initialize the interoperation
+	cudaRayTracingInteroperability.setInteroperability_desc(interoperability_desc);
+	
+	return cudaRayTracingInteroperability.InitializeResource();
+
 }

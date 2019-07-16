@@ -29,6 +29,10 @@ public:
 	const XMVECTOR & GetRightVector();
 	const XMVECTOR & GetBackwardVector();
 	const XMVECTOR & GetLeftVector();
+
+	const XMFLOAT3& GetUpVector();
+
+	
 private:
 	void UpdateViewMatrix();
 	XMVECTOR posVector;

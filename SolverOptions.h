@@ -33,6 +33,8 @@ public:
 	bool beginStream = false;
 	bool beginPath = false;
 
+	bool interOperation = false;
+
 	IDXGIAdapter* p_Adapter;
 	ID3D11Resource* p_vertexBuffer;
 
