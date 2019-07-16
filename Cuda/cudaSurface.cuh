@@ -1,5 +1,6 @@
 #pragma once
 #include "cuda_runtime.h"
+#include <string.h>
 
 class CudaSurface
 {
@@ -11,11 +12,21 @@ private:
 
 	int width = 0;
 	int height = 0;
+	CudaSurface();
 
 public:
 
+	CudaSurface(const int& _width, const int& _height)
+	{
+		this->width = _width;
+		this->height = _height;
+	}
+
+	cudaSurfaceObject_t getSurfaceObject()
+	{
+		return this->surfaceObject;
+	}
 	bool initializeSurface();
 	bool destroySurface();
 
-	cudaSurfaceObject_t getSurfaceObject();
 };

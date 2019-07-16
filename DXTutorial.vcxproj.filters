@@ -66,6 +66,9 @@
     <Filter Include="Source Files\VolumeTexture">
       <UniqueIdentifier>{a42de083-1331-40b9-82cb-637a7768d853}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\RayTracing">
+      <UniqueIdentifier>{a7f30409-2634-45c1-8712-477c4e1ad2b1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="StringConverter.cpp">
@@ -136,9 +139,6 @@
     </ClCompile>
     <ClCompile Include="Volume\Volume_IO.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Cuda\BoundingBox.cu">
-      <Filter>Source Files\Cuda</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -266,10 +266,10 @@
       <Filter>Header Files\Cuda</Filter>
     </ClInclude>
     <ClInclude Include="Cuda\BoundingBox.cuh">
-      <Filter>Header Files\Cuda</Filter>
+      <Filter>Header Files\RayTracing</Filter>
     </ClInclude>
     <ClInclude Include="Cuda\Ray.cuh">
-      <Filter>Header Files\Cuda</Filter>
+      <Filter>Header Files\RayTracing</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -300,6 +300,9 @@
       <Filter>Source Files\VolumeTexture</Filter>
     </CudaCompile>
     <CudaCompile Include="Cuda\cudaSurface.cu">
+      <Filter>Source Files\Cuda</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Cuda\BoundingBox.cu">
       <Filter>Source Files\Cuda</Filter>
     </CudaCompile>
   </ItemGroup>
