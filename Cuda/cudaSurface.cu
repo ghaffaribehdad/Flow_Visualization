@@ -1,5 +1,4 @@
 #include "cudaSurface.cuh"
-#include <string>
 
 bool CudaSurface::initializeSurface()
 {
@@ -7,12 +6,12 @@ bool CudaSurface::initializeSurface()
 
 	// Allocate CUDA arrays in device memory
 	cudaChannelFormatDesc channelDesc =
-		cudaCreateChannelDesc(8, 8, 8, 8,
+		cudaCreateChannelDesc(16, 16, 16, 16,
 			cudaChannelFormatKindUnsigned);
 
 
-	cudaMallocArray(&this->cuInputArray, &channelDesc, this->width, this->height,
-		cudaArraySurfaceLoadStore);
+	//cudaMallocArray(&this->cuInputArray, &channelDesc, this->width, this->height,\
+		//cudaArraySurfaceLoadStore);
 
 
 
@@ -36,7 +35,7 @@ bool CudaSurface::destroySurface()
 	cudaDestroySurfaceObject(surfaceObject);
 
 	// Free device memory
-	cudaFreeArray(cuInputArray);
+	//cudaFreeArray(cuInputArray);
 
 	return true;
 }

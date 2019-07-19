@@ -19,7 +19,8 @@
 #include "RenderImGui.h"
 #include "..\\Cuda\Interoperability.cuh"
 #include <d3d11.h>
-
+#include "..\\Cuda\cudaSurface.cuh"
+#include "..\\testCudaInterOp.cuh"
 
 
 
@@ -41,10 +42,7 @@ public:
 	// Add Camera object
 	Camera camera;
 
-	// Get the camera position and directions
-	const float3 upVector();
-	const float3 eyePosition();
-	const float3 viewDir();
+
 
 
 	SolverOptions solverOptions;
@@ -55,14 +53,50 @@ public:
 	ID3D11Buffer* GetVertexBuffer();
 
 	// Setter Functions
-	void setCudaVertex(void * cudaVertex, size_t size)
+	void setCudaVertex(void* cudaVertex, size_t size)
 	{
 		cudaMemcpy(vertexBuffer.Get(), cudaVertex, size, cudaMemcpyDeviceToDevice);
 	}
 
 	bool showLines = false;
 
+	bool initializeRaycasting();
+	bool releaseRaycastingResource()
+	{
+		// destroy and release the resources
+		//cudaSurface.destroySurface();
+		cudaRayTracingInteroperability.release();
+	}
+
+
+	// Get the camera position and directions
+	const float3 getUpVector();
+	const float3 getEyePosition();
+	const float3 getViewDir();
+	const int& getWindowHeight()
+	{
+		return this->windowHeight;
+	}
+	const int& getWindowWidth()
+	{
+		return this->windowWidth;
+	}
+
+	const float& getFOV()
+	{
+		return this->FOV;
+	}
+
+	cudaSurfaceObject_t getSurfaceObject()
+	{
+		return NULL;
+	}
+
 private:
+
+	// camera propertis
+	float FOV = 90.0;
+
 
 	// call by Initialize() funcion
 	bool InitializeDirectX(HWND hwnd);
@@ -79,6 +113,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext>		deviceContext; //use to set resources for rendering
 	Microsoft::WRL::ComPtr<IDXGISwapChain>			swapchain; // use to swap out our frame
 	Microsoft::WRL::ComPtr<ID3D11RenderTargetView>	renderTargetView; // where we are going to render our buffer
+	Microsoft::WRL::ComPtr<ID3D11RenderTargetView>	viewtofrontText; // where we are going to render our buffer
 
 	
 	// ImGui resoureces

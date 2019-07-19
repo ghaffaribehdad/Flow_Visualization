@@ -1,7 +1,8 @@
 #pragma once
 #include "cuda_runtime.h"
-#include "helper_math.cuh"
 #include <string>
+#include "..//Cuda/helper_math.h"
+
 
 
 class BoundingBox

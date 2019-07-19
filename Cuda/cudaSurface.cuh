@@ -8,11 +8,10 @@ private:
 
 	cudaSurfaceObject_t surfaceObject = 0;
 
-	cudaArray* cuInputArray;
+	cudaArray_t cuInputArray = NULL;
 
 	int width = 0;
 	int height = 0;
-	CudaSurface();
 
 public:
 
@@ -26,6 +25,12 @@ public:
 	{
 		return this->surfaceObject;
 	}
+
+	void setInputArray(cudaArray_t & _cuInputArray)
+	{
+		this->cuInputArray = _cuInputArray;
+	}
+
 	bool initializeSurface();
 	bool destroySurface();
 

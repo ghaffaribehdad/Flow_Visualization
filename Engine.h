@@ -4,6 +4,7 @@
 #include "Timer.h"
 #include "Cuda/StreamlineSolver.cuh"
 #include "Cuda/PathlineSolver.cuh"
+#include "Raycaster/Raycasting.h"
 
 
 
@@ -29,7 +30,7 @@ private:
 	StreamlineSolver<float> streamlineSolver_float;
 	PathlineSolver<float> pathlineSolver_float;
 
-	//TO-DO:: implement Pathline Solver
+	Raycasting raycasting;
 
 
 };

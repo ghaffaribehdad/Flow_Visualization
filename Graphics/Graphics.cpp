@@ -26,8 +26,6 @@ bool Graphics::Initialize(HWND hwnd, int width, int height)
 	if (!this->InitializeImGui(hwnd))
 		return false;
 
-	if (!this->InitializeRayCastingTexture())
-		return false;
 
 	//start the timer 
 	fpsTimer.Start();
@@ -49,7 +47,7 @@ bool Graphics::InitializeRayCastingTexture()
 	textureDesc.Width = windowWidth;
 	textureDesc.MipLevels = 1;
 	textureDesc.MiscFlags = 0;
-	textureDesc.SampleDesc.Count = 1;
+	textureDesc.SampleDesc.Count = 4;
 	textureDesc.SampleDesc.Quality = 0;
 	textureDesc.Usage = D3D11_USAGE_DEFAULT;
 
@@ -57,6 +55,19 @@ bool Graphics::InitializeRayCastingTexture()
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log(hr, "Failed to Create Front Texture");
+	}
+
+	// Create Render targe view
+
+	CD3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc;
+	ZeroMemory(&renderTargetViewDesc, sizeof(CD3D11_RENDER_TARGET_VIEW_DESC));
+
+	renderTargetViewDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+
+	hr = this->device->CreateRenderTargetView(frontTex.Get(), NULL, this->viewtofrontText.GetAddressOf());
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to Create viewtofrontText");
 	}
 
 	return true;
@@ -67,10 +78,13 @@ bool Graphics::InitializeRayCastingTexture()
 
 void Graphics::RenderFrame()
 {
-	float bgcolor[] = { 0.0f,0.0f, 0.0f, 0.0f };
+	float bgcolor[] = { 1.0f,0.0f, 0.0f, 0.0f };
+	float bgcolor2[] = { 0.0f,0.0f, 0.0f, 0.0f };
 
+	this->deviceContext->ClearRenderTargetView(this->viewtofrontText.Get(), bgcolor);// Clear the target view
 
 	this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), bgcolor);// Clear the target view
+
 	this->deviceContext->ClearDepthStencilView(this->depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);// Clear the depth stencil view
 	this->deviceContext->OMSetDepthStencilState(this->depthStencilState.Get(), 0);	// add depth  stencil state to rendering routin
 	//this->deviceContext->PSSetSamplers(0, 1, this->samplerState.GetAddressOf());	// Set sampler for the pixel shader
@@ -106,13 +120,17 @@ void Graphics::RenderFrame()
 
 
 	this->deviceContext->IASetIndexBuffer(this->indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
-	
 
-	//////////////////////////////////////////////////////////////////////////////
-	//																			//
-	//	this->deviceContext->CopyResource(backbuffer.Get(), frontTex.Get());	//
-	//																			//
-	//////////////////////////////////////////////////////////////////////////////
+
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> backbuffer;
+	HRESULT hr = this->swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(backbuffer.GetAddressOf()));
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to Get Back buffer");
+	}
+	this->deviceContext->CopyResource(backbuffer.Get(), frontTex.Get());
+
+
 	if (showLines)
 	{
 		for (int i = 0; i < solverOptions.lines_count; i++)
@@ -146,13 +164,10 @@ void Graphics::RenderFrame()
 	//######################################### Dear ImGui ######################################
 	RenderImGui();
 
-	Microsoft::WRL::ComPtr<ID3D11Texture2D> backbuffer;
 
-	HRESULT hr = this->swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(backbuffer.GetAddressOf()));
-	if (FAILED(hr))
-	{
-		ErrorLogger::Log(hr, "Failed to Get Back buffer");
-	}
+
+
+
 	
 
 	// Present the backbuffer
@@ -330,7 +345,7 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 	scd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	scd.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
 	scd.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
-	scd.SampleDesc.Count = 1;
+	scd.SampleDesc.Count = 4;
 	scd.SampleDesc.Quality = 0;
 	scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	scd.BufferCount = 1;
@@ -341,19 +356,21 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 
 	HRESULT hr;
 
+	D3D_FEATURE_LEVEL feature;
+
 	// Create Device and swapchain
 	hr = D3D11CreateDeviceAndSwapChain(
 		adapters[0].pAdapter,	//IDXGI adapter (noramlly the first adapter is the hardware and the second one is the software accelarator)
 		D3D_DRIVER_TYPE_UNKNOWN,
-		NULL,					// For software driver type
+		NULL,						// For software driver type
 		D3D11_CREATE_DEVICE_DEBUG,	// Flags for runtime layers
-		NULL,					// Feature levels array
+		NULL,						// Feature levels array
 		0,						// Number of feature levels in array
 		D3D11_SDK_VERSION,		// SDK version
 		&scd,					// Swapchain description
 		this->swapchain.GetAddressOf(), // Pointer to the address of swapchain
 		this->device.GetAddressOf(),	// Pointer to the address of device
-		NULL,					// supported feature level
+		&feature,					// supported feature level
 		this->deviceContext.GetAddressOf() // Pointer to the address of device context
 		);
 
@@ -488,7 +505,7 @@ bool Graphics::InitializeScene()
 
 	// set camera properties
 	camera.SetPosition(0.0f, 0.0f, 0.0f);
-	camera.SetProjectionValues(90.0f, static_cast<float>(this->windowWidth) / static_cast<float>(this->windowHeight), \
+	camera.SetProjectionValues(this->FOV, static_cast<float>(this->windowWidth) / static_cast<float>(this->windowHeight), \
 		1.0f, 100.0f);
 
 	return true;
@@ -552,8 +569,15 @@ void Graphics::Resize(HWND hwnd)
 	
 	// Reinitialize Resources and Scene accordingly
 	this->InitializeResources();
-	this->InitializeScene(); 
-	this->InitializeRayCastingTexture();
+	this->InitializeScene();
+
+	// Create Render targe view
+	hr = this->device->CreateRenderTargetView(frontTex.Get(), NULL, this->viewtofrontText.GetAddressOf());
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to Create viewtofrontText");
+	}
+
 
 }
 #pragma endregion Scene_Initialization
@@ -722,21 +746,21 @@ ID3D11Buffer* Graphics::GetVertexBuffer()
 
 
 
-const float3 Graphics::upVector()
+const float3 Graphics::getUpVector()
 {
 	XMFLOAT3 upDir = this->camera.GetUpVector();
 	float3 up = { upDir.x,upDir.y,upDir.z };
 	
 	return up;
 }
-const float3 Graphics::eyePosition()
+const float3 Graphics::getEyePosition()
 {
 	XMFLOAT3 eyePosition = this->camera.GetPositionFloat3();
 	float3 eye = { eyePosition.x,eyePosition.y,eyePosition.z };
 
 	return eye;
 }
-const float3 Graphics::viewDir()
+const float3 Graphics::getViewDir()
 {
 	XMFLOAT3 viewDir;
 	XMStoreFloat3(&viewDir, this->camera.GetForwardVector());
@@ -755,7 +779,7 @@ bool Graphics::InitializeRaytracingInteroperability()
 	interoperability_desc.flag = cudaGraphicsRegisterFlagsSurfaceLoadStore;
 	interoperability_desc.p_adapter = this->adapter;
 	interoperability_desc.p_device = this->device.Get();
-	interoperability_desc.size = static_cast<size_t>(32) *\
+	interoperability_desc.size = static_cast<size_t>(4*8) *\
 		static_cast<size_t>(this->windowWidth) * \
 		static_cast<size_t>(this->windowHeight);
 	interoperability_desc.pD3DResource = frontTex.Get();
@@ -765,4 +789,35 @@ bool Graphics::InitializeRaytracingInteroperability()
 	
 	return cudaRayTracingInteroperability.InitializeResource();
 
+}
+
+
+bool Graphics::initializeRaycasting()
+{
+	// Create and initializes the dst texture for raycasting
+	this->InitializeRayCastingTexture();
+
+	// Create a Cuda surface to bind with the raycasting texture
+	CudaSurface cudaSurface = CudaSurface(this->windowWidth,this->windowHeight);
+
+	// A pointer to the cuda array
+	cudaArray_t pCudaArray = NULL;
+
+	// Initialize the interoperation
+	if (!this->InitializeRaytracingInteroperability())
+		return false;
+
+	
+
+	// Bind raycasting texture to the cuda array
+	cudaRayTracingInteroperability.getMappedArray(pCudaArray);
+
+	// pass the cuda array to the cuda surface
+	cudaSurface.setInputArray(pCudaArray);
+
+	// initilize and cuda surface
+	if (!cudaSurface.initializeSurface())
+		return false;
+
+	return true;
 }

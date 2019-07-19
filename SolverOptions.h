@@ -38,7 +38,7 @@ public:
 	IDXGIAdapter* p_Adapter;
 	ID3D11Resource* p_vertexBuffer;
 
-
+	bool beginRaycasting = false;
 
 
 	SolverOptions() {};

@@ -1,6 +1,7 @@
 #pragma once
 #include "CudaHelper.cuh"
-#include "helper_math.cuh"
+#include <math.h>
+
 
 
 __device__ float3 RK4Even(cudaTextureObject_t t_VelocityField_0, cudaTextureObject_t t_VelocityField_1, float3 * position, float3 gridDiameter, float dt)

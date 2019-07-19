@@ -18,7 +18,7 @@ class Interoperability
 
 private:
 
-	cudaGraphicsResource* cudaGraphics = NULL;
+	cudaGraphicsResource_t cudaGraphics = NULL;
 	Interoperability_desc interoperability_desc;
 	
 
@@ -56,7 +56,7 @@ public:
 			this->interoperability_desc.pD3DResource,
 			this->interoperability_desc.flag));
 
-		// Map Vertex Buffer
+		// Map graphic resoource
 		gpuErrchk(cudaGraphicsMapResources(
 			1,
 			&this->cudaGraphics
@@ -69,11 +69,10 @@ public:
 	void release()
 	{
 		gpuErrchk(cudaGraphicsUnmapResources(1, &this->cudaGraphics));
-
 		gpuErrchk(cudaGraphicsUnregisterResource(this->cudaGraphics));
 	}
 
-	void getMappedArray(cudaArray_t cuda_Array)
+	void getMappedArray(cudaArray_t & cuda_Array)
 	{
 		gpuErrchk(cudaGraphicsSubResourceGetMappedArray(&cuda_Array, this->cudaGraphics, 0, 0));
 	}

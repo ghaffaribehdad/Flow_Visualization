@@ -177,8 +177,12 @@
     </CudaLink>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <CudaCompile Include="Cuda\BoundingBox.cu">
+    <CudaCompile Include="Raycaster\BoundingBox.cu">
       <FileType>Document</FileType>
+      <GenerateRelocatableDeviceCode Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</GenerateRelocatableDeviceCode>
+      <GenerateRelocatableDeviceCode Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</GenerateRelocatableDeviceCode>
+      <GenerateRelocatableDeviceCode Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GenerateRelocatableDeviceCode>
+      <GenerateRelocatableDeviceCode Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</GenerateRelocatableDeviceCode>
     </CudaCompile>
     <ClCompile Include="Cuda\CudaDevice.cpp" />
     <ClCompile Include="Engine.cpp" />
@@ -199,20 +203,32 @@
     <ClCompile Include="Graphics\Shaders.cpp" />
     <ClCompile Include="Graphics\Camera.cpp" />
     <ClCompile Include="Cuda\CudaSolver.cpp" />
+    <CudaCompile Include="Raycaster\Raycasting.cu">
+      <GenerateRelocatableDeviceCode Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</GenerateRelocatableDeviceCode>
+      <GenerateRelocatableDeviceCode Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</GenerateRelocatableDeviceCode>
+      <GenerateRelocatableDeviceCode Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GenerateRelocatableDeviceCode>
+      <GenerateRelocatableDeviceCode Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</GenerateRelocatableDeviceCode>
+      <FileType>Document</FileType>
+    </CudaCompile>
+    <CudaCompile Include="testCudaInterOp.cu" />
+    <ClInclude Include="Cuda\helper_math.h" />
+    <ClInclude Include="Raycaster\Raycasting.h" />
+    <ClInclude Include="testCudaInterOp.cuh">
+      <FileType>Document</FileType>
+    </ClInclude>
     <ClCompile Include="Timer.cpp" />
     <ClCompile Include="StringConverter.cpp" />
     <ClCompile Include="Volume\Volume_IO.cpp" />
     <ClCompile Include="WindowContainer.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Cuda\BoundingBox.cuh" />
+    <ClInclude Include="Raycaster\BoundingBox.cuh" />
     <ClInclude Include="Cuda\cudaSurface.cuh" />
     <ClInclude Include="CUDA\CudaDevice.h" />
     <ClInclude Include="CUDA\CudaSolver.h" />
     <ClInclude Include="Cuda\Interoperability.cuh" />
-    <ClInclude Include="Cuda\Ray.cuh" />
+    <ClInclude Include="Raycaster\Ray.cuh" />
     <ClInclude Include="VolumeTexture\VolumeTexture.h" />
-    <ClInclude Include="Cuda\helper_math.cuh" />
     <ClInclude Include="ErrorLogger.h" />
     <ClInclude Include="Engine.h" />
     <ClInclude Include="Cuda\StreamlineSolver.cuh">
@@ -221,6 +237,8 @@
     <ClInclude Include="Enum.h" />
     <CudaCompile Include="Cuda\CudaHelper.cu">
       <FileType>Document</FileType>
+      <GenerateRelocatableDeviceCode Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</GenerateRelocatableDeviceCode>
+      <GenerateRelocatableDeviceCode Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</GenerateRelocatableDeviceCode>
     </CudaCompile>
     <ClInclude Include="Cuda\PathlineSolver.cuh" />
     <ClInclude Include="SolverOptions.h" />

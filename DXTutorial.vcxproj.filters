@@ -66,7 +66,10 @@
     <Filter Include="Source Files\VolumeTexture">
       <UniqueIdentifier>{a42de083-1331-40b9-82cb-637a7768d853}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\RayTracing">
+    <Filter Include="Source Files\Raycasting">
+      <UniqueIdentifier>{ecc9a664-af30-480b-b1a9-a8a8498d4287}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Raycasting">
       <UniqueIdentifier>{a7f30409-2634-45c1-8712-477c4e1ad2b1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -253,9 +256,6 @@
     <ClInclude Include="Cuda\CudaHelper.cuh">
       <Filter>Header Files\Cuda</Filter>
     </ClInclude>
-    <ClInclude Include="Cuda\helper_math.cuh">
-      <Filter>Header Files\Cuda</Filter>
-    </ClInclude>
     <ClInclude Include="VolumeTexture\VolumeTexture.h">
       <Filter>Header Files\VolumeTexture</Filter>
     </ClInclude>
@@ -265,11 +265,18 @@
     <ClInclude Include="Cuda\Interoperability.cuh">
       <Filter>Header Files\Cuda</Filter>
     </ClInclude>
-    <ClInclude Include="Cuda\BoundingBox.cuh">
-      <Filter>Header Files\RayTracing</Filter>
+    <ClInclude Include="testCudaInterOp.cuh" />
+    <ClInclude Include="Raycaster\Raycasting.h">
+      <Filter>Header Files\Raycasting</Filter>
     </ClInclude>
-    <ClInclude Include="Cuda\Ray.cuh">
-      <Filter>Header Files\RayTracing</Filter>
+    <ClInclude Include="Raycaster\Ray.cuh">
+      <Filter>Header Files\Raycasting</Filter>
+    </ClInclude>
+    <ClInclude Include="Raycaster\BoundingBox.cuh">
+      <Filter>Header Files\Raycasting</Filter>
+    </ClInclude>
+    <ClInclude Include="Cuda\helper_math.h">
+      <Filter>Header Files\Cuda</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -302,8 +309,12 @@
     <CudaCompile Include="Cuda\cudaSurface.cu">
       <Filter>Source Files\Cuda</Filter>
     </CudaCompile>
-    <CudaCompile Include="Cuda\BoundingBox.cu">
-      <Filter>Source Files\Cuda</Filter>
+    <CudaCompile Include="testCudaInterOp.cu" />
+    <CudaCompile Include="Raycaster\BoundingBox.cu">
+      <Filter>Source Files\Raycasting</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Raycaster\Raycasting.cu">
+      <Filter>Source Files\Raycasting</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

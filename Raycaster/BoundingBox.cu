@@ -1,6 +1,8 @@
 #include "BoundingBox.cuh"
 #include <iostream>
 #include <fstream>
+
+
 __device__ __host__ void BoundingBox::constructEyeCoordinates()
 {
 	// N vector
@@ -171,5 +173,5 @@ __host__ __device__ void BoundingBox::updateBoxFaces()
 
 __host__ __device__ void BoundingBox::updateAspectRatio()
 {
-	this->aspectRatio = this->width / this->height;
+	this->aspectRatio = static_cast<float>(this->width) / static_cast<float>(this->height);
 }

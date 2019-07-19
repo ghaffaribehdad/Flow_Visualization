@@ -1,6 +1,5 @@
 #pragma once
 #include "cuda_runtime.h"
-#include "helper_math.cuh"
 #include "BoundingBox.cuh"
 
 class Ray
@@ -27,7 +26,7 @@ public:
 	}
 
 
-	__host__ __device__ void extractIntersection()
+	__device__ void extractIntersection()
 	{
 		this->nearIntersection = eyePos + this->tNearFar.x * (pixelPos - eyePos);
 		this->farIntersection = eyePos + this->tNearFar.y * (pixelPos - eyePos);
