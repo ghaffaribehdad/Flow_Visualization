@@ -87,9 +87,9 @@ public:
 		return this->FOV;
 	}
 
-	cudaSurfaceObject_t getSurfaceObject()
+	CudaSurface * getSurfaceObject()
 	{
-		return NULL;
+		return &cudaSurface;
 	}
 
 private:
@@ -169,6 +169,7 @@ private:
 	Vertex* CudaVertex = nullptr;
 
 	Interoperability cudaRayTracingInteroperability;
+	CudaSurface cudaSurface = CudaSurface(this->windowWidth, this->windowHeight);
 
 
 

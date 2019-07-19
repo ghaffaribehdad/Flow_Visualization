@@ -798,8 +798,7 @@ bool Graphics::initializeRaycasting()
 	this->InitializeRayCastingTexture();
 
 	// Create a Cuda surface to bind with the raycasting texture
-	CudaSurface cudaSurface = CudaSurface(this->windowWidth,this->windowHeight);
-
+	
 	// A pointer to the cuda array
 	cudaArray_t pCudaArray = NULL;
 
@@ -808,7 +807,6 @@ bool Graphics::initializeRaycasting()
 		return false;
 
 	
-
 	// Bind raycasting texture to the cuda array
 	cudaRayTracingInteroperability.getMappedArray(pCudaArray);
 

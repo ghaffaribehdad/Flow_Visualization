@@ -144,6 +144,7 @@ void Engine::Update()
 		raycasting_desc.viewDir = this->gfx.getViewDir();
 		raycasting_desc.eyePos = this->gfx.getEyePosition();
 		raycasting_desc.FOV_deg = this->gfx.getFOV();
+		raycasting_desc.upDir = this->gfx.getUpVector();
 		
 		raycasting.setRaycastingDec(raycasting_desc);
 		raycasting.initialize();

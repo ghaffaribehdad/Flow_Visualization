@@ -5,7 +5,7 @@
 class Ray
 {
 private:
-	int2 pixel = { 0,0 };
+	
 	float3 eyePos = { 0,0,0 };
 	float3 pixelPos = { 0,0,0 };
 
@@ -17,7 +17,7 @@ private:
 
 
 public:
-
+	int2 pixel = { 0,0 };
 	// calculate bounding box intersection with the ray (tNear and tFar)
 	__device__  void boundingBoxIntersection(BoundingBox* boundingBox)
 	{
