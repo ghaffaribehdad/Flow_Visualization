@@ -7,7 +7,6 @@
 
 class BoundingBox
 {
-
 private:
 
 	float3 eyePos = { 0.0f, 0.0f, 0.0f };
@@ -29,7 +28,7 @@ private:
 
 
 
-	__device__ __host__ void constructEyeCoordinates();
+	__host__ __device__ void constructEyeCoordinates();
 	__host__ __device__ void updateBoxFaces();
 	__host__ __device__ void updateAspectRatio();
 
@@ -37,41 +36,41 @@ private:
 public:
 
 	// Initialize BoundingBox rendering
-	__device__ __host__ void initialize();
+	__host__ __device__ void initialize();
 
 	// return tNear and tFar for pixel i and j
-	__device__ float2 findIntersections(float3& pixelPos);
+	__host__ __device__ float2 findIntersections(float3& pixelPos);
 
 	// compute pixelPosition for pixel i and j
-	__device__ float3 pixelPosition(const int& i, const int& j);
+	__host__ __device__ float3 pixelPosition(const int& i, const int& j);
 
 	// setter and getter functions
-	__host__ void setEyePos(const float3& _eyePos)
+	__host__ __device__ void setEyePos(const float3& _eyePos)
 	{
 		this->eyePos = _eyePos;
 	}
 
-	__host__ void setGridDiametr(const float3& _gridDiameter)
+	__host__ __device__ void setGridDiametr(const float3& _gridDiameter)
 	{
 		this->gridDiameter = _gridDiameter;
 	}
-	__host__ void setAspectRatio(const float& _aspectRatio)
+	__host__ __device__ void setAspectRatio(const float& _aspectRatio)
 	{
 		this->aspectRatio = _aspectRatio;
 	}
 
-	__host__ void setViewDir(const float3& _viewDir)
+	__host__ __device__ void setViewDir(const float3& _viewDir)
 	{
 		this->viewDir = _viewDir;
 	}
 
-	__host__ void setUpVect(const float3 _upVec)
+	__host__ __device__ void setUpVect(const float3 _upVec)
 	{
 		this->upVec = _upVec;
 	}
 
 
-	__host__ void setResolution(const int& _width, const int& _height)
+	__host__ __device__ void setResolution(const int& _width, const int& _height)
 	{
 		this->width = _width;
 		this->height = _height;

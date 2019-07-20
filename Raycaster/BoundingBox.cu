@@ -17,7 +17,7 @@ __device__ __host__ void BoundingBox::constructEyeCoordinates()
 }
 
 
-__device__ float3 BoundingBox::pixelPosition(const int& i, const int& j)
+__device__ __host__ float3 BoundingBox::pixelPosition(const int& i, const int& j)
 {
 	// Height of the Image Plane
 	float H = static_cast<float>(tan(this->FOV / 2.0) * 2.0 * this->distImagePlane);
@@ -38,7 +38,7 @@ __device__ float3 BoundingBox::pixelPosition(const int& i, const int& j)
 
 
 
-__device__ float2 BoundingBox::findIntersections(float3& pixelPos)
+__device__ __host__ float2 BoundingBox::findIntersections(float3& pixelPos)
 {
 
 	bool hit = true;

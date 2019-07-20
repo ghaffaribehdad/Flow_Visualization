@@ -6,11 +6,11 @@
 struct Interoperability_desc
 {
 	cudaDeviceProp cuda_device_prop;
-	IDXGIAdapter* p_adapter = NULL;
-	ID3D11Device* p_device = NULL;
+	IDXGIAdapter* p_adapter = nullptr;
+	ID3D11Device* p_device = nullptr;
 	size_t size;
 	cudaGraphicsRegisterFlags flag = cudaGraphicsRegisterFlagsNone;
-	ID3D11Resource* pD3DResource = NULL;
+	ID3D11Resource * pD3DResource;
 };
 
 class Interoperability

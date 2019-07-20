@@ -5,9 +5,9 @@ bool CudaSurface::initializeSurface()
 
 
 	// Allocate CUDA arrays in device memory
-	cudaChannelFormatDesc channelDesc =
-		cudaCreateChannelDesc(16, 16, 16, 16,
-			cudaChannelFormatKindUnsigned);
+	//cudaChannelFormatDesc channelDesc =
+	//	cudaCreateChannelDesc(8, 8, 8, 8,
+	//		cudaChannelFormatKindUnsigned);
 
 
 	//cudaMallocArray(&this->cuInputArray, &channelDesc, this->width, this->height,\
@@ -31,11 +31,13 @@ bool CudaSurface::initializeSurface()
 
 bool CudaSurface::destroySurface()
 {
+	// Free device memory
+	//cudaFreeArray(cuInputArray);
+
 	// Destroy surface objects
 	cudaDestroySurfaceObject(surfaceObject);
 
-	// Free device memory
-	//cudaFreeArray(cuInputArray);
+	
 
 	return true;
 }

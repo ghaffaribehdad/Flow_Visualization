@@ -132,24 +132,7 @@ void Engine::Update()
 		this->gfx.showLines = true;
 	}
 
-	if (this->gfx.solverOptions.beginRaycasting)
-	{
-		this->gfx.initializeRaycasting();
-		Raycasting_desc raycasting_desc;
-		ZeroMemory(&raycasting_desc, sizeof(raycasting_desc));
-
-		raycasting_desc.width = this->gfx.getWindowWidth();
-		raycasting_desc.height = this->gfx.getWindowHeight();
-		raycasting_desc.gridDiameter = make_float3(this->gfx.solverOptions.gridDiameter[0], this->gfx.solverOptions.gridDiameter[1], this->gfx.solverOptions.gridDiameter[2]);
-		raycasting_desc.viewDir = this->gfx.getViewDir();
-		raycasting_desc.eyePos = this->gfx.getEyePosition();
-		raycasting_desc.FOV_deg = this->gfx.getFOV();
-		raycasting_desc.upDir = this->gfx.getUpVector();
-		
-		raycasting.setRaycastingDec(raycasting_desc);
-		raycasting.initialize();
-
-	}
+	
 
 	if (this->gfx.solverOptions.interOperation)
 	{

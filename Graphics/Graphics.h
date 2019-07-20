@@ -21,6 +21,8 @@
 #include <d3d11.h>
 #include "..\\Cuda\cudaSurface.cuh"
 #include "..\\testCudaInterOp.cuh"
+#include "..\\Raycaster\Raycasting.h"
+
 
 
 
@@ -50,6 +52,20 @@ public:
 	// Getter Functions
 	IDXGIAdapter* GetAdapter();
 	ID3D11Device* GetDevice();
+	ID3D11DeviceContext* GetDeviceContext()
+	{
+		return this->deviceContext.Get();
+	}
+	ID3D11Texture2D* getBackbuffer()
+	{
+		HRESULT hr = this->swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(frontTex.GetAddressOf()));
+		if (FAILED(hr))
+		{
+			ErrorLogger::Log(hr, "Failed to Get Back buffer");
+		}
+		return this->frontTex.Get();
+	}
+	
 	ID3D11Buffer* GetVertexBuffer();
 
 	// Setter Functions
@@ -60,11 +76,14 @@ public:
 
 	bool showLines = false;
 
+
+	// Check comments inside the definition
 	bool initializeRaycasting();
+
 	bool releaseRaycastingResource()
 	{
 		// destroy and release the resources
-		//cudaSurface.destroySurface();
+		cudaSurface.destroySurface();
 		cudaRayTracingInteroperability.release();
 	}
 
@@ -91,6 +110,8 @@ public:
 	{
 		return &cudaSurface;
 	}
+
+	CudaSurface cudaSurface = CudaSurface(this->windowWidth, this->windowHeight);
 
 private:
 
@@ -169,7 +190,8 @@ private:
 	Vertex* CudaVertex = nullptr;
 
 	Interoperability cudaRayTracingInteroperability;
-	CudaSurface cudaSurface = CudaSurface(this->windowWidth, this->windowHeight);
+	
+	Raycasting raycasting;
 
 
 

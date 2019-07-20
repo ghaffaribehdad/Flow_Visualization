@@ -5,7 +5,7 @@
 #include "cuda_runtime.h"
 #include "BoundingBox.cuh"
 
-__global__ void boundingBoxRendering(Ray* d_Ray, BoundingBox* d_boundingBox,cudaSurfaceObject_t raycastingSurface, int rays);
+__global__ void boundingBoxRendering(BoundingBox* d_boundingBox,cudaSurfaceObject_t raycastingSurface, int rays);
 
 struct Raycasting_desc
 {
@@ -47,7 +47,8 @@ public:
 
 private:
 
-	int maxThreadBlock = 256;
+	int maxThreadBlock = 1024;
+
 	size_t rays = 0;
 	
 	__host__ bool initilizeBoundingBox();
@@ -60,9 +61,6 @@ private:
 
 	BoundingBox * h_boundingBox;
 	BoundingBox * d_boundingBox;
-
-	Ray* h_Ray;
-	Ray* d_Ray;
 
 
 };
