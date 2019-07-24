@@ -48,7 +48,7 @@ void VolumeTexture::initialize()
 
 
 	// Copy velocities to 3D Array
-	cudaMemcpy3D(&cpyParams);
+	gpuErrchk(cudaMemcpy3D(&cpyParams));
 	// might need sync before release the host memory
 
 	// Release the Volume while it is copied on GPU
@@ -75,11 +75,12 @@ void VolumeTexture::initialize()
 	texDesc.addressMode[0] = cudaAddressModeClamp;
 	texDesc.addressMode[1] = cudaAddressModeClamp;
 	texDesc.addressMode[2] = cudaAddressModeClamp;
+	texDesc.readMode = cudaReadModeElementType;
 
 
 
 	// Create the texture and bind it to the array
-	cudaCreateTextureObject(&this->t_field, &resDesc, &texDesc, NULL);
+	gpuErrchk(cudaCreateTextureObject(&this->t_field, &resDesc, &texDesc, NULL));
 
 }
 void VolumeTexture::release()

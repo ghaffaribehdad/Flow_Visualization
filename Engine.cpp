@@ -46,6 +46,7 @@ void Engine::Update()
 		MouseEvent me = mouse.ReadEvent();
 		if (mouse.IsRightDown())
 		{
+			this->gfx.solverOptions.userInterruption = true;
 			if (me.GetType() == MouseEvent::EventType::RAW_MOVE)
 			{
 				this->gfx.camera.AdjustRotation((float)me.GetPosY() * 0.005f, (float)me.GetPosX() *  0.005f, 0);
@@ -60,26 +61,32 @@ void Engine::Update()
 	if (keyboard.KeyIsPressed('W'))
 	{
 		this->gfx.camera.AdjustPosition(this->gfx.camera.GetForwardVector() * cameraSpeed * dt);
+		this->gfx.solverOptions.userInterruption = true;
 	}
 	if (keyboard.KeyIsPressed('S'))
 	{
 		this->gfx.camera.AdjustPosition(this->gfx.camera.GetBackwardVector() * cameraSpeed* dt);
+		this->gfx.solverOptions.userInterruption = true;
 	}
 	if (keyboard.KeyIsPressed('A'))
 	{
 		this->gfx.camera.AdjustPosition(this->gfx.camera.GetLeftVector() * cameraSpeed* dt);
+		this->gfx.solverOptions.userInterruption = true;
 	}
 	if (keyboard.KeyIsPressed('D'))
 	{
 		this->gfx.camera.AdjustPosition(this->gfx.camera.GetRightVector() * cameraSpeed* dt);
+		this->gfx.solverOptions.userInterruption = true;
 	}
 	if (keyboard.KeyIsPressed(VK_SPACE))
 	{
 		this->gfx.camera.AdjustPosition(0.0f, cameraSpeed * dt, 0.0f);
+		this->gfx.solverOptions.userInterruption = true;
 	}
 	if (keyboard.KeyIsPressed('Z'))
 	{
 		this->gfx.camera.AdjustPosition(0.0f, -cameraSpeed * dt, 0.0f);
+		this->gfx.solverOptions.userInterruption = true;
 	}
 
 	// Resize the window

@@ -7,7 +7,6 @@
 
 
 #include "device_launch_parameters.h"
-#include "texture_fetch_functions.h"
 #include <vector>
 #include <stdio.h>
 #include "../Particle.cuh"

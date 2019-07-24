@@ -1,6 +1,7 @@
 #pragma once
 #include "cuda_runtime.h"
 #include "helper_math.h"
+#include <math.h>
 
 
 // RKOdd assumes the first timevolume is in first texture and second timevolume in second

@@ -265,18 +265,17 @@
     <ClInclude Include="Cuda\Interoperability.cuh">
       <Filter>Header Files\Cuda</Filter>
     </ClInclude>
-    <ClInclude Include="testCudaInterOp.cuh" />
     <ClInclude Include="Raycaster\Raycasting.h">
-      <Filter>Header Files\Raycasting</Filter>
-    </ClInclude>
-    <ClInclude Include="Raycaster\Ray.cuh">
-      <Filter>Header Files\Raycasting</Filter>
-    </ClInclude>
-    <ClInclude Include="Raycaster\BoundingBox.cuh">
       <Filter>Header Files\Raycasting</Filter>
     </ClInclude>
     <ClInclude Include="Cuda\helper_math.h">
       <Filter>Header Files\Cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="Raycaster\Raycasting_Helper.h">
+      <Filter>Header Files\Raycasting</Filter>
+    </ClInclude>
+    <ClInclude Include="Raycaster\BoundingBox.h">
+      <Filter>Header Files\Raycasting</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -309,7 +308,6 @@
     <CudaCompile Include="Cuda\cudaSurface.cu">
       <Filter>Source Files\Cuda</Filter>
     </CudaCompile>
-    <CudaCompile Include="testCudaInterOp.cu" />
     <CudaCompile Include="Raycaster\BoundingBox.cu">
       <Filter>Source Files\Raycasting</Filter>
     </CudaCompile>

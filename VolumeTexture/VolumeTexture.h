@@ -1,13 +1,13 @@
 
 #pragma once
 #include "cuda_runtime.h"
+#include "..//ErrorLogger.h"
+#include "texture_fetch_functions.h"
 
 class VolumeTexture
 {
 
 public:
-
-	VolumeTexture();
 
 	// setter functions
 	void setGridDiameter(const float3& _gridDiamter);
@@ -21,8 +21,10 @@ public:
 	void initialize();
 	void release();
 
-
-	__device__ float4 fetch(float3 index);
+	cudaTextureObject_t getTexture()
+	{
+		return this->t_field;
+	}
 	
 
 private:

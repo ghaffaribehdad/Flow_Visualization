@@ -33,9 +33,9 @@ __global__ void TracingStream(Particle<T>* d_particles, cudaTextureObject_t t_Ve
 		{
 			d_particles[index].move(dt, gridSize, gridDiameter, t_VelocityField);
 
-			p_VertexBuffer[index_buffer + i].pos.x = d_particles[index].getPosition()->x;
-			p_VertexBuffer[index_buffer + i].pos.y = d_particles[index].getPosition()->y;
-			p_VertexBuffer[index_buffer + i].pos.z = d_particles[index].getPosition()->z;
+			p_VertexBuffer[index_buffer + i].pos.x = d_particles[index].getPosition()->x - gridDiameter.x / 2.0;
+			p_VertexBuffer[index_buffer + i].pos.y = d_particles[index].getPosition()->y - gridDiameter.y / 2.0;
+			p_VertexBuffer[index_buffer + i].pos.z = d_particles[index].getPosition()->z + gridDiameter.z / 2.0;
 
 			switch (solverOptions.colorMode)
 			{

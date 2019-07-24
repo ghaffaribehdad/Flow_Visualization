@@ -1,6 +1,4 @@
-#pragma once
 #include "CudaHelper.cuh"
-#include <math.h>
 
 
 

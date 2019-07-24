@@ -31,7 +31,8 @@ public:
 	const XMVECTOR & GetLeftVector();
 
 	const XMFLOAT3& GetUpVector();
-
+	const XMFLOAT3& GetViewVector();
+	
 	
 private:
 	void UpdateViewMatrix();

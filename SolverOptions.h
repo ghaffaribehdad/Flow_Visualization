@@ -39,6 +39,10 @@ public:
 	ID3D11Resource* p_vertexBuffer;
 
 	bool beginRaycasting = false;
+	bool idChange = false;
+
+
+	bool userInterruption = true;
 
 
 	SolverOptions() {};

@@ -45,7 +45,7 @@ bool Graphics::InitializeRayCastingTexture()
 	textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	textureDesc.Height = windowHeight;
 	textureDesc.Width = windowWidth;
-	textureDesc.MipLevels = 1;
+	textureDesc.MipLevels = 4;
 	textureDesc.MiscFlags = 0;
 	textureDesc.SampleDesc.Count = 1;
 	textureDesc.SampleDesc.Quality = 0;
@@ -81,57 +81,16 @@ void Graphics::RenderFrame()
 	float bgcolor[] = { 0.0f,0.0f, 0.0f, 0.0f };
 	float bgcolor2[] = { 0.0f,0.0f, 0.0f, 0.0f };
 
-	this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), bgcolor);// Clear the target view
+	
 
-
-
-
-	if (this->solverOptions.beginRaycasting)
+	if (this->solverOptions.userInterruption)
 	{
-		
-		Raycasting_desc raycasting_desc;
-		ZeroMemory(&raycasting_desc, sizeof(raycasting_desc));
-
-		raycasting_desc.width = this->getWindowWidth();
-		raycasting_desc.height = this->getWindowHeight();
-		raycasting_desc.gridDiameter = make_float3(this->solverOptions.gridDiameter[0], this->solverOptions.gridDiameter[1], this->solverOptions.gridDiameter[2]);
-		raycasting_desc.viewDir = this->getViewDir();
-		raycasting_desc.eyePos = this->getEyePosition();
-		raycasting_desc.FOV_deg = this->getFOV();
-		raycasting_desc.upDir = this->getUpVector();
-
-		raycasting.setRaycastingDec(raycasting_desc);
-
-		// Intializes Interopration: bind texture to cuda array, create a surface and bind the cuda array to it
-		this->initializeRaycasting();
-
-		// Now bind the cuda surface to the raycaster
-		raycasting.setRaycastingSurface(this->getSurfaceObject());
-
-		
-		// + Create a bounding box and initialize it
-		// + Copy bounding box to GPU
-		// + Create and copy rays to GPU
-		raycasting.initialize();
-
-		// + Run the Cuda Kernel
-		raycasting.Rendering();
-
-		// + Release bounding box and rays
-		raycasting.release();
-
-		//std::string fileName = "test.dds";
-		//std::wstring wfileName = std::wstring(fileName.begin(), fileName.end());
-		//const wchar_t* result = wfileName.c_str();
-		//SaveDDSTextureToFile(this->gfx.GetDeviceContext(), this->gfx.getTexture(), result);
-
-		this->cudaSurface.destroySurface();
-
-		// Unmap and Unregister the D3D resource
-		this->cudaRayTracingInteroperability.release();
-
-
+		this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), bgcolor);// Clear the target view
 	}
+
+
+	raycastingRendering();
+	
 
 
 
@@ -194,22 +153,10 @@ void Graphics::RenderFrame()
 		this->deviceContext->Draw(0, 0);
 
 	}
-	// calculatin FPS
-	static int fpsCounter = 0;
-	static std::string fpsString = "FPS : 0";
-	fpsCounter += 1;
-	if (fpsTimer.GetMilisecondsElapsed() > 1000.0)
-	{
-		fpsString = "FPS: " + std::to_string(fpsCounter);
-		fpsCounter = 0;
-		fpsTimer.Restart();
-	}
 
-	// Draw text
-	this->spriteBatch->Begin();
-	spriteFont->DrawString(spriteBatch.get(), StringConverter::StringToWide(fpsString).c_str(), DirectX::XMFLOAT2(0, 0), \
-		DirectX::Colors::White, 0.0f, DirectX::XMFLOAT2(1.0, 1.0), DirectX::XMFLOAT2(1.0, 1.0));
-	this->spriteBatch->End();
+
+
+
 
 	//######################################### Dear ImGui ######################################
 	RenderImGui();
@@ -222,6 +169,8 @@ void Graphics::RenderFrame()
 
 	// Present the backbuffer
 	this->swapchain->Present(0, NULL);
+
+	this->solverOptions.userInterruption = false;
 
 	
 }
@@ -339,12 +288,12 @@ bool Graphics::InitializeResources()
 		}
 	}
 
-	if (this->spriteBatch.get() == nullptr)
-	{
-		// Initialize the Fonts
-		this->spriteBatch = std::make_unique<DirectX::SpriteBatch>(this->deviceContext.Get());
-		this->spriteFont = std::make_unique<DirectX::SpriteFont>(this->device.Get(), L"Data\\Fonts\\comic_sans_ms_16.spritefont");
-	}
+	//if (this->spriteBatch.get() == nullptr)
+	//{
+	//	// Initialize the Fonts
+	//	this->spriteBatch = std::make_unique<DirectX::SpriteBatch>(this->deviceContext.Get());
+	//	this->spriteFont = std::make_unique<DirectX::SpriteFont>(this->device.Get(), L"Data\\Fonts\\comic_sans_ms_16.spritefont");
+	//}
 
 	//if (this->samplerState.Get() == nullptr)
 	//{
@@ -554,7 +503,7 @@ bool Graphics::InitializeScene()
 #pragma endregion Create_Constant_Buffer
 
 	// set camera properties
-	camera.SetPosition(0.0f, 0.0f, -3.0f);
+	camera.SetPosition(0.0f, 0.0f, -10.0f);
 	camera.SetProjectionValues(this->FOV, static_cast<float>(this->windowWidth) / static_cast<float>(this->windowHeight), \
 		1.0f, 100.0f);
 
@@ -745,6 +694,7 @@ void Graphics::RenderImGui()
 
 	if (ImGui::Checkbox("Rendering Bounding box", &this->solverOptions.beginRaycasting))
 	{
+		this->solverOptions.idChange = true;
 		strcpy(log, "Raycasting is started!");
 	}
 
@@ -763,7 +713,20 @@ void Graphics::RenderImGui()
 #pragma region Log
 
 	ImGui::Begin("Log");
-	
+
+	// calculatin FPS
+	static int fpsCounter = 0;
+	static std::string fpsString = "FPS : 0";
+	fpsCounter += 1;
+	if (fpsTimer.GetMilisecondsElapsed() > 1000.0)
+	{
+		fpsString = "FPS: " + std::to_string(fpsCounter);
+		fpsCounter = 0;
+		fpsTimer.Restart();
+	}
+
+	//Copy it to the log
+	strcpy(log, fpsString.c_str());
 
 	if (ImGui::InputTextMultiline("Log",this->log,1000))
 	{
@@ -819,8 +782,8 @@ const float3 Graphics::getEyePosition()
 }
 const float3 Graphics::getViewDir()
 {
-	XMFLOAT3 viewDir;
-	XMStoreFloat3(&viewDir, this->camera.GetForwardVector());
+
+	XMFLOAT3 viewDir =  this->camera.GetViewVector();
 	float3 view = { viewDir.x,viewDir.y,viewDir.z };
 
 	return view;
@@ -872,4 +835,117 @@ bool Graphics::initializeRaycasting()
 		return false;
 
 	return true;
+}
+
+
+void Graphics::raycastingRendering()
+{
+	if (this->solverOptions.beginRaycasting)
+	{
+		if (this->solverOptions.idChange)
+		{
+			/*std::string upDirection = "";
+		upDirection += std::to_string(getViewDir().x);
+		upDirection += ", ";
+		upDirection += std::to_string(getViewDir().y);
+		upDirection += ", ";
+		upDirection += std::to_string(getViewDir().z);
+		upDirection += "\n";
+		OutputDebugStringA(upDirection.c_str());
+*/
+			Raycasting_desc raycasting_desc;
+			ZeroMemory(&raycasting_desc, sizeof(raycasting_desc));
+
+			raycasting_desc.width = this->getWindowWidth();
+			raycasting_desc.height = this->getWindowHeight();
+			raycasting_desc.gridDiameter = make_float3(this->solverOptions.gridDiameter[0], this->solverOptions.gridDiameter[1], this->solverOptions.gridDiameter[2]);
+			raycasting_desc.gridSize = make_int3(this->solverOptions.gridSize[0], this->solverOptions.gridSize[1], this->solverOptions.gridSize[2]);
+			raycasting_desc.viewDir = this->getViewDir();
+			raycasting_desc.eyePos = this->getEyePosition();
+			raycasting_desc.FOV_deg = this->getFOV();
+			raycasting_desc.upDir = this->getUpVector();
+			raycasting_desc.solverOption = this->solverOptions;
+
+			raycasting.setRaycastingDec(raycasting_desc);
+
+			// Intializes Interopration: bind texture to cuda array, create a surface and bind the cuda array to it
+			this->initializeRaycasting();
+
+			// Now bind the cuda surface to the raycaster
+			raycasting.setRaycastingSurface(this->getSurfaceObject());
+
+
+			// + Create a bounding box and initialize it
+			// + Copy bounding box to GPU
+			// + Create and copy rays to GPU
+			raycasting.initialize();
+
+			// + Run the Cuda Kernel
+			raycasting.Rendering();
+
+			// + Release bounding box and rays
+			raycasting.release();
+
+			//std::string fileName = "test.dds";
+			//std::wstring wfileName = std::wstring(fileName.begin(), fileName.end());
+			//const wchar_t* result = wfileName.c_str();
+			//SaveDDSTextureToFile(this->gfx.GetDeviceContext(), this->gfx.getTexture(), result);
+
+			this->cudaSurface.destroySurface();
+
+			// Unmap and Unregister the D3D resource
+			this->cudaRayTracingInteroperability.release();
+
+			this->solverOptions.idChange = false;
+		}
+		else if (this->solverOptions.userInterruption)
+		{
+			Raycasting_desc raycasting_desc;
+			ZeroMemory(&raycasting_desc, sizeof(raycasting_desc));
+
+			raycasting_desc.width = this->getWindowWidth();
+			raycasting_desc.height = this->getWindowHeight();
+			raycasting_desc.gridDiameter = make_float3(this->solverOptions.gridDiameter[0], this->solverOptions.gridDiameter[1], this->solverOptions.gridDiameter[2]);
+			raycasting_desc.gridSize = make_int3(this->solverOptions.gridSize[0], this->solverOptions.gridSize[1], this->solverOptions.gridSize[2]);
+			raycasting_desc.viewDir = this->getViewDir();
+			raycasting_desc.eyePos = this->getEyePosition();
+			raycasting_desc.FOV_deg = this->getFOV();
+			raycasting_desc.upDir = this->getUpVector();
+			raycasting_desc.solverOption = this->solverOptions;
+
+			raycasting.setRaycastingDec(raycasting_desc);
+
+			// Intializes Interopration: bind texture to cuda array, create a surface and bind the cuda array to it
+			this->initializeRaycasting();
+
+			// Now bind the cuda surface to the raycaster
+			raycasting.setRaycastingSurface(this->getSurfaceObject());
+
+
+			// + Create a bounding box and initialize it
+			// + Copy bounding box to GPU
+			// + Create and copy rays to GPU
+			raycasting.initialize();
+
+			// + Run the Cuda Kernel
+			raycasting.Rendering();
+
+			// + Release bounding box and rays
+			raycasting.release();
+
+			//std::string fileName = "test.dds";
+			//std::wstring wfileName = std::wstring(fileName.begin(), fileName.end());
+			//const wchar_t* result = wfileName.c_str();
+			//SaveDDSTextureToFile(this->gfx.GetDeviceContext(), this->gfx.getTexture(), result);
+
+			this->cudaSurface.destroySurface();
+
+			// Unmap and Unregister the D3D resource
+			this->cudaRayTracingInteroperability.release();
+
+
+		}
+
+
+	}
 }

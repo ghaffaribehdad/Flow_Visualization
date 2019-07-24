@@ -1,11 +1,25 @@
-#pragma once
-#include "Ray.cuh"
+
+
+#ifndef RAYCASTING_H
+#define RAYCASINTG_H
+
+
+
 #include "..//VolumeTexture/VolumeTexture.h"
 #include "..//Cuda/CudaSurface.cuh"
 #include "cuda_runtime.h"
-#include "BoundingBox.cuh"
+#include "BoundingBox.h"
+#include "..//VolumeTexture/VolumeTexture.h"
+#include "..//Volume/Volume_IO.h"
+#include "..//SolverOptions.h"
+#include <vector>
+#include "texture_fetch_functions.h"
+#include "Raycasting_Helper.h"
 
-__global__ void boundingBoxRendering(BoundingBox* d_boundingBox,cudaSurfaceObject_t raycastingSurface, int rays);
+
+//__global__ void boundingBoxRendering(BoundingBox* d_boundingBox,cudaSurfaceObject_t raycastingSurface,cudaTextureObject_t field1, int rays);
+__global__ void isoSurfaceVelocityMagnitude(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
+
 
 struct Raycasting_desc
 {
@@ -18,9 +32,14 @@ struct Raycasting_desc
 	int height;
 
 	float3 gridDiameter;
-	
+	int3 gridSize;
+
+	float* field;
+
 	// for now this is fixed 
 	float3 gridCenter = { 0,0,0 };
+
+	SolverOptions solverOption;
 };
 
 
@@ -35,11 +54,11 @@ public:
 	__host__ void Rendering();
 
 
-	__host__ void setRaycastingDec(Raycasting_desc & _raycasting_desc)
+	__host__ void setRaycastingDec(Raycasting_desc& _raycasting_desc)
 	{
 		this->raycasting_desc = _raycasting_desc;
 	}
-	__host__ void setRaycastingSurface(CudaSurface * _raycastingSurface)
+	__host__ void setRaycastingSurface(CudaSurface* _raycastingSurface)
 	{
 		this->raycastingSurface = _raycastingSurface;
 	}
@@ -47,20 +66,28 @@ public:
 
 private:
 
+
+	bool fileLoaded = false;
+	bool fileChanged = false;
+
 	int maxThreadBlock = 1024;
 
 	size_t rays = 0;
-	
+
 	__host__ bool initilizeBoundingBox();
+	__host__ bool initializeIO();
 	__host__ bool initializeVolumeTexuture();
+
 
 	Raycasting_desc raycasting_desc;
 
-	VolumeTexture* volumeTexture;
-	CudaSurface * raycastingSurface;
+	VolumeTexture volumeTexture;
+	CudaSurface* raycastingSurface;
 
-	BoundingBox * h_boundingBox;
-	BoundingBox * d_boundingBox;
-
+	Volume_IO volume_IO;
 
 };
+
+
+
+#endif // !RAYCASTING_H

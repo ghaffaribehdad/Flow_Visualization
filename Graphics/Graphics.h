@@ -25,7 +25,6 @@
 
 
 
-
 class Graphics
 {
 	friend CUDASolver<float>;
@@ -128,6 +127,8 @@ private:
 	bool InitializeRayCastingTexture();
 	bool InitializeRaytracingInteroperability();
 
+	void raycastingRendering();
+
 
 	// directx resources
 	Microsoft::WRL::ComPtr<ID3D11Device>			device;// use to creat buffers
@@ -159,8 +160,8 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11RasterizerState> rasterizerstate;
 
 	// Standart unique pointer to sprite batch/font
-	std::unique_ptr<DirectX::SpriteBatch>	spriteBatch;
-	std::unique_ptr<DirectX::SpriteFont>	spriteFont;
+	//std::unique_ptr<DirectX::SpriteBatch>	spriteBatch;
+	//std::unique_ptr<DirectX::SpriteFont>	spriteFont;
 
 	// COM pointer to sampler state
 	//Microsoft::WRL::ComPtr<ID3D11SamplerState> samplerState;
@@ -185,7 +186,7 @@ private:
 	bool pathline = false;
 
 	// Log pointer
-	char* log = new char[100];
+	char* log = new char[1000];
 
 	Vertex* CudaVertex = nullptr;
 
