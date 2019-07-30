@@ -1,5 +1,5 @@
 #include "Raycasting.h"
-
+#include "IsosurfaceFunctions.h"
 
 
 __constant__ BoundingBox d_boundingBox;
@@ -49,17 +49,20 @@ __host__ void Raycasting::Rendering()
 {
 
 
-	int blocks = (int(rays) % (maxThreadBlock )) == 0 ? int(rays) / maxThreadBlock : (int(rays) / maxThreadBlock ) + 1;
-	isoSurfaceVelocityMagnitude <<< blocks, maxThreadBlock >> > 
+	int blocks;
+	dim3 thread = { maxBlockDim,maxBlockDim,1 };
+	blocks = (this->rays % (thread.x * thread.y) == 0 ? rays / (thread.x * thread.y) : rays / (thread.x * thread.y) + 1);
+
+
+	isoSurfaceVelocityMagnitude <<< blocks, thread >> >
 		(
 		this->raycastingSurface->getSurfaceObject(),
 		this->volumeTexture.getTexture(),
 		int(this->rays),
-		15.0f,
-		.02f,
-		.09f
+		20.0,
+		.01f,
+		1.0f
 	);
-	//cudaDeviceSynchronize();
 }
 
 
@@ -110,6 +113,8 @@ __host__ bool Raycasting::initilizeBoundingBox()
 
 
 	// Populate the constant memory
+	//gpuErrchk(cudaMalloc(&this->d_BoundingBox, sizeof(BoundingBox)));
+	//gpuErrchk(cudaMemcpy(this->d_BoundingBox, h_boundingBox, sizeof(BoundingBox), cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpyToSymbol(d_boundingBox, h_boundingBox, sizeof(BoundingBox)));
 	
 
@@ -150,56 +155,59 @@ __host__ bool Raycasting::initializeIO()
 __global__ void isoSurfaceVelocityMagnitude(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance)
 {
 	// Calculate surface coordinates
-	int thread = threadIdx.x;
-
-	int index = blockIdx.x * blockDim.x + thread;
-
+	
+	int index = blockIdx.x  * blockDim.y * blockDim.x;
+	index += threadIdx.y * blockDim.x;
+	index += threadIdx.x;
 
 	if (index < rays)
 	{
-		int2 pixel = { 0,0 };
+		int2 pixel;
 		pixel.y = index / d_boundingBox.width;
 		pixel.x = index - pixel.y * d_boundingBox.width;
-		float3 pixelPos = pixelPosition(d_boundingBox,pixel.x, pixel.y);
+		float3 viewDir = d_boundingBox.viewDir;
+		float3 pixelPos = pixelPosition(d_boundingBox, pixel.x, pixel.y);
 		float2 NearFar = findIntersections(pixelPos, d_boundingBox);
-		
-		float4 velocity4D = { 0,0,0,0 };
-		float4 color = {.5,.2,.5,0 };
-		float rgba = rgba = DecodeFloatRGBA(color);;
+		float distImagePlane = d_boundingBox.distImagePlane;
 
+		float4 velocity4D;
+		float3 rgb = { 1.0f, 0.3f, 0.0f};
 
+		//float3 positionOffset = (d_boundingBox.eyePos + (d_boundingBox.gridDiameter / 2.0f)) / d_boundingBox.gridDiameter;
+		float3 positionOffset = d_boundingBox.gridDiameter / 2.0f;
 		// if hits
 		if (NearFar.y != -1)
-		{ 
+		{
 			float3 rayDir = normalize(pixelPos - d_boundingBox.eyePos);
-			
+			//float3 correction = rayDir / d_boundingBox.gridDiameter;
+
 			for (float t = NearFar.x; t < NearFar.y; t = t + samplingRate)
 			{
 
-				float3 relativePos = (d_boundingBox.eyePos + t * rayDir);
-				relativePos += d_boundingBox.gridDiameter / 2.0;
-				relativePos = relativePos/ d_boundingBox.gridDiameter;
-
+				//float3 relativePos = positionOffset + (correction * t);
+				float3 relativePos = pixelPos + (rayDir * t);
+				relativePos = (relativePos / d_boundingBox.gridDiameter) + make_float3(.5f, .5f, .5f);
 				velocity4D = tex3D<float4>(field1, relativePos.x, relativePos.y, relativePos.z);
 
-				if (fabsf(velocityMagnitude(velocity4D) - isoValue) < IsosurfaceTolerance)
+				if (fabsf(VelocityMagnitude::ValueAtXYZ(field1,relativePos) - isoValue) < IsosurfaceTolerance)
 				{
-					surf2Dwrite(rgba, raycastingSurface, 4* pixel.x, pixel.y);
+					float3 gradient = VelocityMagnitude::GradientAtXYZ(field1, relativePos, 0.01f);
+					float diffuse = max(dot(normalize(gradient), viewDir), 0.0f);
+					rgb = rgb * diffuse;
+					float4 rgba = { rgb.x,rgb.y,rgb.z,0.0 };
+					
+					surf2Dwrite(rgbaFloatToUChar(rgba), raycastingSurface, 4 * pixel.x, pixel.y);
 					break;
 				}
 
 			}
 
+
+
 		}
-
-	/*	if (NearFar.y != -1)
-		{
-
-			float4 color = { 1,.5,.5,0 };
-			float rgba = DecodeFloatRGBA(color);
-			surf2Dwrite(rgba, raycastingSurface, 4 * pixel.x, pixel.y);
-		}*/
-			
+	
 	}
+
+
 }
 

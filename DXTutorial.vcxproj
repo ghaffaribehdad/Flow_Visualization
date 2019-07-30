@@ -125,6 +125,7 @@
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
       <CodeGeneration>compute_61,sm_61</CodeGeneration>
+      <CudaRuntime>Static</CudaRuntime>
     </CudaCompile>
     <CudaLink>
       <AdditionalLibraryDirectories>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -211,6 +212,7 @@
       <FileType>Document</FileType>
     </CudaCompile>
     <ClInclude Include="Cuda\helper_math.h" />
+    <ClInclude Include="Raycaster\IsosurfaceFunctions.h" />
     <ClInclude Include="Raycaster\Raycasting.h" />
     <ClInclude Include="Raycaster\Raycasting_Helper.h" />
     <ClCompile Include="Timer.cpp" />
@@ -224,6 +226,7 @@
     <ClInclude Include="CUDA\CudaDevice.h" />
     <ClInclude Include="CUDA\CudaSolver.h" />
     <ClInclude Include="Cuda\Interoperability.cuh" />
+    <ClInclude Include="RaycastingOptions.h" />
     <ClInclude Include="VolumeTexture\VolumeTexture.h" />
     <ClInclude Include="ErrorLogger.h" />
     <ClInclude Include="Engine.h" />

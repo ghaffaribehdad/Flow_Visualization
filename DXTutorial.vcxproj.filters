@@ -277,6 +277,12 @@
     <ClInclude Include="Raycaster\BoundingBox.h">
       <Filter>Header Files\Raycasting</Filter>
     </ClInclude>
+    <ClInclude Include="Raycaster\IsosurfaceFunctions.h">
+      <Filter>Header Files\Raycasting</Filter>
+    </ClInclude>
+    <ClInclude Include="RaycastingOptions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="vertexshader.hlsl">

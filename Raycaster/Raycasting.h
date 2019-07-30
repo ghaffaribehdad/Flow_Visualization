@@ -14,7 +14,6 @@
 #include "..//SolverOptions.h"
 #include <vector>
 #include "texture_fetch_functions.h"
-#include "Raycasting_Helper.h"
 
 
 //__global__ void boundingBoxRendering(BoundingBox* d_boundingBox,cudaSurfaceObject_t raycastingSurface,cudaTextureObject_t field1, int rays);
@@ -70,7 +69,7 @@ private:
 	bool fileLoaded = false;
 	bool fileChanged = false;
 
-	int maxThreadBlock = 1024;
+	unsigned int maxBlockDim = 32;
 
 	size_t rays = 0;
 
@@ -85,6 +84,7 @@ private:
 	CudaSurface* raycastingSurface;
 
 	Volume_IO volume_IO;
+	BoundingBox * d_BoundingBox;
 
 };
 

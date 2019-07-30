@@ -23,6 +23,7 @@
 #include "..\\testCudaInterOp.cuh"
 #include "..\\Raycaster\Raycasting.h"
 
+typedef long long int llInt;
 
 
 class Graphics
@@ -115,7 +116,7 @@ public:
 private:
 
 	// camera propertis
-	float FOV = 90.0;
+	float FOV = 30.0;
 
 
 	// call by Initialize() funcion

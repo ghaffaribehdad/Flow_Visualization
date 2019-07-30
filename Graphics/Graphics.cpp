@@ -125,51 +125,43 @@ void Graphics::RenderFrame()
 
 
 
-	this->deviceContext->IASetVertexBuffers(0, 1, this->vertexBuffer.GetAddressOf(), this->vertexBuffer.StridePtr(), &offset);
+	this->deviceContext->IASetVertexBuffers(0, 1, this->vertexBuffer.GetAddressOf(), this->vertexBuffer.StridePtr(), &offset); // set Vertex buffer
+	this->deviceContext->IASetIndexBuffer(this->indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0); // Set index buffer
 
 
-	this->deviceContext->IASetIndexBuffer(this->indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
-
-
-	Microsoft::WRL::ComPtr<ID3D11Texture2D> backbuffer;
-	HRESULT hr = this->swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(backbuffer.GetAddressOf()));
-	if (FAILED(hr))
-	{
-		ErrorLogger::Log(hr, "Failed to Get Back buffer");
-	}
+	//Microsoft::WRL::ComPtr<ID3D11Texture2D> backbuffer;
+	//HRESULT hr = this->swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(backbuffer.GetAddressOf()));
+	//if (FAILED(hr))
+	//{
+	//	ErrorLogger::Log(hr, "Failed to Get Back buffer");
+	//}
 	//this->deviceContext->CopyResource(backbuffer.Get(), frontTex.Get());
 
 
 	if (showLines)
 	{
-		for (int i = 0; i < solverOptions.lines_count; i++)
-		{
-			this->deviceContext->DrawIndexed(solverOptions.lineLength, i* solverOptions.lineLength, 0);
+		//for (int i = 0; i < solverOptions.lines_count; i++)
+	//	{
+			this->deviceContext->DrawIndexed(llInt(solverOptions.lineLength) * llInt(solverOptions.lines_count) + solverOptions.lines_count, 0, 0);
 
-		}
+		//}
 	}
 	else
 	{
 		this->deviceContext->Draw(0, 0);
 
 	}
-
-
-
+	   
 
 
 	//######################################### Dear ImGui ######################################
 	RenderImGui();
 
 
-
-
-
-	
-
 	// Present the backbuffer
 	this->swapchain->Present(0, NULL);
 
+	// Always turn the user interruption to false after the presentation of backbuffer
 	this->solverOptions.userInterruption = false;
 
 	
@@ -453,10 +445,18 @@ bool Graphics::InitializeScene()
 
 #pragma region Create_Indices
 
-	std::vector<DWORD> indices(solverOptions.lineLength*solverOptions.lines_count);
+	std::vector<DWORD> indices(llInt(solverOptions.lineLength)* llInt(solverOptions.lines_count) + solverOptions.lines_count);
 	for (int i = 0; i < indices.size(); i++)
 	{
-		indices[i] = i;
+		if (i % (solverOptions.lines_count) == 0)
+		{
+			indices[i] = -1;
+		}
+		else
+		{
+			indices[i] = i;
+		}
+		
 	}
 
 #pragma endregion Create_Indices

@@ -1,19 +1,21 @@
 #pragma once
 
 #include "..\\Cuda\helper_math.h"
+#include "texture_fetch_functions.h"
+#include "Raycasting_Helper.h"
 
 
-inline __device__ float velocityMagnitude(float4& _velocity)
+typedef unsigned char uchar;
+
+inline __device__ float velocityMagnitude(float4 _velocity)
 {
 	float3 velocity = make_float3(_velocity.x, _velocity.y, _velocity.z);
-	float magnitude = fabsf(sqrtf(dot(velocity, velocity)));
-	
-	return magnitude;
+	return fabsf(sqrtf(dot(velocity, velocity)));
 }
 
 
 
-inline __device__ __host__ float2 findIntersections(const float3& pixelPos, const BoundingBox & boundingBox)
+inline __device__ float2 findIntersections(const float3 pixelPos, const BoundingBox boundingBox)
 {
 
 	bool hit = true;
@@ -93,7 +95,7 @@ inline __device__ __host__ float2 findIntersections(const float3& pixelPos, cons
 
 
 
- inline __device__ __host__ float3 pixelPosition(const BoundingBox & boundingBox,const int& i,const int& j)
+ inline __device__ float3 pixelPosition(const BoundingBox  boundingBox,const int i,const int j)
 {
 	// Height of the Image Plane
 	float H = static_cast<float>(tan(boundingBox.FOV / 2.0) * 2.0 * boundingBox.distImagePlane);
@@ -111,3 +113,15 @@ inline __device__ __host__ float2 findIntersections(const float3& pixelPos, cons
 
 	return pixelPos;
 }
+ 
+
+
+
+ __device__ inline uchar4 rgbaFloatToUChar(float4 rgba)
+ {
+	 rgba.x = __saturatef(rgba.x);
+	 rgba.y = __saturatef(rgba.y);
+	 rgba.z = __saturatef(rgba.z);
+	 rgba.w = __saturatef(rgba.w);
+	 return make_uchar4(uchar(rgba.x * 255.0f), uchar(rgba.y * 255.0f), uchar(rgba.z * 255.0f), uchar(rgba.w * 255.0f));
+ }

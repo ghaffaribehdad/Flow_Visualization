@@ -1,7 +1,6 @@
 #include "Shaders.h"
 
 
-
 //##################### Vertex Shader #####################
 bool VertexShader::Initialize(Microsoft::WRL::ComPtr<ID3D11Device> & device, std::wstring shaderpath, D3D11_INPUT_ELEMENT_DESC * layoutDesc, UINT numElements)
 {

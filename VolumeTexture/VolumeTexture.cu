@@ -72,9 +72,9 @@ void VolumeTexture::initialize()
 	// Texture Description
 	texDesc.normalizedCoords = true;
 	texDesc.filterMode = cudaFilterModeLinear;
-	texDesc.addressMode[0] = cudaAddressModeClamp;
-	texDesc.addressMode[1] = cudaAddressModeClamp;
-	texDesc.addressMode[2] = cudaAddressModeClamp;
+	texDesc.addressMode[0] = cudaAddressModeBorder;
+	texDesc.addressMode[1] = cudaAddressModeBorder;
+	texDesc.addressMode[2] = cudaAddressModeBorder;
 	texDesc.readMode = cudaReadModeElementType;
 
 
