@@ -10,12 +10,12 @@ private:
 
 private:
 	Microsoft::WRL::ComPtr<ID3D11Buffer> buffer;
-	UINT buffersize = 0;
+	long long int buffersize = 0;
 
 public:
 	IndexBuffer() {}
 
-	UINT GetBuffersize() const
+	long long int GetBuffersize() const
 	{
 		return this->buffersize;
 	}
@@ -30,7 +30,7 @@ public:
 		return this->buffer.GetAddressOf();
 	}
 
-	HRESULT Initialize(ID3D11Device * device, DWORD * data, UINT numIndices)
+	HRESULT Initialize(ID3D11Device * device, DWORD * data, long long int numIndices)
 	{
 		// Release if it is already alocated
 		if (buffer.Get() != nullptr)

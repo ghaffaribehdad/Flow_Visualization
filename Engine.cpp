@@ -52,6 +52,11 @@ void Engine::Update()
 				this->gfx.camera.AdjustRotation((float)me.GetPosY() * 0.005f, (float)me.GetPosX() *  0.005f, 0);
 			}
 		}
+
+		if (mouse.IsLeftDown())
+		{
+			this->gfx.solverOptions.userInterruption = true;
+		}
 	}
 
 	const float cameraSpeed = 0.005f;

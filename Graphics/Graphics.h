@@ -14,9 +14,7 @@
 #include "..\Timer.h"
 #include "..\Cuda\CudaSolver.h"
 #include "ImGui/imgui.h"
-#include "ImGui/imgui_impl_win32.h"
-#include "ImGui/imgui_impl_dx11.h"
-#include "RenderImGui.h"
+
 #include "..\\Cuda\Interoperability.cuh"
 #include <d3d11.h>
 #include "..\\Cuda\cudaSurface.cuh"
@@ -113,6 +111,9 @@ public:
 
 	CudaSurface cudaSurface = CudaSurface(this->windowWidth, this->windowHeight);
 
+	// for now it is public while imgui need the access
+	Timer fpsTimer;
+
 private:
 
 	// camera propertis
@@ -145,6 +146,8 @@ private:
 	// Shaders
 	VertexShader vertexshader;
 	PixelShader pixelshader;
+	GeometryShader geometryshader;
+
 
 	// Buffers
 	VertexBuffer<Vertex> vertexBuffer;
@@ -177,24 +180,21 @@ private:
 	int windowWidth = 0;
 	int windowHeight = 0;
 
-	Timer fpsTimer;
+	
 
 
-	void RenderImGui();
+	//void RenderImGui();
 
 	// Solver options
 	bool streamline = true;
 	bool pathline = false;
 
-	// Log pointer
-	char* log = new char[1000];
+
 
 	Vertex* CudaVertex = nullptr;
 
 	Interoperability cudaRayTracingInteroperability;
 	
 	Raycasting raycasting;
-
-
 
 };

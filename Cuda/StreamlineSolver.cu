@@ -1,5 +1,5 @@
 #include "StreamlineSolver.cuh"
-
+#include "helper_math.h"
 // Explicit instantiation
 template class StreamlineSolver<float>;
 template class StreamlineSolver<double>;
@@ -36,34 +36,37 @@ __global__ void TracingStream(Particle<T>* d_particles, cudaTextureObject_t t_Ve
 			p_VertexBuffer[index_buffer + i].pos.x = d_particles[index].getPosition()->x - gridDiameter.x / 2.0;
 			p_VertexBuffer[index_buffer + i].pos.y = d_particles[index].getPosition()->y - gridDiameter.y / 2.0;
 			p_VertexBuffer[index_buffer + i].pos.z = d_particles[index].getPosition()->z + gridDiameter.z / 2.0;
+			float3* velocity = d_particles[index].getVelocity();
+			float3 norm = normalize(*velocity);
+			p_VertexBuffer[index_buffer + i].tangent.x = norm.x;
+			p_VertexBuffer[index_buffer + i].tangent.y = norm.y;
+			p_VertexBuffer[index_buffer + i].tangent.z = norm.z;
+			p_VertexBuffer[index_buffer + i].LineID = float(index) / float(solverOptions.lines_count);
+
 
 			switch (solverOptions.colorMode)
 			{
 				case 0: // Velocity
 				{
-					float3* velocity = d_particles[index].getVelocity();
-					double norm = norm3d(velocity->x, velocity->y, velocity->z);
-					p_VertexBuffer[index_buffer + i].colorID.x = norm;
-					p_VertexBuffer[index_buffer + i].colorID.y = float(index) / float(solverOptions.lines_count);
+				
+					p_VertexBuffer[index_buffer + i].LineID = float(index) / float(solverOptions.lines_count);
 
 				}
 				case 1: // Vx
 				{
 					float velocity = d_particles[index].getVelocity()->x;
-					p_VertexBuffer[index_buffer + i].colorID.x = velocity;
-					p_VertexBuffer[index_buffer + i].colorID.y = float(index) / float(solverOptions.lines_count);
+					p_VertexBuffer[index_buffer + i].color.x = velocity;
+
 				}
 				case 2: // Vx
 				{
 					float velocity = d_particles[index].getVelocity()->y;
-					p_VertexBuffer[index_buffer + i].colorID.x = velocity;
-					p_VertexBuffer[index_buffer + i].colorID.y = float(index) / float(solverOptions.lines_count);
+					p_VertexBuffer[index_buffer + i].color.x = velocity;
 				}
 				case 3: // Vx
 				{
 					float velocity = d_particles[index].getVelocity()->z;
-					p_VertexBuffer[index_buffer + i].colorID.x = velocity;
-					p_VertexBuffer[index_buffer + i].colorID.y = float(index)/ float(solverOptions.lines_count);
+					p_VertexBuffer[index_buffer + i].color.x = velocity;
 				}
 			}
 

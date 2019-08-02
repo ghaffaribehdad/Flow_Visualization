@@ -44,6 +44,11 @@ public:
 
 	bool userInterruption = true;
 
+	bool streamline = true;
+	bool pathline = false;
+
+
+	bool lengthChanged = false;
 
 	SolverOptions() {};
 

@@ -30,6 +30,7 @@ inline __host__ __device__ float3 operator*(float b, float3 a)
 }
 
 
+
 inline __host__ __device__ void operator+=(float3& a, const float3 b)
 {
 	a.x += b.x;

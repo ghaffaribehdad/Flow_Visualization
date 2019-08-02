@@ -1,5 +1,5 @@
 #include "Graphics.h"
-
+#include "RenderImGui.h"
 
 
 
@@ -8,7 +8,6 @@ bool Graphics::Initialize(HWND hwnd, int width, int height)
 {
 	this->windowHeight = height;
 	this->windowWidth = width;
-	strcpy(log, "Initialized");
 
 	if (!this->InitializeDirectX(hwnd))
 		return false;
@@ -93,6 +92,8 @@ void Graphics::RenderFrame()
 	
 
 
+	//####################################################### line rendering #####################################################
+
 
 	this->deviceContext->ClearDepthStencilView(this->depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);// Clear the depth stencil view
 	this->deviceContext->OMSetDepthStencilState(this->depthStencilState.Get(), 0);	// add depth  stencil state to rendering routin
@@ -101,6 +102,7 @@ void Graphics::RenderFrame()
 	this->deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_LINESTRIP);// set the primitive topology
 	this->deviceContext->RSSetState(this->rasterizerstate.Get());					// set the rasterizer state
 	this->deviceContext->VSSetShader(vertexshader.GetShader(), NULL, 0);			// set vertex shader
+	//this->deviceContext->GSSetShader(geometryshader.GetShader(), NULL, 0);			// set Geometry shader
 	this->deviceContext->PSSetShader(pixelshader.GetShader(), NULL, 0);				// set pixel shader
 
 	UINT offset = 0;
@@ -120,22 +122,13 @@ void Graphics::RenderFrame()
 	//set the constant buffer
 	this->deviceContext->VSSetConstantBuffers(0, 1, this->constantBuffer.GetAddressOf());
 
-	// Draw lines using indices
-	//this->deviceContext->PSSetShaderResources(0, 1, this->myTexture.GetAddressOf());
-
 
 
 	this->deviceContext->IASetVertexBuffers(0, 1, this->vertexBuffer.GetAddressOf(), this->vertexBuffer.StridePtr(), &offset); // set Vertex buffer
 	this->deviceContext->IASetIndexBuffer(this->indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0); // Set index buffer
 
 
-	//Microsoft::WRL::ComPtr<ID3D11Texture2D> backbuffer;
-	//HRESULT hr = this->swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(backbuffer.GetAddressOf()));
-	//if (FAILED(hr))
-	//{
-	//	ErrorLogger::Log(hr, "Failed to Get Back buffer");
-	//}
-	//this->deviceContext->CopyResource(backbuffer.Get(), frontTex.Get());
+
 
 
 	if (showLines)
@@ -155,7 +148,18 @@ void Graphics::RenderFrame()
 
 
 	//######################################### Dear ImGui ######################################
-	RenderImGui();
+
+	RenderImGui renderImGui;
+	renderImGui.drawSolverOptions(this->solverOptions);
+	renderImGui.drawLog(this);
+	renderImGui.render();
+
+	
+	if (this->solverOptions.beginStream || this->solverOptions.beginPath)
+	{
+		this->InitializeScene();
+	}
+
 
 
 	// Present the backbuffer
@@ -201,7 +205,7 @@ bool Graphics::InitializeResources()
 	D3D11_TEXTURE2D_DESC depthStencilDesc;
 	depthStencilDesc.Width = this->windowWidth;
 	depthStencilDesc.Height = this->windowHeight;
-	depthStencilDesc.MipLevels = 1;
+	depthStencilDesc.MipLevels = 0;
 	depthStencilDesc.ArraySize = 1;
 	depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	depthStencilDesc.SampleDesc.Count = 1;
@@ -279,35 +283,6 @@ bool Graphics::InitializeResources()
 			return false;
 		}
 	}
-
-	//if (this->spriteBatch.get() == nullptr)
-	//{
-	//	// Initialize the Fonts
-	//	this->spriteBatch = std::make_unique<DirectX::SpriteBatch>(this->deviceContext.Get());
-	//	this->spriteFont = std::make_unique<DirectX::SpriteFont>(this->device.Get(), L"Data\\Fonts\\comic_sans_ms_16.spritefont");
-	//}
-
-	//if (this->samplerState.Get() == nullptr)
-	//{
-	//	// Create Sampler description for sampler state
-	//	D3D11_SAMPLER_DESC sampleDesc;
-	//	ZeroMemory(&sampleDesc, sizeof(D3D11_SAMPLER_DESC));
-	//	sampleDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-	//	sampleDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-	//	sampleDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-	//	sampleDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-	//	sampleDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-	//	sampleDesc.MinLOD = 0;
-	//	sampleDesc.MaxLOD = D3D11_FLOAT32_MAX;
-
-	//	// Create sampler state
-	//	hr = this->device->CreateSamplerState(&sampleDesc, this->samplerState.GetAddressOf());
-	//	if (FAILED(hr))
-	//	{
-	//		ErrorLogger::Log(hr, "Failed to Create sampler state.");
-	//		return false;
-	//	}
-	//}
 
 	return true;
 }
@@ -402,9 +377,11 @@ bool Graphics::InitializeShaders()
 	{
 		{"POSITION",0,DXGI_FORMAT::DXGI_FORMAT_R32G32B32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,\
 		D3D11_INPUT_CLASSIFICATION::D3D11_INPUT_PER_VERTEX_DATA,0},
-		{"VELOCITY",0,DXGI_FORMAT::DXGI_FORMAT_R32G32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,
-		D3D11_INPUT_CLASSIFICATION::D3D11_INPUT_PER_VERTEX_DATA,0},
 		{"TANGENT",0,DXGI_FORMAT::DXGI_FORMAT_R32G32B32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,
+		D3D11_INPUT_CLASSIFICATION::D3D11_INPUT_PER_VERTEX_DATA,0},
+		{"LINEID",0,DXGI_FORMAT::DXGI_FORMAT_R32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,
+		D3D11_INPUT_CLASSIFICATION::D3D11_INPUT_PER_VERTEX_DATA,0},
+		{"COLOR",0,DXGI_FORMAT::DXGI_FORMAT_R32G32B32A32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,
 		D3D11_INPUT_CLASSIFICATION::D3D11_INPUT_PER_VERTEX_DATA,0}
 	};
 	UINT numElements = ARRAYSIZE(layout);
@@ -414,10 +391,16 @@ bool Graphics::InitializeShaders()
 		return false;
 	}
 
+	if (!geometryshader.Initialize(this->device, shaderfolder + L"geometryshader.cso"))
+	{
+		return false;
+	}
+
 	if (!pixelshader.Initialize(this->device, shaderfolder + L"pixelshader.cso"))
 	{
 		return false;
 	}
+
 	
 	
 	return true;
@@ -581,172 +564,6 @@ void Graphics::Resize(HWND hwnd)
 }
 #pragma endregion Scene_Initialization
 
-
-
-void Graphics::RenderImGui()
-{
-	ImGui_ImplDX11_NewFrame();
-	ImGui_ImplWin32_NewFrame();
-	ImGui::NewFrame();
-
-#pragma region Solver_Option
-
-	ImGui::Begin("Solver Options");
-
-	ImGui::Text("Mode: ");
-	ImGui::SameLine();
-
-	//Solver Mode
-
-	if (ImGui::Checkbox("Streamline", &streamline))
-	{
-		pathline = !streamline;
-		this->solverOptions.lineLength = solverOptions.lastIdx - solverOptions.firstIdx;
-		this->InitializeScene();
-	}
-	ImGui::SameLine();
-	if (ImGui::Checkbox("Pathline", &pathline))
-	{
-		streamline = !pathline;
-		this->solverOptions.lineLength = solverOptions.lastIdx - solverOptions.firstIdx;
-		this->InitializeScene();
-	}
-
-
-	// Solver Options
-	if (ImGui::InputText("File Path", this->solverOptions.filePath, sizeof(this->solverOptions.filePath)))
-	{
-	}
-
-	if (ImGui::InputText("File Name", this->solverOptions.fileName, sizeof(this->solverOptions.fileName)))
-	{
-	}
-
-	if (ImGui::InputInt3("Grid Size", this->solverOptions.gridSize, sizeof(this->solverOptions.gridSize)))
-	{
-	}
-	if (ImGui::InputFloat3("Grid Diameter", this->solverOptions.gridDiameter, sizeof(this->solverOptions.gridDiameter)))
-	{
-	}
-
-	if (ImGui::InputInt("precision", &(this->solverOptions.precision)))
-	{
-	
-	}
-	ImGui::PushItemWidth(75);
-	if (ImGui::InputInt("First Index", &(this->solverOptions.firstIdx)))
-	{
-
-	}
-	ImGui::SameLine();
-	if (ImGui::InputInt("Last Index", &(this->solverOptions.lastIdx)))
-	{
-
-	}
-	if (ImGui::DragInt("Current Index", &(this->solverOptions.currentIdx), 1.0f, 0, solverOptions.lastIdx, "%d"))
-	{
-
-	}
-	ImGui::PopItemWidth();
-	if (ImGui::InputFloat("dt", &(this->solverOptions.dt)))
-	{
-
-	}
-
-	if (ImGui::InputInt("Lines", &(this->solverOptions.lines_count)))
-	{
-		if(this->pathline)
-		{
-			this->solverOptions.lineLength = solverOptions.lastIdx - solverOptions.firstIdx;
-		}
-		this->InitializeScene();
-
-
-	}
-	if (this->streamline)
-	{
-		if (ImGui::InputInt("Line Length", &(this->solverOptions.lineLength)))
-		{
-			this->InitializeScene();
-
-		}
-	}
-	if (ImGui::ListBox("Color Mode",&this->solverOptions.colorMode,ColorModeList,4))
-	{
-
-	}
-
-	if (this->streamline) 
-	{
-		if (ImGui::Checkbox("Render Streamlines", &this->solverOptions.beginStream))
-		{
-			strcpy(log, "It is running!");
-		}
-
-	}
-	else
-	{
-		if (ImGui::Checkbox("Render Pathlines", &this->solverOptions.beginPath))
-		{
-			strcpy(log, "It is running!");
-		}
-	}
-
-	if (ImGui::Checkbox("Rendering Bounding box", &this->solverOptions.beginRaycasting))
-	{
-		this->solverOptions.idChange = true;
-		strcpy(log, "Raycasting is started!");
-	}
-
-	
-	if (ImGui::Button("Reset", ImVec2(80,25)))
-	{
-		this->camera.SetPosition(0, 0, -3);
-	}
-
-
-
-
-	ImGui::End();
-#pragma endregion Solver_Options
-
-#pragma region Log
-
-	ImGui::Begin("Log");
-
-	// calculatin FPS
-	static int fpsCounter = 0;
-	static std::string fpsString = "FPS : 0";
-	fpsCounter += 1;
-	if (fpsTimer.GetMilisecondsElapsed() > 1000.0)
-	{
-		fpsString = "FPS: " + std::to_string(fpsCounter);
-		fpsCounter = 0;
-		fpsTimer.Restart();
-	}
-
-	//Copy it to the log
-	strcpy(log, fpsString.c_str());
-
-	if (ImGui::InputTextMultiline("Log",this->log,1000))
-	{
-
-	}
-
-
-
-
-
-	ImGui::End();
-#pragma endregion Log
-
-
-	//Assemble Together Draw Data
-	ImGui::Render();
-
-	//Render Draw Data
-	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
-}
 
 IDXGIAdapter* Graphics::GetAdapter()
 {

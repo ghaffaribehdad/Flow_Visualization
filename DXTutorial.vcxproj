@@ -212,6 +212,7 @@
       <FileType>Document</FileType>
     </CudaCompile>
     <ClInclude Include="Cuda\helper_math.h" />
+    <ClInclude Include="Graphics\LineRendering.h" />
     <ClInclude Include="Raycaster\IsosurfaceFunctions.h" />
     <ClInclude Include="Raycaster\Raycasting.h" />
     <ClInclude Include="Raycaster\Raycasting_Helper.h" />

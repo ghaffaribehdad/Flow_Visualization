@@ -33,7 +33,7 @@ private:
 };
 
 
-class GeomertyShader
+class GeometryShader
 {
 public:
 	bool Initialize(Microsoft::WRL::ComPtr<ID3D11Device>& device, std::wstring shaderpath);

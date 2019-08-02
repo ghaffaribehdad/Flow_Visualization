@@ -106,7 +106,7 @@ ID3D10Blob * PixelShader::GetBuffer()
 
 //################### Geometry shader #######################//
 
-bool GeomertyShader::Initialize(Microsoft::WRL::ComPtr<ID3D11Device>& device, std::wstring shaderpath)
+bool GeometryShader::Initialize(Microsoft::WRL::ComPtr<ID3D11Device>& device, std::wstring shaderpath)
 {
 	HRESULT hr = D3DReadFileToBlob(shaderpath.c_str(), this->shader_buffer.GetAddressOf());
 	if (FAILED(hr))
@@ -135,12 +135,12 @@ bool GeomertyShader::Initialize(Microsoft::WRL::ComPtr<ID3D11Device>& device, st
 	return true;
 }
 
-ID3D11GeometryShader* GeomertyShader::GetShader()
+ID3D11GeometryShader* GeometryShader::GetShader()
 {
 	return this->shader.Get();
 }
 
-ID3D10Blob* GeomertyShader::GetBuffer()
+ID3D10Blob* GeometryShader::GetBuffer()
 {
 	return this->shader_buffer.Get();
 }
