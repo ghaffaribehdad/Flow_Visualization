@@ -8,11 +8,12 @@
 #include "ConsantBufferTypes.h"
 #include <d3d11.h>
 #include "RenderingOptions.h"
+#include "..//SolverOptions.h"
 #include <Windows.h>
 #include "Camera.h"
 
 
-class LineRendering
+class LineRenderer
 {
 
 protected:
@@ -25,6 +26,7 @@ protected:
 	VertexBuffer<Vertex>				vertexBuffer;
 	IndexBuffer							indexBuffer;
 	ConstantBuffer<Tube_geometryShader> GS_constantBuffer;
+	std::vector<DWORD>					indices;
 
 
 	// Shaders
@@ -32,8 +34,10 @@ protected:
 	PixelShader			pixelshader;
 	GeometryShader		geometryshader;
 
-	// Rendering Options
-	RenderingOptions	renderingOptions;
+	// Reference of resources
+	RenderingOptions&	renderingOptions;
+	SolverOptions& solverOptions;
+
 
 
 	// Pointers to graphics infrastructures
@@ -41,26 +45,39 @@ protected:
 	Microsoft::WRL::ComPtr<ID3D11Device>		device;
 
 	
+	
 
+	// initilize GS,VS and PS
 	bool initializeShaders();
-	bool initializeConstantBuffer(Camera & camera);
-	bool initializeIndexBuffer();
 
-	bool updateConstantBuffer();
-	bool updateIndexBuffer();
-	bool updateVertexBuffer();
+	// initilize vertex, constant and index buffer
+	bool initializeBuffers();
 
+
+
+	// Update Constant Buffer (view + tube radius)
+	void updateConstantBuffer(Camera& camera);
+
+	// Update Index buffer to match the vertex buffer
+	void updateIndexBuffer();
+
+
+	// set shaders and rasterizer
 	bool setShaders();
+
+	// set vertex and index and constant bufferbuffer
 	bool setBuffers();
 	
 	// After drawing the pipeline must be clean (at least geometry shader needs to be deactivated)
-	bool cleanPipeline();
+	void cleanPipeline();
 
 
 public:
 
-	void initialize();
+	void setResources(RenderingOptions& _renderingOptions, SolverOptions& _solverOptions);
+
+	bool initialize();
 	void draw();
-	void update();
+	virtual void update(Camera & camera);
 	
 };

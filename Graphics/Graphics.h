@@ -181,7 +181,6 @@ private:
 	
 
 
-	//void RenderImGui();
 
 	// Solver options
 	bool streamline = true;

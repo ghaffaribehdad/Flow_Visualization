@@ -192,7 +192,7 @@
     <ClCompile Include="Graphics\ImGui\imgui_impl_dx11.cpp" />
     <ClCompile Include="Graphics\ImGui\imgui_impl_win32.cpp" />
     <ClCompile Include="Graphics\ImGui\imgui_widgets.cpp" />
-    <ClCompile Include="Graphics\LineRendering.cpp" />
+    <ClCompile Include="Graphics\LineRenderer.cpp" />
     <ClCompile Include="Keyboard\KeyboardClass.cpp" />
     <ClCompile Include="Keyboard\KeyboardEvent.cpp" />
     <ClCompile Include="main.cpp" />
@@ -213,8 +213,9 @@
       <FileType>Document</FileType>
     </CudaCompile>
     <ClInclude Include="Cuda\helper_math.h" />
-    <ClInclude Include="Graphics\LineRendering.h" />
+    <ClInclude Include="Graphics\LineRenderer.h" />
     <ClInclude Include="Graphics\RenderingOptions.h" />
+    <ClInclude Include="Graphics\StreamlineRenderer.h" />
     <ClInclude Include="Raycaster\IsosurfaceFunctions.h" />
     <ClInclude Include="Raycaster\Raycasting.h" />
     <ClInclude Include="Raycaster\Raycasting_Helper.h" />

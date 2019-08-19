@@ -105,8 +105,7 @@ void Engine::Update()
 	// Streamline Solver
 	if (this->gfx.solverOptions.beginStream)
 	{
-		gfx.solverOptions.p_Adapter = this->gfx.GetAdapter();
-		gfx.solverOptions.p_vertexBuffer = this->gfx.GetVertexBuffer();
+
 
 		if (gfx.solverOptions.precision == 32)
 		{
@@ -115,11 +114,7 @@ void Engine::Update()
 			this->streamlineSolver_float.solve();
 			this->streamlineSolver_float.FinalizeCUDA();
 		}
-		// under construction
-		else if(gfx.solverOptions.precision == 64)
-		{
-		}
-
+	
 		this->gfx.solverOptions.beginStream = false;
 		this->gfx.showLines = true;
 	}
@@ -136,10 +131,7 @@ void Engine::Update()
 			this->pathlineSolver_float.solve();
 			this->pathlineSolver_float.FinalizeCUDA();
 		}
-		// under construction
-		else if (gfx.solverOptions.precision == 64)
-		{
-		}
+
 		this->gfx.solverOptions.beginPath = false;
 		this->gfx.showLines = true;
 	}

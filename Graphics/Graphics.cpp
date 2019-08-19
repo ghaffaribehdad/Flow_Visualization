@@ -347,6 +347,7 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 	}
 	
 
+
 	return true;
 }
 
@@ -492,8 +493,20 @@ bool Graphics::InitializeScene()
 	camera.SetProjectionValues(this->FOV, static_cast<float>(this->windowWidth) / static_cast<float>(this->windowHeight), \
 		1.0f, 100.0f);
 
+
+
+	//#### Important!!!!! here the we set fixed part of solver Options
+	this->solverOptions.p_Adapter = this->GetAdapter();
+	this->solverOptions.p_vertexBuffer = this->GetVertexBuffer();
+	//###############################################################
+
+
 	return true;
 }
+
+
+
+
 bool Graphics::InitializeImGui(HWND hwnd)
 {
 	if (this->ImGuicontext == nullptr)
