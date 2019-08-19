@@ -163,27 +163,25 @@ __global__ void TracingPath(Particle<T>* d_particles, cudaTextureObject_t t_Velo
 			case 0: // Velocity
 			{
 				float3* velocity = d_particles[index].getVelocity();
-				float norm = norm3d(velocity->x, velocity->y, velocity->z);
-				p_VertexBuffer[index_buffer + step].color.x = norm;
+				p_VertexBuffer[index_buffer + step].measure = norm3df(velocity->x, velocity->y, velocity->z);;
 				break;
 
 			}
 			case 1: // Vx
 			{
-				float velocity = d_particles[index].getVelocity()->x;
-				p_VertexBuffer[index_buffer + step].color.x = velocity;
+
+				p_VertexBuffer[index_buffer + step].measure = d_particles[index].getVelocity()->x;
 				break;
 			}
-			case 2: // Vx
+			case 2: // Vy
 			{
-				float velocity = d_particles[index].getVelocity()->y;
-				p_VertexBuffer[index_buffer + step].color.x = velocity;
+				float velocity = 
+				p_VertexBuffer[index_buffer + step].measure = d_particles[index].getVelocity()->y;
 				break;
 			}
-			case 3: // Vx
+			case 3: // Vz
 			{
-				float velocity = d_particles[index].getVelocity()->z;
-				p_VertexBuffer[index_buffer + step].color.x = velocity;
+				p_VertexBuffer[index_buffer + step].measure = d_particles[index].getVelocity()->z;
 				break;
 
 			}

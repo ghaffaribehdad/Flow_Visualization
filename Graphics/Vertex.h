@@ -4,12 +4,12 @@
 struct Vertex
 {
 	Vertex(){}
-	Vertex(float x, float y, float z, float tx, float ty,float tz, float id, float r, float g, float b, float a)
-		:pos(x, y, z), tangent(tx,ty,tz),LineID(id),color(r,g,b,a){}
+	Vertex(float x, float y, float z, float tx, float ty,float tz, unsigned int id, float _measure)
+		:pos(x, y, z), tangent(tx,ty,tz),LineID(id),measure(_measure){}
 	DirectX::XMFLOAT3 pos;
 	DirectX::XMFLOAT3 tangent;
-	float LineID;
-	DirectX::XMFLOAT4 color;
+	unsigned int LineID;
+	float measure;
 };
 
 

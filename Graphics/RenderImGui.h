@@ -6,6 +6,7 @@
 #include "..//SolverOptions.h"
 #include <string>
 #include "Graphics.h"
+#include "RenderingOptions.h"
 
 
 class RenderImGui
@@ -15,9 +16,15 @@ public:
 
 	void drawSolverOptions(SolverOptions& solverOptions); // draw the solver option window
 	void drawLog(Graphics* p_graphics);	// draw Log window
+	void drawRenderingOptions(RenderingOptions& renderingOptions);
+	
 	void render(); // renders the imGui drawings
+
 	// Log pointer
 	char* log = new char[1000];
+
+private:
+
 };
 
 void RenderImGui::drawSolverOptions(SolverOptions& solverOptions)
@@ -115,6 +122,7 @@ void RenderImGui::drawSolverOptions(SolverOptions& solverOptions)
 	{
 		if (ImGui::Checkbox("Render Streamlines", &solverOptions.beginStream))
 		{
+			solverOptions.userInterruption = true;
 		}
 
 	}
@@ -152,19 +160,46 @@ void RenderImGui::drawLog(Graphics * p_graphics)
 	static int fpsCounter = 0;
 	static std::string fpsString = "FPS : 0";
 	fpsCounter += 1;
-	if (p_graphics->fpsTimer.GetMilisecondsElapsed() > 1000.0)
+
+	static float fps_array[10];
+	static int fps_arrayCounter = 0;
+
+	if (p_graphics->fpsTimer.GetMilisecondsElapsed() > 100.0)
 	{
-		fpsString = "FPS: " + std::to_string(fpsCounter);
+		fpsString = "FPS: " + std::to_string(10*fpsCounter);
+
+		if (fps_arrayCounter < 10)
+		{
+			fps_array[fps_arrayCounter] = fpsCounter / 10;
+			fps_arrayCounter++;
+		}
+		else
+		{
+			fps_arrayCounter = 0;
+		}
+
 		fpsCounter = 0;
 		p_graphics->fpsTimer.Restart();
 	}
 
 	strcpy(this->log, fpsString.c_str());
 
+	ImGui::PlotLines("Frame Times", fps_array, IM_ARRAYSIZE(fps_array),0,NULL,0,50,ImVec2(250,80));
+
 	if (ImGui::InputTextMultiline("Frame per Second", this->log, 1000))
 	{
 
 	}
+
+
+	ImGui::End();
+}
+
+
+void RenderImGui::drawRenderingOptions(RenderingOptions& renderingOptions)
+{
+	ImGui::Begin("Rendering Options");
+
 
 	ImGui::End();
 }
@@ -173,9 +208,12 @@ void RenderImGui::drawLog(Graphics * p_graphics)
 
 void RenderImGui::render()
 {
+
 	//Assemble Together Draw Data
 	ImGui::Render();
 
 	//Render Draw Data
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+
+
 }

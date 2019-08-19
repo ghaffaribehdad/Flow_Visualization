@@ -21,6 +21,8 @@
 #include "..\\testCudaInterOp.cuh"
 #include "..\\Raycaster\Raycasting.h"
 
+#include "RenderingOptions.h"
+
 typedef long long int llInt;
 
 
@@ -46,6 +48,7 @@ public:
 
 
 	SolverOptions solverOptions;
+	RenderingOptions renderingOptions;
 
 	// Getter Functions
 	IDXGIAdapter* GetAdapter();
@@ -152,7 +155,9 @@ private:
 	// Buffers
 	VertexBuffer<Vertex> vertexBuffer;
 	IndexBuffer indexBuffer;
-	ConstantBuffer<CB_VS_vertexshader> constantBuffer;
+
+	//ConstantBuffer<CB_VS_vertexshader> VS_constantBuffer;
+	ConstantBuffer<Tube_geometryShader> GS_constantBuffer;
 
 	// Depth stencil view and buffer and state
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilView>		depthStencilView;
@@ -162,13 +167,6 @@ private:
 
 	// Resterizer com pointer
 	Microsoft::WRL::ComPtr<ID3D11RasterizerState> rasterizerstate;
-
-	// Standart unique pointer to sprite batch/font
-	//std::unique_ptr<DirectX::SpriteBatch>	spriteBatch;
-	//std::unique_ptr<DirectX::SpriteFont>	spriteFont;
-
-	// COM pointer to sampler state
-	//Microsoft::WRL::ComPtr<ID3D11SamplerState> samplerState;
 
 	// COM pointer to texture to store rendered bounding box
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> frontTex;	//front-face

@@ -15,8 +15,8 @@ public:
 	float dt = 0.1f;
 	float advectTime = 0.0f;
 
-	int lineLength = 1;
-	int lines_count = 1;
+	int lineLength = 100;
+	int lines_count = 100;
 	float line_thickness = 0.0f;
 
 

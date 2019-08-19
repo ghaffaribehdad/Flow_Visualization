@@ -8,7 +8,7 @@ template class StreamlineSolver<double>;
 template <typename T>
 __global__ void TracingStream(Particle<T>* d_particles, cudaTextureObject_t t_VelocityField, SolverOptions solverOptions, Vertex* p_VertexBuffer)
 {
-	int index = blockDim.x * blockIdx.x + threadIdx.x;
+	unsigned int index = blockDim.x * blockIdx.x + threadIdx.x;
 
 	if (index < solverOptions.lines_count)
 	{
@@ -31,17 +31,22 @@ __global__ void TracingStream(Particle<T>* d_particles, cudaTextureObject_t t_Ve
 
 		for (int i = 0; i < lineLength; i++)
 		{
+
+			// Moves a particle for dt and update its velocity and position
 			d_particles[index].move(dt, gridSize, gridDiameter, t_VelocityField);
 
+			// write the new position into the vertex buffer
 			p_VertexBuffer[index_buffer + i].pos.x = d_particles[index].getPosition()->x - gridDiameter.x / 2.0;
 			p_VertexBuffer[index_buffer + i].pos.y = d_particles[index].getPosition()->y - gridDiameter.y / 2.0;
 			p_VertexBuffer[index_buffer + i].pos.z = d_particles[index].getPosition()->z + gridDiameter.z / 2.0;
+
+
 			float3* velocity = d_particles[index].getVelocity();
-			float3 norm = normalize(*velocity);
+			float3 norm = normalize(make_float3(velocity->x,velocity->y,velocity->z));
 			p_VertexBuffer[index_buffer + i].tangent.x = norm.x;
 			p_VertexBuffer[index_buffer + i].tangent.y = norm.y;
 			p_VertexBuffer[index_buffer + i].tangent.z = norm.z;
-			p_VertexBuffer[index_buffer + i].LineID = float(index) / float(solverOptions.lines_count);
+			p_VertexBuffer[index_buffer + i].LineID = index;
 
 
 			switch (solverOptions.colorMode)
@@ -49,24 +54,24 @@ __global__ void TracingStream(Particle<T>* d_particles, cudaTextureObject_t t_Ve
 				case 0: // Velocity
 				{
 				
-					p_VertexBuffer[index_buffer + i].LineID = float(index) / float(solverOptions.lines_count);
+					p_VertexBuffer[index_buffer + i].measure = norm3df(norm.x,norm.y,norm.z);
+					break;
 
 				}
 				case 1: // Vx
 				{
-					float velocity = d_particles[index].getVelocity()->x;
-					p_VertexBuffer[index_buffer + i].color.x = velocity;
-
+					p_VertexBuffer[index_buffer + i].measure = d_particles[index].getVelocity()->x;;
+					break;
 				}
-				case 2: // Vx
+				case 2: // Vy
 				{
-					float velocity = d_particles[index].getVelocity()->y;
-					p_VertexBuffer[index_buffer + i].color.x = velocity;
+					p_VertexBuffer[index_buffer + i].measure = d_particles[index].getVelocity()->y;
+					break;
 				}
-				case 3: // Vx
+				case 3: // Vz
 				{
-					float velocity = d_particles[index].getVelocity()->z;
-					p_VertexBuffer[index_buffer + i].color.x = velocity;
+					p_VertexBuffer[index_buffer + i].measure = d_particles[index].getVelocity()->z;
+					break;
 				}
 			}
 

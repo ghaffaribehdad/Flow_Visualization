@@ -192,6 +192,7 @@
     <ClCompile Include="Graphics\ImGui\imgui_impl_dx11.cpp" />
     <ClCompile Include="Graphics\ImGui\imgui_impl_win32.cpp" />
     <ClCompile Include="Graphics\ImGui\imgui_widgets.cpp" />
+    <ClCompile Include="Graphics\LineRendering.cpp" />
     <ClCompile Include="Keyboard\KeyboardClass.cpp" />
     <ClCompile Include="Keyboard\KeyboardEvent.cpp" />
     <ClCompile Include="main.cpp" />
@@ -213,6 +214,7 @@
     </CudaCompile>
     <ClInclude Include="Cuda\helper_math.h" />
     <ClInclude Include="Graphics\LineRendering.h" />
+    <ClInclude Include="Graphics\RenderingOptions.h" />
     <ClInclude Include="Raycaster\IsosurfaceFunctions.h" />
     <ClInclude Include="Raycaster\Raycasting.h" />
     <ClInclude Include="Raycaster\Raycasting_Helper.h" />
@@ -279,6 +281,10 @@
     <CudaCompile Include="Cuda\PathlineSolver.cu" />
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="geometryshader.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Geometry</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+    </FxCompile>
     <FxCompile Include="pixelshader.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>

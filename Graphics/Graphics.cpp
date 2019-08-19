@@ -97,12 +97,12 @@ void Graphics::RenderFrame()
 
 	this->deviceContext->ClearDepthStencilView(this->depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);// Clear the depth stencil view
 	this->deviceContext->OMSetDepthStencilState(this->depthStencilState.Get(), 0);	// add depth  stencil state to rendering routin
-	//this->deviceContext->PSSetSamplers(0, 1, this->samplerState.GetAddressOf());	// Set sampler for the pixel shader
+
+
 	this->deviceContext->IASetInputLayout(this->vertexshader.GetInputLayout());		// Set the input layout
-	this->deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_LINESTRIP);// set the primitive topology
+	this->deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_LINESTRIP);// set the primitive topology
 	this->deviceContext->RSSetState(this->rasterizerstate.Get());					// set the rasterizer state
 	this->deviceContext->VSSetShader(vertexshader.GetShader(), NULL, 0);			// set vertex shader
-	//this->deviceContext->GSSetShader(geometryshader.GetShader(), NULL, 0);			// set Geometry shader
 	this->deviceContext->PSSetShader(pixelshader.GetShader(), NULL, 0);				// set pixel shader
 
 	UINT offset = 0;
@@ -111,43 +111,43 @@ void Graphics::RenderFrame()
 	DirectX::XMMATRIX world = DirectX::XMMatrixIdentity();
 
 	// Create the Projection Matrix
-	constantBuffer.data.mat = world * camera.GetViewMatrix() * camera.GetProjectionMatrix();
-	constantBuffer.data.mat = DirectX::XMMatrixTranspose(constantBuffer.data.mat);
+	//VS_constantBuffer.data.mat = world * camera.GetViewMatrix() * camera.GetProjectionMatrix();
+	//VS_constantBuffer.data.mat = DirectX::XMMatrixTranspose(VS_constantBuffer.data.mat);
+
+
+	// Set attributes of constant buffer for geometry shader
+	GS_constantBuffer.data.View = world * camera.GetViewMatrix();
+	GS_constantBuffer.data.Proj = camera.GetProjectionMatrix();
+	GS_constantBuffer.data.eyePos = this->camera.GetPositionFloat3();
+	GS_constantBuffer.data.tubeRadius = this->renderingOptions.tubeRadius;
+	GS_constantBuffer.data.tubeRadius = .1;
+	GS_constantBuffer.data.viewDir = this->camera.GetViewVector();
 
 	// Update Constant Buffer
-	if (!constantBuffer.ApplyChanges())
-	{
-		return;
-	}
+	GS_constantBuffer.ApplyChanges();
+	//VS_constantBuffer.ApplyChanges();
+	 
+
 	//set the constant buffer
-	this->deviceContext->VSSetConstantBuffers(0, 1, this->constantBuffer.GetAddressOf());
-
-
+	//this->deviceContext->VSSetConstantBuffers(0, 1, this->VS_constantBuffer.GetAddressOf());
+	this->deviceContext->GSSetConstantBuffers(0, 1, this->GS_constantBuffer.GetAddressOf());
 
 	this->deviceContext->IASetVertexBuffers(0, 1, this->vertexBuffer.GetAddressOf(), this->vertexBuffer.StridePtr(), &offset); // set Vertex buffer
 	this->deviceContext->IASetIndexBuffer(this->indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0); // Set index buffer
 
 
 
-
-
 	if (showLines)
 	{
-		//for (int i = 0; i < solverOptions.lines_count; i++)
-	//	{
-			this->deviceContext->DrawIndexed(llInt(solverOptions.lineLength) * llInt(solverOptions.lines_count) + solverOptions.lines_count, 0, 0);
-
-		//}
+		// Set Geometry shader
+		this->deviceContext->GSSetShader(geometryshader.GetShader(), NULL, 0);	
+		this->deviceContext->DrawIndexed(llInt(solverOptions.lineLength) * llInt(solverOptions.lines_count), 0, 0);
 	}
-	else
-	{
-		this->deviceContext->Draw(0, 0);
-
-	}
+	
 	   
 
-
-	//######################################### Dear ImGui ######################################
+	////######################################### Dear ImGui ######################################
+	this->deviceContext->GSSetShader(NULL, NULL, 0);
 
 	RenderImGui renderImGui;
 	renderImGui.drawSolverOptions(this->solverOptions);
@@ -271,8 +271,8 @@ bool Graphics::InitializeResources()
 		ZeroMemory(&rasterizerDesc, sizeof(D3D11_RASTERIZER_DESC));
 
 		rasterizerDesc.FillMode = D3D11_FILL_MODE::D3D11_FILL_SOLID;
-		rasterizerDesc.CullMode = D3D11_CULL_MODE::D3D11_CULL_BACK; // CULLING could be set to none
-		rasterizerDesc.MultisampleEnable = false;
+		rasterizerDesc.CullMode = D3D11_CULL_MODE::D3D11_CULL_NONE; // CULLING could be set to none
+		rasterizerDesc.MultisampleEnable = true;
 		rasterizerDesc.AntialiasedLineEnable = true;
 		//rasterizerDesc.FrontCounterClockwise = TRUE;//= 1;
 
@@ -379,9 +379,9 @@ bool Graphics::InitializeShaders()
 		D3D11_INPUT_CLASSIFICATION::D3D11_INPUT_PER_VERTEX_DATA,0},
 		{"TANGENT",0,DXGI_FORMAT::DXGI_FORMAT_R32G32B32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,
 		D3D11_INPUT_CLASSIFICATION::D3D11_INPUT_PER_VERTEX_DATA,0},
-		{"LINEID",0,DXGI_FORMAT::DXGI_FORMAT_R32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,
+		{"LINEID",0,DXGI_FORMAT::DXGI_FORMAT_R32_UINT,0,D3D11_APPEND_ALIGNED_ELEMENT,
 		D3D11_INPUT_CLASSIFICATION::D3D11_INPUT_PER_VERTEX_DATA,0},
-		{"COLOR",0,DXGI_FORMAT::DXGI_FORMAT_R32G32B32A32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,
+		{"MEASURE",0,DXGI_FORMAT::DXGI_FORMAT_R32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,
 		D3D11_INPUT_CLASSIFICATION::D3D11_INPUT_PER_VERTEX_DATA,0}
 	};
 	UINT numElements = ARRAYSIZE(layout);
@@ -428,25 +428,19 @@ bool Graphics::InitializeScene()
 
 #pragma region Create_Indices
 
-	std::vector<DWORD> indices(llInt(solverOptions.lineLength)* llInt(solverOptions.lines_count) + solverOptions.lines_count);
+	std::vector<DWORD> indices(llInt(solverOptions.lineLength)* llInt(solverOptions.lines_count));
 	for (int i = 0; i < indices.size(); i++)
 	{
-		if (i % (solverOptions.lines_count) == 0)
-		{
-			indices[i] = -1;
-		}
-		else
-		{
-			indices[i] = i;
-		}
-		
+
+		indices[i] = i;
+
 	}
 
 #pragma endregion Create_Indices
 
 #pragma region Create_Vertex_Buffer
 
-
+	
 	HRESULT hr;
 
 	// Initialize Vertex Buffer
@@ -463,12 +457,13 @@ bool Graphics::InitializeScene()
 
 #pragma region Create_Index_Buffer
 
-		hr = this->indexBuffer.Initialize(this->device.Get(), &indices.at(0), indices.size());
-		if (FAILED(hr))
-		{
-			ErrorLogger::Log(hr, "Failed to Create Index Buffer.");
-			return false;
-		}
+
+	hr = this->indexBuffer.Initialize(this->device.Get(), &indices.at(0), indices.size());
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to Create Index Buffer.");
+		return false;
+	}
 
 
 #pragma endregion Create_Index_Buffer
@@ -477,12 +472,19 @@ bool Graphics::InitializeScene()
 
 
 #pragma region Create_Constant_Buffer
-	hr = this->constantBuffer.Initialize(this->device.Get(), this->deviceContext.Get());
+
+
+
+	hr = this->GS_constantBuffer.Initialize(this->device.Get(), this->deviceContext.Get());
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log(hr, "Failed to Create Constant buffer.");
 		return false;
 	}
+
+
+
+
 #pragma endregion Create_Constant_Buffer
 
 	// set camera properties
@@ -750,10 +752,6 @@ void Graphics::raycastingRendering()
 			// + Release bounding box and rays
 			raycasting.release();
 
-			//std::string fileName = "test.dds";
-			//std::wstring wfileName = std::wstring(fileName.begin(), fileName.end());
-			//const wchar_t* result = wfileName.c_str();
-			//SaveDDSTextureToFile(this->gfx.GetDeviceContext(), this->gfx.getTexture(), result);
 
 			this->cudaSurface.destroySurface();
 

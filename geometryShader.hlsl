@@ -1,115 +1,118 @@
 
-struct VS_OUTPUT
+cbuffer GS_CBuffer
 {
-	float4 position : POSITION;
-	float3 tangent : TANGENT;
-	int lineID : LINEID;
-	float4 color : COLOR;
-
+	float4x4 View;
+	float4x4 Proj;
+	float3 viewDir;
+	float tubeRadius;
+	float3 eyePos;
+	float size;
 };
+
+
+
+
+struct GS_INPUT
+{
+	float3 inPosition : POSITION;
+	float3 inTangent: TANGENT;
+	unsigned int inLineID : LINEID;
+	float inMeasure : MEASURE;
+};
+
 
 struct GS_OUTPUT
 {
 
-	float4 position : SV_POSITION;
-	float3 worldPosition : WORLDPOSITION;
-	float3 normal : NORMAL0;
-	float3 tangent : TANGENT0;
-	float4 color : COLOR;
-
+	float4 outPosition : SV_POSITION;
+	float3 outTangent : TANGENT;
+	float3 outLightDir: LIGHTDIR;
+	float3 outNormal : NORMAL;
+	float outMeasure : MEASURE;
 };
 
 
+
+
+// The plane is to calculate vertices and then transform them in the camera coordinate
 [maxvertexcount(18)]
-//lineadj
-void main(VS_OUTPUT input[2], inout TriangleStream<GS_OUTPUT> output) {
-
-	float StripWidth = input[0].tubeRadius * input[0].size;
+void main(line GS_INPUT input[2], inout TriangleStream<GS_OUTPUT> output)
+{
 
 
-
-
-	if (input[0].lineID == input[1].lineID)
+	if (input[0].inLineID == input[1].inLineID)
 	{
-
-		float3 viewDirection = normalize(input[0].position.xyz - input[0].CameraPosition);
-
-
-		float3 viewTangent0 = mul(float4(input[0].tangent, 0), View).xyz;
-		float3 viewTangent1 = mul(float4(input[1].tangent, 0), View).xyz;
-
-
-
-
-		float3 viewDirectionWorld = normalize(input[0].position -
-			CameraPosition);
-		float3 random_dir = viewDirectionWorld;
-
-		float3 normal0 = normalize(cross(input[0].tangent, random_dir));
-		float3 normal1 = normalize(cross(input[1].tangent, random_dir));
-
-
-
-		float3 orient0 = normalize(cross(normal0, input[0].tangent));
-		float3 orient1 = normalize(cross(normal1, input[1].tangent));
-
-
-		float averageLength = length(input[0].position.xyz -
-			input[1].position.xyz);
-
-
-		float t = 360.0 / 8.0;
-
 		GS_OUTPUT vertex0;
 		GS_OUTPUT vertex1;
 
-		for (int i = 0; i <= 8; i++)
+
+		// calculates ray direction from eye to the vertex
+		float3 viewDirection = normalize(input[0].inPosition - eyePos);
+
+		// A vector in the cross-section plane
+		float3 orient0 = normalize(cross(input[0].inTangent, viewDirection));
+		float3 orient1 = normalize(cross(input[1].inTangent, viewDirection));
+
+		// Radius of the tubes
+		float tubeRad = tubeRadius;
+
+		// in degree
+		float angle = 360.0f / 8.0f;
+		// in radian
+		angle = (angle / 180.0f) * 3.14159265359f;
+
+		// pre-computing the sine and cosine
+		float sine = sin(angle);
+		float cosine = cos(angle);
+
+		float3 orient0_rotated = orient0;
+		float3 orient1_rotated = orient1;
+
+		for (int i = 0; i < 9; i++)
 		{
-
-			float angle = t * i;
-			float rad = (3.1415f / 180.0f) * (angle);
-			float cosine = cos(rad) * StripWidth;
-			float sine = sin(rad) * StripWidth;
-
-			float3 position = input[0].position.xyz + cosine * normal0
-				+ sine * orient0;
-			float3 vertexNormal = normalize(position -
-				input[0].position.xyz);
-
-			vertex0.worldPosition = position;
-			float3 VRCPosition = mul(float4(position, 1), View).xyz;
-			vertex0.position = mul(float4(VRCPosition, 1), Proj);
-
-			vertex0.normal = vertexNormal;
-			vertex0.tangent = input[0].tangent;
-			vertex0.color = input[0].color;
+			// rotate the orientation vector around normal for 45 degree (input[0])
+			orient0_rotated = orient0_rotated * cosine + cross(input[0].inTangent, orient0_rotated) * sine;
 
 
-
-			position = input[1].position.xyz + cosine * normal1 + sine
-				* orient1;
-			vertexNormal = normalize(position - input[1].position.xyz);
-
-			vertex1.worldPosition = position;
-			VRCPosition = mul(float4(position, 1), View).xyz;
-			vertex1.position = mul(float4(VRCPosition, 1), Proj);
-
-			vertex1.normal = vertexNormal;
-			vertex1.tangent = input[1].tangent;
-			vertex1.color = input[1].color;
+			// rotate the orientation vector around normal for 45 degree (input[1])
+			orient1_rotated = orient1_rotated * cosine + cross(input[1].inTangent, orient1_rotated) * sine;
 
 
+			float3 position0 = input[0].inPosition + orient0_rotated * tubeRad;
+			float3 position1 = input[1].inPosition + orient1_rotated * tubeRad;
+
+			// SV_POSITION
+			vertex0.outPosition = mul(float4(position0,1.0f), transpose(View));
+			vertex0.outPosition = mul(vertex0.outPosition, transpose(Proj));
+
+			vertex1.outPosition = mul(float4(position1, 1.0f), transpose(View));
+			vertex1.outPosition = mul(vertex1.outPosition, transpose(Proj));
+
+
+			// Normals
+			vertex0.outNormal = -orient0_rotated;
+			vertex1.outNormal = -orient1_rotated;
+			
+			// Colors
+			vertex0.outMeasure = input[0].inMeasure;
+			vertex1.outMeasure = input[0].inMeasure;
+
+			// Tangent
+			vertex0.outTangent = input[0].inTangent;
+			vertex1.outTangent = input[1].inTangent;
+
+			// World Position
+			vertex0.outLightDir = viewDir;
+			vertex1.outLightDir = viewDir;
 
 			output.Append(vertex0);
 			output.Append(vertex1);
 
-
 		}
+
 		output.RestartStrip();
-
-
-	}
-
+	}		
 }
+
 
 

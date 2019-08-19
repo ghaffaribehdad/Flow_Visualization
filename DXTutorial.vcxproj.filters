@@ -143,6 +143,9 @@
     <ClCompile Include="Volume\Volume_IO.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Graphics\LineRendering.cpp">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="StringConverter.h">
@@ -286,12 +289,18 @@
     <ClInclude Include="Graphics\LineRendering.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
+    <ClInclude Include="Graphics\RenderingOptions.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="vertexshader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="pixelshader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="geometryshader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

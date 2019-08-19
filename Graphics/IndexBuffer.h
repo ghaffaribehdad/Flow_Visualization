@@ -30,7 +30,7 @@ public:
 		return this->buffer.GetAddressOf();
 	}
 
-	HRESULT Initialize(ID3D11Device * device, DWORD * data, long long int numIndices)
+	HRESULT Initialize(ID3D11Device * device, DWORD * data, unsigned long int numIndices)
 	{
 		// Release if it is already alocated
 		if (buffer.Get() != nullptr)
