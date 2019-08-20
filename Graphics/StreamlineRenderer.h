@@ -2,33 +2,31 @@
 
 #include "LineRenderer.h"
 #include "..//Cuda/StreamlineSolver.cuh"
+#include "Vertex.h"
 
-class StreamlineRenderer :protected LineRenderer
+class StreamlineRenderer :public LineRenderer
 {
 private:
 
 	StreamlineSolver<float> streamlineSolver;
 
+	//Vertex vertex[3] = { {0,0,0,0,1,0,0,1},{0,1,0,0,1,0,0,1},{0,2,0,0,1,0,0,1} };
 
 
 	void updateVertexBuffer()
 	{
-		this->streamlineSolver.Initialize(this->solverOptions);
-		this->streamlineSolver.solve();
-		this->streamlineSolver.FinalizeCUDA();
-
-		this->solverOptions.beginStream = false;
 		
+		solverOptions->p_vertexBuffer = this->vertexBuffer.Get();
+
+		this->streamlineSolver.Initialize(*solverOptions);
+		this->streamlineSolver.solve();
+		this->streamlineSolver.FinalizeCUDA();		
 	}
 
 
-
-
-
 public:
-	void update(Camera& camera) override
+	void updateScene() override
 	{
-		this->updateConstantBuffer(camera);
 		this->updateVertexBuffer();
 		this->updateIndexBuffer();
 	}

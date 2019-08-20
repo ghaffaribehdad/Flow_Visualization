@@ -8,7 +8,7 @@
 class VertexShader
 {
 public:
-	bool Initialize(Microsoft::WRL::ComPtr<ID3D11Device> & device, std::wstring shaderpath, D3D11_INPUT_ELEMENT_DESC * layoutDesc, UINT numElements);
+	bool Initialize(Microsoft::WRL::ComPtr<ID3D11Device> device, std::wstring shaderpath, D3D11_INPUT_ELEMENT_DESC* layoutDesc, UINT numElements);
 	ID3D11VertexShader * GetShader();
 	ID3D10Blob * GetBuffer();
 	ID3D11InputLayout * GetInputLayout();
@@ -23,7 +23,7 @@ private:
 class PixelShader
 {
 public:
-	bool Initialize(Microsoft::WRL::ComPtr<ID3D11Device> & device, std::wstring shaderpath);
+	bool Initialize(Microsoft::WRL::ComPtr<ID3D11Device> device, std::wstring shaderpath);
 	ID3D11PixelShader * GetShader();
 	ID3D10Blob * GetBuffer();
 private:
@@ -35,7 +35,7 @@ private:
 class GeometryShader
 {
 public:
-	bool Initialize(Microsoft::WRL::ComPtr<ID3D11Device>& device, std::wstring shaderpath);
+	bool Initialize(Microsoft::WRL::ComPtr<ID3D11Device> device, std::wstring shaderpath);
 	ID3D11GeometryShader* GetShader();
 	ID3D10Blob* GetBuffer();
 private:

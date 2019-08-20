@@ -28,7 +28,9 @@ float4 main(PS_INPUT input) : SV_TARGET
 
 	//float3 pixelColor = {input.color.x,input.color.y,input.color.z,input.color.w};
 	//float3 pixelColor = {input.color.x,0,0};
-	float4 rgb = float4(input.outMeasure,0.5f,0.5f,1);
+	//float4 rgb = float4(input.outMeasure,0.5f,0.5f,1);
+	float4 rgb = float4(0.5f, 0.5f, 0.5f, 1);
+
 	float diffuse = max(dot(normalize(input.outNormal), input.outLightDir), 0.0f);
 	rgb = rgb * diffuse;
 	

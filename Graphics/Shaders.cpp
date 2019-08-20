@@ -2,7 +2,7 @@
 
 
 //##################### Vertex Shader #####################
-bool VertexShader::Initialize(Microsoft::WRL::ComPtr<ID3D11Device> & device, std::wstring shaderpath, D3D11_INPUT_ELEMENT_DESC * layoutDesc, UINT numElements)
+bool VertexShader::Initialize(Microsoft::WRL::ComPtr<ID3D11Device> device, std::wstring shaderpath, D3D11_INPUT_ELEMENT_DESC * layoutDesc, UINT numElements)
 {
 	HRESULT hr = D3DReadFileToBlob(shaderpath.c_str(), this->shader_buffer.GetAddressOf());
 	if (FAILED(hr))
@@ -62,7 +62,7 @@ ID3D11InputLayout * VertexShader::GetInputLayout()
 
 //##################### Pixel Shader #####################
 
-bool PixelShader::Initialize(Microsoft::WRL::ComPtr<ID3D11Device> & device, std::wstring shaderpath)
+bool PixelShader::Initialize(Microsoft::WRL::ComPtr<ID3D11Device> device, std::wstring shaderpath)
 {
 	HRESULT hr = D3DReadFileToBlob(shaderpath.c_str(), this->shader_buffer.GetAddressOf());
 	if (FAILED(hr))
@@ -106,7 +106,7 @@ ID3D10Blob * PixelShader::GetBuffer()
 
 //################### Geometry shader #######################//
 
-bool GeometryShader::Initialize(Microsoft::WRL::ComPtr<ID3D11Device>& device, std::wstring shaderpath)
+bool GeometryShader::Initialize(Microsoft::WRL::ComPtr<ID3D11Device> device, std::wstring shaderpath)
 {
 	HRESULT hr = D3DReadFileToBlob(shaderpath.c_str(), this->shader_buffer.GetAddressOf());
 	if (FAILED(hr))

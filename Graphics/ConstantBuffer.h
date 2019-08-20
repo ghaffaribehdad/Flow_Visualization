@@ -34,7 +34,7 @@ public:
 
 	HRESULT Initialize(ID3D11Device * device, ID3D11DeviceContext * deviceContext)
 	{
-		// Release if it is already alocated
+		// Release if it is already allocated
 		if (buffer.Get() != nullptr)
 		{
 			buffer.Reset();

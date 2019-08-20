@@ -11,6 +11,6 @@ enum RenderMode
 
 struct RenderingOptions
 {
-	float tubeRadius = 0.1f;
+	float tubeRadius = 1.0f;
 	RenderMode renderMode = RenderMode::TUBES;
 };

@@ -16,7 +16,7 @@
 class LineRenderer
 {
 
-protected:
+public:
 
 
 	// Resterizer com pointer
@@ -35,25 +35,31 @@ protected:
 	GeometryShader		geometryshader;
 
 	// Reference of resources
-	RenderingOptions&	renderingOptions;
-	SolverOptions& solverOptions;
+	RenderingOptions	* renderingOptions;
+	SolverOptions		* solverOptions;
 
 
 
 	// Pointers to graphics infrastructures
-	Microsoft::WRL::ComPtr<ID3D11DeviceContext>	deviceContext;
-	Microsoft::WRL::ComPtr<ID3D11Device>		device;
+	ID3D11DeviceContext*	deviceContext;
+	ID3D11Device*			device;
+	IDXGIAdapter*			pAdapter = nullptr;
 
 	
 	
 
-	// initilize GS,VS and PS
+
+
+
+
+public:
+	// initilize GS,VS and PS 
 	bool initializeShaders();
 
 	// initilize vertex, constant and index buffer
 	bool initializeBuffers();
 
-
+	bool initilizeRasterizer();
 
 	// Update Constant Buffer (view + tube radius)
 	void updateConstantBuffer(Camera& camera);
@@ -66,18 +72,16 @@ protected:
 	bool setShaders();
 
 	// set vertex and index and constant bufferbuffer
-	bool setBuffers();
-	
+	void setBuffers();
+
 	// After drawing the pipeline must be clean (at least geometry shader needs to be deactivated)
+
+	void updateView(Camera& camera);
+	void setResources(RenderingOptions& _renderingOptions, SolverOptions& _solverOptions, ID3D11DeviceContext* _deviceContext, ID3D11Device* _device, IDXGIAdapter* pAdapter);
 	void cleanPipeline();
-
-
-public:
-
-	void setResources(RenderingOptions& _renderingOptions, SolverOptions& _solverOptions);
-
 	bool initialize();
-	void draw();
-	virtual void update(Camera & camera);
+	void draw(Camera& camera);
+
+	virtual void updateScene();
 	
 };

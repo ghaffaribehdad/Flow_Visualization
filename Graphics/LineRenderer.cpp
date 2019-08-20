@@ -1,31 +1,11 @@
 #include "LineRenderer.h"
 
-
 typedef long long int llInt;
 
 
 bool LineRenderer::setShaders()
 {
-	if (this->rasterizerstate.Get() == nullptr)
-	{
-		// Create Rasterizer state
-		D3D11_RASTERIZER_DESC rasterizerDesc;
-		ZeroMemory(&rasterizerDesc, sizeof(D3D11_RASTERIZER_DESC));
 
-		rasterizerDesc.FillMode = D3D11_FILL_MODE::D3D11_FILL_SOLID;
-		rasterizerDesc.CullMode = D3D11_CULL_MODE::D3D11_CULL_NONE; // CULLING could be set to none
-		rasterizerDesc.MultisampleEnable = true;
-		rasterizerDesc.AntialiasedLineEnable = true;
-		//rasterizerDesc.FrontCounterClockwise = TRUE;//= 1;
-
-		HRESULT hr = this->device->CreateRasterizerState(&rasterizerDesc, this->rasterizerstate.GetAddressOf());
-		if (FAILED(hr))
-		{
-			ErrorLogger::Log(hr, "Failed to Create rasterizer state.");
-			return false;
-		}
-	}
-	
 	this->deviceContext->IASetInputLayout(this->vertexshader.GetInputLayout());		// Set the input layout
 	this->deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_LINESTRIP);// set the primitive topology
 	this->deviceContext->RSSetState(this->rasterizerstate.Get());					// set the rasterizer state
@@ -40,32 +20,33 @@ bool LineRenderer::setShaders()
 
 bool LineRenderer::initializeBuffers()
 {
-
+	this->indices.resize(llInt(solverOptions->lineLength) * llInt(solverOptions->lines_count));
 	
-	HRESULT hr = this->GS_constantBuffer.Initialize(this->device.Get(), this->deviceContext.Get());
+	HRESULT hr = this->GS_constantBuffer.Initialize(this->device, this->deviceContext);
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log(hr, "Failed to Create Constant buffer.");
 		return false;
 	}
 
-	hr = this->indexBuffer.Initialize(this->device.Get(), &indices.at(0), indices.size());
+	hr = this->indexBuffer.Initialize(this->device, &indices.at(0), indices.size());
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log(hr, "Failed to Create Index Buffer.");
 		return false;
 	}
 
-	hr = this->vertexBuffer.Initialize(this->device.Get(), NULL, sizeof(Vertex) * solverOptions.lineLength * solverOptions.lines_count);
+	hr = this->vertexBuffer.Initialize(this->device, NULL, solverOptions->lineLength * solverOptions->lines_count);
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log(hr, "Failed to Create Vertex Buffer.");
 		return false;
 	}
 
-	return true;
+
 
 	return true;
+
 }
 
 
@@ -117,24 +98,18 @@ bool LineRenderer::initializeShaders()
 		return false;
 	}
 
-
-
 	return true;
 }
 
 
-bool LineRenderer::setBuffers()
+void LineRenderer::setBuffers()
 {
 	
 	UINT offset = 0;
 
 	//set index and vertex buffer
-
-
 	this->deviceContext->IASetVertexBuffers(0, 1, this->vertexBuffer.GetAddressOf(), this->vertexBuffer.StridePtr(), &offset); // set Vertex buffer
 	this->deviceContext->IASetIndexBuffer(this->indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0); // Set index buffer
-
-	return true;
 }
 
 
@@ -149,7 +124,7 @@ void LineRenderer::updateConstantBuffer(Camera& camera)
 	GS_constantBuffer.data.View = world * camera.GetViewMatrix();
 	GS_constantBuffer.data.Proj = camera.GetProjectionMatrix();
 	GS_constantBuffer.data.eyePos = camera.GetPositionFloat3();
-	GS_constantBuffer.data.tubeRadius = renderingOptions.tubeRadius;
+	GS_constantBuffer.data.tubeRadius = renderingOptions->tubeRadius;
 	GS_constantBuffer.data.viewDir = camera.GetViewVector();
 
 	// Update Constant Buffer
@@ -163,7 +138,7 @@ void LineRenderer::updateConstantBuffer(Camera& camera)
 void LineRenderer::updateIndexBuffer()
 {
 
-	indices.resize(llInt(solverOptions.lineLength) * llInt(solverOptions.lines_count));
+	indices.resize(llInt(solverOptions->lineLength) * llInt(solverOptions->lines_count));
 	for (int i = 0; i < indices.size(); i++)
 	{
 
@@ -179,21 +154,32 @@ bool LineRenderer::initialize()
 	if (!this->initializeBuffers())
 		return false;
 
+	if (!this->initilizeRasterizer())
+		return false;
+
 	if (!this->initializeShaders())
 		return false;
 
 	return true;
 }
 
-void LineRenderer::setResources(RenderingOptions& _renderingOptions, SolverOptions& _solverOptions)
+void LineRenderer::setResources(RenderingOptions& _renderingOptions, SolverOptions& _solverOptions,ID3D11DeviceContext* _deviceContext, ID3D11Device* _device, IDXGIAdapter * _adapter)
 {
-	this->solverOptions = _solverOptions;
-	this->renderingOptions = _renderingOptions;
+	this->solverOptions = &_solverOptions;
+	this->solverOptions->p_Adapter = _adapter;
+	this->renderingOptions = &_renderingOptions;
+	this->device = _device;
+	this->deviceContext = _deviceContext;
 }
 
-void LineRenderer::draw()
-{
-	this->deviceContext->DrawIndexed(llInt(solverOptions.lineLength) * llInt(solverOptions.lines_count), 0, 0);
+void LineRenderer::draw(Camera & camera)
+{	
+	
+	this->setShaders();
+	this->updateView(camera);
+	this->updateIndexBuffer();
+	this->setBuffers();
+	this->deviceContext->DrawIndexed(llInt(solverOptions->lineLength) * llInt(solverOptions->lines_count), 0,0);
 }
 
 void LineRenderer::cleanPipeline()
@@ -201,8 +187,37 @@ void LineRenderer::cleanPipeline()
 	this->deviceContext->GSSetShader(NULL, NULL, 0);
 }
 
-void LineRenderer::update(Camera & camera)
+void LineRenderer::updateScene()
+{
+	
+	this->updateIndexBuffer();
+}
+
+void LineRenderer::updateView(Camera& camera)
 {
 	this->updateConstantBuffer(camera);
-	this->updateIndexBuffer();
+}
+
+
+bool LineRenderer::initilizeRasterizer()
+{
+	if (this->rasterizerstate.Get() == nullptr)
+	{
+		// Create Rasterizer state
+		D3D11_RASTERIZER_DESC rasterizerDesc;
+		ZeroMemory(&rasterizerDesc, sizeof(D3D11_RASTERIZER_DESC));
+
+		rasterizerDesc.FillMode = D3D11_FILL_MODE::D3D11_FILL_SOLID;
+		rasterizerDesc.CullMode = D3D11_CULL_MODE::D3D11_CULL_NONE; // CULLING could be set to none
+		rasterizerDesc.MultisampleEnable = true;
+		rasterizerDesc.AntialiasedLineEnable = true;
+		//rasterizerDesc.FrontCounterClockwise = TRUE;//= 1;
+
+		HRESULT hr = this->device->CreateRasterizerState(&rasterizerDesc, this->rasterizerstate.GetAddressOf());
+		if (FAILED(hr))
+		{
+			ErrorLogger::Log(hr, "Failed to Create rasterizer state.");
+			return false;
+		}
+	}
 }
