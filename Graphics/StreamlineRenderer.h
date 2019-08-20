@@ -6,7 +6,7 @@
 
 class StreamlineRenderer :public LineRenderer
 {
-private:
+public:
 
 	StreamlineSolver<float> streamlineSolver;
 
@@ -25,10 +25,11 @@ private:
 
 
 public:
-	void updateScene() override
+	void updateBuffers() override
 	{
-		this->updateVertexBuffer();
 		this->updateIndexBuffer();
+		this->updateVertexBuffer();
+		
 	}
 		
 };

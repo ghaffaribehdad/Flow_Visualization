@@ -36,12 +36,14 @@ bool LineRenderer::initializeBuffers()
 		return false;
 	}
 
-	hr = this->vertexBuffer.Initialize(this->device, NULL, solverOptions->lineLength * solverOptions->lines_count);
+	hr = this->vertexBuffer.Initialize(this->device,NULL, solverOptions->lineLength * solverOptions->lines_count);
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log(hr, "Failed to Create Vertex Buffer.");
 		return false;
 	}
+
+	this->solverOptions->p_vertexBuffer = this->vertexBuffer.Get();
 
 
 
@@ -109,7 +111,7 @@ void LineRenderer::setBuffers()
 
 	//set index and vertex buffer
 	this->deviceContext->IASetVertexBuffers(0, 1, this->vertexBuffer.GetAddressOf(), this->vertexBuffer.StridePtr(), &offset); // set Vertex buffer
-	this->deviceContext->IASetIndexBuffer(this->indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0); // Set index buffer
+	this->deviceContext->GSSetConstantBuffers(0, 1, this->GS_constantBuffer.GetAddressOf());
 }
 
 
@@ -133,20 +135,6 @@ void LineRenderer::updateConstantBuffer(Camera& camera)
 }
 
 
-
-
-void LineRenderer::updateIndexBuffer()
-{
-
-	indices.resize(llInt(solverOptions->lineLength) * llInt(solverOptions->lines_count));
-	for (int i = 0; i < indices.size(); i++)
-	{
-
-		indices[i] = i;
-
-	}
-
-}
 
 bool LineRenderer::initialize()
 {
@@ -174,12 +162,12 @@ void LineRenderer::setResources(RenderingOptions& _renderingOptions, SolverOptio
 
 void LineRenderer::draw(Camera & camera)
 {	
-	
-	this->setShaders();
-	this->updateView(camera);
-	this->updateIndexBuffer();
-	this->setBuffers();
-	this->deviceContext->DrawIndexed(llInt(solverOptions->lineLength) * llInt(solverOptions->lines_count), 0,0);
+
+	initilizeRasterizer();
+	setShaders();
+	updateView(camera);
+	setBuffers();
+	this->deviceContext->Draw(llInt(solverOptions->lineLength) * llInt(solverOptions->lines_count),0);
 }
 
 void LineRenderer::cleanPipeline()
@@ -187,15 +175,18 @@ void LineRenderer::cleanPipeline()
 	this->deviceContext->GSSetShader(NULL, NULL, 0);
 }
 
-void LineRenderer::updateScene()
+void LineRenderer::updateBuffers()
 {
-	
 	this->updateIndexBuffer();
 }
 
-void LineRenderer::updateView(Camera& camera)
+
+void LineRenderer::updateIndexBuffer(){}
+
+
+void LineRenderer::updateView(Camera& _camera)
 {
-	this->updateConstantBuffer(camera);
+	this->updateConstantBuffer(_camera);
 }
 
 
@@ -220,4 +211,6 @@ bool LineRenderer::initilizeRasterizer()
 			return false;
 		}
 	}
+
+	return true;
 }

@@ -16,7 +16,7 @@
 class LineRenderer
 {
 
-public:
+protected:
 
 
 	// Resterizer com pointer
@@ -47,41 +47,31 @@ public:
 
 	
 	
-
-
-
+	virtual void updateIndexBuffer(); 			// Update Index buffer to match the vertex buffer (If Index buffer is needed)
+	void updateView(Camera& _camera);	// Update Constant buffer based on the camera positions and view 
+	bool setShaders();					// set shaders and rasterizer
+	bool initilizeRasterizer();			// Create Rasterizer state
+	void setBuffers();					// set vertex and index and constant buffer
 
 
 public:
-	// initilize GS,VS and PS 
-	bool initializeShaders();
-
-	// initilize vertex, constant and index buffer
-	bool initializeBuffers();
-
-	bool initilizeRasterizer();
-
-	// Update Constant Buffer (view + tube radius)
-	void updateConstantBuffer(Camera& camera);
-
-	// Update Index buffer to match the vertex buffer
-	void updateIndexBuffer();
 
 
-	// set shaders and rasterizer
-	bool setShaders();
+	void updateConstantBuffer(Camera& camera); 	// Update Constant Buffer (view + tube radius)
+	bool initializeShaders(); 					// Create GS,VS and PS 
+	bool initializeBuffers();					// initilize vertex, constant and index buffer
 
-	// set vertex and index and constant bufferbuffer
-	void setBuffers();
+	virtual void updateBuffers();				// Virutal function to implement Main Routine of the LineRenderer
 
-	// After drawing the pipeline must be clean (at least geometry shader needs to be deactivated)
+	void draw(Camera& camera);					// Draw results to the backbuffer
 
-	void updateView(Camera& camera);
+	// need to be called at the initilization of this object 
+	//=> To Do: Move it to the constructor
 	void setResources(RenderingOptions& _renderingOptions, SolverOptions& _solverOptions, ID3D11DeviceContext* _deviceContext, ID3D11Device* _device, IDXGIAdapter* pAdapter);
-	void cleanPipeline();
-	bool initialize();
-	void draw(Camera& camera);
+	
+	void cleanPipeline();						// Deactivates the Geometry Shader prevent conflict with other pipelines
 
-	virtual void updateScene();
+
+	bool initialize();
 	
 };
