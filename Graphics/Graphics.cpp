@@ -2,6 +2,14 @@
 #include "RenderImGui.h"
 
 
+bool Graphics::InitializeCamera()
+{
+	// set camera properties
+	camera.SetPosition(0.0f, 0.0f, -30.0f);
+	camera.SetProjectionValues(this->FOV, static_cast<float>(this->windowWidth) / static_cast<float>(this->windowHeight), \
+		1.0f, 100.0f);
+	return true;
+}
 
 #pragma region Main_Initialization
 bool Graphics::Initialize(HWND hwnd, int width, int height)
@@ -18,6 +26,8 @@ bool Graphics::Initialize(HWND hwnd, int width, int height)
 	if (!this->InitializeShaders())
 		return false;
 
+	if (!this->InitializeCamera())
+		return false;
 
 	if (!this->InitializeScene())
 		return false;
@@ -77,50 +87,68 @@ bool Graphics::InitializeRayCastingTexture()
 
 void Graphics::RenderFrame()
 {
+
+	raycastingRendering();
+
+
 	float bgcolor[] = { 0.0f,0.0f, 0.0f, 0.0f };
-
-
-
 	if (this->solverOptions.userInterruption)
 	{
 		this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), bgcolor);// Clear the target view
 	}
 
 
-	raycastingRendering();
-
-
-
-	//####################################################### line rendering #####################################################
-
 
 	this->deviceContext->ClearDepthStencilView(this->depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);// Clear the depth stencil view
 	this->deviceContext->OMSetDepthStencilState(this->depthStencilState.Get(), 0);	// add depth  stencil state to rendering routin
+
+	/*
+	##############################################################
+	##															##
+	##						Line Rendering						##
+	##															##
+	##############################################################
+	*/
 
 
 		// Streamline Solver
 	if (this->solverOptions.beginStream)
 	{
 		this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), bgcolor);// Clear the target view
-		streamlineRenderer.updateVertexBuffer();
+		streamlineRenderer.updateBuffers();
 		
 		solverOptions.beginStream = false;
 		showLines = true;
 	}
+	/*
+	##############################################################
+	##															##
+	##							Draw							##
+	##															##
+	##############################################################
+	*/
 
-	// Draw
+	this->volumeBox.draw(camera,D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_LINELIST);
+
 	if (showLines)
 	{	
-		this->streamlineRenderer.draw(camera);
+		this->streamlineRenderer.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_LINESTRIP);
 	}
 
 
 
-	////######################################### Dear ImGui ######################################
+	/*
+	##############################################################
+	##															##
+	##						Dear ImGUI							##
+	##															##
+	##############################################################
+	*/
 	this->deviceContext->GSSetShader(NULL, NULL, 0);
 
 	RenderImGui renderImGui;
 	renderImGui.drawSolverOptions(this->solverOptions);
+	renderImGui.drawLineRenderingOptions(this->renderingOptions, this->solverOptions);
 	renderImGui.drawLog(this);
 	renderImGui.render();
 
@@ -149,6 +177,8 @@ bool Graphics::InitializeResources()
 
 
 	streamlineRenderer.setResources(this->renderingOptions, this->solverOptions, this->deviceContext.Get(),this->device.Get() ,this->adapter);
+	volumeBox.setResources(this->renderingOptions, this->solverOptions, this->deviceContext.Get(), this->device.Get(), this->adapter);
+
 
 	//create and bind the backbuffer
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> backbuffer;
@@ -237,25 +267,25 @@ bool Graphics::InitializeResources()
 	// Set the Viewport
 	this->deviceContext->RSSetViewports(1, &viewport);
 
-	if (this->rasterizerstate.Get() == nullptr)
-	{
-		// Create Rasterizer state
-		D3D11_RASTERIZER_DESC rasterizerDesc;
-		ZeroMemory(&rasterizerDesc, sizeof(D3D11_RASTERIZER_DESC));
+	//if (this->rasterizerstate.Get() == nullptr)
+	//{
+	//	// Create Rasterizer state
+	//	D3D11_RASTERIZER_DESC rasterizerDesc;
+	//	ZeroMemory(&rasterizerDesc, sizeof(D3D11_RASTERIZER_DESC));
 
-		rasterizerDesc.FillMode = D3D11_FILL_MODE::D3D11_FILL_SOLID;
-		rasterizerDesc.CullMode = D3D11_CULL_MODE::D3D11_CULL_NONE; // CULLING could be set to none
-		rasterizerDesc.MultisampleEnable = true;
-		rasterizerDesc.AntialiasedLineEnable = true;
-		//rasterizerDesc.FrontCounterClockwise = TRUE;//= 1;
+	//	rasterizerDesc.FillMode = D3D11_FILL_MODE::D3D11_FILL_SOLID;
+	//	rasterizerDesc.CullMode = D3D11_CULL_MODE::D3D11_CULL_NONE; // CULLING could be set to none
+	//	rasterizerDesc.MultisampleEnable = true;
+	//	rasterizerDesc.AntialiasedLineEnable = true;
+	//	//rasterizerDesc.FrontCounterClockwise = TRUE;//= 1;
 
-		hr = this->device->CreateRasterizerState(&rasterizerDesc, this->rasterizerstate.GetAddressOf());
-		if (FAILED(hr))
-		{
-			ErrorLogger::Log(hr, "Failed to Create rasterizer state.");
-			return false;
-		}
-	}
+	//	hr = this->device->CreateRasterizerState(&rasterizerDesc, this->rasterizerstate.GetAddressOf());
+	//	if (FAILED(hr))
+	//	{
+	//		ErrorLogger::Log(hr, "Failed to Create rasterizer state.");
+	//		return false;
+	//	}
+	//}
 
 	return true;
 }
@@ -331,7 +361,11 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 //########################### Shader Initialization #####################
 bool Graphics::InitializeShaders()
 {
-	this->streamlineRenderer.initializeShaders();
+	if (!this->streamlineRenderer.initializeShaders())
+		return false;
+
+	if (!this->volumeBox.initializeShaders())
+		return false;
 
 	return true;
 }
@@ -342,13 +376,13 @@ bool Graphics::InitializeShaders()
 bool Graphics::InitializeScene()
 {
 
-	// set camera properties
-	camera.SetPosition(0.0f, 0.0f, -10.0f);
-	camera.SetProjectionValues(this->FOV, static_cast<float>(this->windowWidth) / static_cast<float>(this->windowHeight), \
-		1.0f, 100.0f);
-
-
 	streamlineRenderer.initializeBuffers();
+
+	volumeBox.initilizeScene(camera);
+	volumeBox.initializeBuffers();
+
+
+
 	solverOptions.p_Adapter = this->GetAdapter();
 
 

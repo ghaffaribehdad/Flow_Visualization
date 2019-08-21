@@ -8,15 +8,16 @@ public:
 	char  filePath[100] = "D:\\test_Flow_VisualizationTool\\";
 
 	int gridSize[3] = { 192,192,192 };
-	float gridDiameter[3] = { 10,10,10 };
+	float gridDiameter[3] = { 10,2,5 };
+	float seedingBox[3] = { 10,10,10 };
 
 	int precision = 32;
 
-	float dt = 0.1f;
+	float dt = 0.001f;
 	float advectTime = 0.0f;
 
-	int lineLength = 100;
-	int lines_count = 5;
+	int lineLength = 1000;
+	int lines_count = 1024;
 	float line_thickness = 0.0f;
 
 

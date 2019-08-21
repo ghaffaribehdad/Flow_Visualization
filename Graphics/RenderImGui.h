@@ -16,8 +16,7 @@ public:
 
 	void drawSolverOptions(SolverOptions& solverOptions); // draw the solver option window
 	void drawLog(Graphics* p_graphics);	// draw Log window
-	void drawRenderingOptions(RenderingOptions& renderingOptions);
-	
+	void drawLineRenderingOptions(RenderingOptions& renderingOptions, SolverOptions& solverOptions);
 	void render(); // renders the imGui drawings
 
 	// Log pointer
@@ -186,7 +185,7 @@ void RenderImGui::drawLog(Graphics * p_graphics)
 
 	ImGui::PlotLines("Frame Times", fps_array, IM_ARRAYSIZE(fps_array),0,NULL,0,50,ImVec2(250,80));
 
-	if (ImGui::InputTextMultiline("Frame per Second", this->log, 1000))
+	if (ImGui::InputTextMultiline("Frame per Second", this->log, 1000,ImVec2(100,35)))
 	{
 
 	}
@@ -195,14 +194,6 @@ void RenderImGui::drawLog(Graphics * p_graphics)
 	ImGui::End();
 }
 
-
-void RenderImGui::drawRenderingOptions(RenderingOptions& renderingOptions)
-{
-	ImGui::Begin("Rendering Options");
-
-
-	ImGui::End();
-}
 
 	
 
@@ -215,5 +206,30 @@ void RenderImGui::render()
 	//Render Draw Data
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
+
+}
+
+
+void RenderImGui::drawLineRenderingOptions(RenderingOptions& renderingOptions, SolverOptions& solverOptions)
+{
+
+
+	ImGui::Begin("Line Rendering Options");
+	ImGui::SliderFloat("Tube Radius", &renderingOptions.tubeRadius, 0.0f, 0.4f);            // Edit 1 float using a slider from 0.0f to 1.0f
+
+
+
+	ImGui::Text("Color Coding:");
+
+	ImGui::ColorEdit4("Minimum", (float*)& renderingOptions.minColor);
+	if (ImGui::InputFloat("Min Value", (float*)&renderingOptions.minMeasure, 0.1f)) {}
+
+	ImGui::ColorEdit4("Maximum", (float*)& renderingOptions.maxColor);
+	if (ImGui::InputFloat("Max Value", (float*)&renderingOptions.maxMeasure, 0.1f)) {}
+
+	
+
+
+	ImGui::End();
 
 }

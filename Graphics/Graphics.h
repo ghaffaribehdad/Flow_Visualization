@@ -23,6 +23,7 @@
 
 #include "RenderingOptions.h"
 #include "StreamlineRenderer.h"
+#include "ObjectRenderer.h"
 
 typedef long long int llInt;
 
@@ -129,6 +130,8 @@ private:
 	bool InitializeResources();
 	bool InitializeShaders();
 	bool InitializeScene();
+	bool InitializeCamera();
+
 	bool InitializeImGui(HWND hwnd);
 	bool InitializeRayCastingTexture();
 	bool InitializeRaytracingInteroperability();
@@ -158,7 +161,7 @@ private:
 	IndexBuffer indexBuffer;
 
 	//ConstantBuffer<CB_VS_vertexshader> VS_constantBuffer;
-	ConstantBuffer<Tube_geometryShader> GS_constantBuffer;
+	//ConstantBuffer<Tube_geometryShader> GS_constantBuffer;
 
 	// Depth stencil view and buffer and state
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilView>		depthStencilView;
@@ -181,6 +184,7 @@ private:
 
 
 	StreamlineRenderer streamlineRenderer;
+	BoxRenderer volumeBox;
 
 
 	// Solver options

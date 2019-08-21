@@ -54,14 +54,14 @@ void main(line GS_INPUT input[2], inout TriangleStream<GS_OUTPUT> output)
 		float3 orient1 = normalize(cross(input[1].inTangent, viewDirection));
 
 		// Radius of the tubes
-		float tubeRad = tubeRadius;
+		float tubeRad = .04;
 
 		// in degree
 		float angle = 360.0f / 8.0f;
 		// in radian
 		angle = (angle / 180.0f) * 3.14159265359f;
 
-		// pre-computing the sine and cosine
+		// pre-computing the sine and cosine0
 		float sine = sin(angle);
 		float cosine = cos(angle);
 
@@ -90,8 +90,17 @@ void main(line GS_INPUT input[2], inout TriangleStream<GS_OUTPUT> output)
 
 
 			// Normals
-			vertex0.outNormal = -orient0_rotated;
-			vertex1.outNormal = -orient1_rotated;
+			if (input[0].inLineID == 0)
+			{
+				vertex0.outNormal = -orient0_rotated;
+				vertex1.outNormal = -orient1_rotated;
+			}
+			else // To Do: Change the direction of the normal for sides
+			{
+				vertex0.outNormal = -orient0_rotated;
+				vertex1.outNormal = -orient1_rotated;
+			}
+			
 			
 			// Colors
 			vertex0.outMeasure = input[0].inMeasure;

@@ -36,9 +36,9 @@ __global__ void TracingStream(Particle<T>* d_particles, cudaTextureObject_t t_Ve
 			d_particles[index].move(dt, gridSize, gridDiameter, t_VelocityField);
 
 			// write the new position into the vertex buffer
-			p_VertexBuffer[index_buffer + i].pos.x = d_particles[index].getPosition()->x - gridDiameter.x / 2.0;
-			p_VertexBuffer[index_buffer + i].pos.y = d_particles[index].getPosition()->y - gridDiameter.y / 2.0;
-			p_VertexBuffer[index_buffer + i].pos.z = d_particles[index].getPosition()->z + gridDiameter.z / 2.0;
+			p_VertexBuffer[index_buffer + i].pos.x = d_particles[index].getPosition()->x - (gridDiameter.x / 2.0);
+			p_VertexBuffer[index_buffer + i].pos.y = d_particles[index].getPosition()->y - (gridDiameter.y / 2.0);
+			p_VertexBuffer[index_buffer + i].pos.z = d_particles[index].getPosition()->z - (gridDiameter.z / 2.0);
 
 
 			float3* velocity = d_particles[index].getVelocity();
@@ -54,7 +54,7 @@ __global__ void TracingStream(Particle<T>* d_particles, cudaTextureObject_t t_Ve
 				case 0: // Velocity
 				{
 				
-					p_VertexBuffer[index_buffer + i].measure = norm3df(norm.x,norm.y,norm.z);
+					p_VertexBuffer[index_buffer + i].measure = VecMagnitude(*velocity);
 					break;
 
 				}

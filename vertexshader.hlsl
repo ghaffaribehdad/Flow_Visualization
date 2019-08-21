@@ -35,24 +35,3 @@ VS_OUTPUT main(VS_INPUT input)
 
     return output;
 }
-
-
-//struct VS_OUTPUT
-//{
-//	float4 outPosition : SV_POSITION;
-//	float3 outTangent: TANGENT;
-//	unsigned int outLineID : LINEID;
-//	float outMeasure : MEASURE;
-//};
-//
-//VS_OUTPUT main(VS_INPUT input)
-//{
-//	VS_OUTPUT output;
-//
-//	output.outPosition =mul(float4(input.inPos, 1.0f),mat);
-//	output.outTangent = input.inTangent;
-//	output.outLineID = input.inLineID;
-//	output.outMeasure = input.inMeasure;
-//
-//	return output;
-//}

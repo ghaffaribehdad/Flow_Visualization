@@ -1,4 +1,14 @@
 
+cbuffer PS_CBuffer
+{
+
+	float4 minColor;
+	float4 maxColor;
+	float minMeasure;
+	float maxMeasure;
+};
+
+
 
 struct PS_INPUT
 {
@@ -10,28 +20,17 @@ struct PS_INPUT
 	float outMeasure : MEASURE;
 };
 
-//struct PS_INPUT
-//{
-//
-//	float4 outPosition : SV_POSITION;
-//	float3 outTangent: TANGENT;
-//	unsigned int outWorldPosition: LINEID;
-//	float outMeasure : MEASURE;
-//};
+
 
 float4 main(PS_INPUT input) : SV_TARGET
 {
-	// TO-DO: Change color base on a measure
-	//float4 outPosition = input.position;
-	//float3 outTangent = input.tangent;
-	//float4 outVelocity = input.color;
+	float measure = input.outMeasure + minMeasure;
 
-	//float3 pixelColor = {input.color.x,input.color.y,input.color.z,input.color.w};
-	//float3 pixelColor = {input.color.x,0,0};
-	//float4 rgb = float4(input.outMeasure,0.5f,0.5f,1);
-	float4 rgb = float4(0.5f, 0.5f, 0.5f, 1);
+	float Projection = maxMeasure - minMeasure == 0 ? saturate(measure / (maxMeasure - minMeasure + .00001f)) : saturate(measure / (maxMeasure - minMeasure));
 
-	float diffuse = max(dot(normalize(input.outNormal), input.outLightDir), 0.0f);
+	float4 rgb = ((1.0 - Projection) * minColor) + (Projection * maxColor);
+
+	float diffuse = max(dot(normalize(input.outNormal), input.outLightDir),0);
 	rgb = rgb * diffuse;
 	
 	return rgb;

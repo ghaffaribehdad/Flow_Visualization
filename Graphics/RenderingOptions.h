@@ -1,5 +1,5 @@
 #pragma once
-
+#include "ImGui/imgui.h"
 typedef unsigned int uint;
 
 
@@ -11,6 +11,11 @@ enum RenderMode
 
 struct RenderingOptions
 {
-	float tubeRadius = 0.1f;
+	float tubeRadius = 0.01f;
+	float minColor[4] = { 1,0,0,1 };
+	float maxColor[4] = { 0,1,0,1};
 	RenderMode renderMode = RenderMode::TUBES;
+
+	float maxMeasure = 30;
+	float minMeasure = 0;
 };

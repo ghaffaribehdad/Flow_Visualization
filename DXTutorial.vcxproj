@@ -214,6 +214,7 @@
     </CudaCompile>
     <ClInclude Include="Cuda\helper_math.h" />
     <ClInclude Include="Graphics\LineRenderer.h" />
+    <ClInclude Include="Graphics\ObjectRenderer.h" />
     <ClInclude Include="Graphics\RenderingOptions.h" />
     <ClInclude Include="Graphics\StreamlineRenderer.h" />
     <ClInclude Include="Raycaster\IsosurfaceFunctions.h" />
@@ -282,7 +283,11 @@
     <CudaCompile Include="Cuda\PathlineSolver.cu" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="geometryshader.hlsl">
+    <FxCompile Include="geometryshaderLineTube.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Geometry</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="geometryshaderLineTubeBox.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Geometry</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
     </FxCompile>
@@ -291,6 +296,10 @@
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="pixelshaderSeedBox.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
     </FxCompile>
     <FxCompile Include="vertexshader.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>

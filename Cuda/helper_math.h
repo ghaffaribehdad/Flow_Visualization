@@ -74,6 +74,11 @@ inline __host__ __device__ float3 normalize(const float3 & v)
 	return v * invLen;
 }
 
+inline __host__ __device__ float VecMagnitude(const float3& v)
+{
+	return sqrtf(dot(v, v));
+}
+
 inline __host__ __device__ float3 operator-(const float3& a)
 {
 	return make_float3(-a.x, -a.y, -a.z);

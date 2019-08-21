@@ -1,13 +1,12 @@
 #include "LineRenderer.h"
 
-typedef long long int llInt;
 
 
-bool LineRenderer::setShaders()
+bool LineRenderer::setShaders(D3D11_PRIMITIVE_TOPOLOGY Topology)
 {
 
 	this->deviceContext->IASetInputLayout(this->vertexshader.GetInputLayout());		// Set the input layout
-	this->deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_LINESTRIP);// set the primitive topology
+	this->deviceContext->IASetPrimitiveTopology(Topology);							// set the primitive topology
 	this->deviceContext->RSSetState(this->rasterizerstate.Get());					// set the rasterizer state
 	this->deviceContext->VSSetShader(vertexshader.GetShader(), NULL, 0);			// set vertex shader
 	this->deviceContext->PSSetShader(pixelshader.GetShader(), NULL, 0);		
@@ -18,40 +17,51 @@ bool LineRenderer::setShaders()
 }
 
 
-bool LineRenderer::initializeBuffers()
+
+
+void LineRenderer::setBuffers()
 {
-	this->indices.resize(llInt(solverOptions->lineLength) * llInt(solverOptions->lines_count));
 	
-	HRESULT hr = this->GS_constantBuffer.Initialize(this->device, this->deviceContext);
-	if (FAILED(hr))
-	{
-		ErrorLogger::Log(hr, "Failed to Create Constant buffer.");
-		return false;
-	}
+	UINT offset = 0;
 
-	hr = this->indexBuffer.Initialize(this->device, &indices.at(0), indices.size());
-	if (FAILED(hr))
-	{
-		ErrorLogger::Log(hr, "Failed to Create Index Buffer.");
-		return false;
-	}
-
-	hr = this->vertexBuffer.Initialize(this->device,NULL, solverOptions->lineLength * solverOptions->lines_count);
-	if (FAILED(hr))
-	{
-		ErrorLogger::Log(hr, "Failed to Create Vertex Buffer.");
-		return false;
-	}
-
-	this->solverOptions->p_vertexBuffer = this->vertexBuffer.Get();
+	//set index and vertex buffer
+	this->deviceContext->IASetVertexBuffers(0, 1, this->vertexBuffer.GetAddressOf(), this->vertexBuffer.StridePtr(), &offset); // set Vertex buffer
+	this->deviceContext->GSSetConstantBuffers(0, 1, this->GS_constantBuffer.GetAddressOf());
+	this->deviceContext->PSSetConstantBuffers(0, 1, this->PS_constantBuffer.GetAddressOf());
+}
 
 
 
-	return true;
+void LineRenderer::updateConstantBuffer(Camera& camera)
+{
+
+
+	DirectX::XMMATRIX world = DirectX::XMMatrixIdentity();
+
+	// Set attributes of constant buffer for geometry shader
+	GS_constantBuffer.data.View = world * camera.GetViewMatrix();
+	GS_constantBuffer.data.Proj = camera.GetProjectionMatrix();
+	GS_constantBuffer.data.eyePos = camera.GetPositionFloat3();
+	GS_constantBuffer.data.tubeRadius = renderingOptions->tubeRadius;
+	GS_constantBuffer.data.viewDir = camera.GetViewVector();
+
+
+
+	// Update Constant Buffer
+	GS_constantBuffer.ApplyChanges();
 
 }
 
 
+
+void LineRenderer::setResources(RenderingOptions& _renderingOptions, SolverOptions& _solverOptions,ID3D11DeviceContext* _deviceContext, ID3D11Device* _device, IDXGIAdapter * _adapter)
+{
+	this->solverOptions = &_solverOptions;
+	this->solverOptions->p_Adapter = _adapter;
+	this->renderingOptions = &_renderingOptions;
+	this->device = _device;
+	this->deviceContext = _deviceContext;
+}
 bool LineRenderer::initializeShaders()
 {
 	std::wstring shaderfolder;
@@ -90,7 +100,7 @@ bool LineRenderer::initializeShaders()
 		return false;
 	}
 
-	if (!this->geometryshader.Initialize(this->device, shaderfolder + L"geometryshader.cso"))
+	if (!this->geometryshader.Initialize(this->device, shaderfolder + L"geometryshaderLineTube.cso"))
 	{
 		return false;
 	}
@@ -104,90 +114,14 @@ bool LineRenderer::initializeShaders()
 }
 
 
-void LineRenderer::setBuffers()
-{
-	
-	UINT offset = 0;
 
-	//set index and vertex buffer
-	this->deviceContext->IASetVertexBuffers(0, 1, this->vertexBuffer.GetAddressOf(), this->vertexBuffer.StridePtr(), &offset); // set Vertex buffer
-	this->deviceContext->GSSetConstantBuffers(0, 1, this->GS_constantBuffer.GetAddressOf());
-}
-
-
-
-void LineRenderer::updateConstantBuffer(Camera& camera)
-{
-
-
-	DirectX::XMMATRIX world = DirectX::XMMatrixIdentity();
-
-	// Set attributes of constant buffer for geometry shader
-	GS_constantBuffer.data.View = world * camera.GetViewMatrix();
-	GS_constantBuffer.data.Proj = camera.GetProjectionMatrix();
-	GS_constantBuffer.data.eyePos = camera.GetPositionFloat3();
-	GS_constantBuffer.data.tubeRadius = renderingOptions->tubeRadius;
-	GS_constantBuffer.data.viewDir = camera.GetViewVector();
-
-	// Update Constant Buffer
-	GS_constantBuffer.ApplyChanges();
-
-}
-
-
-
-bool LineRenderer::initialize()
-{
-	
-	if (!this->initializeBuffers())
-		return false;
-
-	if (!this->initilizeRasterizer())
-		return false;
-
-	if (!this->initializeShaders())
-		return false;
-
-	return true;
-}
-
-void LineRenderer::setResources(RenderingOptions& _renderingOptions, SolverOptions& _solverOptions,ID3D11DeviceContext* _deviceContext, ID3D11Device* _device, IDXGIAdapter * _adapter)
-{
-	this->solverOptions = &_solverOptions;
-	this->solverOptions->p_Adapter = _adapter;
-	this->renderingOptions = &_renderingOptions;
-	this->device = _device;
-	this->deviceContext = _deviceContext;
-}
-
-void LineRenderer::draw(Camera & camera)
-{	
-
-	initilizeRasterizer();
-	setShaders();
-	updateView(camera);
-	setBuffers();
-	this->deviceContext->Draw(llInt(solverOptions->lineLength) * llInt(solverOptions->lines_count),0);
-}
 
 void LineRenderer::cleanPipeline()
 {
 	this->deviceContext->GSSetShader(NULL, NULL, 0);
 }
 
-void LineRenderer::updateBuffers()
-{
-	this->updateIndexBuffer();
-}
 
-
-void LineRenderer::updateIndexBuffer(){}
-
-
-void LineRenderer::updateView(Camera& _camera)
-{
-	this->updateConstantBuffer(_camera);
-}
 
 
 bool LineRenderer::initilizeRasterizer()

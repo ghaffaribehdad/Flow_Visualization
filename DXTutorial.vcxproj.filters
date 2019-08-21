@@ -295,6 +295,9 @@
     <ClInclude Include="Graphics\LineRenderer.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
+    <ClInclude Include="Graphics\ObjectRenderer.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="vertexshader.hlsl">
@@ -303,7 +306,13 @@
     <FxCompile Include="pixelshader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="geometryshader.hlsl">
+    <FxCompile Include="geometryshaderLineTube.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="geometryshaderLineTubeBox.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="pixelshaderSeedBox.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

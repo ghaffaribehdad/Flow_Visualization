@@ -12,7 +12,10 @@
 #include <Windows.h>
 #include "Camera.h"
 
+typedef long long int llInt;
 
+
+// A generic class to render lines
 class LineRenderer
 {
 
@@ -26,6 +29,7 @@ protected:
 	VertexBuffer<Vertex>				vertexBuffer;
 	IndexBuffer							indexBuffer;
 	ConstantBuffer<Tube_geometryShader> GS_constantBuffer;
+	ConstantBuffer<CB_pixelShader>		PS_constantBuffer;
 	std::vector<DWORD>					indices;
 
 
@@ -47,31 +51,28 @@ protected:
 
 	
 	
-	virtual void updateIndexBuffer(); 			// Update Index buffer to match the vertex buffer (If Index buffer is needed)
-	void updateView(Camera& _camera);	// Update Constant buffer based on the camera positions and view 
-	bool setShaders();					// set shaders and rasterizer
+	virtual void updateIndexBuffer() {}; 			// Update Index buffer to match the vertex buffer (If Index buffer is needed)
+
+
+	virtual void updateConstantBuffer(Camera& _camera);	// Update Constant buffer based on the camera positions and view 
+	bool setShaders(D3D11_PRIMITIVE_TOPOLOGY Topology);					// set shaders and rasterizer
 	bool initilizeRasterizer();			// Create Rasterizer state
-	void setBuffers();					// set vertex and index and constant buffer
+	virtual void setBuffers();					// set vertex and index and constant buffer
+	virtual bool initilizeIndexBuffer() { return true; }
 
 
 public:
 
-
-	void updateConstantBuffer(Camera& camera); 	// Update Constant Buffer (view + tube radius)
-	bool initializeShaders(); 					// Create GS,VS and PS 
-	bool initializeBuffers();					// initilize vertex, constant and index buffer
-
-	virtual void updateBuffers();				// Virutal function to implement Main Routine of the LineRenderer
-
-	void draw(Camera& camera);					// Draw results to the backbuffer
+	virtual void initilizeScene(Camera & camera) {};						// Adds static scenes
+	virtual void updateBuffers() {};						// Virutal function to implement Main Routine of the LineRenderer
+	virtual void draw(Camera& camera, D3D11_PRIMITIVE_TOPOLOGY Toplogy) {}		// Draw results to the backbuffer
+	virtual bool initializeBuffers() { return true; }		// initilize vertex, constant and index buffer
+	virtual void cleanPipeline();							// Deactivates the Geometry Shader prevent conflict with other pipelines
 
 	// need to be called at the initilization of this object 
 	//=> To Do: Move it to the constructor
 	void setResources(RenderingOptions& _renderingOptions, SolverOptions& _solverOptions, ID3D11DeviceContext* _deviceContext, ID3D11Device* _device, IDXGIAdapter* pAdapter);
 	
-	void cleanPipeline();						// Deactivates the Geometry Shader prevent conflict with other pipelines
+	virtual bool initializeShaders();				// Create GS,VS and PS 
 
-
-	bool initialize();
-	
 };
