@@ -176,7 +176,6 @@ void Camera::UpdateViewMatrix() //Updates view matrix and also updates the movem
 
 const XMFLOAT3& Camera::GetUpVector()
 {
-	XMFLOAT3 upDir;
 
 	XMMATRIX camRotationMatrix = XMMatrixRotationRollPitchYaw(this->rot.x, this->rot.y, this->rot.z);
 	XMVECTOR v_upDir = XMVector3TransformCoord(this->DEFAULT_UP_VECTOR, camRotationMatrix);
@@ -188,7 +187,6 @@ const XMFLOAT3& Camera::GetUpVector()
 
 const XMFLOAT3& Camera::GetViewVector()
 {
-	XMFLOAT3 viewDir;
 
 	XMMATRIX camRotationMatrix = XMMatrixRotationRollPitchYaw(this->rot.x, this->rot.y, this->rot.z);
 	XMVECTOR v_viewDir = XMVector3TransformCoord(this->DEFAULT_FORWARD_VECTOR, camRotationMatrix);

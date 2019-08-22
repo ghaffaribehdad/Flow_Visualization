@@ -13,8 +13,8 @@
 #include "CudaDevice.h"
 #include "../Graphics/Vertex.h"
 #include "../Volume/Volume_IO.h"
+#include "..//Enum.h"
 
-template <class T1>
 class CUDASolver
 {
 public:
@@ -24,7 +24,7 @@ public:
 	bool Initialize(SolverOptions _solverOptions);
 
 	// Read volume and store it in a vector, returns a pointer to the first element of the vector
-	__host__ T1* InitializeVelocityField(int ID);
+	__host__ float* InitializeVelocityField(int ID);
 
 	// Solve must be defined in the derived classes
 	virtual bool solve()
@@ -38,8 +38,6 @@ public:
 	SolverOptions solverOptions;
 
 protected:
-
-	__host__ bool InitializeTexture(T1* h_source, cudaTextureObject_t& texture);
 	
 	__host__ void InitializeParticles();
 
@@ -55,8 +53,8 @@ protected:
 	Volume_IO volume_IO;
 
 	// The probe particles
-	Particle<T1>* d_Particles;
-	Particle<T1>* h_Particles;
+	Particle<float>* d_Particles;
+	Particle<float>* h_Particles;
 
 	virtual void release(){}
 

@@ -7,15 +7,13 @@
 
 
 #include "device_launch_parameters.h"
-#include "texture_fetch_functions.h"
 #include <vector>
 #include <stdio.h>
 #include "../Particle.cuh"
+#include "..//VolumeTexture/VolumeTexture.h"
 
 
-
-template <class T>
-class StreamlineSolver : public CUDASolver<T>
+class PathlineSolver : public CUDASolver
 {
 
 public:
@@ -25,15 +23,21 @@ public:
 
 private:
 
-	Particle<T>* d_particles;
+
+	Particle<float>* d_particles;
 
 
-	T * h_VelocityField;
-	T * d_VelocityField;
-	
+	float* h_VelocityField;
+	float* d_VelocityField;
+
+	VolumeTexture volumeTexture_0;
+	VolumeTexture volumeTexture_1;
+
 	// https://devblogs.nvidia.com/cuda-pro-tip-kepler-texture-objects-improve-performance-and-flexibility/
 	// Reference to Velocity Field as a Texture 
-	cudaTextureObject_t t_VelocityField = NULL;
+	// we need three timesteps for RK4
+
+
 
 
 	float3* result;
@@ -42,7 +46,7 @@ private:
 
 // Kernel of the streamlines
 template <typename T>
-__global__ void TracingStream(Particle<T>* d_particles, cudaTextureObject_t t_VelocityField, SolverOptions solverOptions, Vertex* p_VertexBuffer);
+__global__ void TracingPath(Particle<T>* d_particles, cudaTextureObject_t t_VelocityField_0, cudaTextureObject_t t_VelocityField_1, SolverOptions solverOptions, Vertex* p_VertexBuffer, bool odd, int step);
 
 
 

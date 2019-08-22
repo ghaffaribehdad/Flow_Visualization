@@ -2,22 +2,12 @@
 #include "VolumeTexture.h"
 #include <string>
 
-void VolumeTexture::setGridDiameter(const float3& _gridDiamter)
-{
-	this->gridDiameter = _gridDiamter;
-}
 
-void VolumeTexture::setGridSize(const int3& _gridSize)
-{
-	this->gridSize = _gridSize;
-}
 
-void VolumeTexture::setField(float* _h_field)
-{
-	this->h_field = _h_field;
-}
 
-void VolumeTexture::initialize()
+
+
+cudaTextureObject_t VolumeTexture::initialize()
 {
 	// Cuda 3D array of velocities
 	cudaArray_t cuArray_velocity;
@@ -26,9 +16,9 @@ void VolumeTexture::initialize()
 	// define the size of the velocity field
 	cudaExtent extent =
 	{
-		static_cast<size_t>(this->gridSize.x),
-		static_cast<size_t>(this->gridSize.y),
-		static_cast<size_t>(this->gridSize.z)
+		static_cast<size_t>(this->solverOptions->gridSize[0]),
+		static_cast<size_t>(this->solverOptions->gridSize[1]),
+		static_cast<size_t>(this->solverOptions->gridSize[2])
 	};
 
 
@@ -82,20 +72,13 @@ void VolumeTexture::initialize()
 	// Create the texture and bind it to the array
 	gpuErrchk(cudaCreateTextureObject(&this->t_field, &resDesc, &texDesc, NULL));
 
+	return t_field;
+
 }
 void VolumeTexture::release()
 {
 	cudaDestroyTextureObject(this->t_field);
 }
 
-
-const int3& VolumeTexture::getGridSize() const
-{
-	return this->gridSize;
-}
-const float3& VolumeTexture::getGridDiameter() const
-{
-	return this->gridDiameter;
-}
 
 

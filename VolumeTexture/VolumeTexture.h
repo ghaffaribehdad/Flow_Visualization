@@ -3,6 +3,7 @@
 #include "cuda_runtime.h"
 #include "..//ErrorLogger.h"
 #include "texture_fetch_functions.h"
+#include "..//SolverOptions.h"
 
 class VolumeTexture
 {
@@ -10,15 +11,19 @@ class VolumeTexture
 public:
 
 	// setter functions
-	void setGridDiameter(const float3& _gridDiamter);
-	void setGridSize(const int3& _gridSize);
+	void setField(float* _h_field)
+	{
+		this->h_field = _h_field;
+	}
 
-	void setField(float* _h_field);
+	void setSolverOptions(SolverOptions* _solverOptions)
+	{
+		this->solverOptions = _solverOptions;
+	}
 
-	const int3& getGridSize() const;
-	const float3& getGridDiameter() const;
 
-	void initialize();
+	cudaTextureObject_t initialize();
+
 	void release();
 
 	cudaTextureObject_t getTexture()
@@ -29,11 +34,13 @@ public:
 
 private:
 
+	SolverOptions * solverOptions;
+
 	cudaTextureObject_t t_field;
+
 	float* h_field;
 
 	float3 gridDiameter;
-	int3 gridSize;
 
 
 

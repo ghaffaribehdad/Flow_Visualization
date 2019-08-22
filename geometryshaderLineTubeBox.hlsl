@@ -7,6 +7,7 @@ cbuffer GS_CBuffer
 	float tubeRadius;
 	float3 eyePos;
 	float size;
+	float4 color;
 };
 
 

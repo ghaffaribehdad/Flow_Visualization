@@ -247,15 +247,6 @@
     <ClInclude Include="Volume\Volume_IO.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Cuda\StreamlineSolver.cuh">
-      <Filter>Header Files\Cuda</Filter>
-    </ClInclude>
-    <ClInclude Include="Cuda\PathlineSolver.cuh">
-      <Filter>Header Files\Cuda</Filter>
-    </ClInclude>
-    <ClInclude Include="Particle.cuh">
-      <Filter>Source Files\Particle</Filter>
-    </ClInclude>
     <ClInclude Include="Cuda\CudaHelper.cuh">
       <Filter>Header Files\Cuda</Filter>
     </ClInclude>
@@ -297,6 +288,15 @@
     </ClInclude>
     <ClInclude Include="Graphics\ObjectRenderer.h">
       <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Particle.cuh">
+      <Filter>Header Files\Particle</Filter>
+    </ClInclude>
+    <ClInclude Include="Cuda\StreamlineSolver.h">
+      <Filter>Header Files\Cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="Cuda\PathlineSolver.h">
+      <Filter>Header Files\Cuda</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -46,7 +46,6 @@ void LineRenderer::updateConstantBuffer(Camera& camera)
 	GS_constantBuffer.data.viewDir = camera.GetViewVector();
 
 
-
 	// Update Constant Buffer
 	GS_constantBuffer.ApplyChanges();
 

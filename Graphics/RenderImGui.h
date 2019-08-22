@@ -70,6 +70,10 @@ void RenderImGui::drawSolverOptions(SolverOptions& solverOptions)
 	{
 	}
 
+	if (ImGui::InputFloat3("Seed Box", solverOptions.seedBox, sizeof(solverOptions.seedBox)))
+	{
+	}
+
 	if (ImGui::InputInt("precision", &(solverOptions.precision)))
 	{
 
@@ -169,7 +173,7 @@ void RenderImGui::drawLog(Graphics * p_graphics)
 
 		if (fps_arrayCounter < 10)
 		{
-			fps_array[fps_arrayCounter] = fpsCounter / 10;
+			fps_array[fps_arrayCounter] = static_cast<float>(fpsCounter / 10.0f);
 			fps_arrayCounter++;
 		}
 		else

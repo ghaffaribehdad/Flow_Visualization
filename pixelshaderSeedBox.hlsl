@@ -1,4 +1,9 @@
+cbuffer PS_CBuffer
+{
 
+	float4 minColor;
+
+};
 
 struct PS_INPUT
 {
@@ -14,7 +19,7 @@ struct PS_INPUT
 float4 main(PS_INPUT input) : SV_TARGET
 {
 
-	float4 rgb = float4(0.5f, 1.0f, 0.5f, 1);
+	float4 rgb = minColor;
 
 	float diffuse = max(dot(normalize(input.outNormal), input.outLightDir), 0.0f);
 	rgb = rgb * diffuse;

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "LineRenderer.h"
-#include "..//Cuda/StreamlineSolver.cuh"
+#include "..//Cuda/StreamlineSolver.h"
 #include "Vertex.h"
 
 class StreamlineRenderer :public LineRenderer
@@ -10,7 +10,7 @@ class StreamlineRenderer :public LineRenderer
 
 private:
 
-	StreamlineSolver<float> streamlineSolver;
+	StreamlineSolver streamlineSolver;
 
 public:
 	void updateBuffers() override

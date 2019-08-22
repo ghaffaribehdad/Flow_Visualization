@@ -20,8 +20,13 @@ bool Graphics::Initialize(HWND hwnd, int width, int height)
 	if (!this->InitializeDirectX(hwnd))
 		return false;
 
+
+	if (!this->InitializeDirectXResources())
+		return false;
+
 	if (!this->InitializeResources())
 		return false;
+
 
 	if (!this->InitializeShaders())
 		return false;
@@ -129,6 +134,7 @@ void Graphics::RenderFrame()
 	*/
 
 	this->volumeBox.draw(camera,D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_LINELIST);
+	this->seedBox.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_LINELIST);
 
 	if (showLines)
 	{	
@@ -170,14 +176,13 @@ void Graphics::RenderFrame()
 }
 
 
-bool Graphics::InitializeResources()
+bool Graphics::InitializeDirectXResources()
 {
 
 	HRESULT hr;
 
 
-	streamlineRenderer.setResources(this->renderingOptions, this->solverOptions, this->deviceContext.Get(),this->device.Get() ,this->adapter);
-	volumeBox.setResources(this->renderingOptions, this->solverOptions, this->deviceContext.Get(), this->device.Get(), this->adapter);
+
 
 
 	//create and bind the backbuffer
@@ -259,6 +264,7 @@ bool Graphics::InitializeResources()
 	ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
+
 	viewport.Width = static_cast<float>(this->windowWidth);
 	viewport.Height = static_cast<float>(this->windowHeight);
 	viewport.MaxDepth = 1.0f;
@@ -267,30 +273,31 @@ bool Graphics::InitializeResources()
 	// Set the Viewport
 	this->deviceContext->RSSetViewports(1, &viewport);
 
-	//if (this->rasterizerstate.Get() == nullptr)
-	//{
-	//	// Create Rasterizer state
-	//	D3D11_RASTERIZER_DESC rasterizerDesc;
-	//	ZeroMemory(&rasterizerDesc, sizeof(D3D11_RASTERIZER_DESC));
+	return true;
+}
 
-	//	rasterizerDesc.FillMode = D3D11_FILL_MODE::D3D11_FILL_SOLID;
-	//	rasterizerDesc.CullMode = D3D11_CULL_MODE::D3D11_CULL_NONE; // CULLING could be set to none
-	//	rasterizerDesc.MultisampleEnable = true;
-	//	rasterizerDesc.AntialiasedLineEnable = true;
-	//	//rasterizerDesc.FrontCounterClockwise = TRUE;//= 1;
+bool Graphics::InitializeResources()
+{
+	
+	streamlineRenderer.setResources(this->renderingOptions, this->solverOptions, this->deviceContext.Get(), this->device.Get(), this->adapter);
+	volumeBox.setResources(this->renderingOptions, this->solverOptions, this->deviceContext.Get(), this->device.Get(), this->adapter);
+	seedBox.setResources(this->renderingOptions, this->solverOptions, this->deviceContext.Get(), this->device.Get(), this->adapter);
+	
+	if (!streamlineRenderer.initializeBuffers())
+		return false;
 
-	//	hr = this->device->CreateRasterizerState(&rasterizerDesc, this->rasterizerstate.GetAddressOf());
-	//	if (FAILED(hr))
-	//	{
-	//		ErrorLogger::Log(hr, "Failed to Create rasterizer state.");
-	//		return false;
-	//	}
-	//}
+	if (!volumeBox.initializeBuffers())
+		return false;	
+
+	if (!seedBox.initializeBuffers())
+		return false;
+
+
 
 	return true;
 }
-#pragma region DirectX_Initialization
-// ################################### Initialize DirectX ################################
+
+
 bool Graphics::InitializeDirectX(HWND hwnd)
 {
 	// Get an adapter(normally the first one is the graphics card)
@@ -349,12 +356,11 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 		return false;
 	}
 
-
+	// Keep a pointer to the Adapter in SolverOptions
+	solverOptions.p_Adapter = this->GetAdapter();
 
 	return true;
 }
-
-#pragma endregion DirectX_Initialization
 
 
 
@@ -367,6 +373,10 @@ bool Graphics::InitializeShaders()
 	if (!this->volumeBox.initializeShaders())
 		return false;
 
+	if (!this->seedBox.initializeShaders())
+		return false;
+
+
 	return true;
 }
 
@@ -376,14 +386,9 @@ bool Graphics::InitializeShaders()
 bool Graphics::InitializeScene()
 {
 
-	streamlineRenderer.initializeBuffers();
+	volumeBox.addBox(camera, this->solverOptions.gridDiameter, { 0,1,0,1});
+	seedBox.addBox(camera, this->solverOptions.seedBox, { 1,0,0,1 });
 
-	volumeBox.initilizeScene(camera);
-	volumeBox.initializeBuffers();
-
-
-
-	solverOptions.p_Adapter = this->GetAdapter();
 
 
 	return true;
@@ -448,6 +453,7 @@ void Graphics::Resize(HWND hwnd)
 	}
 
 	// Reinitialize Resources and Scene accordingly
+	this->InitializeDirectXResources();
 	this->InitializeResources();
 
 

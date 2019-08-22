@@ -2,8 +2,8 @@
 
 #include "WindowContainer.h"
 #include "Timer.h"
-#include "Cuda/StreamlineSolver.cuh"
-#include "Cuda/PathlineSolver.cuh"
+#include "Cuda/StreamlineSolver.h"
+#include "Cuda/PathlineSolver.h"
 #include <ScreenGrab.h>
 
 
@@ -28,8 +28,8 @@ public:
 private:
 	Timer timer;
 
-	StreamlineSolver<float> streamlineSolver_float;
-	PathlineSolver<float> pathlineSolver_float;
+	StreamlineSolver streamlineSolver_float;
+	PathlineSolver pathlineSolver_float;
 
 
 

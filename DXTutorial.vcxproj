@@ -235,7 +235,7 @@
     <ClInclude Include="VolumeTexture\VolumeTexture.h" />
     <ClInclude Include="ErrorLogger.h" />
     <ClInclude Include="Engine.h" />
-    <ClInclude Include="Cuda\StreamlineSolver.cuh">
+    <ClInclude Include="Cuda\StreamlineSolver.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="Enum.h" />
@@ -244,7 +244,7 @@
       <GenerateRelocatableDeviceCode Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</GenerateRelocatableDeviceCode>
       <GenerateRelocatableDeviceCode Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</GenerateRelocatableDeviceCode>
     </CudaCompile>
-    <ClInclude Include="Cuda\PathlineSolver.cuh" />
+    <ClInclude Include="Cuda\PathlineSolver.h" />
     <ClInclude Include="SolverOptions.h" />
     <ClInclude Include="Cuda\CudaHelper.cuh" />
     <CudaCompile Include="Cuda\cudaSurface.cu" />

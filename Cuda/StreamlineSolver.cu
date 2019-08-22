@@ -1,12 +1,11 @@
-#include "StreamlineSolver.cuh"
+#include "StreamlineSolver.h"
 #include "helper_math.h"
-// Explicit instantiation
-template class StreamlineSolver<float>;
-template class StreamlineSolver<double>;
+
+
 
 // Kernel of the streamlines, TO-DO: Divide kernel into seprate functions
-template <typename T>
-__global__ void TracingStream(Particle<T>* d_particles, cudaTextureObject_t t_VelocityField, SolverOptions solverOptions, Vertex* p_VertexBuffer)
+
+__global__ void TracingStream(Particle<float>* d_particles, cudaTextureObject_t t_VelocityField, SolverOptions solverOptions, Vertex* p_VertexBuffer)
 {
 	unsigned int index = blockDim.x * blockIdx.x + threadIdx.x;
 
@@ -80,30 +79,35 @@ __global__ void TracingStream(Particle<T>* d_particles, cudaTextureObject_t t_Ve
 	}
 
 }
-template <typename T>
-__host__ void StreamlineSolver<T>::release()
+
+__host__ void StreamlineSolver::release()
 {
 	cudaFree(this->d_Particles);
 	cudaFree(this->d_VelocityField);
 	cudaDestroyTextureObject(this->t_VelocityField);
 }
 
-template <typename T>
-__host__ bool StreamlineSolver<T>::solve()
+__host__ bool StreamlineSolver::solve()
 {
+	// Read Dataset
 	this->volume_IO.Initialize(this->solverOptions);
-
-	// TO-DO: Define streamlinesolver for double precision
 	this->h_VelocityField = InitializeVelocityField(this->solverOptions.currentIdx);
-	this->InitializeTexture(h_VelocityField, t_VelocityField);
+	
+	// Copy it to the texture memory
+	this->volumeTexture.setField(h_VelocityField);
+	this->volumeTexture.setSolverOptions(&this->solverOptions);
+	this->volumeTexture.initialize();
 
+	// Release it from Host
 	volume_IO.release();
+
+
 	this->InitializeParticles();
 	
 	int blockDim = 256;
 	int thread = (this->solverOptions.lines_count / blockDim)+1;
 	
-	TracingStream<T> << <blockDim , thread >> > (this->d_Particles, t_VelocityField, solverOptions, reinterpret_cast<Vertex*>(this->p_VertexBuffer));
+	TracingStream << <blockDim , thread >> > (this->d_Particles, volumeTexture.getTexture(), solverOptions, reinterpret_cast<Vertex*>(this->p_VertexBuffer));
 
 	this->release();
 

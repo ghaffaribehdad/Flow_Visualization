@@ -49,9 +49,9 @@ __host__ void Raycasting::Rendering()
 {
 
 
-	int blocks;
+	unsigned int blocks;
 	dim3 thread = { maxBlockDim,maxBlockDim,1 };
-	blocks = (this->rays % (thread.x * thread.y) == 0 ? rays / (thread.x * thread.y) : rays / (thread.x * thread.y) + 1);
+	blocks = static_cast<unsigned int>((this->rays % (thread.x * thread.y) == 0 ? rays / (thread.x * thread.y) : rays / (thread.x * thread.y) + 1));
 
 
 	isoSurfaceVelocityMagnitude <<< blocks, thread >> >
@@ -130,8 +130,7 @@ __host__ bool Raycasting::initilizeBoundingBox()
 
 __host__ bool Raycasting::initializeVolumeTexuture()
 {
-	this->volumeTexture.setGridDiameter(this->raycasting_desc.gridDiameter);
-	this->volumeTexture.setGridSize(this->raycasting_desc.gridSize);
+	this->volumeTexture.setSolverOptions(&this->raycasting_desc.solverOption);
 	this->volumeTexture.setField(this->raycasting_desc.field);
 	this->volumeTexture.initialize();
 
@@ -168,9 +167,8 @@ __global__ void isoSurfaceVelocityMagnitude(cudaSurfaceObject_t raycastingSurfac
 		float3 viewDir = d_boundingBox.viewDir;
 		float3 pixelPos = pixelPosition(d_boundingBox, pixel.x, pixel.y);
 		float2 NearFar = findIntersections(pixelPos, d_boundingBox);
-		float distImagePlane = d_boundingBox.distImagePlane;
 
-		float4 velocity4D;
+		
 		float3 rgb = { 1.0f, 0.3f, 0.0f};
 
 		//float3 positionOffset = (d_boundingBox.eyePos + (d_boundingBox.gridDiameter / 2.0f)) / d_boundingBox.gridDiameter;
@@ -187,7 +185,7 @@ __global__ void isoSurfaceVelocityMagnitude(cudaSurfaceObject_t raycastingSurfac
 				//float3 relativePos = positionOffset + (correction * t);
 				float3 relativePos = pixelPos + (rayDir * t);
 				relativePos = (relativePos / d_boundingBox.gridDiameter) + make_float3(.5f, .5f, .5f);
-				velocity4D = tex3D<float4>(field1, relativePos.x, relativePos.y, relativePos.z);
+				float4 velocity4D = tex3D<float4>(field1, relativePos.x, relativePos.y, relativePos.z);
 
 				if (fabsf(VelocityMagnitude::ValueAtXYZ(field1,relativePos) - isoValue) < IsosurfaceTolerance)
 				{

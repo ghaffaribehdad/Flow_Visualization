@@ -30,8 +30,7 @@ typedef long long int llInt;
 
 class Graphics
 {
-	friend CUDASolver<float>;
-	friend CUDASolver<double>;
+	friend CUDASolver;
 
 public:
 	// Initialize graphics
@@ -127,6 +126,7 @@ private:
 
 	// call by Initialize() funcion
 	bool InitializeDirectX(HWND hwnd);
+	bool InitializeDirectXResources();
 	bool InitializeResources();
 	bool InitializeShaders();
 	bool InitializeScene();
@@ -160,8 +160,6 @@ private:
 	VertexBuffer<Vertex> vertexBuffer;
 	IndexBuffer indexBuffer;
 
-	//ConstantBuffer<CB_VS_vertexshader> VS_constantBuffer;
-	//ConstantBuffer<Tube_geometryShader> GS_constantBuffer;
 
 	// Depth stencil view and buffer and state
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilView>		depthStencilView;
@@ -169,8 +167,6 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilState>		depthStencilState;
 
 
-	// Resterizer com pointer
-	Microsoft::WRL::ComPtr<ID3D11RasterizerState> rasterizerstate;
 
 	// COM pointer to texture to store rendered bounding box
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> frontTex;	//front-face
@@ -182,9 +178,10 @@ private:
 	int windowWidth = 0;
 	int windowHeight = 0;
 
-
+	// Rendering Obejcts
 	StreamlineRenderer streamlineRenderer;
 	BoxRenderer volumeBox;
+	BoxRenderer seedBox;
 
 
 	// Solver options

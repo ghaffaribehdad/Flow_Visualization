@@ -4,17 +4,18 @@
 
 #include "LineRenderer.h"
 
+
+
 class BoxRenderer : public LineRenderer
 {
 
 private:
 
 	Vertex edges[24];
+	DirectX::XMFLOAT4 color;
 
 
-
-
-	void updateEdges(Camera & camera)
+	void updateEdges(Camera & camera, float * gridDiameter)
 	{
 		DirectX::XMFLOAT3 x_hat = DirectX::XMFLOAT3(1.0f, 0.0f, 0.0f);
 		DirectX::XMFLOAT3 y_hat = DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f);
@@ -23,62 +24,60 @@ private:
 		DirectX::XMFLOAT3 ny_hat = DirectX::XMFLOAT3(0.0f, -1.0f, 0.0f);
 		DirectX::XMFLOAT3 nz_hat = DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f);
 
-		edges[0].pos = DirectX::XMFLOAT3(this->solverOptions->gridDiameter[0] / 2.0f, this->solverOptions->gridDiameter[1] / 2.0f, this->solverOptions->gridDiameter[2] / 2.0f);
-		edges[1].pos = DirectX::XMFLOAT3(this->solverOptions->gridDiameter[0] / 2.0f, this->solverOptions->gridDiameter[1] / 2.0f, this->solverOptions->gridDiameter[2] / -2.0f);
+		edges[0].pos = DirectX::XMFLOAT3(gridDiameter[0] / 2.0f, gridDiameter[1] / 2.0f, gridDiameter[2] / 2.0f);
+		edges[1].pos = DirectX::XMFLOAT3(gridDiameter[0] / 2.0f, gridDiameter[1] / 2.0f, gridDiameter[2] / -2.0f);
 
 
 
-		edges[2].pos = DirectX::XMFLOAT3(this->solverOptions->gridDiameter[0] / 2.0f, this->solverOptions->gridDiameter[1] / 2.0f, this->solverOptions->gridDiameter[2] / -2.0f);
-		edges[3].pos = DirectX::XMFLOAT3(this->solverOptions->gridDiameter[0] / -2.0f, this->solverOptions->gridDiameter[1] / 2.0f, this->solverOptions->gridDiameter[2] / -2.0f);
+		edges[2].pos = DirectX::XMFLOAT3(gridDiameter[0] / 2.0f, gridDiameter[1] / 2.0f, gridDiameter[2] / -2.0f);
+		edges[3].pos = DirectX::XMFLOAT3(gridDiameter[0] / -2.0f, gridDiameter[1] / 2.0f, gridDiameter[2] / -2.0f);
 
 
 
-		edges[4].pos = DirectX::XMFLOAT3(this->solverOptions->gridDiameter[0] / -2.0f, this->solverOptions->gridDiameter[1] / 2.0f, this->solverOptions->gridDiameter[2] / -2.0f);
-		edges[5].pos = DirectX::XMFLOAT3(this->solverOptions->gridDiameter[0] / -2.0f, this->solverOptions->gridDiameter[1] / 2.0f, this->solverOptions->gridDiameter[2] / 2.0f);
+		edges[4].pos = DirectX::XMFLOAT3(gridDiameter[0] / -2.0f, gridDiameter[1] / 2.0f, gridDiameter[2] / -2.0f);
+		edges[5].pos = DirectX::XMFLOAT3(gridDiameter[0] / -2.0f, gridDiameter[1] / 2.0f, gridDiameter[2] / 2.0f);
 
 
 
-		edges[6].pos = DirectX::XMFLOAT3(this->solverOptions->gridDiameter[0] / -2.0f, this->solverOptions->gridDiameter[1] / 2.0f, this->solverOptions->gridDiameter[2] / 2.0f);
-		edges[7].pos = DirectX::XMFLOAT3(this->solverOptions->gridDiameter[0] / 2.0f, this->solverOptions->gridDiameter[1] / 2.0f, this->solverOptions->gridDiameter[2] / 2.0f);
+		edges[6].pos = DirectX::XMFLOAT3(gridDiameter[0] / -2.0f, gridDiameter[1] / 2.0f, gridDiameter[2] / 2.0f);
+		edges[7].pos = DirectX::XMFLOAT3(gridDiameter[0] / 2.0f, gridDiameter[1] / 2.0f, gridDiameter[2] / 2.0f);
 
 
 
-		edges[8].pos = DirectX::XMFLOAT3(this->solverOptions->gridDiameter[0] / -2.0f, this->solverOptions->gridDiameter[1] / -2.0f, this->solverOptions->gridDiameter[2] / 2.0f);
-		edges[9].pos = DirectX::XMFLOAT3(this->solverOptions->gridDiameter[0] / 2.0f, this->solverOptions->gridDiameter[1] / -2.0f, this->solverOptions->gridDiameter[2] / 2.0f);
+		edges[8].pos = DirectX::XMFLOAT3(gridDiameter[0] / -2.0f, gridDiameter[1] / -2.0f, gridDiameter[2] / 2.0f);
+		edges[9].pos = DirectX::XMFLOAT3(gridDiameter[0] / 2.0f, gridDiameter[1] / -2.0f, gridDiameter[2] / 2.0f);
 
 
 
-		edges[10].pos = DirectX::XMFLOAT3(this->solverOptions->gridDiameter[0] / 2.0f, this->solverOptions->gridDiameter[1] / -2.0f, this->solverOptions->gridDiameter[2] / 2.0f);
-		edges[11].pos = DirectX::XMFLOAT3(this->solverOptions->gridDiameter[0] / 2.0f, this->solverOptions->gridDiameter[1] / -2.0f, this->solverOptions->gridDiameter[2] / -2.0f);
+		edges[10].pos = DirectX::XMFLOAT3(gridDiameter[0] / 2.0f, gridDiameter[1] / -2.0f, gridDiameter[2] / 2.0f);
+		edges[11].pos = DirectX::XMFLOAT3(gridDiameter[0] / 2.0f, gridDiameter[1] / -2.0f, gridDiameter[2] / -2.0f);
 
 
-		edges[12].pos = DirectX::XMFLOAT3(this->solverOptions->gridDiameter[0] / 2.0f, this->solverOptions->gridDiameter[1] / -2.0f, this->solverOptions->gridDiameter[2] / -2.0f);
-		edges[13].pos = DirectX::XMFLOAT3(this->solverOptions->gridDiameter[0] / -2.0f, this->solverOptions->gridDiameter[1] / -2.0f, this->solverOptions->gridDiameter[2] / -2.0f);
+		edges[12].pos = DirectX::XMFLOAT3(gridDiameter[0] / 2.0f, gridDiameter[1] / -2.0f, gridDiameter[2] / -2.0f);
+		edges[13].pos = DirectX::XMFLOAT3(gridDiameter[0] / -2.0f, gridDiameter[1] / -2.0f, gridDiameter[2] / -2.0f);
 
-		edges[14].pos = DirectX::XMFLOAT3(this->solverOptions->gridDiameter[0] / -2.0f, this->solverOptions->gridDiameter[1] / -2.0f, this->solverOptions->gridDiameter[2] / -2.0f);
-		edges[15].pos = DirectX::XMFLOAT3(this->solverOptions->gridDiameter[0] / -2.0f, this->solverOptions->gridDiameter[1] / -2.0f, this->solverOptions->gridDiameter[2] / 2.0f);
-
-
-		edges[16].pos = DirectX::XMFLOAT3(this->solverOptions->gridDiameter[0] / 2.0f, this->solverOptions->gridDiameter[1] / 2.0f, this->solverOptions->gridDiameter[2] / 2.0f);
-		edges[17].pos = DirectX::XMFLOAT3(this->solverOptions->gridDiameter[0] / 2.0f, this->solverOptions->gridDiameter[1] / -2.0f, this->solverOptions->gridDiameter[2] / 2.0f);
+		edges[14].pos = DirectX::XMFLOAT3(gridDiameter[0] / -2.0f, gridDiameter[1] / -2.0f, gridDiameter[2] / -2.0f);
+		edges[15].pos = DirectX::XMFLOAT3(gridDiameter[0] / -2.0f, gridDiameter[1] / -2.0f, gridDiameter[2] / 2.0f);
 
 
-		edges[18].pos = DirectX::XMFLOAT3(this->solverOptions->gridDiameter[0] / 2.0f, this->solverOptions->gridDiameter[1] / 2.0f, this->solverOptions->gridDiameter[2] / -2.0f);
-		edges[19].pos = DirectX::XMFLOAT3(this->solverOptions->gridDiameter[0] / 2.0f, this->solverOptions->gridDiameter[1] / -2.0f, this->solverOptions->gridDiameter[2] / -2.0f);
+		edges[16].pos = DirectX::XMFLOAT3(gridDiameter[0] / 2.0f, gridDiameter[1] / 2.0f, gridDiameter[2] / 2.0f);
+		edges[17].pos = DirectX::XMFLOAT3(gridDiameter[0] / 2.0f, gridDiameter[1] / -2.0f, gridDiameter[2] / 2.0f);
 
-		edges[20].pos = DirectX::XMFLOAT3(this->solverOptions->gridDiameter[0] / -2.0f, this->solverOptions->gridDiameter[1] / 2.0f, this->solverOptions->gridDiameter[2] / -2.0f);
-		edges[21].pos = DirectX::XMFLOAT3(this->solverOptions->gridDiameter[0] / -2.0f, this->solverOptions->gridDiameter[1] / -2.0f, this->solverOptions->gridDiameter[2] / -2.0f);
 
-		edges[22].pos = DirectX::XMFLOAT3(this->solverOptions->gridDiameter[0] / -2.0f, this->solverOptions->gridDiameter[1] / 2.0f, this->solverOptions->gridDiameter[2] / 2.0f);
-		edges[23].pos = DirectX::XMFLOAT3(this->solverOptions->gridDiameter[0] / -2.0f, this->solverOptions->gridDiameter[1] / -2.0f, this->solverOptions->gridDiameter[2] / 2.0f);
+		edges[18].pos = DirectX::XMFLOAT3(gridDiameter[0] / 2.0f, gridDiameter[1] / 2.0f, gridDiameter[2] / -2.0f);
+		edges[19].pos = DirectX::XMFLOAT3(gridDiameter[0] / 2.0f, gridDiameter[1] / -2.0f, gridDiameter[2] / -2.0f);
+
+		edges[20].pos = DirectX::XMFLOAT3(gridDiameter[0] / -2.0f, gridDiameter[1] / 2.0f, gridDiameter[2] / -2.0f);
+		edges[21].pos = DirectX::XMFLOAT3(gridDiameter[0] / -2.0f, gridDiameter[1] / -2.0f, gridDiameter[2] / -2.0f);
+
+		edges[22].pos = DirectX::XMFLOAT3(gridDiameter[0] / -2.0f, gridDiameter[1] / 2.0f, gridDiameter[2] / 2.0f);
+		edges[23].pos = DirectX::XMFLOAT3(gridDiameter[0] / -2.0f, gridDiameter[1] / -2.0f, gridDiameter[2] / 2.0f);
 
 
 		for (int i = 0; i < 8; i++)
 		{
 			edges[2*i].LineID = 0;
 			edges[2 * i + 1].LineID = 0;
-
-
 
 			edges[2*i].measure = 0;
 			edges[2*i+1].measure = 0;
@@ -111,7 +110,6 @@ private:
 			XMStoreFloat3(&edges[2 * i + 1].tangent, tan);
 
 		}
-
 	}
 
 
@@ -122,7 +120,7 @@ private:
 
 		indices.resize(24);
 
-		HRESULT hr = this->indexBuffer.Initialize(this->device, &indices.at(0), indices.size());
+		HRESULT hr = this->indexBuffer.Initialize(this->device, &indices.at(0), static_cast<size_t>( indices.size()));
 		if (FAILED(hr))
 		{
 			ErrorLogger::Log(hr, "Failed to Create Index Buffer.");
@@ -143,15 +141,17 @@ private:
 		this->deviceContext->IASetIndexBuffer(indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
 		this->deviceContext->IASetVertexBuffers(0, 1, this->vertexBuffer.GetAddressOf(), this->vertexBuffer.StridePtr(), &offset); // set Vertex buffer
 		this->deviceContext->GSSetConstantBuffers(0, 1, this->GS_constantBuffer.GetAddressOf());
+		this->deviceContext->PSSetConstantBuffers(0, 1, this->PS_constantBuffer.GetAddressOf());
 	}
 
 public:
 	
 
-	void initilizeScene(Camera& camera) override
+	void addBox(Camera& camera, float * edges, DirectX::XMFLOAT4 _color) override
 	{
 
-		updateEdges(camera);
+		updateEdges(camera, edges);
+		this->color = _color;
 	}
 
 	bool initializeShaders() override
@@ -224,11 +224,19 @@ public:
 			return false;
 		}
 
-		this->solverOptions->p_vertexBuffer = this->vertexBuffer.Get();
+		hr = this->PS_constantBuffer.Initialize(this->device, this->deviceContext);
+		if (FAILED(hr))
+		{
+			ErrorLogger::Log(hr, "Failed to Create Pixel shader Constant buffer.");
+			return false;
+		}
+
 
 		return true;
 
 	}
+
+
 
 	void draw(Camera& camera, D3D11_PRIMITIVE_TOPOLOGY Topology) override
 	{
@@ -239,6 +247,22 @@ public:
 		this->deviceContext->Draw(24,0);
 	}
 
+	void updateConstantBuffer(Camera & camera) override
+	{
 
+		DirectX::XMMATRIX world = DirectX::XMMatrixIdentity();
 
+		// Set attributes of constant buffer for geometry shader
+		GS_constantBuffer.data.View = world * camera.GetViewMatrix();
+		GS_constantBuffer.data.Proj = camera.GetProjectionMatrix();
+		GS_constantBuffer.data.eyePos = camera.GetPositionFloat3();
+		GS_constantBuffer.data.tubeRadius = renderingOptions->tubeRadius;
+		GS_constantBuffer.data.viewDir = camera.GetViewVector();
+
+		PS_constantBuffer.data.minColor = color;
+
+		// Update Constant Buffer
+		GS_constantBuffer.ApplyChanges();
+		PS_constantBuffer.ApplyChanges();
+	}
 };
