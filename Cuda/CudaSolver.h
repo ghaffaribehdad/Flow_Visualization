@@ -39,7 +39,7 @@ public:
 
 protected:
 	
-	__host__ void InitializeParticles();
+	__host__ void InitializeParticles(SeedingPattern seedingPattern);
 
 	cudaGraphicsResource* cudaGraphics = NULL;
 
@@ -53,8 +53,8 @@ protected:
 	Volume_IO volume_IO;
 
 	// The probe particles
-	Particle<float>* d_Particles;
-	Particle<float>* h_Particles;
+	Particle<float>* d_Particles = nullptr;
+	Particle<float>* h_Particles = nullptr;
 
 	virtual void release(){}
 

@@ -37,6 +37,7 @@ private:
 	SolverOptions * solverOptions;
 
 	cudaTextureObject_t t_field;
+	cudaArray_t cuArray_velocity;
 
 	float* h_field;
 

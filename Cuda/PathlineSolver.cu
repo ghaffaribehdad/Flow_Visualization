@@ -26,7 +26,7 @@ __host__ bool PathlineSolver::solve()
 	this->volume_IO.Initialize(this->solverOptions);
 
 	// Initialize Particles and upload it to GPU
-	this->InitializeParticles();
+	this->InitializeParticles(SeedingPattern::SEED_RANDOM);
 
 	int blockDim = 256;
 	int thread = (this->solverOptions.lines_count / blockDim) + 1;

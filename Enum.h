@@ -3,8 +3,8 @@
 enum SeedingPattern
 {
 	SEED_RANDOM = 0,
-	//SEED_REGULAR,
-	//SEED_FILE,
+	SEED_REGULAR,
+	SEED_FILE,
 };
 
 enum IntegrationMethod

@@ -18,7 +18,9 @@ std::vector<char>* Volume_IO::flushBuffer()
 
 void Volume_IO::release()
 {
+
 	this->buffer.clear();
+
 }
 
 bool Volume_IO::Read()

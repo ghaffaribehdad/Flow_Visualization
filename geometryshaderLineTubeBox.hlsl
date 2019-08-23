@@ -55,7 +55,7 @@ void main(line GS_INPUT input[2], inout TriangleStream<GS_OUTPUT> output)
 		float3 orient1 = normalize(cross(input[1].inTangent, viewDirection));
 
 		// Radius of the tubes
-		float tubeRad = .04;
+		float tubeRad = .02;
 
 		// in degree
 		float angle = 360.0f / 8.0f;
@@ -81,6 +81,13 @@ void main(line GS_INPUT input[2], inout TriangleStream<GS_OUTPUT> output)
 
 			float3 position0 = input[0].inPosition + orient0_rotated * tubeRad;
 			float3 position1 = input[1].inPosition + orient1_rotated * tubeRad;
+
+			if (input[0].inLineID == 1) // Vertical Line
+			{
+				position0.y += .01;
+				position1.y -= .01;
+			}
+
 
 			// SV_POSITION
 			vertex0.outPosition = mul(float4(position0,1.0f), transpose(View));

@@ -5,13 +5,26 @@
 #include "ImGui/imgui_impl_dx11.h"
 #include "..//SolverOptions.h"
 #include <string>
-#include "Graphics.h"
 #include "RenderingOptions.h"
 #include "Camera.h"
 #include "..//Timer.h"
+#include <map>
 
 class RenderImGuiOptions
 {
+
+
+
+private:
+
+	Camera* camera;
+	Timer* fpsTimer;
+	SolverOptions* solverOptions;
+	RenderingOptions* renderingOptions;
+
+	
+
+
 public:
 
 	void setResources(Camera* _camera, Timer * _fpsTimer, RenderingOptions * _renderingOptions, SolverOptions * _solverOptions)
@@ -25,6 +38,7 @@ public:
 		this->solverOptions = _solverOptions;
 	}
 
+	bool updateLineRendering = false;
 
 	void drawSolverOptions(); // draw the solver option window
 	void drawLog();										// draw Log window
@@ -34,12 +48,11 @@ public:
 	// Log pointer
 	char* log = new char[1000];
 
-private:
 
-	Camera* camera;
-	Timer * fpsTimer;
-	SolverOptions* solverOptions;
-	RenderingOptions* renderingOptions;
+
+
+
+
 
 };
 

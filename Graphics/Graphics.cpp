@@ -1,11 +1,10 @@
 #include "Graphics.h"
-#include "RenderImGui.h"
 
 
 bool Graphics::InitializeCamera()
 {
 	// set camera properties
-	camera.SetPosition(0.0f, 0.0f, -30.0f);
+	camera.SetPosition(0.0f, 0.0f, -10.0f);
 	camera.SetProjectionValues(this->FOV, static_cast<float>(this->windowWidth) / static_cast<float>(this->windowHeight), \
 		1.0f, 100.0f);
 	return true;
@@ -88,7 +87,20 @@ bool Graphics::InitializeRayCastingTexture()
 
 }
 
-//########################### Rendering #############################
+
+
+void Graphics::updateScene()
+{
+	float center[3] = { 0,0,0 };
+	this->seedBox.updateScene(this->solverOptions.seedBox, this->solverOptions.seedBoxPos);
+	this->volumeBox.updateScene(this->solverOptions.gridDiameter, center);
+	if (showLines)
+	{
+		this->streamlineRenderer.updateScene();
+	}
+}
+
+
 
 void Graphics::RenderFrame()
 {
@@ -97,10 +109,10 @@ void Graphics::RenderFrame()
 
 
 	float bgcolor[] = { 0.0f,0.0f, 0.0f, 0.0f };
-	if (this->solverOptions.userInterruption)
-	{
-		this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), bgcolor);// Clear the target view
-	}
+
+	// For the raycasting we need a workaround!
+	this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), bgcolor);// Clear the target view
+	
 
 
 
@@ -125,6 +137,17 @@ void Graphics::RenderFrame()
 		solverOptions.beginStream = false;
 		showLines = true;
 	}
+
+
+	// check if something has been change
+	if (renderImGuiOptions.updateLineRendering == true)
+	{
+		this->updateScene();
+	
+		renderImGuiOptions.updateLineRendering = false;
+
+	}
+
 	/*
 	##############################################################
 	##															##
@@ -132,6 +155,9 @@ void Graphics::RenderFrame()
 	##															##
 	##############################################################
 	*/
+
+
+
 
 	this->volumeBox.draw(camera,D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_LINELIST);
 	this->seedBox.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_LINELIST);
@@ -141,28 +167,22 @@ void Graphics::RenderFrame()
 		this->streamlineRenderer.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_LINESTRIP);
 	}
 
-
-
 	/*
 	##############################################################
 	##															##
-	##						Dear ImGUI							##
+	##						Dear ImGui							##
 	##															##
 	##############################################################
 	*/
-	this->deviceContext->GSSetShader(NULL, NULL, 0);
-
-	RenderImGui renderImGui;
-	renderImGui.drawSolverOptions(this->solverOptions);
-	renderImGui.drawLineRenderingOptions(this->renderingOptions, this->solverOptions);
-	renderImGui.drawLog(this);
-	renderImGui.render();
 
 
-	if (this->solverOptions.beginStream || this->solverOptions.beginPath)
-	{
-		this->InitializeScene();
-	}
+
+
+	renderImGuiOptions.drawSolverOptions();
+	renderImGuiOptions.drawLineRenderingOptions();
+	renderImGuiOptions.drawLog();
+	renderImGuiOptions.render();
+
 
 
 
@@ -385,10 +405,13 @@ bool Graphics::InitializeShaders()
 // ############################# Initialize the Scene #########################
 bool Graphics::InitializeScene()
 {
+	float center[3] = { 0,0,0 };
+	DirectX::XMFLOAT4 redColor = { 1,0,0,1 };
+	DirectX::XMFLOAT4 greenColor = { 0,1,0,1 };
 
-	volumeBox.addBox(camera, this->solverOptions.gridDiameter, { 0,1,0,1});
-	seedBox.addBox(camera, this->solverOptions.seedBox, { 1,0,0,1 });
-
+	volumeBox.addBox(this->solverOptions.gridDiameter, center, greenColor);
+	seedBox.addBox( this->solverOptions.seedBox, this->solverOptions.seedBoxPos, redColor);
+	 
 
 
 	return true;
@@ -408,6 +431,9 @@ bool Graphics::InitializeImGui(HWND hwnd)
 		ImGui_ImplWin32_Init(hwnd);
 		ImGui_ImplDX11_Init(this->device.Get(), this->deviceContext.Get());
 		ImGui::StyleColorsDark();
+
+		this->renderImGuiOptions.setResources(&camera,&fpsTimer,&renderingOptions,&solverOptions);
+
 
 		return true;
 	}
@@ -454,8 +480,8 @@ void Graphics::Resize(HWND hwnd)
 
 	// Reinitialize Resources and Scene accordingly
 	this->InitializeDirectXResources();
+	this->InitializeCamera();
 	this->InitializeResources();
-
 
 
 }
@@ -573,7 +599,7 @@ void Graphics::raycastingRendering()
 			raycasting_desc.gridSize = make_int3(this->solverOptions.gridSize[0], this->solverOptions.gridSize[1], this->solverOptions.gridSize[2]);
 			raycasting_desc.viewDir = this->getViewDir();
 			raycasting_desc.eyePos = this->getEyePosition();
-			raycasting_desc.FOV_deg = this->getFOV();
+			raycasting_desc.FOV_deg = this->FOV;
 			raycasting_desc.upDir = this->getUpVector();
 			raycasting_desc.solverOption = this->solverOptions;
 

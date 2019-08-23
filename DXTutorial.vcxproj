@@ -193,6 +193,7 @@
     <ClCompile Include="Graphics\ImGui\imgui_impl_win32.cpp" />
     <ClCompile Include="Graphics\ImGui\imgui_widgets.cpp" />
     <ClCompile Include="Graphics\LineRenderer.cpp" />
+    <ClCompile Include="Graphics\RenderImGuiOptions.cpp" />
     <ClCompile Include="Keyboard\KeyboardClass.cpp" />
     <ClCompile Include="Keyboard\KeyboardEvent.cpp" />
     <ClCompile Include="main.cpp" />
@@ -214,7 +215,8 @@
     </CudaCompile>
     <ClInclude Include="Cuda\helper_math.h" />
     <ClInclude Include="Graphics\LineRenderer.h" />
-    <ClInclude Include="Graphics\ObjectRenderer.h" />
+    <ClInclude Include="Graphics\BoxRenderer.h" />
+    <ClInclude Include="Graphics\PathlineRenderer.h" />
     <ClInclude Include="Graphics\RenderingOptions.h" />
     <ClInclude Include="Graphics\StreamlineRenderer.h" />
     <ClInclude Include="Raycaster\IsosurfaceFunctions.h" />
@@ -251,7 +253,7 @@
     <CudaCompile Include="VolumeTexture\VolumeTexture.cu" />
     <CudaCompile Include="Particle.cu" />
     <ClInclude Include="Particle.cuh" />
-    <ClInclude Include="Graphics\RenderImGui.h" />
+    <ClInclude Include="Graphics\RenderImGuiOptions.h" />
     <ClInclude Include="Graphics\Graphics.h" />
     <ClInclude Include="Graphics\AdapterReader.h" />
     <ClInclude Include="Graphics\ImGui\imconfig.h" />

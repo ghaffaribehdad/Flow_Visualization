@@ -23,7 +23,10 @@
 
 #include "RenderingOptions.h"
 #include "StreamlineRenderer.h"
-#include "ObjectRenderer.h"
+#include "BoxRenderer.h"
+#include "RenderImGuiOptions.h"
+#include "PathlineRenderer.h"
+
 
 typedef long long int llInt;
 
@@ -70,11 +73,6 @@ public:
 
 	ID3D11Buffer* GetVertexBuffer();
 
-	// Setter Functions
-	void setCudaVertex(void* cudaVertex, size_t size)
-	{
-		cudaMemcpy(vertexBuffer.Get(), cudaVertex, size, cudaMemcpyDeviceToDevice);
-	}
 
 	bool showLines = false;
 
@@ -139,6 +137,8 @@ private:
 	void raycastingRendering();
 
 
+	void updateScene();
+
 	// directx resources
 	Microsoft::WRL::ComPtr<ID3D11Device>			device;// use to creat buffers
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext>		deviceContext; //use to set resources for rendering
@@ -179,6 +179,7 @@ private:
 	int windowHeight = 0;
 
 	// Rendering Obejcts
+	PathlineRenderer pathlineRenderer;
 	StreamlineRenderer streamlineRenderer;
 	BoxRenderer volumeBox;
 	BoxRenderer seedBox;
@@ -195,5 +196,7 @@ private:
 	Interoperability cudaRayTracingInteroperability;
 
 	Raycasting raycasting;
+
+	RenderImGuiOptions renderImGuiOptions;
 
 };

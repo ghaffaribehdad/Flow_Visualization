@@ -22,18 +22,18 @@ __global__ void isoSurfaceVelocityMagnitude(cudaSurfaceObject_t raycastingSurfac
 
 struct Raycasting_desc
 {
-	float3 eyePos;
-	float3 viewDir;
-	float3 upDir;
-	float FOV_deg;
+	float3 eyePos = { 0,0,0 };
+	float3 viewDir = { 0,0,0 };
+	float3 upDir = { 0,0,0 };
+	float FOV_deg = 0.0f;
 
-	int width;
-	int height;
+	int width = 0;
+	int height = 0;
 
-	float3 gridDiameter;
-	int3 gridSize;
+	float3 gridDiameter = { 0,0,0 };
+	int3 gridSize = { 0,0,0 };
 
-	float* field;
+	float* field = nullptr;
 
 	// for now this is fixed 
 	float3 gridCenter = { 0,0,0 };

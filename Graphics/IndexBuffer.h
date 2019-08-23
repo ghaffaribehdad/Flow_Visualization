@@ -10,7 +10,7 @@ private:
 
 private:
 	Microsoft::WRL::ComPtr<ID3D11Buffer> buffer;
-	long long int buffersize = 0;
+	size_t buffersize = 0;
 
 public:
 	IndexBuffer() {}
@@ -30,7 +30,7 @@ public:
 		return this->buffer.GetAddressOf();
 	}
 
-	HRESULT Initialize(ID3D11Device * device, DWORD * data, unsigned long int numIndices)
+	HRESULT Initialize(ID3D11Device * device, DWORD * data, size_t  numIndices)
 	{
 		// Release if it is already alocated
 		if (buffer.Get() != nullptr)
@@ -43,7 +43,7 @@ public:
 		D3D11_BUFFER_DESC indexBufferDesc;
 		ZeroMemory(&indexBufferDesc, sizeof(indexBufferDesc));
 		indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-		indexBufferDesc.ByteWidth = sizeof(DWORD)*numIndices;
+		indexBufferDesc.ByteWidth = static_cast<unsigned int>(sizeof(DWORD)*numIndices);
 		indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
 		indexBufferDesc.CPUAccessFlags = 0;
 		indexBufferDesc.MiscFlags = 0;

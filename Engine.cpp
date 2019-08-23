@@ -65,12 +65,12 @@ void Engine::Update()
 
 	if (keyboard.KeyIsPressed('W'))
 	{
-		this->gfx.camera.AdjustPosition(this->gfx.camera.GetForwardVector() * cameraSpeed * dt);
+		this->gfx.camera.AdjustPosition(this->gfx.camera.GetForwardVector() * 1.5f*cameraSpeed * dt);
 		this->gfx.solverOptions.userInterruption = true;
 	}
 	if (keyboard.KeyIsPressed('S'))
 	{
-		this->gfx.camera.AdjustPosition(this->gfx.camera.GetBackwardVector() * cameraSpeed * dt);
+		this->gfx.camera.AdjustPosition(this->gfx.camera.GetBackwardVector() * 1.5f * cameraSpeed * dt);
 		this->gfx.solverOptions.userInterruption = true;
 	}
 	if (keyboard.KeyIsPressed('A'))
@@ -100,25 +100,6 @@ void Engine::Update()
 		OutputDebugStringA("It is resized!\n");
 		this->gfx.Resize(this->render_window.GetHWND());
 		this->resize = false;
-	}
-
-
-
-	// Pathline Solver
-	if (this->gfx.solverOptions.beginPath)
-	{
-		gfx.solverOptions.p_Adapter = this->gfx.GetAdapter();
-		gfx.solverOptions.p_vertexBuffer = this->gfx.GetVertexBuffer();
-
-		if (gfx.solverOptions.precision == 32)
-		{
-			this->pathlineSolver_float.Initialize(this->gfx.solverOptions);
-			this->pathlineSolver_float.solve();
-			this->pathlineSolver_float.FinalizeCUDA();
-		}
-
-		this->gfx.solverOptions.beginPath = false;
-		this->gfx.showLines = true;
 	}
 }
 

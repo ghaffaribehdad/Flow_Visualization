@@ -84,7 +84,7 @@ __host__ void StreamlineSolver::release()
 {
 	cudaFree(this->d_Particles);
 	cudaFree(this->d_VelocityField);
-	cudaDestroyTextureObject(this->t_VelocityField);
+	this->volumeTexture.release();
 }
 
 __host__ bool StreamlineSolver::solve()
@@ -93,16 +93,17 @@ __host__ bool StreamlineSolver::solve()
 	this->volume_IO.Initialize(this->solverOptions);
 	this->h_VelocityField = InitializeVelocityField(this->solverOptions.currentIdx);
 	
-	// Copy it to the texture memory
+	// Copy data to the texture memory
 	this->volumeTexture.setField(h_VelocityField);
 	this->volumeTexture.setSolverOptions(&this->solverOptions);
 	this->volumeTexture.initialize();
 
+
 	// Release it from Host
 	volume_IO.release();
+	
 
-
-	this->InitializeParticles();
+	this->InitializeParticles(SeedingPattern::SEED_RANDOM);
 	
 	int blockDim = 256;
 	int thread = (this->solverOptions.lines_count / blockDim)+1;

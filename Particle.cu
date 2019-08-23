@@ -30,11 +30,11 @@ __device__ __host__ float3 Particle<T>::findRelative(const float3& gridDiameter)
 }
 
 template <typename T>
-__host__ void  Particle<T>::seedParticle(const float3& gridDimenstion)
+__host__ void  Particle<T>::seedParticle(const float* gridDiameter, const float* seedBox, const float* seedBoxPos)
 {
-	this->m_position.x = static_cast <float> (rand()) / static_cast <float> (RAND_MAX / gridDimenstion.x);
-	this->m_position.y = static_cast <float> (rand()) / static_cast <float> (RAND_MAX / gridDimenstion.y);
-	this->m_position.z = static_cast <float> (rand()) / static_cast <float> (RAND_MAX / gridDimenstion.z);
+	this->m_position.x = +gridDiameter[0] /	2.0f - seedBox[0] / 2.0f + seedBoxPos[0] + static_cast <float> (rand()) / static_cast <float> (RAND_MAX / seedBox[0]);
+	this->m_position.y = +gridDiameter[1] / 2.0f - seedBox[1] / 2.0f + seedBoxPos[1] + static_cast <float> (rand()) / static_cast <float> (RAND_MAX / seedBox[1]);
+	this->m_position.z = +gridDiameter[2] / 2.0f - seedBox[2] / 2.0f + seedBoxPos[2] + static_cast <float> (rand()) / static_cast <float> (RAND_MAX / seedBox[2]);
 
 }
 

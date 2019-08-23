@@ -77,21 +77,35 @@ __host__ float* CUDASolver::InitializeVelocityField(int ID)
 
 
 
-void CUDASolver::InitializeParticles()
+void CUDASolver::InitializeParticles(SeedingPattern seedingPattern)
 {
 	// Create an array of particles
 	this->h_Particles = new Particle<float>[solverOptions.lines_count];
 
-	float3 gridDiameter =
+
+	switch (seedingPattern)
 	{
-		solverOptions.gridDiameter[0],
-		solverOptions.gridDiameter[1],
-		solverOptions.gridDiameter[2]
-	};
-	// Seed Particles Randomly according to the grid diameters
-	for (int i = 0; i < solverOptions.lines_count; i++)
-	{
-		this->h_Particles[i].seedParticle(gridDiameter);
+		case SeedingPattern::SEED_RANDOM:
+		{
+			// Seed Particles Randomly according to the grid diameters
+			for (int i = 0; i < solverOptions.lines_count; i++)
+			{
+				this->h_Particles[i].seedParticle(solverOptions.gridDiameter,solverOptions.seedBox, solverOptions.seedBoxPos);
+			}
+			break;
+		}
+
+		case SeedingPattern::SEED_REGULAR:
+		{
+			break;
+		}
+		
+		case SeedingPattern::SEED_FILE:
+		{
+			break;
+		}
+
+
 	}
 
 	size_t Particles_byte = sizeof(Particle<float>) * solverOptions.lines_count;

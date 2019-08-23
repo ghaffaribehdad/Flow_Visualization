@@ -9,9 +9,6 @@
 
 cudaTextureObject_t VolumeTexture::initialize()
 {
-	// Cuda 3D array of velocities
-	cudaArray_t cuArray_velocity;
-
 
 	// define the size of the velocity field
 	cudaExtent extent =
@@ -24,7 +21,7 @@ cudaTextureObject_t VolumeTexture::initialize()
 
 	// Allocate 3D Array
 	cudaChannelFormatDesc channelFormatDesc = cudaCreateChannelDesc<float4>();
-	cudaMalloc3DArray(&cuArray_velocity, &channelFormatDesc, extent, 0);
+	cudaMalloc3DArray(&this->cuArray_velocity , &channelFormatDesc, extent, 0);
 
 
 
@@ -32,17 +29,14 @@ cudaTextureObject_t VolumeTexture::initialize()
 	cudaMemcpy3DParms cpyParams = { 0 };
 
 	cpyParams.srcPtr = make_cudaPitchedPtr((void*)this->h_field, extent.width * sizeof(float4), extent.height, extent.depth);
-	cpyParams.dstArray = cuArray_velocity;
+	cpyParams.dstArray = this->cuArray_velocity;
 	cpyParams.kind = cudaMemcpyHostToDevice;
 	cpyParams.extent = extent;
 
-
+	
 	// Copy velocities to 3D Array
 	gpuErrchk(cudaMemcpy3D(&cpyParams));
 	// might need sync before release the host memory
-
-	// Release the Volume while it is copied on GPU
-	//this->volume_IO.release();
 
 
 	// Set Texture Description
@@ -57,7 +51,7 @@ cudaTextureObject_t VolumeTexture::initialize()
 
 
 	resDesc.resType = cudaResourceTypeArray;
-	resDesc.res.array.array = cuArray_velocity;
+	resDesc.res.array.array = this->cuArray_velocity;
 
 	// Texture Description
 	texDesc.normalizedCoords = true;
@@ -77,6 +71,7 @@ cudaTextureObject_t VolumeTexture::initialize()
 }
 void VolumeTexture::release()
 {
+	cudaFreeArray(this->cuArray_velocity);
 	cudaDestroyTextureObject(this->t_field);
 }
 

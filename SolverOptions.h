@@ -1,5 +1,6 @@
 #pragma once
 #include "Enum.h"
+#include <d3d11.h>
 
 struct SolverOptions
 {
@@ -9,7 +10,8 @@ public:
 
 	int gridSize[3] = { 192,192,192 };
 	float gridDiameter[3] = { 10,2,5 };
-	float seedBox[3] = { 10,10,10 };
+	float seedBox[3] = { 10,2,5 };
+	float seedBoxPos[3] = { 0.0f, 0.0f, 0.0f };
 
 	int precision = 32;
 

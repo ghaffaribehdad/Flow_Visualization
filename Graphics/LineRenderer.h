@@ -20,7 +20,7 @@ class LineRenderer
 {
 
 protected:
-
+	
 
 	// Resterizer com pointer
 	Microsoft::WRL::ComPtr<ID3D11RasterizerState> rasterizerstate;
@@ -63,7 +63,7 @@ protected:
 
 public:
 
-	virtual void addBox(Camera& camera, float* edges, DirectX::XMFLOAT4 color) {};			// Adds static scenes
+	virtual void addBox(float* edges, float* pos, DirectX::XMFLOAT4 color) {};			// Adds static scenes
 
 
 	virtual void updateBuffers() {};						// Virutal function to implement Main Routine of the LineRenderer

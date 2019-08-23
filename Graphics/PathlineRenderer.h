@@ -1,16 +1,16 @@
 #pragma once
 
 #include "LineRenderer.h"
-#include "..//Cuda/StreamlineSolver.h"
+#include "..//Cuda/PathlineSolver.h"
 #include "Vertex.h"
 
-class StreamlineRenderer :public LineRenderer
+class PathlineRenderer :public LineRenderer
 {
 
 
 private:
 
-	StreamlineSolver streamlineSolver;
+	PathlineSolver pathlinesolver;
 
 public:
 
@@ -35,11 +35,11 @@ public:
 	void updateBuffers() override
 	{
 		solverOptions->p_vertexBuffer = this->vertexBuffer.Get();
-		
-		this->streamlineSolver.Initialize(*solverOptions);
-		this->streamlineSolver.solve();
-		this->streamlineSolver.FinalizeCUDA();
-		
+
+		this->pathlinesolver.Initialize(*solverOptions);
+		this->pathlinesolver.solve();
+		this->pathlinesolver.FinalizeCUDA();
+
 	}
 
 	void draw(Camera& camera, D3D11_PRIMITIVE_TOPOLOGY Topology) override
@@ -51,7 +51,7 @@ public:
 		this->deviceContext->Draw(llInt(solverOptions->lineLength) * llInt(solverOptions->lines_count), 0);
 		this->cleanPipeline();
 	}
-		
+
 
 	bool initializeBuffers() override
 	{
