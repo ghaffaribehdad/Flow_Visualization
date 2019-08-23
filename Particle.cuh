@@ -49,7 +49,11 @@ public:
 
 	__device__ void move(const float& dt, int3 gridSize, float3 gridDiameter, cudaTextureObject_t t_VelocityField )
 	{
-		updatePosition(dt);										//checked
+
+		if (!outOfScope)
+		{
+			this->m_position = RK4EStream(t_VelocityField, &this->m_position, gridDiameter, dt);
+		}
 		checkPosition(gridDiameter);							//check if it is out of scope
 		updateVelocity(gridDiameter, gridSize, t_VelocityField);//checked
 	}

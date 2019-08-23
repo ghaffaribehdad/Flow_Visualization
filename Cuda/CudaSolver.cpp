@@ -8,7 +8,7 @@ CUDASolver::CUDASolver()
 }
 
 // Initilize the solver
-bool CUDASolver::Initialize(SolverOptions _solverOptions)
+bool CUDASolver::Initialize(SolverOptions * _solverOptions)
 {
 	this->solverOptions = _solverOptions;
 	this->InitializeCUDA();
@@ -36,7 +36,7 @@ bool CUDASolver::InitializeCUDA()
 {
 	// Get number of CUDA-Enable devices
 	int device;
-	gpuErrchk(cudaD3D11GetDevice(&device,solverOptions.p_Adapter));
+	gpuErrchk(cudaD3D11GetDevice(&device,solverOptions->p_Adapter));
 
 	// Get properties of the Best(usually at slot 0) card
 	gpuErrchk(cudaGetDeviceProperties(&this->cuda_device_prop, 0));
@@ -44,7 +44,7 @@ bool CUDASolver::InitializeCUDA()
 	// Register Vertex Buffer to map it
 	gpuErrchk(cudaGraphicsD3D11RegisterResource(
 		&this->cudaGraphics,
-		this->solverOptions.p_vertexBuffer,
+		this->solverOptions->p_vertexBuffer,
 		cudaGraphicsRegisterFlagsNone));
 
 	// Map Vertex Buffer
@@ -54,7 +54,7 @@ bool CUDASolver::InitializeCUDA()
 		));
 
 	// Get Mapped pointer
-	size_t size = static_cast<size_t>(solverOptions.lines_count)* static_cast<size_t>(solverOptions.lineLength)*sizeof(Vertex);
+	size_t size = static_cast<size_t>(solverOptions->lines_count)* static_cast<size_t>(solverOptions->lineLength)*sizeof(Vertex);
 
 	gpuErrchk(cudaGraphicsResourceGetMappedPointer(
 		&p_VertexBuffer,
@@ -80,7 +80,7 @@ __host__ float* CUDASolver::InitializeVelocityField(int ID)
 void CUDASolver::InitializeParticles(SeedingPattern seedingPattern)
 {
 	// Create an array of particles
-	this->h_Particles = new Particle<float>[solverOptions.lines_count];
+	this->h_Particles = new Particle<float>[solverOptions->lines_count];
 
 
 	switch (seedingPattern)
@@ -88,9 +88,9 @@ void CUDASolver::InitializeParticles(SeedingPattern seedingPattern)
 		case SeedingPattern::SEED_RANDOM:
 		{
 			// Seed Particles Randomly according to the grid diameters
-			for (int i = 0; i < solverOptions.lines_count; i++)
+			for (int i = 0; i < solverOptions->lines_count; i++)
 			{
-				this->h_Particles[i].seedParticle(solverOptions.gridDiameter,solverOptions.seedBox, solverOptions.seedBoxPos);
+				this->h_Particles[i].seedParticle(solverOptions->gridDiameter,solverOptions->seedBox, solverOptions->seedBoxPos);
 			}
 			break;
 		}
@@ -108,7 +108,7 @@ void CUDASolver::InitializeParticles(SeedingPattern seedingPattern)
 
 	}
 
-	size_t Particles_byte = sizeof(Particle<float>) * solverOptions.lines_count;
+	size_t Particles_byte = sizeof(Particle<float>) * solverOptions->lines_count;
 
 	// Upload Velocity Filled to GPU 
 

@@ -36,7 +36,7 @@ public:
 	{
 		solverOptions->p_vertexBuffer = this->vertexBuffer.Get();
 
-		this->pathlinesolver.Initialize(*solverOptions);
+		this->pathlinesolver.Initialize(solverOptions);
 		this->pathlinesolver.solve();
 		this->pathlinesolver.FinalizeCUDA();
 

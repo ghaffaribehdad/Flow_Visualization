@@ -601,7 +601,7 @@ void Graphics::raycastingRendering()
 			raycasting_desc.eyePos = this->getEyePosition();
 			raycasting_desc.FOV_deg = this->FOV;
 			raycasting_desc.upDir = this->getUpVector();
-			raycasting_desc.solverOption = this->solverOptions;
+			raycasting_desc.solverOption = &this->solverOptions;
 
 			raycasting.setRaycastingDec(raycasting_desc);
 
@@ -648,7 +648,7 @@ void Graphics::raycastingRendering()
 			raycasting_desc.eyePos = this->getEyePosition();
 			raycasting_desc.FOV_deg = this->getFOV();
 			raycasting_desc.upDir = this->getUpVector();
-			raycasting_desc.solverOption = this->solverOptions;
+			raycasting_desc.solverOption = &this->solverOptions;
 
 			raycasting.setRaycastingDec(raycasting_desc);
 

@@ -130,7 +130,7 @@ __host__ bool Raycasting::initilizeBoundingBox()
 
 __host__ bool Raycasting::initializeVolumeTexuture()
 {
-	this->volumeTexture.setSolverOptions(&this->raycasting_desc.solverOption);
+	this->volumeTexture.setSolverOptions(this->raycasting_desc.solverOption);
 	this->volumeTexture.setField(this->raycasting_desc.field);
 	this->volumeTexture.initialize();
 
@@ -140,7 +140,7 @@ __host__ bool Raycasting::initializeVolumeTexuture()
 __host__ bool Raycasting::initializeIO()
 {
 	
-	this->volume_IO.readVolume(this->raycasting_desc.solverOption.currentIdx);
+	this->volume_IO.readVolume(this->raycasting_desc.solverOption->currentIdx);
 	std::vector<char>* p_vec_buffer = volume_IO.flushBuffer();
 	char* p_vec_buffer_temp = &(p_vec_buffer->at(0));
 	raycasting_desc.field = reinterpret_cast<float*>(p_vec_buffer_temp);

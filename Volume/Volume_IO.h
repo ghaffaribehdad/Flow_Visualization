@@ -17,7 +17,7 @@ private:
 	std::vector<char> buffer;
 public:
 	
-	void Initialize(SolverOptions& solverOption);
+	void Initialize(SolverOptions * solverOption);
 	void setFileName(std::string _fileName);
 	void setFilePath(std::string _filePath);
 

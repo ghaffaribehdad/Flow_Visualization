@@ -79,14 +79,14 @@ void Volume_IO::setFilePath(std::string _filePath)
 }
 
 
-void Volume_IO::Initialize(SolverOptions& solverOptions)
+void Volume_IO::Initialize(SolverOptions* solverOptions)
 {
-	fileName = solverOptions.fileName;
-	filePath = solverOptions.filePath;
-	this->index.resize(solverOptions.lastIdx - solverOptions.firstIdx);
+	fileName = solverOptions->fileName;
+	filePath = solverOptions->filePath;
+	this->index.resize(solverOptions->lastIdx - solverOptions->firstIdx);
 	int counter = 0;
 	for (int i = 0; i <index.size(); i++)
 	{
-		index[i] = solverOptions.firstIdx + i;
+		index[i] = solverOptions->firstIdx + i;
 	}
 }

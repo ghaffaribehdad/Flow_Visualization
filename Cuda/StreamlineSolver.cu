@@ -91,11 +91,11 @@ __host__ bool StreamlineSolver::solve()
 {
 	// Read Dataset
 	this->volume_IO.Initialize(this->solverOptions);
-	this->h_VelocityField = InitializeVelocityField(this->solverOptions.currentIdx);
+	this->h_VelocityField = InitializeVelocityField(this->solverOptions->currentIdx);
 	
 	// Copy data to the texture memory
 	this->volumeTexture.setField(h_VelocityField);
-	this->volumeTexture.setSolverOptions(&this->solverOptions);
+	this->volumeTexture.setSolverOptions(this->solverOptions);
 	this->volumeTexture.initialize();
 
 
@@ -106,9 +106,9 @@ __host__ bool StreamlineSolver::solve()
 	this->InitializeParticles(SeedingPattern::SEED_RANDOM);
 	
 	int blockDim = 256;
-	int thread = (this->solverOptions.lines_count / blockDim)+1;
+	int thread = (this->solverOptions->lines_count / blockDim)+1;
 	
-	TracingStream << <blockDim , thread >> > (this->d_Particles, volumeTexture.getTexture(), solverOptions, reinterpret_cast<Vertex*>(this->p_VertexBuffer));
+	TracingStream << <blockDim , thread >> > (this->d_Particles, volumeTexture.getTexture(), *this->solverOptions, reinterpret_cast<Vertex*>(this->p_VertexBuffer));
 
 	this->release();
 

@@ -21,7 +21,7 @@ public:
 	CUDASolver();
 
 
-	bool Initialize(SolverOptions _solverOptions);
+	bool Initialize(SolverOptions * _solverOptions);
 
 	// Read volume and store it in a vector, returns a pointer to the first element of the vector
 	__host__ float* InitializeVelocityField(int ID);
@@ -35,7 +35,7 @@ public:
 	bool FinalizeCUDA();
 
 	// Solver Parameters
-	SolverOptions solverOptions;
+	SolverOptions * solverOptions;
 
 protected:
 	

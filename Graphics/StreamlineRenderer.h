@@ -36,7 +36,7 @@ public:
 	{
 		solverOptions->p_vertexBuffer = this->vertexBuffer.Get();
 		
-		this->streamlineSolver.Initialize(*solverOptions);
+		this->streamlineSolver.Initialize(solverOptions);
 		this->streamlineSolver.solve();
 		this->streamlineSolver.FinalizeCUDA();
 		

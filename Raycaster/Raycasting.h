@@ -38,7 +38,7 @@ struct Raycasting_desc
 	// for now this is fixed 
 	float3 gridCenter = { 0,0,0 };
 
-	SolverOptions solverOption;
+	SolverOptions * solverOption;
 };
 
 
