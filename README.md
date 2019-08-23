@@ -10,8 +10,8 @@ Options:
 
 
 TO-DO:
-+ RK4 in Streamline
-+ Fix Pathline
-+ Fix isosurface
-+ Using texture sampler for depth test of isosurfaces
-+ Consider using templates for isosurface tests
++ RK4 in Streamline     [X]
++ Fix Pathline          [ ]
++ Fix isosurface        [ ]
++ Using texture sampler for depth test of isosurfaces   [ ]
++ Consider using templates for isosurface tests         [ ]
