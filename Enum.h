@@ -7,12 +7,16 @@ enum SeedingPattern
 	SEED_FILE,
 };
 
-enum IntegrationMethod
+
+
+enum IsoMeasure
 {
-	EULER_METHOD = 0,
-	//MODIFIED_EULER,
-	//RK4_METHOD,
-	//RK5_METHOD,
+	VelocityMagnitude = 0,
+	Velocity_x,
+	Velocity_y,
+	Velocity_Z,
+	Vorticity,
+	ShearStress,
 };
 
 

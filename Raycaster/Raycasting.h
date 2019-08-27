@@ -1,9 +1,5 @@
 
-
-#ifndef RAYCASTING_H
-#define RAYCASINTG_H
-
-
+#pragma once
 
 #include "..//VolumeTexture/VolumeTexture.h"
 #include "..//Cuda/CudaSurface.cuh"
@@ -16,9 +12,9 @@
 #include "texture_fetch_functions.h"
 
 
-//__global__ void boundingBoxRendering(BoundingBox* d_boundingBox,cudaSurfaceObject_t raycastingSurface,cudaTextureObject_t field1, int rays);
-__global__ void isoSurfaceVelocityMagnitude(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
 
+template <typename Observable>
+__global__ void CudaIsoSurfacRenderer(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
 
 struct Raycasting_desc
 {
@@ -65,7 +61,6 @@ public:
 
 private:
 
-
 	bool fileLoaded = false;
 	bool fileChanged = false;
 
@@ -88,6 +83,3 @@ private:
 
 };
 
-
-
-#endif // !RAYCASTING_H

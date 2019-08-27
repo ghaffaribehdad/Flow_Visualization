@@ -1,9 +1,16 @@
 #include "Raycasting.h"
-#include "IsosurfaceFunctions.h"
+#include "IsosurfaceHelperFunctions.h"
+#include "Raycasting_Helper.h"
 
 
 __constant__ BoundingBox d_boundingBox;
 
+
+// Explicit instantiation
+template __global__ void CudaIsoSurfacRenderer<struct IsosurfaceHelper::Velocity_Magnitude>	(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
+template __global__ void CudaIsoSurfacRenderer<struct IsosurfaceHelper::Velocity_X>			(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
+template __global__ void CudaIsoSurfacRenderer<struct IsosurfaceHelper::Velocity_Y>			(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
+template __global__ void CudaIsoSurfacRenderer<struct IsosurfaceHelper::Velocity_Z>			(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
 
 
 __host__ bool Raycasting::initialize()
@@ -54,7 +61,7 @@ __host__ void Raycasting::Rendering()
 	blocks = static_cast<unsigned int>((this->rays % (thread.x * thread.y) == 0 ? rays / (thread.x * thread.y) : rays / (thread.x * thread.y) + 1));
 
 
-	isoSurfaceVelocityMagnitude <<< blocks, thread >> >
+	CudaIsoSurfacRenderer<IsosurfaceHelper::Velocity_Magnitude> <<< blocks, thread >> >
 		(
 		this->raycastingSurface->getSurfaceObject(),
 		this->volumeTexture.getTexture(),
@@ -66,32 +73,6 @@ __host__ void Raycasting::Rendering()
 }
 
 
-__global__ void boundingBoxRendering(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays)
-{
-	//// Calculate surface coordinates
-	//int thread = threadIdx.x;
-	//
-	//int index = blockIdx.x * blockDim.x + thread;
-
-
-	//
-	//if (index < rays)
-	//{
-	//	int2 pixel = { 0,0 };
-	//	pixel.x = index / d_boundingBox.getResolution().y;
-	//	pixel.y = index - (pixel.x * d_boundingBox.getResolution().y);
-	//	float3 pixelPos = d_boundingBox.pixelPosition(pixel.x, pixel.y);
-	//	float2 NearFar = d_boundingBox.findIntersections(pixelPos);
-
-	//	if (NearFar.x != -1)
-	//	{
-	//		float4 color = { 1,1,0,0 };
-	//		float rgba = DecodeFloatRGBA(color);
-	//		surf2Dwrite(rgba, raycastingSurface, sizeof(float) * pixel.x, pixel.y);
-	//	}
-
-	//}
-}
 
 __host__ bool Raycasting::initilizeBoundingBox()
 {
@@ -112,18 +93,11 @@ __host__ bool Raycasting::initilizeBoundingBox()
 
 
 
-	// Populate the constant memory
-	//gpuErrchk(cudaMalloc(&this->d_BoundingBox, sizeof(BoundingBox)));
-	//gpuErrchk(cudaMemcpy(this->d_BoundingBox, h_boundingBox, sizeof(BoundingBox), cudaMemcpyHostToDevice));
 	gpuErrchk(cudaMemcpyToSymbol(d_boundingBox, h_boundingBox, sizeof(BoundingBox)));
 	
 
 	delete h_boundingBox;
-
-
-
-
-
+	
 	return true;
 }
 
@@ -151,11 +125,16 @@ __host__ bool Raycasting::initializeIO()
 
 
 
-__global__ void isoSurfaceVelocityMagnitude(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance)
+
+
+
+template <typename Observable>
+__global__ void CudaIsoSurfacRenderer(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance)
 {
-	// Calculate surface coordinates
-	
-	int index = blockIdx.x  * blockDim.y * blockDim.x;
+
+	Observable observable;
+
+	int index = blockIdx.x * blockDim.y * blockDim.x;
 	index += threadIdx.y * blockDim.x;
 	index += threadIdx.x;
 
@@ -168,32 +147,29 @@ __global__ void isoSurfaceVelocityMagnitude(cudaSurfaceObject_t raycastingSurfac
 		float3 pixelPos = pixelPosition(d_boundingBox, pixel.x, pixel.y);
 		float2 NearFar = findIntersections(pixelPos, d_boundingBox);
 
-		
-		float3 rgb = { 1.0f, 0.3f, 0.0f};
 
-		//float3 positionOffset = (d_boundingBox.eyePos + (d_boundingBox.gridDiameter / 2.0f)) / d_boundingBox.gridDiameter;
+		float3 rgb = { 1.0f, 0.3f, 0.0f };
+
 		float3 positionOffset = d_boundingBox.gridDiameter / 2.0f;
 		// if hits
 		if (NearFar.y != -1)
 		{
 			float3 rayDir = normalize(pixelPos - d_boundingBox.eyePos);
-			//float3 correction = rayDir / d_boundingBox.gridDiameter;
 
 			for (float t = NearFar.x; t < NearFar.y; t = t + samplingRate)
 			{
 
-				//float3 relativePos = positionOffset + (correction * t);
 				float3 relativePos = pixelPos + (rayDir * t);
 				relativePos = (relativePos / d_boundingBox.gridDiameter) + make_float3(.5f, .5f, .5f);
 				float4 velocity4D = tex3D<float4>(field1, relativePos.x, relativePos.y, relativePos.z);
 
-				if (fabsf(VelocityMagnitude::ValueAtXYZ(field1,relativePos) - isoValue) < IsosurfaceTolerance)
+				if (fabsf(observable.ValueAtXYZ(field1, relativePos) - isoValue) < IsosurfaceTolerance)
 				{
-					float3 gradient = VelocityMagnitude::GradientAtXYZ(field1, relativePos, 0.01f);
+					float3 gradient = observable.GradientAtXYZ(field1, relativePos, 0.01f);
 					float diffuse = max(dot(normalize(gradient), viewDir), 0.0f);
 					rgb = rgb * diffuse;
 					float4 rgba = { rgb.x,rgb.y,rgb.z,0.0 };
-					
+
 					surf2Dwrite(rgbaFloatToUChar(rgba), raycastingSurface, 4 * pixel.x, pixel.y);
 					break;
 				}
@@ -203,9 +179,8 @@ __global__ void isoSurfaceVelocityMagnitude(cudaSurfaceObject_t raycastingSurfac
 
 
 		}
-	
+
 	}
 
 
 }
-

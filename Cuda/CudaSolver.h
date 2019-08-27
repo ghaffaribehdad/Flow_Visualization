@@ -7,7 +7,7 @@
 #include "../BinaryStream/BinaryWriter.h"
 #include "../ErrorLogger.h"
 #include <DirectXMath.h>
-#include "../Particle.cuh"
+#include "../Particle.h"
 #include "../VelocityField.cuh"
 #include "../SolverOptions.h"
 #include "CudaDevice.h"

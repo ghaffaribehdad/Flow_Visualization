@@ -1,5 +1,5 @@
 #include "Pathlinesolver.h"
-#include "CudaHelper.cuh"
+#include "CudaHelper.h"
 
 
 
@@ -109,8 +109,7 @@ __global__ void TracingPath(Particle<T>* d_particles, cudaTextureObject_t t_Velo
 
 	if (index < solverOptions.lines_count)
 	{
-		// needs to be modified
-		int index_buffer = index * solverOptions.lineLength;
+		int line_index = index * solverOptions.lineLength;
 		float dt = solverOptions.dt;
 		float3 gridDiameter =
 		{
@@ -122,41 +121,28 @@ __global__ void TracingPath(Particle<T>* d_particles, cudaTextureObject_t t_Velo
 
 		float3 newPosition = { 0.0f,0.0f,0.0f };
 
-		if (odd)
+		if (d_particles[index].isOut())
 		{
-			if (d_particles[index].isOut())
+			newPosition =
 			{
-				newPosition =
-				{
-					d_particles[index].getPosition()->x,
-					d_particles[index].getPosition()->y,
-					d_particles[index].getPosition()->z
-				};
-			}
-			else
-			{
-				newPosition = RK4Odd(t_VelocityField_0, t_VelocityField_1, d_particles[index].getPosition(), gridDiameter, dt);
-			}
-
+				d_particles[index].getPosition()->x,
+				d_particles[index].getPosition()->y,
+				d_particles[index].getPosition()->z
+			};
 		}
-		else //Even
+		else if(odd)
 		{
-			if (d_particles[index].isOut())
-			{
-				newPosition =
-				{
-					d_particles[index].getPosition()->x,
-					d_particles[index].getPosition()->y,
-					d_particles[index].getPosition()->z
-				};
-			}
-			else
-			{
-				newPosition = RK4Even(t_VelocityField_0, t_VelocityField_1, d_particles[index].getPosition(), gridDiameter, dt);
-			}
+			newPosition = RK4Odd(t_VelocityField_0, t_VelocityField_1, d_particles[index].getPosition(), gridDiameter, dt);
+		}
+		else if(!odd) //Even
+		{
+
+			newPosition = RK4Even(t_VelocityField_0, t_VelocityField_1, d_particles[index].getPosition(), gridDiameter, dt);
 		}
 
 		d_particles[index].setPosition(newPosition);
+		d_particles[index].updateVelocity(gridDiameter, t_VelocityField_1);
+
 
 		if (!d_particles[index].isOut())
 		{
@@ -164,40 +150,42 @@ __global__ void TracingPath(Particle<T>* d_particles, cudaTextureObject_t t_Velo
 		}
 
 		// Write into the Vertex BUffer
-		p_VertexBuffer[index_buffer + step].pos.x = d_particles[index].getPosition()->x;
-		p_VertexBuffer[index_buffer + step].pos.y = d_particles[index].getPosition()->y;
-		p_VertexBuffer[index_buffer + step].pos.z = d_particles[index].getPosition()->z;
-		float3* velocity = d_particles[index_buffer + step].getVelocity();
-		float3 norm = normalize(*velocity);
-		p_VertexBuffer[index_buffer + step].tangent.x = norm.x;
-		p_VertexBuffer[index_buffer + step].tangent.y = norm.y;
-		p_VertexBuffer[index_buffer + step].tangent.z = norm.z;
-		p_VertexBuffer[index_buffer + step].LineID = float(index) / float(solverOptions.lines_count);
+		p_VertexBuffer[line_index + step].pos.x = d_particles[index].getPosition()->x - (gridDiameter.x / 2.0);
+		p_VertexBuffer[line_index + step].pos.y = d_particles[index].getPosition()->y - (gridDiameter.y / 2.0);
+		p_VertexBuffer[line_index + step].pos.z = d_particles[index].getPosition()->z - (gridDiameter.z / 2.0);
+
+
+		float3* velocity = d_particles[index].getVelocity();
+		float3 norm = normalize(make_float3(velocity->x, velocity->y, velocity->z));
+
+		p_VertexBuffer[line_index + step].tangent.x = norm.x;
+		p_VertexBuffer[line_index + step].tangent.y = norm.y;
+		p_VertexBuffer[line_index + step].tangent.z = norm.z;
+
+		p_VertexBuffer[line_index + step].LineID =index;
 
 		switch (solverOptions.colorMode)
 		{
 			case 0: // Velocity
 			{
-				float3* velocity = d_particles[index].getVelocity();
-				p_VertexBuffer[index_buffer + step].measure = norm3df(velocity->x, velocity->y, velocity->z);;
+				p_VertexBuffer[line_index + step].measure = VecMagnitude(*velocity);
 				break;
 
 			}
 			case 1: // Vx
 			{
 
-				p_VertexBuffer[index_buffer + step].measure = d_particles[index].getVelocity()->x;
+				p_VertexBuffer[line_index + step].measure = d_particles[index].getVelocity()->x;
 				break;
 			}
 			case 2: // Vy
 			{
-				float velocity = 
-				p_VertexBuffer[index_buffer + step].measure = d_particles[index].getVelocity()->y;
+				p_VertexBuffer[line_index + step].measure = d_particles[index].getVelocity()->y;
 				break;
 			}
 			case 3: // Vz
 			{
-				p_VertexBuffer[index_buffer + step].measure = d_particles[index].getVelocity()->z;
+				p_VertexBuffer[line_index + step].measure = d_particles[index].getVelocity()->z;
 				break;
 
 			}

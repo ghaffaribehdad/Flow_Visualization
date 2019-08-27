@@ -15,7 +15,7 @@
 #include "..\Cuda\CudaSolver.h"
 #include "ImGui/imgui.h"
 
-#include "..\\Cuda\Interoperability.cuh"
+#include "..\\Cuda\Interoperability.h"
 #include <d3d11.h>
 #include "..\\Cuda\cudaSurface.cuh"
 #include "..\\testCudaInterOp.cuh"
@@ -53,6 +53,7 @@ public:
 
 	SolverOptions solverOptions;
 	RenderingOptions renderingOptions;
+	RaycastingOptions raycastingOptions;
 
 	// Getter Functions
 	IDXGIAdapter* GetAdapter();
@@ -73,8 +74,6 @@ public:
 
 	ID3D11Buffer* GetVertexBuffer();
 
-
-	bool showLines = false;
 
 
 	// Check comments inside the definition
@@ -135,9 +134,6 @@ private:
 	bool InitializeRaytracingInteroperability();
 
 	void raycastingRendering();
-
-
-	void updateScene();
 
 	// directx resources
 	Microsoft::WRL::ComPtr<ID3D11Device>			device;// use to creat buffers

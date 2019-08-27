@@ -1,4 +1,4 @@
-#include "CudaHelper.cuh"
+#include "CudaHelper.h"
 
 
 

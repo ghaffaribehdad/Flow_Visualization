@@ -1,47 +1,18 @@
 #pragma once
 #include "Enum.h"
 
-struct SolverOptions
+struct RaycastingOptions
 {
 public:
 
-	int gridSize[3] = { 192,192,192 };
-	float gridDiameter[3] = { 10,10,10 };
+	float samplingRate_0 = 0.1f;
+	float tolerance_0 = 0.1f;
+	float isoValue_0 = 0.0f;
 
-	int precision = 32;
-
-	float dt = 0.1f;
-	float advectTime = 0.0f;
-
-	int lineLength = 1;
-	int lines_count = 1;
-	float line_thickness = 0.0f;
+	IsoMeasure isoMeasure_0 = IsoMeasure::VelocityMagnitude;
+	IsoMeasure isoMeasure_1 = IsoMeasure::VelocityMagnitude;
+	IsoMeasure isoMeasure_2 = IsoMeasure::VelocityMagnitude;
 
 
-	int firstIdx = 1;
-	int lastIdx = 1;
-	int currentIdx = 1;
-
-	SeedingPattern seedingPatter;
-	IntegrationMethod integrationMethod;
-	InterpolationMethod interpolationMethod;
-
-	int colorMode = 0;
-
-	bool beginStream = false;
-	bool beginPath = false;
-
-	bool interOperation = false;
-
-
-	bool beginRaycasting = false;
-	bool idChange = false;
-
-
-	bool userInterruption = true;
-
-
-	SolverOptions() {};
-
-
+	float color_0[4] = { 0.5f,0.5f,0.5f,1.0f };
 };

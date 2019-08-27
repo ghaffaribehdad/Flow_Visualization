@@ -198,6 +198,12 @@
     <ClCompile Include="Keyboard\KeyboardEvent.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ErrorLogger.cpp" />
+    <CudaCompile Include="Raycaster\IsosurfaceHelperFunctions.cu">
+      <FileType>Document</FileType>
+    </CudaCompile>
+    <CudaCompile Include="Raycaster\Raycasting_Helper.cu">
+      <FileType>Document</FileType>
+    </CudaCompile>
     <ClCompile Include="RenderWindow.cpp" />
     <ClCompile Include="Mouse\MouseClass.cpp" />
     <ClCompile Include="Mouse\MouseEvent.cpp" />
@@ -219,7 +225,7 @@
     <ClInclude Include="Graphics\PathlineRenderer.h" />
     <ClInclude Include="Graphics\RenderingOptions.h" />
     <ClInclude Include="Graphics\StreamlineRenderer.h" />
-    <ClInclude Include="Raycaster\IsosurfaceFunctions.h" />
+    <ClInclude Include="Raycaster\IsosurfaceHelperFunctions.h" />
     <ClInclude Include="Raycaster\Raycasting.h" />
     <ClInclude Include="Raycaster\Raycasting_Helper.h" />
     <ClCompile Include="Timer.cpp" />
@@ -232,7 +238,7 @@
     <ClInclude Include="Cuda\cudaSurface.cuh" />
     <ClInclude Include="CUDA\CudaDevice.h" />
     <ClInclude Include="CUDA\CudaSolver.h" />
-    <ClInclude Include="Cuda\Interoperability.cuh" />
+    <ClInclude Include="Cuda\Interoperability.h" />
     <ClInclude Include="RaycastingOptions.h" />
     <ClInclude Include="VolumeTexture\VolumeTexture.h" />
     <ClInclude Include="ErrorLogger.h" />
@@ -248,11 +254,11 @@
     </CudaCompile>
     <ClInclude Include="Cuda\PathlineSolver.h" />
     <ClInclude Include="SolverOptions.h" />
-    <ClInclude Include="Cuda\CudaHelper.cuh" />
+    <ClInclude Include="Cuda\CudaHelper.h" />
     <CudaCompile Include="Cuda\cudaSurface.cu" />
     <CudaCompile Include="VolumeTexture\VolumeTexture.cu" />
     <CudaCompile Include="Particle.cu" />
-    <ClInclude Include="Particle.cuh" />
+    <ClInclude Include="Particle.h" />
     <ClInclude Include="Graphics\RenderImGuiOptions.h" />
     <ClInclude Include="Graphics\Graphics.h" />
     <ClInclude Include="Graphics\AdapterReader.h" />

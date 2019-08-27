@@ -1,6 +1,7 @@
 #pragma once
 
 #include "cuda_runtime.h"
+#include <corecrt_math.h>
 
 //float3 operations
 

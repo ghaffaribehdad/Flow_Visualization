@@ -1,7 +1,7 @@
 #include "StreamlineSolver.h"
 #include "helper_math.h"
 
-
+#include "texture_fetch_functions.h"
 
 // Kernel of the streamlines, TO-DO: Divide kernel into seprate functions
 
@@ -21,18 +21,11 @@ __global__ void TracingStream(Particle<float>* d_particles, cudaTextureObject_t 
 			solverOptions.gridDiameter[2]
 		};
 
-		int3 gridSize =
-		{
-			solverOptions.gridSize[0],
-			solverOptions.gridSize[1],
-			solverOptions.gridSize[2]
-		};
-
 		for (int i = 0; i < lineLength; i++)
 		{
 
 			// Moves a particle for dt and update its velocity and position
-			d_particles[index].move(dt, gridSize, gridDiameter, t_VelocityField);
+			d_particles[index].move(dt, gridDiameter, t_VelocityField);
 
 			// write the new position into the vertex buffer
 			p_VertexBuffer[index_buffer + i].pos.x = d_particles[index].getPosition()->x - (gridDiameter.x / 2.0);
@@ -73,11 +66,8 @@ __global__ void TracingStream(Particle<float>* d_particles, cudaTextureObject_t 
 					break;
 				}
 			}
-
-			
 		}
 	}
-
 }
 
 __host__ void StreamlineSolver::release()

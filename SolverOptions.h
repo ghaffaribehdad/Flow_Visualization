@@ -28,30 +28,17 @@ public:
 	int currentIdx = 1;
 
 	SeedingPattern seedingPatter;
-	IntegrationMethod integrationMethod;
 	InterpolationMethod interpolationMethod;
 
 	int colorMode = 0;
-
-	bool beginStream = false;
-	bool beginPath = false;
 
 	bool interOperation = false;
 
 	IDXGIAdapter* p_Adapter;
 	ID3D11Resource* p_vertexBuffer;
 
-	bool beginRaycasting = false;
 	bool idChange = false;
 
-
-	bool userInterruption = true;
-
-	bool streamline = true;
-	bool pathline = false;
-
-
-	bool lengthChanged = false;
 
 	SolverOptions() {};
 

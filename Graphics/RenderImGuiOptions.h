@@ -4,11 +4,12 @@
 #include "ImGui/imgui_impl_win32.h"
 #include "ImGui/imgui_impl_dx11.h"
 #include "..//SolverOptions.h"
-#include <string>
+#include "..//RaycastingOptions.h"
 #include "RenderingOptions.h"
 #include "Camera.h"
 #include "..//Timer.h"
 #include <map>
+#include <string>
 
 class RenderImGuiOptions
 {
@@ -17,17 +18,18 @@ class RenderImGuiOptions
 
 private:
 
-	Camera* camera;
-	Timer* fpsTimer;
-	SolverOptions* solverOptions;
-	RenderingOptions* renderingOptions;
+	Camera				*	camera;
+	Timer				*	fpsTimer;
+	SolverOptions		*	solverOptions;
+	RenderingOptions	*	renderingOptions;
+	RaycastingOptions	*	raycastingOptions;
 
 	
 
 
 public:
 
-	void setResources(Camera* _camera, Timer * _fpsTimer, RenderingOptions * _renderingOptions, SolverOptions * _solverOptions)
+	void setResources(Camera* _camera, Timer * _fpsTimer, RenderingOptions * _renderingOptions, SolverOptions * _solverOptions, RaycastingOptions * _raycastingOptions)
 	{
 		this->camera = _camera;
 	
@@ -36,14 +38,30 @@ public:
 		this->renderingOptions = _renderingOptions;
 	
 		this->solverOptions = _solverOptions;
+
+		this->raycastingOptions = _raycastingOptions;
 	}
 
-	bool updateLineRendering = false;
+	bool updateRaycasting		= false;
+	bool updateLineRendering	= false;
+	bool updateSeedBox			= false;
+	bool updateVolumeBox		= false;
+	bool updateStreamlines		= false;
+	bool updatePathlines		= false;
 
-	void drawSolverOptions(); // draw the solver option window
-	void drawLog();										// draw Log window
-	void drawLineRenderingOptions();
-	void render(); // renders the imGui drawings
+	bool showStreamlines		= false;
+	bool showPathlines			= false;
+	bool showRaycasting			= false;
+
+
+	bool streamlineRendering	= true;
+	bool pathlineRendering		= false;
+
+	void drawSolverOptions();			// draw the solver option window
+	void drawLog();						// draw Log window
+	void drawLineRenderingOptions();	// draw options of stream/pathline rendering
+	void drawRaycastingOptions();		// draw options of isosurface rendering (raycasting)
+	void render();						// render Dear ImGui
 
 	// Log pointer
 	char* log = new char[1000];

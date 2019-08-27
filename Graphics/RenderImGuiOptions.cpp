@@ -13,18 +13,15 @@ void RenderImGuiOptions::drawSolverOptions()
 
 	//Solver Mode
 
-	if (ImGui::Checkbox("Streamline", &solverOptions->streamline))
+	if (ImGui::Checkbox("Streamline", &this->streamlineRendering))
 	{
-		solverOptions->pathline = !solverOptions->streamline;
-		solverOptions->lineLength = solverOptions->lastIdx - solverOptions->firstIdx;
-		//p_graphics->InitializeScene();
+		this->pathlineRendering = !this->streamlineRendering;
 	}
 	ImGui::SameLine();
-	if (ImGui::Checkbox("Pathline", &solverOptions->pathline))
+	if (ImGui::Checkbox("Pathline", &this->pathlineRendering))
 	{
-		solverOptions->streamline = !solverOptions->pathline;
-		solverOptions->lineLength = solverOptions->lastIdx - solverOptions->firstIdx;
-		//p_graphics->InitializeScene();
+		this->streamlineRendering = !this->pathlineRendering;
+
 	}
 
 
@@ -42,37 +39,42 @@ void RenderImGuiOptions::drawSolverOptions()
 	}
 	if (ImGui::InputFloat3("Grid Diameter", solverOptions->gridDiameter, sizeof(solverOptions->gridDiameter)))
 	{
-		updateLineRendering = true;
+		this->updateVolumeBox = true;
+		this->updateRaycasting = true;
+		this->updateStreamlines = true;
+		this->updatePathlines = true;
 	}
 
 	if (ImGui::DragFloat3("Seed Box", solverOptions->seedBox, 0.01f))
 	{
-		updateLineRendering = true;
+		this->updateSeedBox = true;
+		this->updateStreamlines = true;
+		this->updatePathlines = true;
 	}
 	
 	if (ImGui::DragFloat3("Seed Box Position", solverOptions->seedBoxPos, 0.01f))
 	{
-		updateLineRendering = true;
+		this->updateSeedBox = true;
+		this->updateStreamlines = true;
+		this->updatePathlines = true;
 	}
 
 
-	if (ImGui::InputInt("precision", &(solverOptions->precision)))
-	{
-
-	}
 	ImGui::PushItemWidth(75);
 	if (ImGui::InputInt("First Index", &(solverOptions->firstIdx)))
 	{
-
+		this->updatePathlines = true;
 	}
 	ImGui::SameLine();
 	if (ImGui::InputInt("Last Index", &(solverOptions->lastIdx)))
 	{
+		this->updatePathlines = true;
 
 	}
 	if (ImGui::DragInt("Current Index", &(solverOptions->currentIdx), 1.0f, 0, solverOptions->lastIdx, "%d"))
 	{
-		updateLineRendering = true;
+		this->updateStreamlines = true;
+		this->updatePathlines = true;
 	}
 
 	ImGui::PopItemWidth();
@@ -81,61 +83,66 @@ void RenderImGuiOptions::drawSolverOptions()
 	{
 		if (solverOptions->dt > 0)
 		{
-			updateLineRendering = true;
+			this->updateStreamlines = true;
+			this->updatePathlines = true;
 		}
 	}
 
 	if (ImGui::InputInt("Lines", &(solverOptions->lines_count)))
 	{
-		if (solverOptions->lines_count > 0)
+		if (this->solverOptions->lines_count <= 0)
 		{
-			updateLineRendering = true;
-
-			if (solverOptions->pathline)
-			{
-				solverOptions->lineLength = solverOptions->lastIdx - solverOptions->firstIdx;
-			}
+			this->solverOptions->lines_count = 1;
 		}
-
-
-
+		this->updateStreamlines = true;
+		this->updatePathlines = true;
 	}
-	if (solverOptions->streamline)
+
+	// length of the line is fixed for the pathlines
+	if (this->streamlineRendering)
 	{
 		if (ImGui::InputInt("Line Length", &(solverOptions->lineLength)))
 		{
+			if (this->solverOptions->lineLength <= 0)
+			{
+				this->solverOptions->lineLength = 1;
+			}
+			this->updateStreamlines = true;
+			this->updatePathlines = true;
 
 		}
 	}
-	if (ImGui::ListBox("Color Mode", &solverOptions->colorMode, ColorModeList, 4))
-	{
 
-	}
 
-	if (solverOptions->streamline)
+	if (ImGui::ListBox("Color Mode", &solverOptions->colorMode, ColorModeList, 4)){}
+
+
+	// Show Lines
+	if (this->streamlineRendering)
 	{
-		if (ImGui::Checkbox("Render Streamlines", &solverOptions->beginStream))
+		if (ImGui::Checkbox("Render Streamlines", &this->showStreamlines))
 		{
-			solverOptions->userInterruption = true;
+			this->updateStreamlines = true;
 		}
-
 	}
-	else
+	else // PathlineRendering
 	{
-		if (ImGui::Checkbox("Render Pathlines", &solverOptions->beginPath))
+		if (ImGui::Checkbox("Render Pathlines", &this->showPathlines))
 		{
+			this->updatePathlines = true;
+
 		}
 	}
 
-	if (ImGui::Checkbox("Rendering Bounding box", &solverOptions->beginRaycasting))
-	{
-		solverOptions->idChange = true;
-	}
+
+
+	if (ImGui::Checkbox("Rendering Bounding box", &this->showRaycasting)){}
 
 
 	if (ImGui::Button("Reset", ImVec2(80, 25)))
 	{
 		this->camera->SetPosition(0, 0, -10);
+		this->camera->SetLookAtPos({ 0, 0, 0 });
 	}
 
 
@@ -224,6 +231,22 @@ void RenderImGuiOptions::drawLineRenderingOptions()
 
 
 
+
+	ImGui::End();
+
+}
+
+void RenderImGuiOptions::drawRaycastingOptions()
+{
+
+
+	ImGui::Begin("Raycasting Options");
+
+	ImGui::DragFloat("Sampling Rate 0", &raycastingOptions->samplingRate_0,0.0001f);       
+	ImGui::DragFloat("Isovalue 0", &raycastingOptions->isoValue_0, 0.01f);
+
+	ImGui::Text("Surfaces color 0:");
+	ImGui::ColorEdit4("Isosurface Color 0", (float*)& raycastingOptions->color_0);
 
 	ImGui::End();
 

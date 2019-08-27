@@ -89,82 +89,81 @@ bool Graphics::InitializeRayCastingTexture()
 
 
 
-void Graphics::updateScene()
-{
-	float center[3] = { 0,0,0 };
-	this->seedBox.updateScene(this->solverOptions.seedBox, this->solverOptions.seedBoxPos);
-	this->volumeBox.updateScene(this->solverOptions.gridDiameter, center);
-	if (showLines)
-	{
-		this->streamlineRenderer.updateScene();
-	}
-}
-
-
 
 void Graphics::RenderFrame()
 {
-
+	// Clean-upa raycasting!!!!!
 	raycastingRendering();
-
 
 	float bgcolor[] = { 0.0f,0.0f, 0.0f, 0.0f };
 
 	// For the raycasting we need a workaround!
 	this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), bgcolor);// Clear the target view
-	
-
-
 
 	this->deviceContext->ClearDepthStencilView(this->depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);// Clear the depth stencil view
 	this->deviceContext->OMSetDepthStencilState(this->depthStencilState.Get(), 0);	// add depth  stencil state to rendering routin
-
 	/*
+
 	##############################################################
 	##															##
-	##						Line Rendering						##
+	##						Update Scene						##
 	##															##
 	##############################################################
+
 	*/
-
-
-		// Streamline Solver
-	if (this->solverOptions.beginStream)
+	if (renderImGuiOptions.updateVolumeBox)
 	{
-		this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), bgcolor);// Clear the target view
-		streamlineRenderer.updateBuffers();
-		
-		solverOptions.beginStream = false;
-		showLines = true;
+		float center[3] = { 0,0,0 };
+		this->volumeBox.updateScene(this->solverOptions.gridDiameter, center);
+		renderImGuiOptions.updateVolumeBox = false;
 	}
 
-
-	// check if something has been change
-	if (renderImGuiOptions.updateLineRendering == true)
+	if (renderImGuiOptions.updateSeedBox)
 	{
-		this->updateScene();
+		float center[3] = { 0,0,0 };
+		this->seedBox.updateScene(this->solverOptions.seedBox, this->solverOptions.seedBoxPos);
+		renderImGuiOptions.updateSeedBox = false;
+
+	}
+
+	if (this->renderImGuiOptions.showStreamlines)
+	{
+		if (renderImGuiOptions.updateStreamlines)
+		{
+			this->streamlineRenderer.updateScene();
+			renderImGuiOptions.updateStreamlines = false;
+		}
+	}
+
+	if (this->renderImGuiOptions.showPathlines)
+	{
+		if (renderImGuiOptions.updatePathlines)
+		{
+			this->pathlineRenderer.updateScene();
+			renderImGuiOptions.updatePathlines = false;
+		}
+	}
 	
-		renderImGuiOptions.updateLineRendering = false;
-
-	}
-
 	/*
+
 	##############################################################
 	##															##
 	##							Draw							##
 	##															##
 	##############################################################
+	
 	*/
-
-
-
-
 	this->volumeBox.draw(camera,D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_LINELIST);
 	this->seedBox.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_LINELIST);
 
-	if (showLines)
+	if (this->renderImGuiOptions.showStreamlines)
 	{	
 		this->streamlineRenderer.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_LINESTRIP);
+	}
+
+	if (this->renderImGuiOptions.showPathlines)
+	{
+		this->pathlineRenderer.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_LINESTRIP);
 	}
 
 	/*
@@ -175,12 +174,10 @@ void Graphics::RenderFrame()
 	##############################################################
 	*/
 
-
-
-
 	renderImGuiOptions.drawSolverOptions();
 	renderImGuiOptions.drawLineRenderingOptions();
 	renderImGuiOptions.drawLog();
+	renderImGuiOptions.drawRaycastingOptions();
 	renderImGuiOptions.render();
 
 
@@ -188,11 +185,6 @@ void Graphics::RenderFrame()
 
 	// Present the backbuffer
 	this->swapchain->Present(0, NULL);
-
-	// Always turn the user interruption to false after the presentation of backbuffer
-	this->solverOptions.userInterruption = false;
-
-
 }
 
 
@@ -300,10 +292,14 @@ bool Graphics::InitializeResources()
 {
 	
 	streamlineRenderer.setResources(this->renderingOptions, this->solverOptions, this->deviceContext.Get(), this->device.Get(), this->adapter);
+	pathlineRenderer.setResources(this->renderingOptions, this->solverOptions, this->deviceContext.Get(), this->device.Get(), this->adapter);
 	volumeBox.setResources(this->renderingOptions, this->solverOptions, this->deviceContext.Get(), this->device.Get(), this->adapter);
 	seedBox.setResources(this->renderingOptions, this->solverOptions, this->deviceContext.Get(), this->device.Get(), this->adapter);
 	
 	if (!streamlineRenderer.initializeBuffers())
+		return false;
+	
+	if (!pathlineRenderer.initializeBuffers())
 		return false;
 
 	if (!volumeBox.initializeBuffers())
@@ -390,6 +386,9 @@ bool Graphics::InitializeShaders()
 	if (!this->streamlineRenderer.initializeShaders())
 		return false;
 
+	if (!this->pathlineRenderer.initializeShaders())
+		return false;
+
 	if (!this->volumeBox.initializeShaders())
 		return false;
 
@@ -432,7 +431,7 @@ bool Graphics::InitializeImGui(HWND hwnd)
 		ImGui_ImplDX11_Init(this->device.Get(), this->deviceContext.Get());
 		ImGui::StyleColorsDark();
 
-		this->renderImGuiOptions.setResources(&camera,&fpsTimer,&renderingOptions,&solverOptions);
+		this->renderImGuiOptions.setResources(&camera,&fpsTimer,&renderingOptions,&solverOptions,&raycastingOptions);
 
 
 		return true;
@@ -577,7 +576,7 @@ bool Graphics::initializeRaycasting()
 
 void Graphics::raycastingRendering()
 {
-	if (this->solverOptions.beginRaycasting)
+	if (this->renderImGuiOptions.showRaycasting)
 	{
 		if (this->solverOptions.idChange)
 		{
@@ -635,7 +634,7 @@ void Graphics::raycastingRendering()
 
 			this->solverOptions.idChange = false;
 		}
-		else if (this->solverOptions.userInterruption)
+		else if (this->renderImGuiOptions.updateRaycasting)
 		{
 			Raycasting_desc raycasting_desc;
 			ZeroMemory(&raycasting_desc, sizeof(raycasting_desc));

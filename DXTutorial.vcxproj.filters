@@ -247,16 +247,10 @@
     <ClInclude Include="Volume\Volume_IO.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Cuda\CudaHelper.cuh">
-      <Filter>Header Files\Cuda</Filter>
-    </ClInclude>
     <ClInclude Include="VolumeTexture\VolumeTexture.h">
       <Filter>Header Files\VolumeTexture</Filter>
     </ClInclude>
     <ClInclude Include="Cuda\cudaSurface.cuh">
-      <Filter>Header Files\Cuda</Filter>
-    </ClInclude>
-    <ClInclude Include="Cuda\Interoperability.cuh">
       <Filter>Header Files\Cuda</Filter>
     </ClInclude>
     <ClInclude Include="Raycaster\Raycasting.h">
@@ -271,9 +265,6 @@
     <ClInclude Include="Raycaster\BoundingBox.h">
       <Filter>Header Files\Raycasting</Filter>
     </ClInclude>
-    <ClInclude Include="Raycaster\IsosurfaceFunctions.h">
-      <Filter>Header Files\Raycasting</Filter>
-    </ClInclude>
     <ClInclude Include="RaycastingOptions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -285,9 +276,6 @@
     </ClInclude>
     <ClInclude Include="Graphics\LineRenderer.h">
       <Filter>Header Files\Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="Particle.cuh">
-      <Filter>Header Files\Particle</Filter>
     </ClInclude>
     <ClInclude Include="Cuda\StreamlineSolver.h">
       <Filter>Header Files\Cuda</Filter>
@@ -303,6 +291,18 @@
     </ClInclude>
     <ClInclude Include="Graphics\PathlineRenderer.h">
       <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Raycaster\IsosurfaceHelperFunctions.h">
+      <Filter>Header Files\Raycasting</Filter>
+    </ClInclude>
+    <ClInclude Include="Cuda\Interoperability.h">
+      <Filter>Header Files\Cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="Cuda\CudaHelper.h">
+      <Filter>Header Files\Cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="Particle.h">
+      <Filter>Header Files\Particle</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -348,6 +348,12 @@
       <Filter>Source Files\Raycasting</Filter>
     </CudaCompile>
     <CudaCompile Include="Raycaster\Raycasting.cu">
+      <Filter>Source Files\Raycasting</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Raycaster\IsosurfaceHelperFunctions.cu">
+      <Filter>Source Files\Raycasting</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Raycaster\Raycasting_Helper.cu">
       <Filter>Source Files\Raycasting</Filter>
     </CudaCompile>
   </ItemGroup>

@@ -9,7 +9,7 @@
 #include "device_launch_parameters.h"
 #include <vector>
 #include <stdio.h>
-#include "../Particle.cuh"
+#include "../Particle.h"
 #include "..//VolumeTexture/VolumeTexture.h"
 
 

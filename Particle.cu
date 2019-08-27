@@ -1,11 +1,11 @@
-#include "Particle.cuh"
+#include "Particle.h"
 
 // Explicit instantions
 template class Particle<float>;
 template class Particle<double>;
 
 template <typename T>
-__device__  void Particle<T>::updateVelocity(const float3& gridDiameter, const int3& gridSize, cudaTextureObject_t t_VelocityField)
+__device__  void Particle<T>::updateVelocity(const float3& gridDiameter, cudaTextureObject_t t_VelocityField)
 {
 	if (!outOfScope)
 	{
