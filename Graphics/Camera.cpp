@@ -35,6 +35,7 @@ const XMFLOAT3 & Camera::GetPositionFloat3() const
 	return this->pos;
 }
 
+
 const XMVECTOR & Camera::GetRotationVector() const
 {
 	return this->rotVector;

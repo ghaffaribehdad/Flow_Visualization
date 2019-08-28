@@ -250,9 +250,6 @@
     <ClInclude Include="VolumeTexture\VolumeTexture.h">
       <Filter>Header Files\VolumeTexture</Filter>
     </ClInclude>
-    <ClInclude Include="Cuda\cudaSurface.cuh">
-      <Filter>Header Files\Cuda</Filter>
-    </ClInclude>
     <ClInclude Include="Raycaster\Raycasting.h">
       <Filter>Header Files\Raycasting</Filter>
     </ClInclude>
@@ -304,6 +301,9 @@
     <ClInclude Include="Particle.h">
       <Filter>Header Files\Particle</Filter>
     </ClInclude>
+    <ClInclude Include="Cuda\cudaSurface.h">
+      <Filter>Header Files\Cuda</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="vertexshader.hlsl">
@@ -319,6 +319,9 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="pixelshaderSeedBox.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="pixelshaderRaycasting.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

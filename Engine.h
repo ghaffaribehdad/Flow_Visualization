@@ -28,8 +28,6 @@ public:
 private:
 	Timer timer;
 
-	StreamlineSolver streamlineSolver_float;
-	PathlineSolver pathlineSolver_float;
 
 
 

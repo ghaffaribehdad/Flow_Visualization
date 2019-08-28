@@ -1,5 +1,5 @@
 #include "Graphics.h"
-
+#include <ScreenGrab.h>
 
 bool Graphics::InitializeCamera()
 {
@@ -26,7 +26,6 @@ bool Graphics::Initialize(HWND hwnd, int width, int height)
 	if (!this->InitializeResources())
 		return false;
 
-
 	if (!this->InitializeShaders())
 		return false;
 
@@ -47,53 +46,13 @@ bool Graphics::Initialize(HWND hwnd, int width, int height)
 }
 #pragma endregion Main_Initialization
 
-bool Graphics::InitializeRayCastingTexture()
-{
-	D3D11_TEXTURE2D_DESC textureDesc;
-	ZeroMemory(&textureDesc, sizeof(textureDesc));
 
-	textureDesc.ArraySize = 1;
-	textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
-	textureDesc.CPUAccessFlags = 0;
-	textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	textureDesc.Height = windowHeight;
-	textureDesc.Width = windowWidth;
-	textureDesc.MipLevels = 4;
-	textureDesc.MiscFlags = 0;
-	textureDesc.SampleDesc.Count = 1;
-	textureDesc.SampleDesc.Quality = 0;
-	textureDesc.Usage = D3D11_USAGE_DEFAULT;
-
-	HRESULT hr = this->device->CreateTexture2D(&textureDesc, nullptr, this->frontTex.GetAddressOf());
-	if (FAILED(hr))
-	{
-		ErrorLogger::Log(hr, "Failed to Create Front Texture");
-	}
-
-	// Create Render targe view
-
-	CD3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc;
-	ZeroMemory(&renderTargetViewDesc, sizeof(CD3D11_RENDER_TARGET_VIEW_DESC));
-
-	renderTargetViewDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-
-	hr = this->device->CreateRenderTargetView(frontTex.Get(), NULL, this->viewtofrontText.GetAddressOf());
-	if (FAILED(hr))
-	{
-		ErrorLogger::Log(hr, "Failed to Create viewtofrontText");
-	}
-
-	return true;
-
-}
 
 
 
 
 void Graphics::RenderFrame()
 {
-	// Clean-upa raycasting!!!!!
-	raycastingRendering();
 
 	float bgcolor[] = { 0.0f,0.0f, 0.0f, 0.0f };
 
@@ -144,6 +103,16 @@ void Graphics::RenderFrame()
 		}
 	}
 	
+	if (this->renderImGuiOptions.showRaycasting)
+	{
+		if (renderImGuiOptions.updateRaycasting)
+		{
+			this->raycasting.updateScene();
+			this->deviceContext->CopyResource(getBackBuffer(), raycasting.getTexture());
+			renderImGuiOptions.updateRaycasting = true;
+
+		}
+	}
 	/*
 
 	##############################################################
@@ -165,6 +134,8 @@ void Graphics::RenderFrame()
 	{
 		this->pathlineRenderer.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_LINESTRIP);
 	}
+
+
 
 	/*
 	##############################################################
@@ -291,10 +262,53 @@ bool Graphics::InitializeDirectXResources()
 bool Graphics::InitializeResources()
 {
 	
-	streamlineRenderer.setResources(this->renderingOptions, this->solverOptions, this->deviceContext.Get(), this->device.Get(), this->adapter);
-	pathlineRenderer.setResources(this->renderingOptions, this->solverOptions, this->deviceContext.Get(), this->device.Get(), this->adapter);
-	volumeBox.setResources(this->renderingOptions, this->solverOptions, this->deviceContext.Get(), this->device.Get(), this->adapter);
-	seedBox.setResources(this->renderingOptions, this->solverOptions, this->deviceContext.Get(), this->device.Get(), this->adapter);
+	streamlineRenderer.setResources
+	(
+		this->renderingOptions,
+		this->solverOptions,
+		this->deviceContext.Get(),
+		this->device.Get(),
+		this->adapter
+	);
+
+	pathlineRenderer.setResources
+	(
+		this->renderingOptions,
+		this->solverOptions,
+		this->deviceContext.Get(),
+		this->device.Get(),
+		this->adapter
+	);
+
+	volumeBox.setResources
+	(
+		this->renderingOptions,
+		this->solverOptions,
+		this->deviceContext.Get(),
+		this->device.Get(),
+		this->adapter
+	);
+
+	seedBox.setResources
+	(
+		this->renderingOptions,
+		this->solverOptions,
+		this->deviceContext.Get(),
+		this->device.Get(),
+		this->adapter
+	);
+
+	raycasting.setResources
+	(
+		&this->camera,
+		&this->windowWidth,
+		&this->windowHeight,
+		&this->solverOptions,
+		&this->raycastingOptions,
+		this->device.Get(),
+		this->adapter,
+		this ->deviceContext.Get()
+	);
 	
 	if (!streamlineRenderer.initializeBuffers())
 		return false;
@@ -308,7 +322,8 @@ bool Graphics::InitializeResources()
 	if (!seedBox.initializeBuffers())
 		return false;
 
-
+	if (!raycasting.initialize())
+		return false;
 
 	return true;
 }
@@ -459,7 +474,6 @@ void Graphics::Resize(HWND hwnd)
 	this->depthStencilView->Release();
 	this->renderTargetView->Release();
 
-
 	// Resize the swapchain
 	HRESULT hr = this->swapchain->ResizeBuffers(1, windowWidth, windowHeight, DXGI_FORMAT_UNKNOWN, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH);
 	if (FAILED(hr))
@@ -481,6 +495,9 @@ void Graphics::Resize(HWND hwnd)
 	this->InitializeDirectXResources();
 	this->InitializeCamera();
 	this->InitializeResources();
+
+	if (this->renderImGuiOptions.showRaycasting)
+		this->raycasting.resize();
 
 
 }
@@ -525,159 +542,12 @@ const float3 Graphics::getViewDir()
 	return view;
 }
 
-bool Graphics::InitializeRaytracingInteroperability()
+
+void Graphics::saveTexture(ID3D11Texture2D* texture)
 {
-	// define interoperation descriptor and set it to zero
-	Interoperability_desc interoperability_desc;
-	memset(&interoperability_desc, 0, sizeof(interoperability_desc));
 
-	// set interoperation descriptor
-	interoperability_desc.flag = cudaGraphicsRegisterFlagsSurfaceLoadStore;
-	interoperability_desc.p_adapter = this->adapter;
-	interoperability_desc.p_device = this->device.Get();
-	interoperability_desc.size = sizeof(float) * static_cast<size_t>(this->windowWidth) * static_cast<size_t>(this->windowHeight);
-	interoperability_desc.pD3DResource = this->getBackbuffer();
-
-	// initialize the interoperation
-	cudaRayTracingInteroperability.setInteroperability_desc(interoperability_desc);
-
-	return cudaRayTracingInteroperability.InitializeResource();
-
-}
-
-
-bool Graphics::initializeRaycasting()
-{
-	// Create and initializes the dst texture for raycasting
-	//this->InitializeRayCastingTexture();
-
-	// A pointer to the cuda array
-	cudaArray_t pCudaArray = NULL;
-
-	// Initialize the interoperation 
-	//		+ Set interoperability description such as device pointer and size and the texture to share with CUDA
-	//		+ Register and map the D3D Resource to CUDA
-	if (!this->InitializeRaytracingInteroperability())
-		return false;
-
-	// Get the an array to the D3D resource and cast it to a cudaArray
-	cudaRayTracingInteroperability.getMappedArray(pCudaArray);
-
-	// Pass the CudaArray to the Surface Array
-	cudaSurface.setInputArray(pCudaArray);
-
-	// Now initialize the Surface
-	if (!cudaSurface.initializeSurface())
-		return false;
-
-	return true;
-}
-
-
-void Graphics::raycastingRendering()
-{
-	if (this->renderImGuiOptions.showRaycasting)
-	{
-		if (this->solverOptions.idChange)
-		{
-			/*std::string upDirection = "";
-		upDirection += std::to_string(getViewDir().x);
-		upDirection += ", ";
-		upDirection += std::to_string(getViewDir().y);
-		upDirection += ", ";
-		upDirection += std::to_string(getViewDir().z);
-		upDirection += "\n";
-		OutputDebugStringA(upDirection.c_str());
-*/
-			Raycasting_desc raycasting_desc;
-			ZeroMemory(&raycasting_desc, sizeof(raycasting_desc));
-
-			raycasting_desc.width = this->getWindowWidth();
-			raycasting_desc.height = this->getWindowHeight();
-			raycasting_desc.gridDiameter = make_float3(this->solverOptions.gridDiameter[0], this->solverOptions.gridDiameter[1], this->solverOptions.gridDiameter[2]);
-			raycasting_desc.gridSize = make_int3(this->solverOptions.gridSize[0], this->solverOptions.gridSize[1], this->solverOptions.gridSize[2]);
-			raycasting_desc.viewDir = this->getViewDir();
-			raycasting_desc.eyePos = this->getEyePosition();
-			raycasting_desc.FOV_deg = this->FOV;
-			raycasting_desc.upDir = this->getUpVector();
-			raycasting_desc.solverOption = &this->solverOptions;
-
-			raycasting.setRaycastingDec(raycasting_desc);
-
-			// Intializes Interopration: bind texture to cuda array, create a surface and bind the cuda array to it
-			this->initializeRaycasting();
-
-			// Now bind the cuda surface to the raycaster
-			raycasting.setRaycastingSurface(this->getSurfaceObject());
-
-
-			// + Create a bounding box and initialize it
-			// + Copy bounding box to GPU
-			// + Create and copy rays to GPU
-			raycasting.initialize();
-
-			// + Run the Cuda Kernel
-			raycasting.Rendering();
-
-			// + Release bounding box and rays
-			raycasting.release();
-
-			//std::string fileName = "test.dds";
-			//std::wstring wfileName = std::wstring(fileName.begin(), fileName.end());
-			//const wchar_t* result = wfileName.c_str();
-			//SaveDDSTextureToFile(this->gfx.GetDeviceContext(), this->gfx.getTexture(), result);
-
-			this->cudaSurface.destroySurface();
-
-			// Unmap and Unregister the D3D resource
-			this->cudaRayTracingInteroperability.release();
-
-			this->solverOptions.idChange = false;
-		}
-		else if (this->renderImGuiOptions.updateRaycasting)
-		{
-			Raycasting_desc raycasting_desc;
-			ZeroMemory(&raycasting_desc, sizeof(raycasting_desc));
-
-			raycasting_desc.width = this->getWindowWidth();
-			raycasting_desc.height = this->getWindowHeight();
-			raycasting_desc.gridDiameter = make_float3(this->solverOptions.gridDiameter[0], this->solverOptions.gridDiameter[1], this->solverOptions.gridDiameter[2]);
-			raycasting_desc.gridSize = make_int3(this->solverOptions.gridSize[0], this->solverOptions.gridSize[1], this->solverOptions.gridSize[2]);
-			raycasting_desc.viewDir = this->getViewDir();
-			raycasting_desc.eyePos = this->getEyePosition();
-			raycasting_desc.FOV_deg = this->getFOV();
-			raycasting_desc.upDir = this->getUpVector();
-			raycasting_desc.solverOption = &this->solverOptions;
-
-			raycasting.setRaycastingDec(raycasting_desc);
-
-			// Intializes Interopration: bind texture to cuda array, create a surface and bind the cuda array to it
-			this->initializeRaycasting();
-
-			// Now bind the cuda surface to the raycaster
-			raycasting.setRaycastingSurface(this->getSurfaceObject());
-
-
-			// + Create a bounding box and initialize it
-			// + Copy bounding box to GPU
-			// + Create and copy rays to GPU
-			raycasting.initialize();
-
-			// + Run the Cuda Kernel
-			raycasting.Rendering();
-
-			// + Release bounding box and rays
-			raycasting.release();
-
-
-			this->cudaSurface.destroySurface();
-
-			// Unmap and Unregister the D3D resource
-			this->cudaRayTracingInteroperability.release();
-
-
-		}
-
-
-	}
+	std::string fileName = "test.dds";
+	std::wstring wfileName = std::wstring(fileName.begin(), fileName.end());
+	const wchar_t* result = wfileName.c_str();
+	SaveDDSTextureToFile(this->deviceContext.Get(), texture ,result);
 }

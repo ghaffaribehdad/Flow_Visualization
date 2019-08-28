@@ -3,8 +3,7 @@
 #include "AdapterReader.h"
 #include "Shaders.h"
 #include "Vertex.h"
-#include <SpriteBatch.h>
-#include <SpriteFont.h>
+
 #include <WICTextureLoader.h>
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
@@ -15,10 +14,7 @@
 #include "..\Cuda\CudaSolver.h"
 #include "ImGui/imgui.h"
 
-#include "..\\Cuda\Interoperability.h"
 #include <d3d11.h>
-#include "..\\Cuda\cudaSurface.cuh"
-#include "..\\testCudaInterOp.cuh"
 #include "..\\Raycaster\Raycasting.h"
 
 #include "RenderingOptions.h"
@@ -48,9 +44,6 @@ public:
 	// Add Camera object
 	Camera camera;
 
-
-
-
 	SolverOptions solverOptions;
 	RenderingOptions renderingOptions;
 	RaycastingOptions raycastingOptions;
@@ -62,29 +55,10 @@ public:
 	{
 		return this->deviceContext.Get();
 	}
-	ID3D11Texture2D* getBackbuffer()
-	{
-		HRESULT hr = this->swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(frontTex.GetAddressOf()));
-		if (FAILED(hr))
-		{
-			ErrorLogger::Log(hr, "Failed to Get Back buffer");
-		}
-		return this->frontTex.Get();
-	}
 
 	ID3D11Buffer* GetVertexBuffer();
 
 
-
-	// Check comments inside the definition
-	bool initializeRaycasting();
-
-	bool releaseRaycastingResource()
-	{
-		// destroy and release the resources
-		cudaSurface.destroySurface();
-		cudaRayTracingInteroperability.release();
-	}
 
 
 	// Get the camera position and directions
@@ -105,12 +79,7 @@ public:
 		return this->FOV;
 	}
 
-	CudaSurface* getSurfaceObject()
-	{
-		return &cudaSurface;
-	}
 
-	CudaSurface cudaSurface = CudaSurface(this->windowWidth, this->windowHeight);
 
 	// for now it is public while imgui need the access
 	Timer fpsTimer;
@@ -129,22 +98,34 @@ private:
 	bool InitializeScene();
 	bool InitializeCamera();
 
-	bool InitializeImGui(HWND hwnd);
-	bool InitializeRayCastingTexture();
-	bool InitializeRaytracingInteroperability();
 
-	void raycastingRendering();
+	// ImGui
+	bool InitializeImGui(HWND hwnd);
+	ImGuiContext* ImGuicontext = nullptr;
+
+
+	ID3D11Texture2D* getBackBuffer()
+	{
+		Microsoft::WRL::ComPtr<ID3D11Texture2D> backBuffer;
+		HRESULT hr = this->swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(backBuffer.GetAddressOf()));
+		if (FAILED(hr)) //If error occurred
+		{
+			ErrorLogger::Log(hr, "GetBuffer Failed.");
+			return nullptr;
+		}
+
+		return backBuffer.Get();
+
+	}
+
 
 	// directx resources
 	Microsoft::WRL::ComPtr<ID3D11Device>			device;// use to creat buffers
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext>		deviceContext; //use to set resources for rendering
 	Microsoft::WRL::ComPtr<IDXGISwapChain>			swapchain; // use to swap out our frame
 	Microsoft::WRL::ComPtr<ID3D11RenderTargetView>	renderTargetView; // where we are going to render our buffer
-	Microsoft::WRL::ComPtr<ID3D11RenderTargetView>	viewtofrontText; // where we are going to render our buffer
+	Microsoft::WRL::ComPtr<ID3D11SamplerState>		samplerState;	// For depth test between raycasting and line rendering
 
-
-	// ImGui resoureces
-	ImGuiContext* ImGuicontext = nullptr;
 
 	// Shaders
 	VertexShader vertexshader;
@@ -164,10 +145,6 @@ private:
 
 
 
-	// COM pointer to texture to store rendered bounding box
-	Microsoft::WRL::ComPtr<ID3D11Texture2D> frontTex;	//front-face
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> frontTexResource;
-
 	// Pointer to the adapter
 	IDXGIAdapter* adapter;
 
@@ -180,18 +157,18 @@ private:
 	BoxRenderer volumeBox;
 	BoxRenderer seedBox;
 
+	// Raycasting (This object would write into a texture and pass it to the graphics then we need to use sampler state to show it on the backbuffer)
+	Raycasting raycasting;
+
 
 	// Solver options
 	bool streamline = true;
 	bool pathline = false;
 
-
+	void saveTexture(ID3D11Texture2D* texture);
 
 	Vertex* CudaVertex = nullptr;
 
-	Interoperability cudaRayTracingInteroperability;
-
-	Raycasting raycasting;
 
 	RenderImGuiOptions renderImGuiOptions;
 

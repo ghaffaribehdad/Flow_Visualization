@@ -235,7 +235,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Raycaster\BoundingBox.h" />
-    <ClInclude Include="Cuda\cudaSurface.cuh" />
+    <ClInclude Include="Cuda\cudaSurface.h" />
     <ClInclude Include="CUDA\CudaDevice.h" />
     <ClInclude Include="CUDA\CudaSolver.h" />
     <ClInclude Include="Cuda\Interoperability.h" />
@@ -304,6 +304,10 @@
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="pixelshaderRaycasting.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
     </FxCompile>
     <FxCompile Include="pixelshaderSeedBox.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>

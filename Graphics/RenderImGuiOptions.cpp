@@ -134,11 +134,6 @@ void RenderImGuiOptions::drawSolverOptions()
 		}
 	}
 
-
-
-	if (ImGui::Checkbox("Rendering Bounding box", &this->showRaycasting)){}
-
-
 	if (ImGui::Button("Reset", ImVec2(80, 25)))
 	{
 		this->camera->SetPosition(0, 0, -10);
@@ -241,12 +236,27 @@ void RenderImGuiOptions::drawRaycastingOptions()
 
 
 	ImGui::Begin("Raycasting Options");
+	
+	if (ImGui::Checkbox("Enable Raycasintg", &this->showRaycasting)) 
+	{
+		this->updateRaycasting = true;
+	}
 
-	ImGui::DragFloat("Sampling Rate 0", &raycastingOptions->samplingRate_0,0.0001f);       
+	ImGui::SliderFloat("Sampling Rate 0", &raycastingOptions->samplingRate_0,0.001f,1.0f);       
 	ImGui::DragFloat("Isovalue 0", &raycastingOptions->isoValue_0, 0.01f);
+	ImGui::DragFloat("Tolerance 0", &raycastingOptions->tolerance_0, 0.001f);
 
 	ImGui::Text("Surfaces color 0:");
 	ImGui::ColorEdit4("Isosurface Color 0", (float*)& raycastingOptions->color_0);
+
+	if (this->raycastingOptions->fileLoaded)
+	{
+		ImGui::Text("File is loaded!");
+	}
+	else
+	{
+		ImGui::Text("File is not loaded yet!");
+	}
 
 	ImGui::End();
 

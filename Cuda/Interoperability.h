@@ -2,10 +2,10 @@
 #include "cuda_runtime.h"
 #include <d3d11.h>
 #include "../ErrorLogger.h"
+#include "..//SolverOptions.h"
 
 struct Interoperability_desc
 {
-	cudaDeviceProp cuda_device_prop;
 	IDXGIAdapter* p_adapter = nullptr;
 	ID3D11Device* p_device = nullptr;
 	size_t size;
@@ -24,30 +24,7 @@ private:
 
 public:
 
-	void setInteroperability_desc(
-		cudaDeviceProp _cuda_device_prop,
-		IDXGIAdapter* _adapter,
-		ID3D11Device* _device,
-		ID3D11Resource* _pD3DResource,
-		size_t _size,
-		cudaGraphicsRegisterFlags _flag
-	)
-	{
-		interoperability_desc.cuda_device_prop = _cuda_device_prop;
-		interoperability_desc.p_adapter = _adapter;
-		interoperability_desc.p_device = _device;
-		interoperability_desc.pD3DResource = _pD3DResource;
-		interoperability_desc.size = _size;
-		interoperability_desc.flag = _flag;
-	}
-
-	void setInteroperability_desc(const Interoperability_desc & _interoperability_desc)
-	{
-		interoperability_desc = _interoperability_desc;
-	}
-
-
-	bool InitializeResource()
+	bool Initialize()
 	{
 
 		// Register DX Resource to map it
@@ -64,6 +41,31 @@ public:
 
 		return true;
 	}
+
+
+
+	void setInteroperability_desc(
+		IDXGIAdapter* _adapter,
+		ID3D11Device* _device,
+		ID3D11Resource* _pD3DResource,
+		size_t _size,
+		cudaGraphicsRegisterFlags _flag
+	)
+	{
+		interoperability_desc.p_adapter = _adapter;
+		interoperability_desc.p_device = _device;
+		interoperability_desc.pD3DResource = _pD3DResource;
+		interoperability_desc.size = _size;
+		interoperability_desc.flag = _flag;
+	}
+
+
+	void setInteroperability_desc(const Interoperability_desc & _interoperability_desc)
+	{
+		interoperability_desc = _interoperability_desc;
+	}
+
+
 	
 
 	void release()
