@@ -113,14 +113,14 @@ void Graphics::RenderFrame()
 	if (this->renderImGuiOptions.showRaycasting)
 	{
 
+		this->raycasting.draw();
 
 		if (renderImGuiOptions.updateRaycasting)
 		{
 			this->raycasting.updateScene();
 
 			//this->deviceContext->CopyResource(getBackBuffer(), raycasting.getTexture());
-			this->raycasting.draw();
-			renderImGuiOptions.updateRaycasting = true;
+			renderImGuiOptions.updateRaycasting = false;
 
 
 		}

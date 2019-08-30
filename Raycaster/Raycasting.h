@@ -106,7 +106,7 @@ public:
 	__host__ bool initialize();
 	__host__ bool release();
 	__host__ void rendering();
-	__host__ void saveTexture();
+	//__host__ void saveTexture();
 	__host__ bool updateScene();
 	__host__ bool resize();
 	

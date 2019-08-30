@@ -15,12 +15,11 @@ enum IsoMeasure
 	Velocity_x,
 	Velocity_y,
 	Velocity_Z,
-	Vorticity,
 	ShearStress,
 };
 
 
-
+static const char* const IsoMeasureModes[] = { "Velocity Magnitude", "Velocity X", "Velocity Y", "Velocity Z","Shear Stress"};
 static const char* const ColorModeList[] = {"V", "Vx", "Vy", "Vz"};
 
 enum InterpolationMethod

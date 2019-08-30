@@ -32,6 +32,11 @@ class Graphics
 	friend CUDASolver;
 
 public:
+	void viewChanged()
+	{
+		this->renderImGuiOptions.updateRaycasting = true;
+	}
+
 	// Initialize graphics
 	bool Initialize(HWND hwnd, int width, int height);
 

@@ -11,6 +11,7 @@ template __global__ void CudaIsoSurfacRenderer<struct IsosurfaceHelper::Velocity
 template __global__ void CudaIsoSurfacRenderer<struct IsosurfaceHelper::Velocity_X>			(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
 template __global__ void CudaIsoSurfacRenderer<struct IsosurfaceHelper::Velocity_Y>			(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
 template __global__ void CudaIsoSurfacRenderer<struct IsosurfaceHelper::Velocity_Z>			(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
+template __global__ void CudaIsoSurfacRenderer<struct IsosurfaceHelper::ShearStress>		(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
 
 
 
@@ -120,16 +121,81 @@ __host__ void Raycasting::rendering()
 	dim3 thread = { maxBlockDim,maxBlockDim,1 };
 	blocks = static_cast<unsigned int>((this->rays % (thread.x * thread.y) == 0 ? rays / (thread.x * thread.y) : rays / (thread.x * thread.y) + 1));
 
+	switch (this->raycastingOptions->isoMeasure_0)
+	{
+		case IsoMeasure::VelocityMagnitude:
+		{
+			CudaIsoSurfacRenderer<IsosurfaceHelper::Velocity_Magnitude> << < blocks, thread >> >
+				(
+					this->raycastingSurface.getSurfaceObject(),
+					this->volumeTexture.getTexture(),
+					int(this->rays),
+					this->raycastingOptions->isoValue_0,
+					this->raycastingOptions->samplingRate_0,
+					this->raycastingOptions->tolerance_0
+					);
+			break;
+		}
 
-	CudaIsoSurfacRenderer<IsosurfaceHelper::Velocity_Magnitude> <<< blocks, thread >> >
-	(
-		this->raycastingSurface.getSurfaceObject(),
-		this->volumeTexture.getTexture(),
-		int(this->rays),
-		this->raycastingOptions->isoValue_0,
-		this->raycastingOptions->samplingRate_0,
-		this->raycastingOptions->tolerance_0
-	);
+		case IsoMeasure::Velocity_x:
+		{
+			CudaIsoSurfacRenderer<IsosurfaceHelper::Velocity_X> << < blocks, thread >> >
+				(
+					this->raycastingSurface.getSurfaceObject(),
+					this->volumeTexture.getTexture(),
+					int(this->rays),
+					this->raycastingOptions->isoValue_0,
+					this->raycastingOptions->samplingRate_0,
+					this->raycastingOptions->tolerance_0
+				);
+			break;
+
+		}
+
+		case IsoMeasure::Velocity_y:
+		{
+			CudaIsoSurfacRenderer<IsosurfaceHelper::Velocity_Y> << < blocks, thread >> >
+				(
+					this->raycastingSurface.getSurfaceObject(),
+					this->volumeTexture.getTexture(),
+					int(this->rays),
+					this->raycastingOptions->isoValue_0,
+					this->raycastingOptions->samplingRate_0,
+					this->raycastingOptions->tolerance_0
+				);
+			break;
+		}
+
+		case IsoMeasure::Velocity_Z:
+		{
+			CudaIsoSurfacRenderer<IsosurfaceHelper::Velocity_Z> << < blocks, thread >> >
+				(
+					this->raycastingSurface.getSurfaceObject(),
+					this->volumeTexture.getTexture(),
+					int(this->rays),
+					this->raycastingOptions->isoValue_0,
+					this->raycastingOptions->samplingRate_0,
+					this->raycastingOptions->tolerance_0
+				);
+			break;
+		}
+
+		case IsoMeasure::ShearStress:
+		{
+			CudaIsoSurfacRenderer<IsosurfaceHelper::ShearStress> << < blocks, thread >> >
+				(
+					this->raycastingSurface.getSurfaceObject(),
+					this->volumeTexture.getTexture(),
+					int(this->rays),
+					this->raycastingOptions->isoValue_0,
+					this->raycastingOptions->samplingRate_0,
+					this->raycastingOptions->tolerance_0
+				);
+			break;
+		}
+
+	}
+
 
 
 }

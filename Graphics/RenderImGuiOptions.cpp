@@ -237,17 +237,38 @@ void RenderImGuiOptions::drawRaycastingOptions()
 
 	ImGui::Begin("Raycasting Options");
 	
+
+
 	if (ImGui::Checkbox("Enable Raycasintg", &this->showRaycasting)) 
 	{
 		this->renderingOptions->isRaycasting = this->showRaycasting;
 		this->updateRaycasting = true;
 	}
 
-	ImGui::SliderFloat("Sampling Rate 0", &raycastingOptions->samplingRate_0,0.001f,1.0f);       
-	ImGui::DragFloat("Isovalue 0", &raycastingOptions->isoValue_0, 0.01f);
-	ImGui::DragFloat("Tolerance 0", &raycastingOptions->tolerance_0, 0.001f);
+	if (ImGui::ListBox("Isosurface Measure 0", &raycastingOptions->isoMeasure_0, IsoMeasureModes, 5))
+	{
+		this->updateRaycasting = true;
+	}
+
+
+	if (ImGui::SliderFloat("Sampling Rate 0", &raycastingOptions->samplingRate_0, 0.0001f, 0.1f))
+	{
+		this->updateRaycasting = true;
+	}
+
+	if (ImGui::DragFloat("Isovalue 0", &raycastingOptions->isoValue_0, 0.001f))
+	{
+		this->updateRaycasting = true;
+	}
+
+	if (ImGui::DragFloat("Tolerance 0", &raycastingOptions->tolerance_0, 0.001f))
+	{
+		this->updateRaycasting = true;
+	}
 
 	ImGui::Text("Surfaces color 0:");
+
+
 	ImGui::ColorEdit3("Isosurface Color 0", (float*)& raycastingOptions->color_0);
 
 	if (this->raycastingOptions->fileLoaded)

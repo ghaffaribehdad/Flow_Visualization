@@ -40,4 +40,14 @@ __device__ float IsosurfaceHelper::Velocity_Z::ValueAtXYZ(cudaTextureObject_t te
 	return  tex3D<float4>(tex, position.x, position.y, position.z).z;
 }
 
+__device__ float IsosurfaceHelper::ShearStress::ValueAtXYZ(cudaTextureObject_t tex, float3 position)
+{
+	float4 dV_dY = tex3D<float4>(tex, position.x, position.y + 0.001 / 2.0f, position.z);
+	
+	dV_dY -= tex3D<float4>(tex, position.x, position.y - 0.001 / 2.0f, position.z);
+
+	float2 ShearStress =make_float2(dV_dY.x / 0.001f, dV_dY.z / 0.001f);
+
+	return fabsf(sqrtf(dot(ShearStress, ShearStress)));
+}
 

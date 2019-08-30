@@ -13,9 +13,11 @@ public:
 	bool fileChanged = false;
 	bool Raycasting = false;
 
-	IsoMeasure isoMeasure_0 = IsoMeasure::VelocityMagnitude;
-	IsoMeasure isoMeasure_1 = IsoMeasure::VelocityMagnitude;
-	IsoMeasure isoMeasure_2 = IsoMeasure::VelocityMagnitude;
+	int isoMeasure_0 = IsoMeasure::VelocityMagnitude;
+	int isoMeasure_1 = IsoMeasure::VelocityMagnitude;
+	int isoMeasure_2 = IsoMeasure::VelocityMagnitude;
+
+
 
 
 	float color_0[3] = { 0.5f,0.5f,0.5f};
