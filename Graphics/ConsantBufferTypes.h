@@ -37,4 +37,5 @@ struct CB_pixelShader
 	DirectX::XMFLOAT4 maxColor;
 	float minMeasure;
 	float maxMeasure;
+	bool isRaycasting;
 };

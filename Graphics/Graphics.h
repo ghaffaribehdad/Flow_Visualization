@@ -59,8 +59,6 @@ public:
 	ID3D11Buffer* GetVertexBuffer();
 
 
-
-
 	// Get the camera position and directions
 	const float3 getUpVector();
 	const float3 getEyePosition();
@@ -124,7 +122,6 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext>		deviceContext; //use to set resources for rendering
 	Microsoft::WRL::ComPtr<IDXGISwapChain>			swapchain; // use to swap out our frame
 	Microsoft::WRL::ComPtr<ID3D11RenderTargetView>	renderTargetView; // where we are going to render our buffer
-	Microsoft::WRL::ComPtr<ID3D11SamplerState>		samplerState;	// For depth test between raycasting and line rendering
 
 
 	// Shaders

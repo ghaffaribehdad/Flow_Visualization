@@ -18,5 +18,5 @@ public:
 	IsoMeasure isoMeasure_2 = IsoMeasure::VelocityMagnitude;
 
 
-	float color_0[4] = { 0.5f,0.5f,0.5f,1.0f };
+	float color_0[3] = { 0.5f,0.5f,0.5f};
 };

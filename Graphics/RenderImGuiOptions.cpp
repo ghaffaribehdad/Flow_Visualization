@@ -239,6 +239,7 @@ void RenderImGuiOptions::drawRaycastingOptions()
 	
 	if (ImGui::Checkbox("Enable Raycasintg", &this->showRaycasting)) 
 	{
+		this->renderingOptions->isRaycasting = this->showRaycasting;
 		this->updateRaycasting = true;
 	}
 
@@ -247,7 +248,7 @@ void RenderImGuiOptions::drawRaycastingOptions()
 	ImGui::DragFloat("Tolerance 0", &raycastingOptions->tolerance_0, 0.001f);
 
 	ImGui::Text("Surfaces color 0:");
-	ImGui::ColorEdit4("Isosurface Color 0", (float*)& raycastingOptions->color_0);
+	ImGui::ColorEdit3("Isosurface Color 0", (float*)& raycastingOptions->color_0);
 
 	if (this->raycastingOptions->fileLoaded)
 	{

@@ -4,7 +4,7 @@
 
 
 __constant__ BoundingBox d_boundingBox;
-
+__constant__ float3 d_raycastingColor;
 
 // Explicit instantiation
 template __global__ void CudaIsoSurfacRenderer<struct IsosurfaceHelper::Velocity_Magnitude>	(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
@@ -105,6 +105,11 @@ __host__ bool Raycasting::release()
 
 __host__ void Raycasting::rendering()
 {
+
+	this->deviceContext->PSSetSamplers(0, 1, this->samplerState.GetAddressOf());
+
+
+
 	float bgcolor[] = { 0.0f,0.0f, 0.0f, 1.0f };
 
 	this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), bgcolor);// Clear the target view
@@ -152,6 +157,9 @@ __host__ bool Raycasting::initializeBoundingBox()
 
 	gpuErrchk(cudaMemcpyToSymbol(d_boundingBox, h_boundingBox, sizeof(BoundingBox)));
 	
+	gpuErrchk(cudaMemcpyToSymbol(d_raycastingColor, this->raycastingOptions->color_0, sizeof(float3)));
+
+
 	delete h_boundingBox;
 	
 	return true;
@@ -206,7 +214,6 @@ __global__ void CudaIsoSurfacRenderer(cudaSurfaceObject_t raycastingSurface, cud
 		float2 NearFar = findIntersections(pixelPos, d_boundingBox);
 
 
-		float3 rgb = { 0.5f, 0.5f, 0.5f };
 
 		float3 positionOffset = d_boundingBox.gridDiameter / 2.0f;
 		// if hits
@@ -225,10 +232,12 @@ __global__ void CudaIsoSurfacRenderer(cudaSurfaceObject_t raycastingSurface, cud
 				{
 					float3 gradient = observable.GradientAtXYZ(field1, relativePos, 0.01f);
 					float diffuse = max(dot(normalize(gradient), viewDir), 0.0f);
-					rgb = rgb * diffuse;
-					float4 rgba = { rgb.x,rgb.y,rgb.z,1 };
+					float3 rgb = d_raycastingColor * diffuse;
+					
+
+					float4 rgba = { rgb.x,rgb.y,rgb.z,relativePos.z };
 										
-					surf2Dwrite(rgbaFloatToUChar(rgba), raycastingSurface, 4 * pixel.x, pixel.y);
+					surf2Dwrite(rgba, raycastingSurface, 4*4 * pixel.x, pixel.y); // offset of 4 floats (4 * 4 Bytes)
 					break;
 				}
 
@@ -253,9 +262,7 @@ bool Raycasting::initializeRaycastingTexture()
 	textureDesc.ArraySize = 1;
 	textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
 	textureDesc.CPUAccessFlags = 0;
-	//textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-
+	textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 	textureDesc.Height = *this->height;
 	textureDesc.Width = *this->width;
 	textureDesc.MipLevels = 1;
@@ -292,8 +299,8 @@ bool Raycasting::initializeRaycastingInteroperability()
 	interoperability_desc.flag = cudaGraphicsRegisterFlagsSurfaceLoadStore;
 	interoperability_desc.p_adapter = this->pAdapter;
 	interoperability_desc.p_device = this->device;
-	//interoperability_desc.size = 4 * sizeof(float) * static_cast<size_t>(this->width) * static_cast<size_t>(this->height);
-	interoperability_desc.size = sizeof(float) * static_cast<size_t>(*this->width) * static_cast<size_t>(*this->height);
+	//interoperability_desc.size = sizeof(float) * static_cast<size_t>(*this->width) * static_cast<size_t>(*this->height);
+	interoperability_desc.size = 4.0f * sizeof(float) * static_cast<size_t>(*this->width) * static_cast<size_t>(*this->height);
 	interoperability_desc.pD3DResource = this->raycastingTexture.Get();
 
 	// initialize the interoperation
@@ -352,4 +359,187 @@ __host__ void Raycasting::setResources
 }
 
 
+bool Raycasting::initializeShaders()
+{
+	if (this->vertexBuffer.Get() == nullptr)
+	{
+		std::wstring shaderfolder;
+#pragma region DetermineShaderPath
+		if (IsDebuggerPresent() == TRUE)
+		{
+#ifdef _DEBUG //Debug Mode
+#ifdef _WIN64 //x64
+			shaderfolder = L"x64\\Debug\\";
+#else //x86
+			shaderfolder = L"Debug\\"
+#endif // DEBUG
+#else //Release mode
+#ifdef _WIN64 //x64
+			shaderfolder = L"x64\\Release\\";
+#else  //x86
+			shaderfolder = L"Release\\"
+#endif // Release
+#endif // _DEBUG or Release mode
+		}
 
+		D3D11_INPUT_ELEMENT_DESC layout[] =
+		{
+			{"POSITION", 0, DXGI_FORMAT::DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_CLASSIFICATION::D3D11_INPUT_PER_VERTEX_DATA, 0  },
+			{"TEXCOORD", 0, DXGI_FORMAT::DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_CLASSIFICATION::D3D11_INPUT_PER_VERTEX_DATA, 0  }
+		};
+
+		UINT numElements = ARRAYSIZE(layout);
+
+		if (!vertexshader.Initialize(this->device, shaderfolder + L"vertexshaderTexture.cso", layout, numElements))
+			return false;
+
+		if (!pixelshader.Initialize(this->device, shaderfolder + L"pixelshaderTextureSampler.cso"))
+			return false;
+	}
+
+
+	return true;
+}
+
+
+bool Raycasting::initializeScene()
+{
+	if (vertexBuffer.Get() == nullptr)
+	{
+		TexCoordVertex BoundingBox[] =
+		{
+			TexCoordVertex(-1.0f,	-1.0f,	1.0f,	0.0f,	1.0f), //Bottom Left 
+			TexCoordVertex(-1.0f,	1.0f,	1.0f,	0.0f,	0.0f), //Top Left
+			TexCoordVertex(1.0f,	1.0f,	1.0f,	1.0f,	0.0f), //Top Right
+
+			TexCoordVertex(-1.0f,	-1.0f,	1.0f,	0.0f,	1.0f), //Bottom Left 
+			TexCoordVertex(1.0f,	1.0f,	1.0f,	1.0f,	0.0f), //Top Right
+			TexCoordVertex(1.0f,	-1.0f,	1.0f,	1.0f,	1.0f), //Bottom Right
+
+		};
+
+
+		this->vertexBuffer.Initialize(this->device, BoundingBox, ARRAYSIZE(BoundingBox));
+	}
+
+
+
+	return true;
+}
+
+
+
+
+bool Raycasting::createRaycastingShaderResourceView()
+{
+
+	if (shaderResourceView == nullptr)
+	{
+		D3D11_SHADER_RESOURCE_VIEW_DESC shader_resource_view_desc;
+		ZeroMemory(&shader_resource_view_desc, sizeof(shader_resource_view_desc));
+
+		shader_resource_view_desc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+		shader_resource_view_desc.Texture2D.MipLevels = 1;
+		shader_resource_view_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+
+		HRESULT hr = this->device->CreateShaderResourceView(
+			this->getTexture(),
+			&shader_resource_view_desc,
+			shaderResourceView.GetAddressOf()
+		);
+
+		if (FAILED(hr))
+		{
+			ErrorLogger::Log(hr, "Failed to Create shader resource view");
+			return false;
+		}
+	}
+
+
+	return true;
+}
+
+
+bool Raycasting::initializeSamplerstate()
+{
+	if (samplerState.Get() == nullptr)
+	{
+		//Create sampler description for sampler state
+		D3D11_SAMPLER_DESC sampDesc;
+		ZeroMemory(&sampDesc, sizeof(sampDesc));
+		sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+		sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+		sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+		sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+		sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+		sampDesc.MinLOD = 0;
+		sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+		HRESULT hr = this->device->CreateSamplerState(&sampDesc, this->samplerState.GetAddressOf()); //Create sampler state
+		if (FAILED(hr))
+		{
+			ErrorLogger::Log(hr, "Failed to create sampler state.");
+			return false;
+		}
+	}
+
+
+	return true;
+}
+
+
+
+bool Raycasting::initializeRasterizer()
+{
+	if (this->rasterizerstate.Get() == nullptr)
+	{
+		// Create Rasterizer state
+		D3D11_RASTERIZER_DESC rasterizerDesc;
+		ZeroMemory(&rasterizerDesc, sizeof(D3D11_RASTERIZER_DESC));
+
+		rasterizerDesc.FillMode = D3D11_FILL_MODE::D3D11_FILL_SOLID;
+		rasterizerDesc.CullMode = D3D11_CULL_MODE::D3D11_CULL_NONE; // CULLING could be set to none
+		rasterizerDesc.MultisampleEnable = true;
+		rasterizerDesc.AntialiasedLineEnable = true;
+		//rasterizerDesc.FrontCounterClockwise = TRUE;//= 1;
+
+		HRESULT hr = this->device->CreateRasterizerState(&rasterizerDesc, this->rasterizerstate.GetAddressOf());
+		if (FAILED(hr))
+		{
+			ErrorLogger::Log(hr, "Failed to Create rasterizer state.");
+			return false;
+		}
+
+	}
+
+	return true;
+}
+
+void Raycasting::setShaders()
+{
+
+	this->deviceContext->IASetInputLayout(this->vertexshader.GetInputLayout());		// Set the input layout
+	this->deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);		// set the primitive topology
+	this->deviceContext->RSSetState(this->rasterizerstate.Get());					// set the rasterizer state
+	this->deviceContext->VSSetShader(vertexshader.GetShader(), NULL, 0);			// set vertex shader
+	this->deviceContext->PSSetShader(pixelshader.GetShader(), NULL, 0);
+	UINT offset = 0;
+
+	this->deviceContext->IASetVertexBuffers(0, 1, this->vertexBuffer.GetAddressOf(), this->vertexBuffer.StridePtr(), &offset); // set Vertex buffer
+	this->deviceContext->PSSetSamplers(0, 1, this->samplerState.GetAddressOf());
+	this->deviceContext->PSSetShaderResources(0, 1, this->shaderResourceView.GetAddressOf());
+}
+
+
+void Raycasting::draw()
+{
+	this->initializeRasterizer();
+	this->initializeSamplerstate();
+	this->createRaycastingShaderResourceView();
+
+	this->initializeShaders();
+	this->initializeScene();
+
+
+	this->setShaders();
+	this->deviceContext->Draw(6, 0);
+}

@@ -105,7 +105,7 @@ public:
 
 		PS_constantBuffer.data.minColor = DirectX::XMFLOAT4(renderingOptions->minColor);
 		PS_constantBuffer.data.maxColor = DirectX::XMFLOAT4(renderingOptions->maxColor);
-
+		PS_constantBuffer.data.isRaycasting = renderingOptions->isRaycasting;
 
 		// Update Constant Buffer
 		GS_constantBuffer.ApplyChanges();

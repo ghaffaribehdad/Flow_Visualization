@@ -1,4 +1,3 @@
-
 cbuffer PS_CBuffer
 {
 
@@ -6,6 +5,7 @@ cbuffer PS_CBuffer
 	float4 maxColor;
 	float minMeasure;
 	float maxMeasure;
+	bool isRaycasting;
 };
 
 
@@ -32,6 +32,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 
 	float diffuse = max(dot(normalize(input.outNormal), input.outLightDir),0);
 	rgb = rgb * diffuse;
-	
+
+
 	return rgb;
 }

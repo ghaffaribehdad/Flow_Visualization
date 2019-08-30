@@ -321,7 +321,10 @@
     <FxCompile Include="pixelshaderSeedBox.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="pixelshaderRaycasting.hlsl">
+    <FxCompile Include="pixelshaderTextureSampler.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="vertexshaderTexture.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

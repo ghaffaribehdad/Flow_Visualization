@@ -34,12 +34,12 @@ public:
 		return this->bufferSize;
 	}
 
-	const UINT Stride() const
+	UINT Stride() const
 	{
 		return *this->stride.get();
 	}
 
-	const UINT * StridePtr() const
+	UINT * StridePtr() const
 	{
 		return this->stride.get();
 	}

@@ -10,6 +10,11 @@ bool Graphics::InitializeCamera()
 	return true;
 }
 
+
+
+
+
+
 #pragma region Main_Initialization
 bool Graphics::Initialize(HWND hwnd, int width, int height)
 {
@@ -39,6 +44,7 @@ bool Graphics::Initialize(HWND hwnd, int width, int height)
 		return false;
 
 
+
 	//start the timer 
 	fpsTimer.Start();
 
@@ -58,9 +64,10 @@ void Graphics::RenderFrame()
 
 	// For the raycasting we need a workaround!
 	this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), bgcolor);// Clear the target view
-
 	this->deviceContext->ClearDepthStencilView(this->depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);// Clear the depth stencil view
 	this->deviceContext->OMSetDepthStencilState(this->depthStencilState.Get(), 0);	// add depth  stencil state to rendering routin
+
+
 	/*
 
 	##############################################################
@@ -105,13 +112,19 @@ void Graphics::RenderFrame()
 	
 	if (this->renderImGuiOptions.showRaycasting)
 	{
+
+
 		if (renderImGuiOptions.updateRaycasting)
 		{
 			this->raycasting.updateScene();
-			this->deviceContext->CopyResource(getBackBuffer(), raycasting.getTexture());
+
+			//this->deviceContext->CopyResource(getBackBuffer(), raycasting.getTexture());
+			this->raycasting.draw();
 			renderImGuiOptions.updateRaycasting = true;
 
+
 		}
+	
 	}
 	/*
 
@@ -398,6 +411,8 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 //########################### Shader Initialization #####################
 bool Graphics::InitializeShaders()
 {
+
+
 	if (!this->streamlineRenderer.initializeShaders())
 		return false;
 
@@ -419,15 +434,14 @@ bool Graphics::InitializeShaders()
 // ############################# Initialize the Scene #########################
 bool Graphics::InitializeScene()
 {
+
 	float center[3] = { 0,0,0 };
 	DirectX::XMFLOAT4 redColor = { 1,0,0,1 };
 	DirectX::XMFLOAT4 greenColor = { 0,1,0,1 };
 
 	volumeBox.addBox(this->solverOptions.gridDiameter, center, greenColor);
 	seedBox.addBox( this->solverOptions.seedBox, this->solverOptions.seedBoxPos, redColor);
-	 
-
-
+	
 	return true;
 }
 
@@ -497,7 +511,9 @@ void Graphics::Resize(HWND hwnd)
 	this->InitializeResources();
 
 	if (this->renderImGuiOptions.showRaycasting)
+	{
 		this->raycasting.resize();
+	}
 
 
 }

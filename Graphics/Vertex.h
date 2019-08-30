@@ -12,5 +12,17 @@ struct Vertex
 	float measure = 0;
 };
 
+struct TexCoordVertex
+{
+	TexCoordVertex() {}
+	TexCoordVertex(float x, float y, float z, float tx, float ty)
+		:pos(x,y,z),TexCoord(tx, ty){}
+	DirectX::XMFLOAT3 pos = { 0,0,0 };
+	DirectX::XMFLOAT2 TexCoord = { 0,0};
+};
+
+
+
+
 
 

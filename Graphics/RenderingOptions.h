@@ -18,4 +18,6 @@ struct RenderingOptions
 
 	float maxMeasure = 30;
 	float minMeasure = 0;
+
+	bool isRaycasting = false;
 };

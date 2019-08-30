@@ -18,6 +18,9 @@
 #include "..//Volume/Volume_IO.h"
 
 #include "cuda_runtime.h"
+#include "..//Graphics/Shaders.h"
+#include "..//Graphics/Vertex.h"
+#include "..//Graphics/VertexBuffer.h"
 
 
 
@@ -45,7 +48,7 @@ class Raycasting
 private:
 
 
-	float FOV_deg	= 90.0f;
+	float FOV_deg	= 30.0f;
 	unsigned int maxBlockDim = 32;
 	int* width = nullptr;
 	int* height = nullptr;
@@ -60,11 +63,17 @@ private:
 	float* field = nullptr;
 
 
+	VertexShader vertexshader;
+	PixelShader pixelshader;
 
+	VertexBuffer<TexCoordVertex> vertexBuffer;
 
 
 	Microsoft::WRL::ComPtr<ID3D11Texture2D>			raycastingTexture;
 	Microsoft::WRL::ComPtr< ID3D11RenderTargetView> renderTargetView;
+	Microsoft::WRL::ComPtr<ID3D11RasterizerState> rasterizerstate;
+	Microsoft::WRL::ComPtr<ID3D11SamplerState>		samplerState;	// For depth test between raycasting and line rendering
+	Microsoft::WRL::ComPtr <ID3D11ShaderResourceView> shaderResourceView;
 
 	ID3D11Device* device		= nullptr;
 	IDXGIAdapter* pAdapter		= nullptr;
@@ -85,9 +94,12 @@ private:
 	__host__ bool initializeRaycastingTexture();
 	__host__ bool initializeRaycastingInteroperability();
 	__host__ bool initializeCudaSurface();
-
-
-
+	__host__ bool initializeRasterizer();
+	__host__ bool initializeSamplerstate();
+	__host__ bool createRaycastingShaderResourceView();
+	__host__ bool initializeScene();
+	__host__ bool initializeShaders();
+	__host__ void setShaders();
 
 public:
 
@@ -97,6 +109,9 @@ public:
 	__host__ void saveTexture();
 	__host__ bool updateScene();
 	__host__ bool resize();
+	
+
+	__host__ void draw();
 
 
 
