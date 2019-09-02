@@ -34,6 +34,8 @@ void RenderImGuiOptions::drawSolverOptions()
 	{
 	}
 
+	if (ImGui::Combo("Projection", &solverOptions->projection, ProjectionList, 4)) {}
+
 	if (ImGui::InputInt3("Grid Size", solverOptions->gridSize, sizeof(solverOptions->gridSize)))
 	{
 	}
@@ -114,7 +116,7 @@ void RenderImGuiOptions::drawSolverOptions()
 	}
 
 
-	if (ImGui::ListBox("Color Mode", &solverOptions->colorMode, ColorModeList, 4)){}
+	if (ImGui::Combo("Color Mode", &solverOptions->colorMode, ColorModeList, 4)){}
 
 
 	// Show Lines
@@ -245,14 +247,18 @@ void RenderImGuiOptions::drawRaycastingOptions()
 		this->updateRaycasting = true;
 	}
 
-	if (ImGui::ListBox("Isosurface Measure 0", &raycastingOptions->isoMeasure_0, IsoMeasureModes, 5))
+	if (ImGui::Combo("Isosurface Measure 0", &raycastingOptions->isoMeasure_0, IsoMeasureModes, 5))
 	{
 		this->updateRaycasting = true;
 	}
 
 
-	if (ImGui::SliderFloat("Sampling Rate 0", &raycastingOptions->samplingRate_0, 0.0001f, 0.1f))
+	if (ImGui::DragFloat("Sampling Rate 0", &raycastingOptions->samplingRate_0, 0.00001f,0.0001f,1.0f,"%.5f"))
 	{
+		if (raycastingOptions->samplingRate_0 < 0.0001f)
+		{
+			raycastingOptions->samplingRate_0 = 0.0001f;
+		}
 		this->updateRaycasting = true;
 	}
 

@@ -53,8 +53,8 @@ protected:
 	Volume_IO volume_IO;
 
 	// The probe particles
-	Particle<float>* d_Particles = nullptr;
-	Particle<float>* h_Particles = nullptr;
+	Particle* d_Particles = nullptr;
+	Particle* h_Particles = nullptr;
 
 	virtual void release(){}
 

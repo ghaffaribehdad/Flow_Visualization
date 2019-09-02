@@ -12,6 +12,7 @@ public:
 	bool fileLoaded = false;
 	bool fileChanged = false;
 	bool Raycasting = false;
+	bool initilized = false;
 
 	int isoMeasure_0 = IsoMeasure::VelocityMagnitude;
 	int isoMeasure_1 = IsoMeasure::VelocityMagnitude;

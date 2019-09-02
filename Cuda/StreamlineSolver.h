@@ -24,7 +24,7 @@ public:
 
 private:
 
-	Particle<float>* d_particles;
+	Particle* d_particles;
 	VolumeTexture volumeTexture;
 
 	float * h_VelocityField;
@@ -41,7 +41,7 @@ private:
 
 // Kernel of the streamlines
 
-__global__ void TracingStream(Particle<float>* d_particles, cudaTextureObject_t t_VelocityField, SolverOptions solverOptions, Vertex* p_VertexBuffer);
+__global__ void TracingStream(Particle* d_particles, cudaTextureObject_t t_VelocityField, SolverOptions solverOptions, Vertex* p_VertexBuffer);
 
 
 

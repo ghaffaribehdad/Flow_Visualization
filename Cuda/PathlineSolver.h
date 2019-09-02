@@ -24,7 +24,7 @@ public:
 private:
 
 
-	Particle<float>* d_particles;
+	Particle* d_particles;
 
 
 	float* h_VelocityField;
@@ -45,8 +45,7 @@ private:
 };
 
 // Kernel of the streamlines
-template <typename T>
-__global__ void TracingPath(Particle<T>* d_particles, cudaTextureObject_t t_VelocityField_0, cudaTextureObject_t t_VelocityField_1, SolverOptions solverOptions, Vertex* p_VertexBuffer, bool odd, int step);
+__global__ void TracingPath(Particle* d_particles, cudaTextureObject_t t_VelocityField_0, cudaTextureObject_t t_VelocityField_1, SolverOptions solverOptions, Vertex* p_VertexBuffer, bool odd, int step);
 
 
 

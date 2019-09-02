@@ -29,7 +29,7 @@ bool RenderWindow::Initialize(WindowContainer * pWindowContainer, HINSTANCE hIns
 	this->handle = CreateWindowEx(0, //Extended Windows style - we are using the default. For other options, see: https://msdn.microsoft.com/en-us/library/windows/desktop/ff700543(v=vs.85).aspx
 		this->window_class_wide.c_str(), //Window class name
 		this->window_title_wide.c_str(), //Window Title
-		WS_MAXIMIZEBOX|WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU, //Windows style - See: https://msdn.microsoft.com/en-us/library/windows/desktop/ms632600(v=vs.85).aspx
+		WS_MAXIMIZEBOX|WS_CAPTION  | WS_SYSMENU, //Windows style - See: https://msdn.microsoft.com/en-us/library/windows/desktop/ms632600(v=vs.85).aspx
 		wr.left, //Window X Position
 		wr.top, //Window Y Position
 		wr.right - wr.left, //Window Width

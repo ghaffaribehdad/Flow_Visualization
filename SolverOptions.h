@@ -6,11 +6,11 @@ struct SolverOptions
 {
 public:
 	char fileName[100] = "FieldP";
-	char  filePath[100] = "D:\\test_Flow_VisualizationTool\\";
+	char  filePath[100] = "E:\\Datasets\\KIT3\\Fields_fld\\binary_fluctuation\\";
 
-	int gridSize[3] = { 192,192,192 };
-	float gridDiameter[3] = { 10,2,5 };
-	float seedBox[3] = { 10,2,5 };
+	int gridSize[3] = { 64,503,2048 };
+	float gridDiameter[3] = { 1,5,10 };
+	float seedBox[3] = { 1,5,10 };
 	float seedBoxPos[3] = { 0.0f, 0.0f, 0.0f };
 
 	int precision = 32;
@@ -18,8 +18,8 @@ public:
 	float dt = 0.001f;
 	float advectTime = 0.0f;
 
-	int lineLength = 1000;
-	int lines_count = 1024;
+	int lineLength = 100;
+	int lines_count = 100;
 	float line_thickness = 0.0f;
 
 
@@ -28,7 +28,6 @@ public:
 	int currentIdx = 1;
 
 	SeedingPattern seedingPatter;
-	InterpolationMethod interpolationMethod;
 
 	int colorMode = 0;
 
@@ -41,6 +40,8 @@ public:
 
 
 	SolverOptions() {};
+
+	int projection = Projection::NO_PROJECTION;
 
 
 };

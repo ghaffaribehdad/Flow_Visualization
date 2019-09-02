@@ -80,7 +80,7 @@ __host__ float* CUDASolver::InitializeVelocityField(int ID)
 void CUDASolver::InitializeParticles(SeedingPattern seedingPattern)
 {
 	// Create an array of particles
-	this->h_Particles = new Particle<float>[solverOptions->lines_count];
+	this->h_Particles = new Particle[solverOptions->lines_count];
 
 
 	switch (seedingPattern)
@@ -108,7 +108,7 @@ void CUDASolver::InitializeParticles(SeedingPattern seedingPattern)
 
 	}
 
-	size_t Particles_byte = sizeof(Particle<float>) * solverOptions->lines_count;
+	size_t Particles_byte = sizeof(Particle) * solverOptions->lines_count;
 
 	// Upload Velocity Filled to GPU 
 

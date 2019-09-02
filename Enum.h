@@ -21,14 +21,13 @@ enum IsoMeasure
 
 static const char* const IsoMeasureModes[] = { "Velocity Magnitude", "Velocity X", "Velocity Y", "Velocity Z","Shear Stress"};
 static const char* const ColorModeList[] = {"V", "Vx", "Vy", "Vz"};
+static const char* const ProjectionList[] = { "None", "X", "Y", "Z" };
 
-enum InterpolationMethod
-{
-	Linear,
-};
 
-enum Precision
+enum Projection
 {
-	BIT_32,
-	BIT_64
+	NO_PROJECTION =0,
+	ZY_PROJECTION,
+	XZ_PROJECTION,
+	XY_PROJECTION
 };

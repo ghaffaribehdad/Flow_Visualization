@@ -10,29 +10,21 @@
 cudaTextureObject_t VolumeTexture::initialize()
 {
 
-	// define the size of the velocity field
-	cudaExtent extent =
-	{
-		static_cast<size_t>(this->solverOptions->gridSize[0]),
-		static_cast<size_t>(this->solverOptions->gridSize[1]),
-		static_cast<size_t>(this->solverOptions->gridSize[2])
-	};
-
+	cudaExtent extent = make_cudaExtent(this->solverOptions->gridSize[0], this->solverOptions->gridSize[1], this->solverOptions->gridSize[2]);
 
 	// Allocate 3D Array
 	cudaChannelFormatDesc channelFormatDesc = cudaCreateChannelDesc<float4>();
-	cudaMalloc3DArray(&this->cuArray_velocity , &channelFormatDesc, extent, 0);
+	cudaMalloc3DArray(&this->cuArray_velocity , &channelFormatDesc, extent);
 
 
 
 	// set copy parameters to copy from velocity field to array
 	cudaMemcpy3DParms cpyParams = { 0 };
 
-	cpyParams.srcPtr = make_cudaPitchedPtr((void*)this->h_field, extent.width * sizeof(float4), extent.height, extent.depth);
+	cpyParams.srcPtr = make_cudaPitchedPtr((void*)this->h_field,extent.width * sizeof(float4),extent.width, extent.height);
 	cpyParams.dstArray = this->cuArray_velocity;
 	cpyParams.kind = cudaMemcpyHostToDevice;
 	cpyParams.extent = extent;
-
 	
 	// Copy velocities to 3D Array
 	gpuErrchk(cudaMemcpy3D(&cpyParams));

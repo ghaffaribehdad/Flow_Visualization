@@ -60,11 +60,6 @@ __host__ bool Raycasting::initialize()
 	if (!this->initializeRaycastingTexture())				// initilize texture (the texture we need to write to)
 		return false;
 
-	//if (!this->initializeRaycastingInteroperability())		// initilize interoperability (the pointer to access texture via CUDA)
-	//	return false;
-
-	//if (!this->initializeCudaSurface())		// initilize CUDA surface ( an interface to write into the cuda array obtained by interoperability)
-	//	return false;
 
 	if (!this->initializeBoundingBox())		// initialize the bounding box ( copy data to the constant memory of GPU about Bounding Box)
 		return false;

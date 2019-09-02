@@ -112,18 +112,22 @@ void Graphics::RenderFrame()
 	
 	if (this->renderImGuiOptions.showRaycasting)
 	{
-
+		if (!this->raycastingOptions.initilized)
+		{
+			raycasting.initialize();
+			this->raycastingOptions.initilized = true;
+		}
 		this->raycasting.draw();
 
 		if (renderImGuiOptions.updateRaycasting)
 		{
 			this->raycasting.updateScene();
 
-			//this->deviceContext->CopyResource(getBackBuffer(), raycasting.getTexture());
 			renderImGuiOptions.updateRaycasting = false;
 
-
 		}
+	
+
 	
 	}
 	/*
@@ -335,8 +339,7 @@ bool Graphics::InitializeResources()
 	if (!seedBox.initializeBuffers())
 		return false;
 
-	if (!raycasting.initialize())
-		return false;
+
 
 	return true;
 }

@@ -92,7 +92,7 @@ __host__ bool PathlineSolver::solve()
 
 		}
 
-		TracingPath<float> << <blockDim, thread >> > (this->d_Particles, volumeTexture_0.getTexture(), volumeTexture_1.getTexture(), *solverOptions, reinterpret_cast<Vertex*>(this->p_VertexBuffer),odd, step);
+		TracingPath << <blockDim, thread >> > (this->d_Particles, volumeTexture_0.getTexture(), volumeTexture_1.getTexture(), *solverOptions, reinterpret_cast<Vertex*>(this->p_VertexBuffer),odd, step);
 
 
 
@@ -102,8 +102,7 @@ __host__ bool PathlineSolver::solve()
 }
 
 
-template <typename T>
-__global__ void TracingPath(Particle<T>* d_particles, cudaTextureObject_t t_VelocityField_0, cudaTextureObject_t t_VelocityField_1, SolverOptions solverOptions, Vertex* p_VertexBuffer, bool odd, int step)
+__global__ void TracingPath(Particle* d_particles, cudaTextureObject_t t_VelocityField_0, cudaTextureObject_t t_VelocityField_1, SolverOptions solverOptions, Vertex* p_VertexBuffer, bool odd, int step)
 {
 	int index = blockDim.x * blockIdx.x + threadIdx.x;
 

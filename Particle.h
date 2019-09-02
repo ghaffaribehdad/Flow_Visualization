@@ -3,9 +3,9 @@
 #include "cuda_runtime.h"
 #include "Cuda//CudaHelper.h"
 
-template <class T>
 class Particle
 {
+
 private:
 	float3 m_position = { 0,0,0 };
 	float3 m_velocity = { 0,0,0 };
