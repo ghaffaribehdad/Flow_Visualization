@@ -34,7 +34,6 @@ public:
 
 	void updateBuffers() override
 	{
-		solverOptions->p_vertexBuffer = this->vertexBuffer.Get();
 		
 		this->streamlineSolver.Initialize(solverOptions);
 		this->streamlineSolver.solve();
@@ -48,7 +47,7 @@ public:
 		setShaders(Topology);
 		updateConstantBuffer(camera);
 		setBuffers();
-		this->deviceContext->Draw(llInt(solverOptions->lineLength) * llInt(solverOptions->lines_count), 0);
+		this->deviceContext->Draw(llInt(solverOptions->lineLength) * llInt(solverOptions->lines_count),0);
 		this->cleanPipeline();
 	}
 		

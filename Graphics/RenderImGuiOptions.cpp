@@ -34,7 +34,11 @@ void RenderImGuiOptions::drawSolverOptions()
 	{
 	}
 
-	if (ImGui::Combo("Projection", &solverOptions->projection, ProjectionList, 4)) {}
+	if (ImGui::Combo("Projection", &solverOptions->projection, ProjectionList, 4)) 
+	{
+		this->updateStreamlines = true;
+		this->updatePathlines = true;
+	}
 
 	if (ImGui::InputInt3("Grid Size", solverOptions->gridSize, sizeof(solverOptions->gridSize)))
 	{
@@ -81,13 +85,12 @@ void RenderImGuiOptions::drawSolverOptions()
 
 	ImGui::PopItemWidth();
 
-	if (ImGui::InputFloat("dt", &(solverOptions->dt)))
+	if (ImGui::DragFloat("dt", &(solverOptions->dt),0.00001,0.00001,1,"%.5f"))
 	{
-		if (solverOptions->dt > 0)
-		{
-			this->updateStreamlines = true;
-			this->updatePathlines = true;
-		}
+		
+		this->updateStreamlines = true;
+		this->updatePathlines = true;
+		
 	}
 
 	if (ImGui::InputInt("Lines", &(solverOptions->lines_count)))
@@ -116,7 +119,10 @@ void RenderImGuiOptions::drawSolverOptions()
 	}
 
 
-	if (ImGui::Combo("Color Mode", &solverOptions->colorMode, ColorModeList, 4)){}
+	if (ImGui::Combo("Color Mode", &solverOptions->colorMode, ColorModeList, 4))
+	{
+		this->updateStreamlines = true;
+	}
 
 
 	// Show Lines
@@ -129,11 +135,15 @@ void RenderImGuiOptions::drawSolverOptions()
 	}
 	else // PathlineRendering
 	{
-		if (ImGui::Checkbox("Render Pathlines", &this->showPathlines))
+		if (this->solverOptions->lastIdx - this->solverOptions->firstIdx >= 2)
 		{
-			this->updatePathlines = true;
+			if (ImGui::Checkbox("Render Pathlines", &this->showPathlines))
+			{
+				this->updatePathlines = true;
 
+			}
 		}
+
 	}
 
 	if (ImGui::Button("Reset", ImVec2(80, 25)))

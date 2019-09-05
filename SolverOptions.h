@@ -5,12 +5,12 @@
 struct SolverOptions
 {
 public:
-	char fileName[100] = "FieldP";
-	char  filePath[100] = "E:\\Datasets\\KIT3\\Fields_fld\\binary_fluctuation\\";
+	char fileName[100] = "FieldInitialPadded";
+	char  filePath[100] = "E:\\Datasets\\KIT3\\Fields_fld\\binary_initial\\";
 
 	int gridSize[3] = { 64,503,2048 };
-	float gridDiameter[3] = { 1,5,10 };
-	float seedBox[3] = { 1,5,10 };
+	float gridDiameter[3] = { 1.0f,5.0f,10.0f };
+	float seedBox[3] = { 0.0f,5.0f,10.0f };
 	float seedBoxPos[3] = { 0.0f, 0.0f, 0.0f };
 
 	int precision = 32;
@@ -18,8 +18,8 @@ public:
 	float dt = 0.001f;
 	float advectTime = 0.0f;
 
-	int lineLength = 100;
-	int lines_count = 100;
+	int lineLength = 1024;
+	int lines_count = 1024;
 	float line_thickness = 0.0f;
 
 

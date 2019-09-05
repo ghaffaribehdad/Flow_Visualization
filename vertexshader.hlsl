@@ -10,6 +10,7 @@ struct VS_INPUT
 	float3 inTangent: TANGENT;
 	unsigned int inLineID : LINEID;
 	float inMeasure : MEASURE;
+	float3 inNormal : NORMAL;
 };
 
 
@@ -19,6 +20,7 @@ struct VS_OUTPUT
 	float3 outTangent: TANGENT;
 	unsigned int outLineID : LINEID;
 	float outMeasure : MEASURE;
+	float3 outNormal : NORMAL;
 };
 
 
@@ -32,6 +34,7 @@ VS_OUTPUT main(VS_INPUT input)
 	output.outTangent = input.inTangent;
 	output.outLineID = input.inLineID;
 	output.outMeasure = input.inMeasure;
+	output.outNormal = input.inNormal;
 
     return output;
 }

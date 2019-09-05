@@ -16,7 +16,7 @@ struct RenderingOptions
 	float maxColor[4] = { 0,1,0,1};
 	RenderMode renderMode = RenderMode::TUBES;
 
-	float maxMeasure = 30;
+	float maxMeasure = 10;
 	float minMeasure = 0;
 
 	bool isRaycasting = false;

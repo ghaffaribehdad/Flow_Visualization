@@ -19,6 +19,7 @@ struct GS_INPUT
 	float3 inTangent: TANGENT;
 	unsigned int inLineID : LINEID;
 	float inMeasure : MEASURE;
+	float3 inNormal : NORMAL;
 };
 
 
@@ -55,7 +56,7 @@ void main(line GS_INPUT input[2], inout TriangleStream<GS_OUTPUT> output)
 		float3 orient1 = normalize(cross(input[1].inTangent, viewDirection));
 
 		// Radius of the tubes
-		float tubeRad = .02;
+		float tubeRad = .02f;
 
 		// in degree
 		float angle = 360.0f / 8.0f;

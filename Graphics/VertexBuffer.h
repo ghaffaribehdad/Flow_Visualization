@@ -66,6 +66,7 @@ public:
 		vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 		vertexBufferDesc.CPUAccessFlags = 0;
 		vertexBufferDesc.MiscFlags = 0;
+	
 
 		// Create Vertex buffer Data structure
 		if (data != NULL)

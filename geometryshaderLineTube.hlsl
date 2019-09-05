@@ -19,9 +19,8 @@ struct GS_INPUT
 	float3 inTangent: TANGENT;
 	unsigned int inLineID : LINEID;
 	float inMeasure : MEASURE;
+	float3 inNormal : NORMAL;
 };
-
-
 struct GS_OUTPUT
 {
 
@@ -37,22 +36,19 @@ struct GS_OUTPUT
 
 // The plane is to calculate vertices and then transform them in the camera coordinate
 [maxvertexcount(18)]
-void main(line GS_INPUT input[2], inout TriangleStream<GS_OUTPUT> output)
+void main(lineadj GS_INPUT input[4], inout TriangleStream<GS_OUTPUT> output)
 {
 
 
-	if (input[0].inLineID == input[1].inLineID)
+	if (input[1].inLineID == input[2].inLineID)
 	{
 		GS_OUTPUT vertex0;
 		GS_OUTPUT vertex1;
 
 
-		// calculates ray direction from eye to the vertex
-		float3 viewDirection = normalize(input[0].inPosition - eyePos);
 
 		// A vector in the cross-section plane
-		float3 orient0 = normalize(cross(input[0].inTangent, viewDirection));
-		float3 orient1 = normalize(cross(input[1].inTangent, viewDirection));
+		float3 vecNormal = input[1].inNormal;
 
 		// Radius of the tubes
 		float tubeRad = tubeRadius;
@@ -66,21 +62,25 @@ void main(line GS_INPUT input[2], inout TriangleStream<GS_OUTPUT> output)
 		float sine = sin(angle);
 		float cosine = cos(angle);
 
-		float3 orient0_rotated = orient0;
-		float3 orient1_rotated = orient1;
+		float3 tangent0 = normalize(normalize(input[1].inPosition - input[0].inPosition) + normalize(input[2].inPosition - input[1].inPosition));
+		float3 tangent1 = normalize(normalize(input[2].inPosition - input[1].inPosition) + normalize(input[3].inPosition - input[2].inPosition));
+
+
+		float3 orient0_rotated = normalize(cross(vecNormal,tangent0));
+		float3 orient1_rotated = normalize(cross(vecNormal,tangent1));
 
 		for (int i = 0; i < 9; i++)
 		{
-			// rotate the orientation vector around normal for 45 degree (input[0])
-			orient0_rotated = orient0_rotated * cosine + cross(input[0].inTangent, orient0_rotated) * sine;
+			// rotate the orientation vector around tangent for 45 degree (input[0])
+			orient0_rotated = orient0_rotated * cosine + cross(tangent0, orient0_rotated) * sine;
 
 
-			// rotate the orientation vector around normal for 45 degree (input[1])
-			orient1_rotated = orient1_rotated * cosine + cross(input[1].inTangent, orient1_rotated) * sine;
+			// rotate the orientation vector around tangent for 45 degree (input[1])
+			orient1_rotated = orient1_rotated * cosine + cross(tangent1, orient1_rotated) * sine;
 
 
-			float3 position0 = input[0].inPosition + orient0_rotated * tubeRad;
-			float3 position1 = input[1].inPosition + orient1_rotated * tubeRad;
+			float3 position0 = input[1].inPosition + orient0_rotated * tubeRad;
+			float3 position1 = input[2].inPosition + orient1_rotated * tubeRad;
 
 			// SV_POSITION
 			vertex0.outPosition = mul(float4(position0,1.0f), transpose(View));
@@ -95,12 +95,14 @@ void main(line GS_INPUT input[2], inout TriangleStream<GS_OUTPUT> output)
 			vertex1.outNormal = -orient1_rotated;
 			
 			// Colors
-			vertex0.outMeasure = input[0].inMeasure;
-			vertex1.outMeasure = input[1].inMeasure;
+			vertex0.outMeasure = input[1].inMeasure;
+			vertex1.outMeasure = input[2].inMeasure;
 
 			// Tangent
-			vertex0.outTangent = input[0].inTangent;
-			vertex1.outTangent = input[1].inTangent;
+
+
+			vertex0.outTangent = tangent0;
+			vertex1.outTangent = tangent1;
 
 			// World Position
 			vertex0.outLightDir = viewDir;

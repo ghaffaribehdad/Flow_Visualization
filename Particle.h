@@ -1,12 +1,11 @@
 #pragma once
 
 #include "cuda_runtime.h"
-#include "Cuda//CudaHelper.h"
 
 class Particle
 {
 
-private:
+public:
 	float3 m_position = { 0,0,0 };
 	float3 m_velocity = { 0,0,0 };
 	bool outOfScope = false;
@@ -50,12 +49,6 @@ public:
 	__device__ void move(const float& dt, float3 gridDiameter, cudaTextureObject_t t_VelocityField )
 	{
 
-		if (!outOfScope)
-		{
-			this->m_position = RK4EStream(t_VelocityField, &this->m_position, gridDiameter, dt);
-		}
-		checkPosition(gridDiameter);							//check if it is out of scope
-		updateVelocity(gridDiameter, t_VelocityField);//checked
 	}
 
 

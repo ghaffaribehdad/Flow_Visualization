@@ -6,7 +6,7 @@ bool Graphics::InitializeCamera()
 	// set camera properties
 	camera.SetPosition(0.0f, 0.0f, -10.0f);
 	camera.SetProjectionValues(this->FOV, static_cast<float>(this->windowWidth) / static_cast<float>(this->windowHeight), \
-		1.0f, 100.0f);
+		0.5f, 1000.0f);
 	return true;
 }
 
@@ -144,7 +144,7 @@ void Graphics::RenderFrame()
 
 	if (this->renderImGuiOptions.showStreamlines)
 	{	
-		this->streamlineRenderer.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_LINESTRIP);
+		this->streamlineRenderer.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ);
 	}
 
 	if (this->renderImGuiOptions.showPathlines)
