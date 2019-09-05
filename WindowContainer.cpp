@@ -140,7 +140,6 @@ LRESULT WindowContainer::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
 		// Resize Window
 		case WM_SIZE:
 		{
-			OutputDebugStringA("The Window is maximized");
 			this->resize = true;
 
 			return 0;

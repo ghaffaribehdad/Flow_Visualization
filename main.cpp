@@ -19,7 +19,7 @@ int APIENTRY wWinMain(
 	}
 
 	// initialize the engine
-	if (engine.Initialize(hInstance, "Title", "MyWindowClass", 800, 800))
+	if (engine.Initialize(hInstance, "Flow Visualization", "MyWindowClass", 800, 800))
 	{
 		while (engine.ProcessMessages() == true)
 		{
