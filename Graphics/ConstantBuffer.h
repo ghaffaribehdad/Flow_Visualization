@@ -3,7 +3,7 @@
 #include <d3d11.h>
 #include "ConsantBufferTypes.h"
 #include <wrl/client.h>
-#include "..\\ErrorLogger.h"
+#include "..\ErrorLogger\ErrorLogger.h"
 
 template<class T>
 class ConstantBuffer

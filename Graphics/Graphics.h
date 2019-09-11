@@ -10,7 +10,6 @@
 #include "ConsantBufferTypes.h"
 #include "ConstantBuffer.h"
 #include "Camera.h"
-#include "..\Timer.h"
 #include "..\Cuda\CudaSolver.h"
 #include "ImGui/imgui.h"
 

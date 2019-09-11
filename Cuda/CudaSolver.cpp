@@ -1,5 +1,6 @@
 #include "CudaSolver.h"
-
+#include "..//Cuda/CudaHelperFunctions.h"
+#include "..//ErrorLogger/ErrorLogger.h"
 
 
 CUDASolver::CUDASolver()
@@ -95,8 +96,9 @@ void CUDASolver::InitializeParticles(SeedingPattern seedingPattern)
 			break;
 		}
 
-		case SeedingPattern::SEED_REGULAR:
+		case SeedingPattern::SEED_GRIDPOINTS:
 		{
+			//seedParticleGridPoints()
 			break;
 		}
 		

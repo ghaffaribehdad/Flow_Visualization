@@ -1,9 +1,9 @@
 
 #pragma once
 #include "cuda_runtime.h"
-#include "..//ErrorLogger.h"
+#include "../ErrorLogger/ErrorLogger.h"
 #include "texture_fetch_functions.h"
-#include "..//SolverOptions.h"
+#include "../Options/SolverOptions.h"
 
 class VolumeTexture
 {

@@ -7,8 +7,8 @@
 #include "..//Graphics/Camera.h"
 
 #include "..//Graphics/ConstantBuffer.h"
-#include "..//SolverOptions.h"
-#include "..//RaycastingOptions.h"
+#include "../Options/SolverOptions.h"
+#include "../Options/RaycastingOptions.h"
 #include<wrl/client.h>
 #include <DirectXMath.h>
 #include <vector>

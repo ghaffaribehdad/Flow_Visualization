@@ -10,7 +10,7 @@
 #include "texture_fetch_functions.h"
 #include <vector>
 #include <stdio.h>
-#include "../Particle.h"
+#include "../Particle/Particle.h"
 #include "..//VolumeTexture/VolumeTexture.h"
 
 

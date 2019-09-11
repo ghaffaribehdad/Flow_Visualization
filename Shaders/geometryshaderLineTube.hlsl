@@ -47,7 +47,6 @@ void main(lineadj GS_INPUT input[4], inout TriangleStream<GS_OUTPUT> output)
 
 
 
-		// A vector in the cross-section plane
 		float3 vecNormal = input[1].inNormal;
 
 		// Radius of the tubes
@@ -64,10 +63,11 @@ void main(lineadj GS_INPUT input[4], inout TriangleStream<GS_OUTPUT> output)
 
 		float3 tangent0 = normalize(normalize(input[1].inPosition - input[0].inPosition) + normalize(input[2].inPosition - input[1].inPosition));
 		float3 tangent1 = normalize(normalize(input[2].inPosition - input[1].inPosition) + normalize(input[3].inPosition - input[2].inPosition));
+		float3 tangent = normalize(tangent0 + tangent1);
 
 
-		float3 orient0_rotated = normalize(cross(vecNormal,tangent0));
-		float3 orient1_rotated = normalize(cross(vecNormal,tangent1));
+		float3 orient0_rotated = normalize(cross(vecNormal, tangent));
+		float3 orient1_rotated = normalize(cross(vecNormal, tangent));
 
 		for (int i = 0; i < 9; i++)
 		{

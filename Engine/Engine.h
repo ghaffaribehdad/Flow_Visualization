@@ -1,9 +1,9 @@
 #pragma once
 
-#include "WindowContainer.h"
-#include "Timer.h"
-#include "Cuda/StreamlineSolver.h"
-#include "Cuda/PathlineSolver.h"
+#include "../Window/WindowContainer.h"
+#include "../Timer/Timer.h"
+#include "../Cuda/StreamlineSolver.h"
+#include "../Cuda/PathlineSolver.h"
 #include <ScreenGrab.h>
 
 

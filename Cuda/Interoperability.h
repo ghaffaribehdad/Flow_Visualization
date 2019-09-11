@@ -1,8 +1,8 @@
 #pragma once
 #include "cuda_runtime.h"
 #include <d3d11.h>
-#include "../ErrorLogger.h"
-#include "..//SolverOptions.h"
+#include "../ErrorLogger/ErrorLogger.h"
+#include "../Options/SolverOptions.h"
 
 struct Interoperability_desc
 {

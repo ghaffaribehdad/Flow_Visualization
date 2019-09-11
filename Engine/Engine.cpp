@@ -56,7 +56,7 @@ void Engine::Update()
 
 	}
 
-	const float cameraSpeed = 0.005f;
+	const float cameraSpeed = 0.001f;
 
 
 

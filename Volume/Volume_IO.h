@@ -3,8 +3,8 @@
 #include <vector>
 #include <string>
 #include <fstream>
-#include "../ErrorLogger.h"
-#include "../SolverOptions.h"
+
+#include "../Options/SolverOptions.h"
 
 class Volume_IO
 {

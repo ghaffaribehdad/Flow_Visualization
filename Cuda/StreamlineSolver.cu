@@ -1,6 +1,6 @@
 #include "StreamlineSolver.h"
 #include "helper_math.h"
-#include "..//Cuda/CudaHelper.h"
+#include "..//Cuda/CudaHelperFunctions.h"
 #include "texture_fetch_functions.h"
 
 // Kernel of the streamlines, TO-DO: Divide kernel into seprate functions
@@ -24,28 +24,6 @@ __global__ void TracingStream(Particle* d_particles, cudaTextureObject_t t_Veloc
 		float3 temp_position = *d_particles[index].getPosition();
 
 		d_particles[index].updateVelocity(gridDiameter, t_VelocityField);
-		switch (solverOptions.projection)
-			{
-			case Projection::NO_PROJECTION:
-			{
-				break;
-			}
-			case Projection::ZY_PROJECTION:
-			{
-				d_particles[index].m_velocity.x = 0.0f;
-				break;
-			}
-			case Projection::XZ_PROJECTION:
-			{
-				d_particles[index].m_velocity.y = 0.0f;
-				break;
-			}
-			case Projection::XY_PROJECTION:
-			{
-				d_particles[index].m_velocity.z = 0.0f;
-				break;
-			}
-		}
 		
 
 		float3 upDir = make_float3(0.0f, 1.0f, 0.0f);
@@ -60,16 +38,38 @@ __global__ void TracingStream(Particle* d_particles, cudaTextureObject_t t_Veloc
 
 		for (int i = 0; i < lineLength; i++)
 		{
+			if (solverOptions.periodic)
+			{
+				p_VertexBuffer[index_buffer + i].pos.x = d_particles[index].getPosition()->x - (gridDiameter.x / 2.0);
+				p_VertexBuffer[index_buffer + i].pos.y = d_particles[index].getPosition()->y - (gridDiameter.y / 2.0);
+				p_VertexBuffer[index_buffer + i].pos.z = d_particles[index].getPosition()->z - (gridDiameter.z / 2.0);
+			}
+			else 
+			{
+				if (!d_particles[index].isOut())
+				{
+					d_particles[index].checkPosition(gridDiameter);
+				}
 
-			p_VertexBuffer[index_buffer + i].pos.x = d_particles[index].getPosition()->x - (gridDiameter.x / 2.0);
-			p_VertexBuffer[index_buffer + i].pos.y = d_particles[index].getPosition()->y - (gridDiameter.y / 2.0);
-			p_VertexBuffer[index_buffer + i].pos.z = d_particles[index].getPosition()->z - (gridDiameter.z / 2.0);
+				if (d_particles[index].isOut())
+				{
+					p_VertexBuffer[index_buffer + i].pos.x = p_VertexBuffer[index_buffer + i - 1].pos.x;
+					p_VertexBuffer[index_buffer + i].pos.y = p_VertexBuffer[index_buffer + i - 1].pos.y;
+					p_VertexBuffer[index_buffer + i].pos.z = p_VertexBuffer[index_buffer + i - 1].pos.z;
+				}
+				else
+				{
+					p_VertexBuffer[index_buffer + i].pos.x = d_particles[index].getPosition()->x - (gridDiameter.x / 2.0);
+					p_VertexBuffer[index_buffer + i].pos.y = d_particles[index].getPosition()->y - (gridDiameter.y / 2.0);
+					p_VertexBuffer[index_buffer + i].pos.z = d_particles[index].getPosition()->z - (gridDiameter.z / 2.0);
+
+				}
+			}
+
+
 
 			float3* velocity = d_particles[index].getVelocity();
 			float3 tangent = normalize(*velocity);
-
-
-
 			float3 norm = upDir;
 
 
@@ -82,9 +82,13 @@ __global__ void TracingStream(Particle* d_particles, cudaTextureObject_t t_Veloc
 			p_VertexBuffer[index_buffer + i].tangent.z = tangent.z;
 
 			// In order to keep track of the very first line segment
-			if (i == 0)
+			if (i == 0 || i == lineLength-1)
 			{
 				p_VertexBuffer[index_buffer + i].LineID = -1;
+			}
+			if ( i == lineLength - 1)
+			{
+				p_VertexBuffer[index_buffer + i].LineID = -2;
 			}
 			else
 			{ 
@@ -117,11 +121,8 @@ __global__ void TracingStream(Particle* d_particles, cudaTextureObject_t t_Veloc
 				}
 			}
 
-
-			if (!d_particles[index].isOut())
-			{
-				RK4EStream(t_VelocityField, &d_particles[index], gridDiameter, dt);
-			}
+			// Do not check if it is out
+			RK4EStream(t_VelocityField, &d_particles[index], gridDiameter, dt);
 
 			// Update position based on the projection
 			switch (solverOptions.projection)
@@ -132,32 +133,28 @@ __global__ void TracingStream(Particle* d_particles, cudaTextureObject_t t_Veloc
 				}
 				case Projection::ZY_PROJECTION:
 				{
-					d_particles[index].m_position.x = temp_position.x;
-					d_particles[index].m_velocity.x = 0.0f;
+					p_VertexBuffer[index_buffer + i].pos.x = temp_position.x - (gridDiameter.x / 2.0);
+	
 
 					break;
 				}
 				case Projection::XZ_PROJECTION:
 				{
-					d_particles[index].m_position.y = temp_position.y;
-					d_particles[index].m_velocity.y = 0.0f;
+					p_VertexBuffer[index_buffer + i].pos.y = temp_position.y - (gridDiameter.y / 2.0);
+
 
 					break;
 				}
 				case Projection::XY_PROJECTION:
 				{
 
-					d_particles[index].m_position.z = temp_position.z;
-					d_particles[index].m_velocity.z = 0.0f;
+					p_VertexBuffer[index_buffer + i].pos.z = temp_position.z - (gridDiameter.z / 2.0);
 
 					break;
 				}
 			}
 
-			if (!d_particles[index].isOut())
-			{
-				d_particles[index].checkPosition(gridDiameter);
-			}
+
 
 
 		}//end of for loop

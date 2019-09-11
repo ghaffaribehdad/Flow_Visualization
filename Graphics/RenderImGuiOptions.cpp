@@ -40,13 +40,29 @@ void RenderImGuiOptions::drawSolverOptions()
 		this->updatePathlines = true;
 	}
 
+	if (ImGui::Checkbox("Periodic", &solverOptions->periodic))
+	{
+		this->updateStreamlines = true;
+		this->updatePathlines = true;
+	}
+
+
 	if (ImGui::InputInt3("Grid Size", solverOptions->gridSize, sizeof(solverOptions->gridSize)))
 	{
+		this->updateSeedBox = true;
+		this->updateStreamlines = true;
+		this->updatePathlines = true;
 	}
 	if (ImGui::InputFloat3("Grid Diameter", solverOptions->gridDiameter, sizeof(solverOptions->gridDiameter)))
 	{
 		this->updateVolumeBox = true;
 		this->updateRaycasting = true;
+		this->updateStreamlines = true;
+		this->updatePathlines = true;
+	}
+
+	if (ImGui::Combo("Seeding Pattern", &solverOptions->seedingPattern, SeedPatternList, 2))
+	{
 		this->updateStreamlines = true;
 		this->updatePathlines = true;
 	}
@@ -122,6 +138,8 @@ void RenderImGuiOptions::drawSolverOptions()
 	if (ImGui::Combo("Color Mode", &solverOptions->colorMode, ColorModeList, 4))
 	{
 		this->updateStreamlines = true;
+		this->updatePathlines = true;
+
 	}
 
 

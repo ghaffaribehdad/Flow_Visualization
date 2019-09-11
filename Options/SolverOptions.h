@@ -10,6 +10,8 @@ public:
 
 	int gridSize[3] = { 64,503,2048 };
 	float gridDiameter[3] = { 1.0f,5.0f,10.0f };
+
+
 	float seedBox[3] = { 0.0f,5.0f,10.0f };
 	float seedBoxPos[3] = { 0.0f, 0.0f, 0.0f };
 
@@ -27,9 +29,9 @@ public:
 	int lastIdx = 1;
 	int currentIdx = 1;
 
-	SeedingPattern seedingPatter;
-
+	
 	int colorMode = 0;
+	int seedingPattern = 0;
 
 	bool interOperation = false;
 
@@ -42,6 +44,7 @@ public:
 	SolverOptions() {};
 
 	int projection = Projection::NO_PROJECTION;
+	bool periodic = false;
 
 
 };

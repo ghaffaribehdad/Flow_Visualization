@@ -36,9 +36,6 @@
     <Filter Include="Source Files\Graphics\ImGui">
       <UniqueIdentifier>{eecefbad-126f-42df-93e3-65f0d9e2d10a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Helper">
-      <UniqueIdentifier>{b1c1e0c7-e174-46ce-9551-9ead12a346de}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\Cuda">
       <UniqueIdentifier>{5dd15d1b-b487-42da-9f0f-6e3473e841dc}</UniqueIdentifier>
     </Filter>
@@ -72,23 +69,44 @@
     <Filter Include="Header Files\Raycasting">
       <UniqueIdentifier>{a7f30409-2634-45c1-8712-477c4e1ad2b1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Dispersion">
+      <UniqueIdentifier>{c25bb9f7-a9fd-47d3-9d26-c241db3ba495}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ErrorLogger">
+      <UniqueIdentifier>{bb59446f-eced-4cb9-ac42-fc40f8fbe060}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ErrorLogger">
+      <UniqueIdentifier>{7affd3ac-7311-4136-bde6-65860449bccf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Options">
+      <UniqueIdentifier>{ff0f133a-547d-46e7-a894-ffcb305d7dbd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine">
+      <UniqueIdentifier>{d6ed99bd-8b7d-44bf-bd13-9c0be79b373c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine">
+      <UniqueIdentifier>{9e0c689d-bf2a-4190-a205-b8d55ca95528}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Window">
+      <UniqueIdentifier>{5a62cafe-bd45-492b-ad23-c290b16ac5a2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Window">
+      <UniqueIdentifier>{be5c0cef-588c-4145-aa46-d903f29bd267}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Timer">
+      <UniqueIdentifier>{515805ab-2a1e-4c73-a4af-fc702296ee76}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Timer">
+      <UniqueIdentifier>{7d5ec984-9178-439a-9945-bb66df585855}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\HelperFunctions">
+      <UniqueIdentifier>{3f36fdce-061e-4399-b2fa-4ede3597b786}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\HelperFunctions">
+      <UniqueIdentifier>{ff7e0db5-ea5e-40b6-82b2-fa40d7e931da}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="StringConverter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ErrorLogger.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderWindow.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Engine.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="WindowContainer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>main</Filter>
     </ClCompile>
@@ -112,9 +130,6 @@
     </ClCompile>
     <ClCompile Include="Graphics\Camera.cpp">
       <Filter>Source Files\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="Timer.cpp">
-      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Graphics\ImGui\imgui.cpp">
       <Filter>Source Files\Graphics\ImGui</Filter>
@@ -140,32 +155,35 @@
     <ClCompile Include="Cuda\CudaDevice.cpp">
       <Filter>Source Files\Cuda</Filter>
     </ClCompile>
-    <ClCompile Include="Volume\Volume_IO.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Graphics\LineRenderer.cpp">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="Graphics\RenderImGuiOptions.cpp">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="ErrorLogger\ErrorLogger.cpp">
+      <Filter>Source Files\ErrorLogger</Filter>
+    </ClCompile>
+    <ClCompile Include="ErrorLogger\StringConverter.cpp">
+      <Filter>Source Files\ErrorLogger</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Engine.cpp">
+      <Filter>Source Files\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Window\RenderWindow.cpp">
+      <Filter>Source Files\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Window\WindowContainer.cpp">
+      <Filter>Source Files\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Timer\Timer.cpp">
+      <Filter>Source Files\Timer</Filter>
+    </ClCompile>
+    <ClCompile Include="Volume\Volume_IO.cpp">
+      <Filter>Source Files\VolumeTexture</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="StringConverter.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ErrorLogger.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RenderWindow.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Engine.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WindowContainer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Keyboard\KeyboardEvent.h">
       <Filter>Header Files\Keyboard</Filter>
     </ClInclude>
@@ -205,9 +223,6 @@
     <ClInclude Include="Graphics\Camera.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="Timer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Graphics\ImGui\imconfig.h">
       <Filter>Header Files\Graphics\ImGui</Filter>
     </ClInclude>
@@ -238,15 +253,6 @@
     <ClInclude Include="CUDA\CudaSolver.h">
       <Filter>Header Files\Cuda</Filter>
     </ClInclude>
-    <ClInclude Include="SolverOptions.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Enum.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Volume\Volume_IO.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="VolumeTexture\VolumeTexture.h">
       <Filter>Header Files\VolumeTexture</Filter>
     </ClInclude>
@@ -261,9 +267,6 @@
     </ClInclude>
     <ClInclude Include="Raycaster\BoundingBox.h">
       <Filter>Header Files\Raycasting</Filter>
-    </ClInclude>
-    <ClInclude Include="RaycastingOptions.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Graphics\RenderingOptions.h">
       <Filter>Header Files\Graphics</Filter>
@@ -295,53 +298,83 @@
     <ClInclude Include="Cuda\Interoperability.h">
       <Filter>Header Files\Cuda</Filter>
     </ClInclude>
-    <ClInclude Include="Cuda\CudaHelper.h">
-      <Filter>Header Files\Cuda</Filter>
-    </ClInclude>
-    <ClInclude Include="Particle.h">
-      <Filter>Header Files\Particle</Filter>
-    </ClInclude>
     <ClInclude Include="Cuda\cudaSurface.h">
       <Filter>Header Files\Cuda</Filter>
     </ClInclude>
+    <ClInclude Include="Dispersion\DispersionOptions.h">
+      <Filter>Header Files\Dispersion</Filter>
+    </ClInclude>
+    <ClInclude Include="Cuda\CudaHelperFunctions.h">
+      <Filter>Header Files\Cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="Particle\Particle.h">
+      <Filter>Header Files\Particle</Filter>
+    </ClInclude>
+    <ClInclude Include="ErrorLogger\ErrorLogger.h">
+      <Filter>Header Files\ErrorLogger</Filter>
+    </ClInclude>
+    <ClInclude Include="ErrorLogger\StringConverter.h">
+      <Filter>Header Files\ErrorLogger</Filter>
+    </ClInclude>
+    <ClInclude Include="Options\Enum.h">
+      <Filter>Header Files\Options</Filter>
+    </ClInclude>
+    <ClInclude Include="Options\RaycastingOptions.h">
+      <Filter>Header Files\Options</Filter>
+    </ClInclude>
+    <ClInclude Include="Options\SolverOptions.h">
+      <Filter>Header Files\Options</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Engine.h">
+      <Filter>Header Files\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Window\RenderWindow.h">
+      <Filter>Header Files\Window</Filter>
+    </ClInclude>
+    <ClInclude Include="Window\WindowContainer.h">
+      <Filter>Header Files\Window</Filter>
+    </ClInclude>
+    <ClInclude Include="Timer\Timer.h">
+      <Filter>Header Files\Timer</Filter>
+    </ClInclude>
+    <ClInclude Include="Volume\Volume_IO.h">
+      <Filter>Header Files\VolumeTexture</Filter>
+    </ClInclude>
+    <ClInclude Include="HelperFunctions\HelperFunctions.h">
+      <Filter>Header Files\HelperFunctions</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="vertexshader.hlsl">
+    <FxCompile Include="Shaders\geometryshaderLineTube.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="pixelshader.hlsl">
+    <FxCompile Include="Shaders\geometryshaderLineTubeBox.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="geometryshaderLineTube.hlsl">
+    <FxCompile Include="Shaders\pixelshader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="geometryshaderLineTubeBox.hlsl">
+    <FxCompile Include="Shaders\pixelshaderRaycasting.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="pixelshaderSeedBox.hlsl">
+    <FxCompile Include="Shaders\pixelshaderSeedBox.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="pixelshaderTextureSampler.hlsl">
+    <FxCompile Include="Shaders\pixelshaderTextureSampler.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="vertexshaderTexture.hlsl">
+    <FxCompile Include="Shaders\vertexshader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\vertexshaderTexture.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="linearIndex.cuh">
-      <Filter>Header Files\Helper</Filter>
-    </CudaCompile>
     <CudaCompile Include="Cuda\StreamlineSolver.cu">
       <Filter>Source Files\Cuda</Filter>
     </CudaCompile>
-    <CudaCompile Include="Particle.cu">
-      <Filter>Source Files\Particle</Filter>
-    </CudaCompile>
     <CudaCompile Include="Cuda\PathlineSolver.cu">
-      <Filter>Source Files\Cuda</Filter>
-    </CudaCompile>
-    <CudaCompile Include="Cuda\CudaHelper.cu">
       <Filter>Source Files\Cuda</Filter>
     </CudaCompile>
     <CudaCompile Include="VolumeTexture\VolumeTexture.cu">
@@ -361,6 +394,12 @@
     </CudaCompile>
     <CudaCompile Include="Raycaster\Raycasting_Helper.cu">
       <Filter>Source Files\Raycasting</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Cuda\CudaHelperFunctions.cu">
+      <Filter>Source Files\Cuda</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Particle\Particle.cu">
+      <Filter>Source Files\Particle</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

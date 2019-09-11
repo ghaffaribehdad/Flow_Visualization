@@ -33,20 +33,21 @@ __host__ void  Particle::seedParticle(const float* gridDiameter, const float* se
 
 }
 
+
 __device__ void Particle::checkPosition(const float3& gridDiameter)
 {
 
-	if (m_position.x >= gridDiameter.x)
+	if (m_position.x >= gridDiameter.x || m_position.x <= 0)
 	{
 		m_position.x = gridDiameter.x;
 		this->outOfScope = true;
 	}
-	else if (m_position.y >= gridDiameter.y)
+	else if (m_position.y >= gridDiameter.y || m_position.y<= 0)
 	{
 		m_position.y = gridDiameter.y;
 		this->outOfScope = true;
 	}
-	else if (m_position.z >= gridDiameter.z)
+	else if (m_position.z >= gridDiameter.z || m_position.z <= 0)
 	{
 		m_position.z = gridDiameter.z;
 		this->outOfScope = true;

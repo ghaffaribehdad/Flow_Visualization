@@ -8,7 +8,7 @@
 #include "ConsantBufferTypes.h"
 #include <d3d11.h>
 #include "RenderingOptions.h"
-#include "..//SolverOptions.h"
+#include "../Options/SolverOptions.h"
 #include <Windows.h>
 #include "Camera.h"
 

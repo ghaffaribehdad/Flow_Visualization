@@ -178,6 +178,13 @@
     </CudaLink>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Timer\Timer.cpp" />
+    <ClCompile Include="Window\RenderWindow.cpp" />
+    <ClCompile Include="Window\WindowContainer.cpp" />
+    <ClInclude Include="Timer\Timer.h" />
+    <ClInclude Include="Window\RenderWindow.h" />
+    <ClInclude Include="Window\WindowContainer.h" />
+    <CudaCompile Include="Particle\Particle.cu" />
     <CudaCompile Include="Raycaster\BoundingBox.cu">
       <FileType>Document</FileType>
       <GenerateRelocatableDeviceCode Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</GenerateRelocatableDeviceCode>
@@ -186,7 +193,9 @@
       <GenerateRelocatableDeviceCode Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</GenerateRelocatableDeviceCode>
     </CudaCompile>
     <ClCompile Include="Cuda\CudaDevice.cpp" />
-    <ClCompile Include="Engine.cpp" />
+    <ClCompile Include="Engine\Engine.cpp" />
+    <ClCompile Include="ErrorLogger\ErrorLogger.cpp" />
+    <ClCompile Include="ErrorLogger\StringConverter.cpp" />
     <ClCompile Include="Graphics\ImGui\imgui.cpp" />
     <ClCompile Include="Graphics\ImGui\imgui_draw.cpp" />
     <ClCompile Include="Graphics\ImGui\imgui_impl_dx11.cpp" />
@@ -197,14 +206,12 @@
     <ClCompile Include="Keyboard\KeyboardClass.cpp" />
     <ClCompile Include="Keyboard\KeyboardEvent.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="ErrorLogger.cpp" />
     <CudaCompile Include="Raycaster\IsosurfaceHelperFunctions.cu">
       <FileType>Document</FileType>
     </CudaCompile>
     <CudaCompile Include="Raycaster\Raycasting_Helper.cu">
       <FileType>Document</FileType>
     </CudaCompile>
-    <ClCompile Include="RenderWindow.cpp" />
     <ClCompile Include="Mouse\MouseClass.cpp" />
     <ClCompile Include="Mouse\MouseEvent.cpp" />
     <ClCompile Include="Graphics\Graphics.cpp" />
@@ -220,18 +227,24 @@
       <FileType>Document</FileType>
     </CudaCompile>
     <ClInclude Include="Cuda\helper_math.h" />
+    <ClInclude Include="Dispersion\DispersionOptions.h" />
+    <ClInclude Include="Engine\Engine.h" />
+    <ClInclude Include="ErrorLogger\ErrorLogger.h" />
+    <ClInclude Include="ErrorLogger\StringConverter.h" />
     <ClInclude Include="Graphics\LineRenderer.h" />
     <ClInclude Include="Graphics\BoxRenderer.h" />
     <ClInclude Include="Graphics\PathlineRenderer.h" />
     <ClInclude Include="Graphics\RenderingOptions.h" />
     <ClInclude Include="Graphics\StreamlineRenderer.h" />
+    <ClInclude Include="HelperFunctions\HelperFunctions.h" />
+    <ClInclude Include="Options\Enum.h" />
+    <ClInclude Include="Options\RaycastingOptions.h" />
+    <ClInclude Include="Options\SolverOptions.h" />
+    <ClInclude Include="Particle\Particle.h" />
     <ClInclude Include="Raycaster\IsosurfaceHelperFunctions.h" />
     <ClInclude Include="Raycaster\Raycasting.h" />
     <ClInclude Include="Raycaster\Raycasting_Helper.h" />
-    <ClCompile Include="Timer.cpp" />
-    <ClCompile Include="StringConverter.cpp" />
     <ClCompile Include="Volume\Volume_IO.cpp" />
-    <ClCompile Include="WindowContainer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Raycaster\BoundingBox.h" />
@@ -239,26 +252,19 @@
     <ClInclude Include="CUDA\CudaDevice.h" />
     <ClInclude Include="CUDA\CudaSolver.h" />
     <ClInclude Include="Cuda\Interoperability.h" />
-    <ClInclude Include="RaycastingOptions.h" />
     <ClInclude Include="VolumeTexture\VolumeTexture.h" />
-    <ClInclude Include="ErrorLogger.h" />
-    <ClInclude Include="Engine.h" />
     <ClInclude Include="Cuda\StreamlineSolver.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="Enum.h" />
-    <CudaCompile Include="Cuda\CudaHelper.cu">
+    <CudaCompile Include="Cuda\CudaHelperFunctions.cu">
       <FileType>Document</FileType>
       <GenerateRelocatableDeviceCode Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</GenerateRelocatableDeviceCode>
       <GenerateRelocatableDeviceCode Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</GenerateRelocatableDeviceCode>
     </CudaCompile>
     <ClInclude Include="Cuda\PathlineSolver.h" />
-    <ClInclude Include="SolverOptions.h" />
-    <ClInclude Include="Cuda\CudaHelper.h" />
+    <ClInclude Include="Cuda\CudaHelperFunctions.h" />
     <CudaCompile Include="Cuda\cudaSurface.cu" />
     <CudaCompile Include="VolumeTexture\VolumeTexture.cu" />
-    <CudaCompile Include="Particle.cu" />
-    <ClInclude Include="Particle.h" />
     <ClInclude Include="Graphics\RenderImGuiOptions.h" />
     <ClInclude Include="Graphics\Graphics.h" />
     <ClInclude Include="Graphics\AdapterReader.h" />
@@ -275,8 +281,6 @@
     <ClInclude Include="Graphics\ConsantBufferTypes.h" />
     <ClInclude Include="Graphics\ConstantBuffer.h" />
     <ClInclude Include="Graphics\Camera.h" />
-    <CudaCompile Include="linearIndex.cuh" />
-    <ClInclude Include="Timer.h" />
     <ClInclude Include="Mouse\MouseEvent.h" />
     <ClInclude Include="Mouse\MouseClass.h" />
     <ClInclude Include="Keyboard\KeyboardClass.h" />
@@ -284,50 +288,53 @@
     <ClInclude Include="Graphics\Shaders.h" />
     <ClInclude Include="Graphics\VertexBuffer.h" />
     <ClInclude Include="Volume\Volume_IO.h" />
-    <ClInclude Include="WindowContainer.h" />
-    <ClInclude Include="RenderWindow.h" />
-    <ClInclude Include="StringConverter.h" />
     <CudaCompile Include="Cuda\StreamlineSolver.cu" />
     <CudaCompile Include="Cuda\PathlineSolver.cu" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="geometryshaderLineTube.hlsl">
+    <FxCompile Include="Shaders\geometryshaderLineTube.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Geometry</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Geometry</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
     </FxCompile>
-    <FxCompile Include="geometryshaderLineTubeBox.hlsl">
+    <FxCompile Include="Shaders\geometryshaderLineTubeBox.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Geometry</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Geometry</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
     </FxCompile>
-    <FxCompile Include="pixelshader.hlsl">
+    <FxCompile Include="Shaders\pixelshader.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
     </FxCompile>
-    <FxCompile Include="pixelshaderSeedBox.hlsl">
+    <FxCompile Include="Shaders\pixelshaderRaycasting.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
     </FxCompile>
-    <FxCompile Include="pixelshaderTextureSampler.hlsl">
+    <FxCompile Include="Shaders\pixelshaderSeedBox.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
     </FxCompile>
-    <FxCompile Include="vertexshader.hlsl">
+    <FxCompile Include="Shaders\pixelshaderTextureSampler.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="Shaders\vertexshader.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
     </FxCompile>
-    <FxCompile Include="vertexshaderTexture.hlsl">
+    <FxCompile Include="Shaders\vertexshaderTexture.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>

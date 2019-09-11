@@ -48,9 +48,9 @@ cudaTextureObject_t VolumeTexture::initialize()
 	// Texture Description
 	texDesc.normalizedCoords = true;
 	texDesc.filterMode = cudaFilterModeLinear;
-	texDesc.addressMode[0] = cudaAddressModeBorder;
+	texDesc.addressMode[0] = cudaAddressModeWrap;
 	texDesc.addressMode[1] = cudaAddressModeBorder;
-	texDesc.addressMode[2] = cudaAddressModeBorder;
+	texDesc.addressMode[2] = cudaAddressModeWrap;
 	texDesc.readMode = cudaReadModeElementType;
 
 

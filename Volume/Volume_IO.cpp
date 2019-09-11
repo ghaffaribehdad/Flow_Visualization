@@ -1,5 +1,5 @@
 #include "Volume_IO.h"
-
+#include "..//ErrorLogger/ErrorLogger.h"
 
 bool Volume_IO::readVolume(unsigned int idx)
 {

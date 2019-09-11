@@ -1,19 +1,15 @@
 #pragma once
 
 #include <d3d11.h>
-#include "CudaDevice.h"
 #include <wrl/client.h>
-#include "../BinaryStream/BinaryReader.h"
-#include "../BinaryStream/BinaryWriter.h"
-#include "../ErrorLogger.h"
-#include <DirectXMath.h>
-#include "../Particle.h"
-#include "../VelocityField.cuh"
-#include "../SolverOptions.h"
-#include "CudaDevice.h"
+
+#include "../Particle/Particle.h"
+#include "../Options/SolverOptions.h"
 #include "../Graphics/Vertex.h"
 #include "../Volume/Volume_IO.h"
-#include "..//Enum.h"
+
+
+
 
 class CUDASolver
 {

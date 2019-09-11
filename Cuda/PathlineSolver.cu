@@ -1,5 +1,5 @@
 #include "Pathlinesolver.h"
-#include "CudaHelper.h"
+#include "CudaHelperFunctions.h"
 
 
 

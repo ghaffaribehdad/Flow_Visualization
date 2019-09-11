@@ -3,11 +3,11 @@
 #include "ImGui/imgui.h"
 #include "ImGui/imgui_impl_win32.h"
 #include "ImGui/imgui_impl_dx11.h"
-#include "..//SolverOptions.h"
-#include "..//RaycastingOptions.h"
+#include "../Options/SolverOptions.h"
+#include "../Options/RaycastingOptions.h"
 #include "RenderingOptions.h"
 #include "Camera.h"
-#include "..//Timer.h"
+#include "../Timer/Timer.h"
 #include <map>
 #include <string>
 
@@ -23,6 +23,7 @@ private:
 	SolverOptions		*	solverOptions;
 	RenderingOptions	*	renderingOptions;
 	RaycastingOptions	*	raycastingOptions;
+	//DispersionOptions	*	dispersionOptions;
 
 	
 
