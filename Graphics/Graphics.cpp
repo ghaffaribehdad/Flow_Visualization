@@ -386,7 +386,18 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 		adapters[0].pAdapter,	//IDXGI adapter (noramlly the first adapter is the hardware and the second one is the software accelarator)
 		D3D_DRIVER_TYPE_UNKNOWN,
 		NULL,						// For software driver type
-		D3D11_CREATE_DEVICE_DEBUG,	// Flags for runtime layers
+
+
+
+#ifdef _DEBUG //Debug Mode
+		D3D11_CREATE_DEVICE_DEBUG,
+
+#else //Release mode
+		NULL,
+#endif // _DEBUG or Release mode
+
+
+
 		NULL,						// Feature levels array
 		0,						// Number of feature levels in array
 		D3D11_SDK_VERSION,		// SDK version
