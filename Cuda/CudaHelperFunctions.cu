@@ -368,3 +368,71 @@ __device__ void RK4EStream(cudaTextureObject_t t_VelocityField_0, Particle* part
 	particle->updateVelocity(gridDiameter, t_VelocityField_0);
 	particle->m_position = newPosition;
 }
+
+
+__host__ void seedParticleGridPoints(Particle* particle, const SolverOptions* solverOptions)
+{
+	float3 gridMeshSize =
+	{
+		solverOptions->seedBox[0] / (float)solverOptions->seedGrid[0],
+		solverOptions->seedBox[1] / (float)solverOptions->seedGrid[1],
+		solverOptions->seedBox[2] / (float)solverOptions->seedGrid[2],
+	};
+
+	for (int x = 0; x < solverOptions->seedGrid[0]; x++)
+	{
+		for (int y = 0; y < solverOptions->seedGrid[1]; y++)
+		{
+			for (int z = 0; z < solverOptions->seedGrid[2]; z++)
+			{
+				int index = x * solverOptions->seedGrid[1] * solverOptions->seedGrid[2] + y * solverOptions->seedGrid[2] + z;
+				particle[index].m_position = 
+				{
+					
+					solverOptions->gridDiameter[0] / 2.0f -
+					solverOptions->seedBox[0] / 2.0f +
+					solverOptions->seedBoxPos[0] + (float)x * gridMeshSize.x,
+
+					solverOptions->gridDiameter[1] / 2.0f -
+					solverOptions->seedBox[1] / 2.0f +
+					solverOptions->seedBoxPos[1]  + (float)y * gridMeshSize.y,
+
+					solverOptions->gridDiameter[2] / 2.0f -
+					solverOptions->seedBox[2] / 2.0f +
+					solverOptions->seedBoxPos[2]  + (float)z * gridMeshSize.z
+				};
+
+			}
+		}
+	}
+
+
+
+
+
+}
+
+__host__ void seedParticleRandom(Particle * particle, const SolverOptions * solverOptions)
+{
+	for (int i = 0; i < solverOptions->lines_count; i++)
+	{
+		particle[i].m_position.x = solverOptions->gridDiameter[0] / 2.0f -
+			solverOptions->seedBox[0] / 2.0f + solverOptions->seedBoxPos[0] +
+			static_cast <float> (rand()) /
+			static_cast <float> (RAND_MAX /
+				solverOptions->seedBox[0]);
+
+
+		particle[i].m_position.y = solverOptions->gridDiameter[1] / 2.0f -
+			solverOptions->seedBox[1] / 2.0f + solverOptions->seedBoxPos[1] +
+			static_cast <float> (rand()) /
+			static_cast <float> (RAND_MAX / solverOptions->seedBox[1]);
+
+
+		particle[i].m_position.z = solverOptions->gridDiameter[2] / 2.0f -
+			solverOptions->seedBox[2] / 2.0f + solverOptions->seedBoxPos[2] +
+			static_cast <float> (rand()) /
+			static_cast <float> (RAND_MAX / solverOptions->seedBox[2]);
+	}
+
+}

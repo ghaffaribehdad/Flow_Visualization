@@ -5,6 +5,7 @@
 #include "ImGui/imgui_impl_dx11.h"
 #include "../Options/SolverOptions.h"
 #include "../Options/RaycastingOptions.h"
+#include "..//Options/DispresionOptions.h"
 #include "RenderingOptions.h"
 #include "Camera.h"
 #include "../Timer/Timer.h"
@@ -23,7 +24,7 @@ private:
 	SolverOptions		*	solverOptions;
 	RenderingOptions	*	renderingOptions;
 	RaycastingOptions	*	raycastingOptions;
-	//DispersionOptions	*	dispersionOptions;
+	DispersionOptions	*	dispersionOptions;
 
 	
 
@@ -62,6 +63,8 @@ public:
 	void drawLog();						// draw Log window
 	void drawLineRenderingOptions();	// draw options of stream/pathline rendering
 	void drawRaycastingOptions();		// draw options of isosurface rendering (raycasting)
+	void drawDispersionOptions();		// draw options of dispersion calculation
+
 	void render();						// render Dear ImGui
 
 	// Log pointer

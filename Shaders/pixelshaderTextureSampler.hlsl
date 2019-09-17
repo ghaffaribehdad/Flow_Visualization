@@ -9,14 +9,23 @@ struct PS_INPUT
 	float2 inTexCoord: TEXCOORD;
 };
 
+struct PS_OUT
+{
+	float4 color : SV_Target;
+	float depth : SV_Depth;
+};
+
 Texture2D objTexture : TEXTURE;
 SamplerState objSamplerState: SAMPLER; 
 
-float4 main(PS_INPUT input) : SV_TARGET
+PS_OUT main(PS_INPUT input)
 {
-	
 
-	float4 value = objTexture.Sample(objSamplerState, input.inTexCoord);
+	PS_OUT output;
 
-	return value;
+	float4 color = objTexture.Sample(objSamplerState, input.inTexCoord);
+	output.color = float4(color.xyz, 1);
+	output.depth = color.w;
+
+	return output;
 }

@@ -26,6 +26,8 @@ int APIENTRY wWinMain(
 			engine.Update();
 			engine.RenderFrame();
 		}
+
+		engine.release();
 	}
 	
 	return 0;

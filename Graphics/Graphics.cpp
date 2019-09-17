@@ -1,12 +1,15 @@
 #include "Graphics.h"
 #include <ScreenGrab.h>
+#include <dxgidebug.h>
+#include <dxgi1_3.h>
+
 
 bool Graphics::InitializeCamera()
 {
 	// set camera properties
 	camera.SetPosition(0.0f, 0.0f, -10.0f);
 	camera.SetProjectionValues(this->FOV, static_cast<float>(this->windowWidth) / static_cast<float>(this->windowHeight), \
-		0.5f, 1000.0f);
+		0.1f, 1000.0f);
 	return true;
 }
 
@@ -137,7 +140,7 @@ void Graphics::RenderFrame()
 	##							Draw							##
 	##															##
 	##############################################################
-	
+
 	*/
 	this->volumeBox.draw(camera,D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_LINELIST);
 	this->seedBox.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_LINELIST);
@@ -193,6 +196,8 @@ bool Graphics::InitializeDirectXResources()
 		ErrorLogger::Log(hr, "Failed to Get Back buffer");
 	}
 
+
+	
 	// Create Render targe view
 	hr = this->device->CreateRenderTargetView(backbuffer.Get(), NULL, this->renderTargetView.GetAddressOf());
 	if (FAILED(hr))
@@ -204,7 +209,7 @@ bool Graphics::InitializeDirectXResources()
 	this->deviceContext->OMSetRenderTargets(1, renderTargetView.GetAddressOf(), NULL);
 
 
-	if (this->depthStencilBuffer != NULL)
+	if (this->depthStencilBuffer.Get() != nullptr)
 	{
 		depthStencilBuffer->Release();
 	}
@@ -278,7 +283,14 @@ bool Graphics::InitializeDirectXResources()
 
 bool Graphics::InitializeResources()
 {
-	
+#if defined(_DEBUG)
+	void** m_d3dDebug;
+	device->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast<void**>(&m_d3dDebug));
+
+	Microsoft::WRL::ComPtr<IDXGIDebug1> dxgiDebug;
+	DXGIGetDebugInterface1(0, IID_PPV_ARGS(&dxgiDebug));
+	dxgiDebug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_FLAGS(DXGI_DEBUG_RLO_SUMMARY | DXGI_DEBUG_RLO_IGNORE_INTERNAL));
+#endif
 	streamlineRenderer.setResources
 	(
 		this->renderingOptions,
@@ -521,7 +533,7 @@ void Graphics::Resize(HWND hwnd)
 
 	// Reinitialize Resources and Scene accordingly
 	this->InitializeDirectXResources();
-	this->InitializeCamera();
+	this->InitializeCamera();  // no-leak
 	this->InitializeResources();
 
 	if (this->renderImGuiOptions.showRaycasting)

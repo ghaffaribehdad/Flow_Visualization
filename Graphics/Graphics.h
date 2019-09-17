@@ -36,6 +36,9 @@ public:
 		this->renderImGuiOptions.updateRaycasting = true;
 	}
 
+
+	void release();
+
 	// Initialize graphics
 	bool Initialize(HWND hwnd, int width, int height);
 
@@ -51,6 +54,7 @@ public:
 	SolverOptions solverOptions;
 	RenderingOptions renderingOptions;
 	RaycastingOptions raycastingOptions;
+	DispersionOptions dispersionOptions;
 
 	// Getter Functions
 	IDXGIAdapter* GetAdapter();

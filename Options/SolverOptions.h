@@ -9,10 +9,11 @@ public:
 	char  filePath[100] = "E:\\Datasets\\KIT3\\Fields_fld\\binary_initial\\";
 
 	int gridSize[3] = { 64,503,2048 };
+	int seedGrid[3] = { 10,10,10 };
 	float gridDiameter[3] = { 1.0f,5.0f,10.0f };
 
 
-	float seedBox[3] = { 0.0f,5.0f,10.0f };
+	float seedBox[3] = { 1.0f,5.0f,10.0f };
 	float seedBoxPos[3] = { 0.0f, 0.0f, 0.0f };
 
 	int precision = 32;

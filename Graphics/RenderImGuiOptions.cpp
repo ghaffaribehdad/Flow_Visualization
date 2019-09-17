@@ -34,7 +34,7 @@ void RenderImGuiOptions::drawSolverOptions()
 	{
 	}
 
-	if (ImGui::Combo("Projection", &solverOptions->projection, ProjectionList, 4)) 
+	if (ImGui::Combo("Projection", &solverOptions->projection, ProjectionList, 4))
 	{
 		this->updateStreamlines = true;
 		this->updatePathlines = true;
@@ -65,7 +65,22 @@ void RenderImGuiOptions::drawSolverOptions()
 	{
 		this->updateStreamlines = true;
 		this->updatePathlines = true;
+
+		if (solverOptions->seedingPattern == (int)SeedingPattern::SEED_GRIDPOINTS)
+			solverOptions->lines_count = solverOptions->seedGrid[0] * solverOptions->seedGrid[1] * solverOptions->seedGrid[2];
 	}
+
+	if (solverOptions->seedingPattern == (int)SeedingPattern::SEED_GRIDPOINTS)
+	{
+		if (ImGui::DragInt3("Seed Grid", solverOptions->seedGrid,1,1,1024))
+		{
+			this->updateStreamlines = true;
+			this->updatePathlines = true;
+		}
+		solverOptions->lines_count = solverOptions->seedGrid[0] * solverOptions->seedGrid[1] * solverOptions->seedGrid[2];
+	}
+
+
 
 	if (ImGui::DragFloat3("Seed Box", solverOptions->seedBox, 0.01f))
 	{
@@ -101,7 +116,7 @@ void RenderImGuiOptions::drawSolverOptions()
 
 	ImGui::PopItemWidth();
 
-	if (ImGui::DragFloat("dt", &(solverOptions->dt),0.00001,0.00001,1,"%.5f"))
+	if (ImGui::DragFloat("dt", &(solverOptions->dt),0.00001f,0.00001f,1.0f,"%.5f"))
 	{
 		
 		this->updateStreamlines = true;
@@ -242,7 +257,7 @@ void RenderImGuiOptions::drawLineRenderingOptions()
 
 
 	ImGui::Begin("Line Rendering Options");
-	ImGui::SliderFloat("Tube Radius", &renderingOptions->tubeRadius, 0.0f, 0.1f);            // Edit 1 float using a slider from 0.0f to 1.0f
+	ImGui::SliderFloat("Tube Radius", &renderingOptions->tubeRadius, 0.0f, 0.02f,"%.4f");            // Edit 1 float using a slider from 0.0f to 1.0f
 
 
 
@@ -313,6 +328,19 @@ void RenderImGuiOptions::drawRaycastingOptions()
 	{
 		ImGui::Text("File is not loaded yet!");
 	}
+
+	ImGui::End();
+
+}
+
+
+void RenderImGuiOptions::drawDispersionOptions()
+{
+
+
+	ImGui::Begin("Raycasting Options");
+
+
 
 	ImGui::End();
 

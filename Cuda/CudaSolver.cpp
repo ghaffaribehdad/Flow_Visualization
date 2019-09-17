@@ -2,7 +2,6 @@
 #include "..//Cuda/CudaHelperFunctions.h"
 #include "..//ErrorLogger/ErrorLogger.h"
 
-
 CUDASolver::CUDASolver()
 {
 	std::printf("A solver is created!\n");
@@ -80,25 +79,31 @@ __host__ float* CUDASolver::InitializeVelocityField(int ID)
 
 void CUDASolver::InitializeParticles(SeedingPattern seedingPattern)
 {
+
+
 	// Create an array of particles
 	this->h_Particles = new Particle[solverOptions->lines_count];
 
-
 	switch (seedingPattern)
 	{
+
+
 		case SeedingPattern::SEED_RANDOM:
 		{
 			// Seed Particles Randomly according to the grid diameters
 			for (int i = 0; i < solverOptions->lines_count; i++)
 			{
-				this->h_Particles[i].seedParticle(solverOptions->gridDiameter,solverOptions->seedBox, solverOptions->seedBoxPos);
+				//this->h_Particles[i].seedParticle(solverOptions->gridDiameter,solverOptions->seedBox, solverOptions->seedBoxPos);
+				seedParticleRandom(h_Particles, solverOptions);
 			}
 			break;
 		}
 
 		case SeedingPattern::SEED_GRIDPOINTS:
 		{
-			//seedParticleGridPoints()
+			// Create an array of particles
+
+			seedParticleGridPoints(this->h_Particles, solverOptions);
 			break;
 		}
 		

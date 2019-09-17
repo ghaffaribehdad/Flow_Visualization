@@ -178,9 +178,11 @@
     </CudaLink>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Dispersion\DispersionHelper.cpp" />
     <ClCompile Include="Timer\Timer.cpp" />
     <ClCompile Include="Window\RenderWindow.cpp" />
     <ClCompile Include="Window\WindowContainer.cpp" />
+    <ClInclude Include="DispersionHelper.h" />
     <ClInclude Include="Timer\Timer.h" />
     <ClInclude Include="Window\RenderWindow.h" />
     <ClInclude Include="Window\WindowContainer.h" />
@@ -305,12 +307,6 @@
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
     </FxCompile>
     <FxCompile Include="Shaders\pixelshader.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
-    </FxCompile>
-    <FxCompile Include="Shaders\pixelshaderRaycasting.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>

@@ -285,18 +285,37 @@ __global__ void CudaIsoSurfacRenderer(cudaSurfaceObject_t raycastingSurface, cud
 			for (float t = NearFar.x; t < NearFar.y; t = t + samplingRate)
 			{
 
-				float3 relativePos = pixelPos + (rayDir * t);
-				relativePos = (relativePos / d_boundingBox.gridDiameter) + make_float3(.5f, .5f, .5f);
+				float3 position = pixelPos + (rayDir * t);
+
+				// (0.5, 0.5, 0.5) comes from the image plane distance
+				// Relative position calculates the position of the point on the cuda texture
+				float3 relativePos = (position / d_boundingBox.gridDiameter) + make_float3(.5f, .5f, .5f);
 				float4 velocity4D = tex3D<float4>(field1, relativePos.x, relativePos.y, relativePos.z);
+
+
 
 				if (fabsf(observable.ValueAtXYZ(field1, relativePos) - isoValue) < IsosurfaceTolerance)
 				{
 					float3 gradient = observable.GradientAtXYZ(field1, relativePos, 0.01f);
 					float diffuse = max(dot(normalize(gradient), viewDir), 0.0f);
 					float3 rgb = d_raycastingColor * diffuse;
+
+
+					float d_near = 0.1f;
+					float d_far = 1000.0f;
+					float z_dist =sqrtf( dot(d_boundingBox.eyePos - position, d_boundingBox.eyePos - position));
+
+					float depth = (d_far + d_near) / (2.0f * (d_far - d_near));
+					depth += (1.0f / z_dist) * (-1.0f * d_near) / (d_far - d_near);
+					depth += 0.5f;
+					depth -= 1;
+
 					
 
-					float4 rgba = { rgb.x,rgb.y,rgb.z,relativePos.z };
+
+
+					float4 rgba = { rgb.x,rgb.y,rgb.z,depth};
+					//float4 rgba = { rgb.x,rgb.y,rgb.z,1 };
 										
 					surf2Dwrite(rgba, raycastingSurface, 4*4 * pixel.x, pixel.y); // offset of 4 floats (4 * 4 Bytes)
 					break;

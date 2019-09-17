@@ -3,6 +3,7 @@
 #include "..//Cuda/CudaHelperFunctions.h"
 #include "texture_fetch_functions.h"
 
+
 // Kernel of the streamlines, TO-DO: Divide kernel into seprate functions
 
 __global__ void TracingStream(Particle* d_particles, cudaTextureObject_t t_VelocityField, SolverOptions solverOptions, Vertex* p_VertexBuffer)
@@ -51,7 +52,7 @@ __global__ void TracingStream(Particle* d_particles, cudaTextureObject_t t_Veloc
 					d_particles[index].checkPosition(gridDiameter);
 				}
 
-				if (d_particles[index].isOut())
+				if (d_particles[index].isOut() && i != 0)
 				{
 					p_VertexBuffer[index_buffer + i].pos.x = p_VertexBuffer[index_buffer + i - 1].pos.x;
 					p_VertexBuffer[index_buffer + i].pos.y = p_VertexBuffer[index_buffer + i - 1].pos.y;
@@ -70,30 +71,21 @@ __global__ void TracingStream(Particle* d_particles, cudaTextureObject_t t_Veloc
 
 			float3* velocity = d_particles[index].getVelocity();
 			float3 tangent = normalize(*velocity);
-			float3 norm = upDir;
+			
 
 
-			p_VertexBuffer[index_buffer + i].normal.x = norm.x;
-			p_VertexBuffer[index_buffer + i].normal.y = norm.y;
-			p_VertexBuffer[index_buffer + i].normal.z = norm.z;
+			p_VertexBuffer[index_buffer + i].normal.x = upDir.x;
+			p_VertexBuffer[index_buffer + i].normal.y = upDir.y;
+			p_VertexBuffer[index_buffer + i].normal.z = upDir.z;
 
 			p_VertexBuffer[index_buffer + i].tangent.x = tangent.x;
 			p_VertexBuffer[index_buffer + i].tangent.y = tangent.y;
 			p_VertexBuffer[index_buffer + i].tangent.z = tangent.z;
 
-			// In order to keep track of the very first line segment
-			if (i == 0 || i == lineLength-1)
-			{
-				p_VertexBuffer[index_buffer + i].LineID = -1;
-			}
-			if ( i == lineLength - 1)
-			{
-				p_VertexBuffer[index_buffer + i].LineID = -2;
-			}
-			else
-			{ 
-				p_VertexBuffer[index_buffer + i].LineID = index;
-			}
+
+			
+			p_VertexBuffer[index_buffer + i].LineID = index;
+			
 
 			switch (solverOptions.colorMode)
 			{
@@ -184,9 +176,9 @@ __host__ bool StreamlineSolver::solve()
 	volume_IO.release();
 	
 
-	this->InitializeParticles(SeedingPattern::SEED_RANDOM);
-	
-	int blockDim = 256;
+	this->InitializeParticles(static_cast<SeedingPattern>( this->solverOptions->seedingPattern));
+
+	int blockDim = 1024;
 	int thread = (this->solverOptions->lines_count / blockDim)+1;
 	
 	TracingStream << <blockDim , thread >> > (this->d_Particles, volumeTexture.getTexture(), *this->solverOptions, reinterpret_cast<Vertex*>(this->p_VertexBuffer));

@@ -42,9 +42,6 @@ public:
 		m_velocity = _velocity;
 	}
 
-	// seeding particle
-	__host__ void  seedParticle(const float* gridDiameter, const float* seedBox, const float* seedBoxPos);
-
 
 	__device__ void move(const float& dt, float3 gridDiameter, cudaTextureObject_t t_VelocityField )
 	{

@@ -105,6 +105,9 @@
     <Filter Include="Source Files\HelperFunctions">
       <UniqueIdentifier>{ff7e0db5-ea5e-40b6-82b2-fa40d7e931da}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Dispersion">
+      <UniqueIdentifier>{d74fde98-29be-4f40-84a1-e276cf4dde29}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -181,6 +184,9 @@
     </ClCompile>
     <ClCompile Include="Volume\Volume_IO.cpp">
       <Filter>Source Files\VolumeTexture</Filter>
+    </ClCompile>
+    <ClCompile Include="Dispersion\DispersionHelper.cpp">
+      <Filter>Source Files\Dispersion</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -343,6 +349,9 @@
     <ClInclude Include="HelperFunctions\HelperFunctions.h">
       <Filter>Header Files\HelperFunctions</Filter>
     </ClInclude>
+    <ClInclude Include="DispersionHelper.h">
+      <Filter>Header Files\Dispersion</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\geometryshaderLineTube.hlsl">
@@ -352,9 +361,6 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\pixelshader.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Shaders\pixelshaderRaycasting.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\pixelshaderSeedBox.hlsl">

@@ -24,6 +24,8 @@ public:
 
 	void RenderFrame();
 
+	void release();
+
 
 private:
 	Timer timer;
