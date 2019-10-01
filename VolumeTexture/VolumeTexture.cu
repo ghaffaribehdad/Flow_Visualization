@@ -7,7 +7,12 @@
 
 
 
-cudaTextureObject_t VolumeTexture::initialize()
+cudaTextureObject_t VolumeTexture::initialize
+(
+	cudaTextureAddressMode addressMode_x ,
+	cudaTextureAddressMode addressMode_y ,
+	cudaTextureAddressMode addressMode_z
+)
 {
 
 	cudaExtent extent = make_cudaExtent(this->solverOptions->gridSize[0], this->solverOptions->gridSize[1], this->solverOptions->gridSize[2]);
@@ -48,9 +53,9 @@ cudaTextureObject_t VolumeTexture::initialize()
 	// Texture Description
 	texDesc.normalizedCoords = true;
 	texDesc.filterMode = cudaFilterModeLinear;
-	texDesc.addressMode[0] = cudaAddressModeWrap;
-	texDesc.addressMode[1] = cudaAddressModeBorder;
-	texDesc.addressMode[2] = cudaAddressModeWrap;
+	texDesc.addressMode[0] = addressMode_x;
+	texDesc.addressMode[1] = addressMode_y;
+	texDesc.addressMode[2] = addressMode_z;
 	texDesc.readMode = cudaReadModeElementType;
 
 

@@ -116,7 +116,7 @@ void RenderImGuiOptions::drawSolverOptions()
 
 	ImGui::PopItemWidth();
 
-	if (ImGui::DragFloat("dt", &(solverOptions->dt),0.00001f,0.00001f,1.0f,"%.5f"))
+	if (ImGui::DragFloat("dt", &(solverOptions->dt),0.0001f,0.001f,1.0f,"%.4f"))
 	{
 		
 		this->updateStreamlines = true;
@@ -310,7 +310,7 @@ void RenderImGuiOptions::drawRaycastingOptions()
 		this->updateRaycasting = true;
 	}
 
-	if (ImGui::DragFloat("Tolerance 0", &raycastingOptions->tolerance_0, 0.001f))
+	if (ImGui::DragFloat("Tolerance 0", &raycastingOptions->tolerance_0, 0.00001f,0.0001f,5,"%5f"))
 	{
 		this->updateRaycasting = true;
 	}
@@ -318,7 +318,10 @@ void RenderImGuiOptions::drawRaycastingOptions()
 	ImGui::Text("Surfaces color 0:");
 
 
-	ImGui::ColorEdit3("Isosurface Color 0", (float*)& raycastingOptions->color_0);
+	if (ImGui::ColorEdit3("Isosurface Color 0", (float*)& raycastingOptions->color_0))
+	{
+		this->updateRaycasting = true;
+	}
 
 	if (this->raycastingOptions->fileLoaded)
 	{

@@ -5,15 +5,15 @@
 struct SolverOptions
 {
 public:
-	char fileName[100] = "FieldInitialPadded";
-	char  filePath[100] = "E:\\Datasets\\KIT3\\Fields_fld\\binary_initial\\";
+	char fileName[100] = "FieldP";
+	char  filePath[100] = "D:\\copy\\ow\\binaryXYZ\\";
 
-	int gridSize[3] = { 64,503,2048 };
-	int seedGrid[3] = { 10,10,10 };
-	float gridDiameter[3] = { 1.0f,5.0f,10.0f };
+	int gridSize[3] = { 192,192,192 };
+	int seedGrid[3] = { 10,5,5 };
+	float gridDiameter[3] = { 10,5,5 };
 
 
-	float seedBox[3] = { 1.0f,5.0f,10.0f };
+	float seedBox[3] = { 10.0f,5.0f,5.0f };
 	float seedBoxPos[3] = { 0.0f, 0.0f, 0.0f };
 
 	int precision = 32;

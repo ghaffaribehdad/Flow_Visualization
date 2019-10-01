@@ -7,7 +7,7 @@ typedef unsigned char uchar;
 
 
 
-
+// return the far and near intersection with bounding box
 __device__ float2 findIntersections(const float3 pixelPos, const BoundingBox boundingBox)
 {
 
@@ -16,8 +16,8 @@ __device__ float2 findIntersections(const float3 pixelPos, const BoundingBox bou
 
 	float arrayPixelPos[3] = { pixelPos.x, pixelPos.y, pixelPos.z };
 
-	float tNear = -1000;
-	float tFar = +1000;
+	float tNear = -10000000;
+	float tFar = +10000000;
 
 	float3 _D = normalize(pixelPos - boundingBox.eyePos);
 	float D[3] = { _D.x,_D.y,_D.z };
@@ -77,7 +77,14 @@ __device__ float2 findIntersections(const float3 pixelPos, const BoundingBox bou
 
 	if (hit)
 	{
-		return { tNear,tFar };
+		if (tNear < 0)
+		{
+			return { 0,tFar };
+		}
+		else
+		{
+			return { tNear,tFar };
+		}
 	}
 	else
 	{
@@ -95,7 +102,7 @@ __device__ float3 pixelPosition(const BoundingBox  boundingBox, const int i, con
 	float W = H * boundingBox.aspectRatio;
 
 	// Center of Image Plane
-	float3 centerPos = (boundingBox.eyePos + boundingBox.nuv[0]) * boundingBox.distImagePlane;
+	float3 centerPos = boundingBox.eyePos + (boundingBox.nuv[0] * boundingBox.distImagePlane);
 
 	// Left Corner of Image Plane
 	float3 leftCornerPos = (centerPos + (boundingBox.nuv[1] * W / 2.0f) - (boundingBox.nuv[2] * H / 2.0f));

@@ -15,8 +15,14 @@ private:
 	DirectX::XMFLOAT4 color;
 
 
-	void updateEdges( float * gridDiameter, float * gridPos)
+	void updateEdges( float * p_gridDiameter, float * gridPos)
 	{
+		float gridDiameter[3] = { 0.0f,0.0f,0.0f };
+
+		for (int i = 0; i < 3; i++)
+		{
+			gridDiameter[i] = p_gridDiameter[i] + this->renderingOptions->tubeRadius;
+		}
 
 
 		edges[0].pos = DirectX::XMFLOAT3(gridDiameter[0] / 2.0f +  gridPos[0], gridDiameter[1] / 2.0f +  gridPos[1], gridDiameter[2] / 2.0f +  gridPos[2]);
@@ -280,7 +286,7 @@ public:
 		GS_constantBuffer.data.View = world * camera.GetViewMatrix();
 		GS_constantBuffer.data.Proj = camera.GetProjectionMatrix();
 		GS_constantBuffer.data.eyePos = camera.GetPositionFloat3();
-		GS_constantBuffer.data.tubeRadius = renderingOptions->tubeRadius;
+		GS_constantBuffer.data.tubeRadius =.015f;
 		GS_constantBuffer.data.viewDir = camera.GetViewVector();
 
 		PS_constantBuffer.data.minColor = color;

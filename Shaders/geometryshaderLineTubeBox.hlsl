@@ -56,7 +56,7 @@ void main(line GS_INPUT input[2], inout TriangleStream<GS_OUTPUT> output)
 		float3 orient1 = normalize(cross(input[1].inTangent, viewDirection));
 
 		// Radius of the tubes
-		float tubeRad = .02f;
+		float tubeRad = tubeRadius;
 
 		// in degree
 		float angle = 360.0f / 8.0f;
@@ -91,11 +91,14 @@ void main(line GS_INPUT input[2], inout TriangleStream<GS_OUTPUT> output)
 
 
 			// SV_POSITION
-			vertex0.outPosition = mul(float4(position0,1.0f), transpose(View));
-			vertex0.outPosition = mul(vertex0.outPosition, transpose(Proj));
+			vertex0.outPosition = mul(View,float4(position0,1.0f));
+			vertex0.outPosition = mul(Proj,vertex0.outPosition );
 
-			vertex1.outPosition = mul(float4(position1, 1.0f), transpose(View));
-			vertex1.outPosition = mul(vertex1.outPosition, transpose(Proj));
+			vertex1.outPosition = mul(View, float4(position1, 1.0f));
+			vertex1.outPosition = mul(Proj, vertex1.outPosition );
+
+			//vertex1.outPosition = mul(float4(position1, 1.0f), transpose(View));
+			//vertex1.outPosition = mul(vertex1.outPosition, transpose(Proj));
 
 
 			// Normals

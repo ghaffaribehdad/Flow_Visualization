@@ -37,8 +37,6 @@ public:
 	}
 
 
-	void release();
-
 	// Initialize graphics
 	bool Initialize(HWND hwnd, int width, int height);
 
@@ -82,7 +80,7 @@ public:
 
 	const float& getFOV()
 	{
-		return this->FOV;
+		return this->cameraProp.FOV;
 	}
 
 
@@ -93,7 +91,9 @@ public:
 private:
 
 	// camera propertis
-	float FOV = 30.0;
+	float eyePos[3] = { 0,0,0.0f };
+	Camera_Prop cameraProp = Camera_Prop(30.0f, 0.1f, 1000.0f,eyePos);
+
 
 
 	// call by Initialize() funcion

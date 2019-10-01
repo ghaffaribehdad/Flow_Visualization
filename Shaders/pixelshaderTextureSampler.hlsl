@@ -24,8 +24,10 @@ PS_OUT main(PS_INPUT input)
 	PS_OUT output;
 
 	float4 color = objTexture.Sample(objSamplerState, input.inTexCoord);
-	output.color = float4(color.xyz, 1);
+
+	output.color = float4(color.xyz,1.0f);
 	output.depth = color.w;
+
 
 	return output;
 }

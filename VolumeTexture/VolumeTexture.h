@@ -22,7 +22,14 @@ public:
 	}
 
 
-	cudaTextureObject_t initialize();
+	// Create a texture and populate it with h_field
+	// Address modes can be set for X,y,z
+	cudaTextureObject_t initialize
+	(
+		cudaTextureAddressMode addressMode_x = cudaAddressModeWrap,
+		cudaTextureAddressMode addressMode_y = cudaAddressModeBorder,
+		cudaTextureAddressMode addressMode_z = cudaAddressModeWrap
+	);
 
 	void release();
 

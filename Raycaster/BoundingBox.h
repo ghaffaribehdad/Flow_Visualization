@@ -2,6 +2,8 @@
 #include "cuda_runtime.h"
 #include <string>
 #include "..//Cuda/helper_math.h"
+#include <DirectXMath.h>
+#define _XM_NO_INTRINSICS_
 
 
 
@@ -25,7 +27,7 @@ public:
 	int width;
 	int height;
 
-
+	DirectX::XMFLOAT4X4 viewMatrix;
 
 	__host__ __device__ void constructEyeCoordinates();
 	__host__ __device__ void updateBoxFaces();

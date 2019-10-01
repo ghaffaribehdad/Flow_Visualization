@@ -7,11 +7,18 @@ Options:
 + Streamline visualization
 + Pathline visualization
 + Iso-surface visualization
++ Projected field visualization
 
 
-TO-DO:
-+ RK4 in Streamline     [X]
-+ Fix Pathline          [ ]
-+ Fix isosurface        [ ]
-+ Using texture sampler for depth test of isosurfaces   [ ]
+TODO:
++ RK4 in Streamline     								[X]
++ Fix Pathline          								[ ]
++ Fix isosurface        								[ ]
++ Using texture sampler for depth test of isosurfaces   [X]
 + Consider using templates for isosurface tests         [ ]
++ Use int template for the global function in CUDA		[ ]
++ Use namespaces for enums								[ ]
++ Add comparative visualization
+
+
++ Type dispatching overloading ??

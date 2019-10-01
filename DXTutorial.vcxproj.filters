@@ -352,6 +352,12 @@
     <ClInclude Include="DispersionHelper.h">
       <Filter>Header Files\Dispersion</Filter>
     </ClInclude>
+    <ClInclude Include="Options\DispresionOptions.h">
+      <Filter>Header Files\Options</Filter>
+    </ClInclude>
+    <ClInclude Include="Dispersion\DispersionTracer.h">
+      <Filter>Header Files\Dispersion</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\geometryshaderLineTube.hlsl">

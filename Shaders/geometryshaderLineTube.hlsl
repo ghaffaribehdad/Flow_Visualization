@@ -63,11 +63,14 @@ void main(lineadj GS_INPUT input[4], inout TriangleStream<GS_OUTPUT> output)
 		float3 tangent0 = { 0,0,0 };
 		float3 tangent1 = { 0,0,0 };
 
+		// for the first line segment (the line ID is different for the first two)
 		if (input[0].inLineID != input[1].inLineID)
 		{
 			tangent0 = normalize(input[2].inPosition - input[1].inPosition);
 			tangent1 = normalize(normalize(input[2].inPosition - input[1].inPosition) + normalize(input[3].inPosition - input[2].inPosition));
 		}
+
+		// for the last line segment (the line ID is different for the third and fourth vertex)
 		else if(input[3].inLineID != input[2].inLineID)
 		{
 			tangent0 = normalize(normalize(input[1].inPosition - input[0].inPosition) + normalize(input[2].inPosition - input[1].inPosition));

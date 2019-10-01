@@ -10,7 +10,6 @@
 #include "../Options/SolverOptions.h"
 #include "../Options/RaycastingOptions.h"
 #include<wrl/client.h>
-#include <DirectXMath.h>
 #include <vector>
 
 #include "..//Cuda/Interoperability.h"
@@ -24,20 +23,7 @@
 
 
 
-inline float3 XMFloat3ToFloat3(const DirectX::XMFLOAT3& src)
-{
-	return make_float3(src.x, src.y, src.z);
-}
 
-inline float3 ArrayFloat3ToFloat3(float* src)
-{
-	return make_float3(src[0], src[1], src[2]);
-}
-
-inline int3 ArrayInt3ToInt3(int* src)
-{
-	return make_int3(src[0], src[1], src[2]);
-}
 
 
 
@@ -49,7 +35,9 @@ private:
 
 
 	float FOV_deg	= 30.0f;
+	float distImagePlane = 0.1;
 	unsigned int maxBlockDim = 32;
+
 	int* width = nullptr;
 	int* height = nullptr;
 

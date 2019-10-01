@@ -1,6 +1,7 @@
 #include "Raycasting.h"
 #include "IsosurfaceHelperFunctions.h"
 #include "Raycasting_Helper.h"
+#include "cuda_runtime.h"
 
 
 __constant__ BoundingBox d_boundingBox;
@@ -23,7 +24,7 @@ __host__ bool Raycasting::updateScene()
 	if (!this->initializeCudaSurface())					// reinitilize cudaSurface	
 		return false;
 
-	if (!this->initializeBoundingBox())	//updates constant memory
+	if (!this->initializeBoundingBox())					//updates constant memory
 		return false;
 
 	this->rendering();
@@ -110,11 +111,23 @@ __host__ void Raycasting::rendering()
 
 	this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), bgcolor);// Clear the target view
 
-	this->initializeBoundingBox();
+	//this->initializeBoundingBox();
 
+	// Calculates the block and grid sizes
 	unsigned int blocks;
 	dim3 thread = { maxBlockDim,maxBlockDim,1 };
 	blocks = static_cast<unsigned int>((this->rays % (thread.x * thread.y) == 0 ? rays / (thread.x * thread.y) : rays / (thread.x * thread.y) + 1));
+
+
+
+
+	// Optimize blocks and grid sizes
+	int* minGridSize	= nullptr;
+	int* blockSize		= nullptr;	
+	//cuOccupancyMaxPotentialBlockSize(minGridSize, blockSize,(CUfunction)CudaIsoSurfacRenderer<IsosurfaceHelper::Velocity_Magnitude>, 0, 0,0);
+
+
+
 
 	switch (this->raycastingOptions->isoMeasure_0)
 	{
@@ -206,15 +219,20 @@ __host__ bool Raycasting::initializeBoundingBox()
 	h_boundingBox->viewDir = XMFloat3ToFloat3(camera->GetViewVector());
 	h_boundingBox->upVec = XMFloat3ToFloat3(camera->GetUpVector());
 
+	//DirectX::XMStoreFloat4x4(&h_boundingBox->viewMatrix,camera->GetViewMatrix());
+	//DirectX::XMStoreFloat4x4(&h_boundingBox->projMatirx, camera->GetProjectionMatrix());
 
+
+	// Multiply and store Projectiopn and View Matrix in View Matrix
+	DirectX::XMStoreFloat4x4(&h_boundingBox->viewMatrix, DirectX::XMMatrixMultiply( camera->GetProjectionMatrix(),camera->GetViewMatrix()));
 	h_boundingBox->width = *width;
 	h_boundingBox->height= *height;
 	h_boundingBox->gridDiameter = ArrayFloat3ToFloat3(solverOptions->gridDiameter);
 	h_boundingBox->updateBoxFaces();
 	h_boundingBox->updateAspectRatio();
 	h_boundingBox->constructEyeCoordinates();
-	h_boundingBox->FOV = (30.0f) * 3.1415f / 180.0f;
-	h_boundingBox->distImagePlane = 1;
+	h_boundingBox->FOV = (this->FOV_deg / 360.0f)* XM_2PI;
+	h_boundingBox->distImagePlane = this->distImagePlane;
 
 	gpuErrchk(cudaMemcpyToSymbol(d_boundingBox, h_boundingBox, sizeof(BoundingBox)));
 	
@@ -231,7 +249,7 @@ __host__ bool Raycasting::initializeVolumeTexuture()
 {
 	this->volumeTexture.setSolverOptions(this->solverOptions);
 	this->volumeTexture.setField(this->field);
-	this->volumeTexture.initialize();
+	this->volumeTexture.initialize(cudaAddressModeClamp, cudaAddressModeClamp, cudaAddressModeClamp);
 
 	return true;
 }
@@ -274,52 +292,53 @@ __global__ void CudaIsoSurfacRenderer(cudaSurfaceObject_t raycastingSurface, cud
 		float3 pixelPos = pixelPosition(d_boundingBox, pixel.x, pixel.y);
 		float2 NearFar = findIntersections(pixelPos, d_boundingBox);
 
-
-
-		float3 positionOffset = d_boundingBox.gridDiameter / 2.0f;
+		
 		// if hits
 		if (NearFar.y != -1)
 		{
 			float3 rayDir = normalize(pixelPos - d_boundingBox.eyePos);
+			float4 viewVector_z = { d_boundingBox.viewMatrix._31, d_boundingBox.viewMatrix._32, d_boundingBox.viewMatrix._33, d_boundingBox.viewMatrix._34 };
+			float4 viewVector_w = { d_boundingBox.viewMatrix._41, d_boundingBox.viewMatrix._42, d_boundingBox.viewMatrix._43, d_boundingBox.viewMatrix._44 };
+
+
 
 			for (float t = NearFar.x; t < NearFar.y; t = t + samplingRate)
 			{
 
 				float3 position = pixelPos + (rayDir * t);
-
-				// (0.5, 0.5, 0.5) comes from the image plane distance
-				// Relative position calculates the position of the point on the cuda texture
-				float3 relativePos = (position / d_boundingBox.gridDiameter) + make_float3(.5f, .5f, .5f);
-				float4 velocity4D = tex3D<float4>(field1, relativePos.x, relativePos.y, relativePos.z);
+				position += d_boundingBox.gridDiameter / 2.0;
 
 
+				//Relative position calculates the position of the point on the cuda texture
+				float3 relativePos = (position / d_boundingBox.gridDiameter);
 
-				if (fabsf(observable.ValueAtXYZ(field1, relativePos) - isoValue) < IsosurfaceTolerance)
+
+				if ( fabsf(observable.ValueAtXYZ(field1, relativePos) - isoValue) < IsosurfaceTolerance)
 				{
 					float3 gradient = observable.GradientAtXYZ(field1, relativePos, 0.01f);
 					float diffuse = max(dot(normalize(gradient), viewDir), 0.0f);
 					float3 rgb = d_raycastingColor * diffuse;
 
-
-					float d_near = 0.1f;
-					float d_far = 1000.0f;
-					float z_dist =sqrtf( dot(d_boundingBox.eyePos - position, d_boundingBox.eyePos - position));
-
-					float depth = (d_far + d_near) / (2.0f * (d_far - d_near));
-					depth += (1.0f / z_dist) * (-1.0f * d_near) / (d_far - d_near);
-					depth += 0.5f;
-					depth -= 1;
-
 					
 
+					float dNear= 0.1f;
+					float dFar = 1000.0f;
+					
+					// calculating depth https://en.wikipedia.org/wiki/Z-buffering
+					
+					float4 h_position = { position.x, position.y, position.z,1.0f };
+					float z_dist = dot(h_position, viewVector_z);
+					float w_dist = dot(h_position, viewVector_w);
+					
+					
+					
 
+					float4 rgba = { rgb.x,  rgb.y,  rgb.z, 1};
 
-					float4 rgba = { rgb.x,rgb.y,rgb.z,depth};
-					//float4 rgba = { rgb.x,rgb.y,rgb.z,1 };
-										
-					surf2Dwrite(rgba, raycastingSurface, 4*4 * pixel.x, pixel.y); // offset of 4 floats (4 * 4 Bytes)
+					surf2Dwrite(rgba, raycastingSurface, 4 * sizeof(float) * pixel.x, pixel.y); // stride size of 4 * floats for each texel
 					break;
 				}
+				
 
 			}
 
@@ -345,11 +364,12 @@ bool Raycasting::initializeRaycastingTexture()
 	textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 	textureDesc.Height = *this->height;
 	textureDesc.Width = *this->width;
-	textureDesc.MipLevels = 1;
+	textureDesc.MipLevels = 2;
 	textureDesc.MiscFlags = 0;
 	textureDesc.SampleDesc.Count = 1;
 	textureDesc.SampleDesc.Quality = 0;
 	textureDesc.Usage = D3D11_USAGE_DEFAULT;
+
 
 	HRESULT hr = this->device->CreateTexture2D(&textureDesc, nullptr, this->raycastingTexture.GetAddressOf());
 	if (FAILED(hr))
@@ -380,7 +400,7 @@ bool Raycasting::initializeRaycastingInteroperability()
 	interoperability_desc.p_adapter = this->pAdapter;
 	interoperability_desc.p_device = this->device;
 	//interoperability_desc.size = sizeof(float) * static_cast<size_t>(*this->width) * static_cast<size_t>(*this->height);
-	interoperability_desc.size = 4.0f * sizeof(float) * static_cast<size_t>(*this->width) * static_cast<size_t>(*this->height);
+	interoperability_desc.size = (size_t)4.0 * sizeof(float) * static_cast<size_t>(*this->width) * static_cast<size_t>(*this->height);
 	interoperability_desc.pD3DResource = this->raycastingTexture.Get();
 
 	// initialize the interoperation
@@ -519,7 +539,7 @@ bool Raycasting::createRaycastingShaderResourceView()
 		ZeroMemory(&shader_resource_view_desc, sizeof(shader_resource_view_desc));
 
 		shader_resource_view_desc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-		shader_resource_view_desc.Texture2D.MipLevels = 1;
+		shader_resource_view_desc.Texture2D.MipLevels = 2;
 		shader_resource_view_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 
 		HRESULT hr = this->device->CreateShaderResourceView(
@@ -548,9 +568,9 @@ bool Raycasting::initializeSamplerstate()
 		D3D11_SAMPLER_DESC sampDesc;
 		ZeroMemory(&sampDesc, sizeof(sampDesc));
 		sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-		sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-		sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-		sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+		sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+		sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+		sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
 		sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
 		sampDesc.MinLOD = 0;
 		sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
@@ -578,7 +598,7 @@ bool Raycasting::initializeRasterizer()
 
 		rasterizerDesc.FillMode = D3D11_FILL_MODE::D3D11_FILL_SOLID;
 		rasterizerDesc.CullMode = D3D11_CULL_MODE::D3D11_CULL_NONE; // CULLING could be set to none
-		rasterizerDesc.MultisampleEnable = true;
+		rasterizerDesc.MultisampleEnable = false;
 		rasterizerDesc.AntialiasedLineEnable = true;
 		//rasterizerDesc.FrontCounterClockwise = TRUE;//= 1;
 

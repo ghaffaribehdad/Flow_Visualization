@@ -7,9 +7,9 @@
 bool Graphics::InitializeCamera()
 {
 	// set camera properties
-	camera.SetPosition(0.0f, 0.0f, -10.0f);
-	camera.SetProjectionValues(this->FOV, static_cast<float>(this->windowWidth) / static_cast<float>(this->windowHeight), \
-		0.1f, 1000.0f);
+	camera.SetPosition(cameraProp.eyePosition);
+	camera.SetProjectionValues(this->cameraProp.FOV, static_cast<float>(this->windowWidth) / static_cast<float>(this->windowHeight), \
+		this->cameraProp.nearField, this->cameraProp.farField);
 	return true;
 }
 
@@ -272,7 +272,7 @@ bool Graphics::InitializeDirectXResources()
 
 	viewport.Width = static_cast<float>(this->windowWidth);
 	viewport.Height = static_cast<float>(this->windowHeight);
-	viewport.MaxDepth = 1.0f;
+	viewport.MaxDepth = 1.0;
 	viewport.MinDepth = 0.0f;
 
 	// Set the Viewport

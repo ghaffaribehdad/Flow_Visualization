@@ -2,6 +2,25 @@
 #include <DirectXMath.h>
 using namespace DirectX;
 
+
+// A structure to keep camera properties
+struct Camera_Prop
+{
+	float FOV; // Field of View
+	float nearField;
+	float farField;
+	float eyePosition[3]; // Eye or Camera Position
+
+	Camera_Prop(float _FOV, float _nearField, float _farField, const float* _eyePosition) :
+		FOV(_FOV), nearField(_nearField), farField(_farField)
+	{
+		eyePosition[0] = _eyePosition[0];
+		eyePosition[1] = _eyePosition[1];
+		eyePosition[2] = _eyePosition[2];
+	}
+};
+
+
 class Camera
 {
 public:
@@ -18,6 +37,7 @@ public:
 
 	void SetPosition(const XMVECTOR & pos);
 	void SetPosition(float x, float y, float z);
+	void SetPosition(const float * eyePos);
 	void AdjustPosition(const XMVECTOR & pos);
 	void AdjustPosition(float x, float y, float z);
 	void SetRotation(const XMVECTOR & rot);

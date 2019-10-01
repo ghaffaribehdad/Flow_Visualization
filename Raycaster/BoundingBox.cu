@@ -174,6 +174,8 @@ __host__ __device__ void BoundingBox::updateBoxFaces()
 
 		this->boxFaces[4] = this->gridDiameter.z / -2.0f;
 		this->boxFaces[5] = this->gridDiameter.z / 2.0f;
+
+
 }
 
 __host__ __device__ void BoundingBox::updateAspectRatio()
