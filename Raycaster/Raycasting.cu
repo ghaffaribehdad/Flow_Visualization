@@ -219,12 +219,9 @@ __host__ bool Raycasting::initializeBoundingBox()
 	h_boundingBox->viewDir = XMFloat3ToFloat3(camera->GetViewVector());
 	h_boundingBox->upVec = XMFloat3ToFloat3(camera->GetUpVector());
 
-	//DirectX::XMStoreFloat4x4(&h_boundingBox->viewMatrix,camera->GetViewMatrix());
-	//DirectX::XMStoreFloat4x4(&h_boundingBox->projMatirx, camera->GetProjectionMatrix());
-
 
 	// Multiply and store Projectiopn and View Matrix in View Matrix
-	DirectX::XMStoreFloat4x4(&h_boundingBox->viewMatrix, DirectX::XMMatrixMultiply( camera->GetProjectionMatrix(),camera->GetViewMatrix()));
+	
 	h_boundingBox->width = *width;
 	h_boundingBox->height= *height;
 	h_boundingBox->gridDiameter = ArrayFloat3ToFloat3(solverOptions->gridDiameter);
@@ -284,57 +281,70 @@ __global__ void CudaIsoSurfacRenderer(cudaSurfaceObject_t raycastingSurface, cud
 	if (index < rays)
 	{
 
-
+		// determine pixel position based on the index of the thread
 		int2 pixel;
 		pixel.y = index / d_boundingBox.width;
 		pixel.x = index - pixel.y * d_boundingBox.width;
-		float3 viewDir = d_boundingBox.viewDir;
+
+		// copy values from constant memory to local memory (which one is faster?)
+		float3 viewDir = normalize(d_boundingBox.viewDir);
 		float3 pixelPos = pixelPosition(d_boundingBox, pixel.x, pixel.y);
 		float2 NearFar = findIntersections(pixelPos, d_boundingBox);
 
 		
-		// if hits
+		// if inside the bounding box
 		if (NearFar.y != -1)
 		{
+
 			float3 rayDir = normalize(pixelPos - d_boundingBox.eyePos);
-			float4 viewVector_z = { d_boundingBox.viewMatrix._31, d_boundingBox.viewMatrix._32, d_boundingBox.viewMatrix._33, d_boundingBox.viewMatrix._34 };
-			float4 viewVector_w = { d_boundingBox.viewMatrix._41, d_boundingBox.viewMatrix._42, d_boundingBox.viewMatrix._43, d_boundingBox.viewMatrix._44 };
 
+			// near and far plane
+			float n = 0.1f;
+			float f = 1000.0f;
 
+			// Add the offset to the eye position
+			float3 eyePos = d_boundingBox.eyePos + d_boundingBox.gridDiameter / 2.0;
 
 			for (float t = NearFar.x; t < NearFar.y; t = t + samplingRate)
 			{
-
+				// Position of the isosurface
 				float3 position = pixelPos + (rayDir * t);
+
+				// Adds an offset to position while the center of the grid is at gridDiamter/2
 				position += d_boundingBox.gridDiameter / 2.0;
 
+				
 
 				//Relative position calculates the position of the point on the cuda texture
 				float3 relativePos = (position / d_boundingBox.gridDiameter);
 
 
+
+
+				// check if we have a hit 
 				if ( fabsf(observable.ValueAtXYZ(field1, relativePos) - isoValue) < IsosurfaceTolerance)
 				{
+					// calculates gradient
 					float3 gradient = observable.GradientAtXYZ(field1, relativePos, 0.01f);
+
+					// shading (no ambient)
 					float diffuse = max(dot(normalize(gradient), viewDir), 0.0f);
 					float3 rgb = d_raycastingColor * diffuse;
 
-					
 
-					float dNear= 0.1f;
-					float dFar = 1000.0f;
-					
-					// calculating depth https://en.wikipedia.org/wiki/Z-buffering
-					
-					float4 h_position = { position.x, position.y, position.z,1.0f };
-					float z_dist = dot(h_position, viewVector_z);
-					float w_dist = dot(h_position, viewVector_w);
-					
-					
-					
+					// vector from eye to isosurface
+					float3 position_viewCoordinate = position - eyePos;
 
-					float4 rgba = { rgb.x,  rgb.y,  rgb.z, 1};
+					// calculates the z-value
+					float z_dist = abs(dot(viewDir, position_viewCoordinate));
 
+					// calculate non-linear depth between 0 to 1
+					float depth = (f) / (f - n);
+					depth += (-1.0f / z_dist) * (f * n) / (f - n);
+
+					float4 rgba = { rgb.x, rgb.y, rgb.z, depth};
+					
+					// write back color and depth into the texture (surface)
 					surf2Dwrite(rgba, raycastingSurface, 4 * sizeof(float) * pixel.x, pixel.y); // stride size of 4 * floats for each texel
 					break;
 				}
@@ -599,7 +609,7 @@ bool Raycasting::initializeRasterizer()
 		rasterizerDesc.FillMode = D3D11_FILL_MODE::D3D11_FILL_SOLID;
 		rasterizerDesc.CullMode = D3D11_CULL_MODE::D3D11_CULL_NONE; // CULLING could be set to none
 		rasterizerDesc.MultisampleEnable = false;
-		rasterizerDesc.AntialiasedLineEnable = true;
+		rasterizerDesc.AntialiasedLineEnable = false;
 		//rasterizerDesc.FrontCounterClockwise = TRUE;//= 1;
 
 		HRESULT hr = this->device->CreateRasterizerState(&rasterizerDesc, this->rasterizerstate.GetAddressOf());

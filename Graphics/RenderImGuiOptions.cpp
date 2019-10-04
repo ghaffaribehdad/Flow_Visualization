@@ -1,5 +1,5 @@
 #include "RenderImGuiOptions.h"
-
+#include "..//Raycaster/Raycasting_Helper.h"
 void RenderImGuiOptions::drawSolverOptions()
 {
 	ImGui_ImplDX11_NewFrame();
@@ -231,6 +231,26 @@ void RenderImGuiOptions::drawLog()
 	{
 
 	}
+
+	eyePos[0] = XMFloat3ToFloat3(camera->GetPositionFloat3()).x;
+	eyePos[1] = XMFloat3ToFloat3(camera->GetPositionFloat3()).y;
+	eyePos[2] = XMFloat3ToFloat3(camera->GetPositionFloat3()).z;
+
+
+	viewDir[0] = XMFloat3ToFloat3(camera->GetViewVector()).x;
+	viewDir[1] = XMFloat3ToFloat3(camera->GetViewVector()).y;
+	viewDir[2] = XMFloat3ToFloat3(camera->GetViewVector()).z;
+
+	upDir[0] = XMFloat3ToFloat3(camera->GetUpVector()).x;
+	upDir[1] = XMFloat3ToFloat3(camera->GetUpVector()).y;
+	upDir[2] = XMFloat3ToFloat3(camera->GetUpVector()).z;
+
+
+
+	ImGui::InputFloat3("eye Position", this->eyePos, 2.0f);
+	ImGui::InputFloat3("View Dirrection", this->viewDir, 2.0f);
+	ImGui::InputFloat3("Up Vector", this->upDir, 2.0f);
+
 
 
 	ImGui::End();

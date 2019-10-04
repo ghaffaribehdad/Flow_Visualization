@@ -102,11 +102,13 @@ void main(lineadj GS_INPUT input[4], inout TriangleStream<GS_OUTPUT> output)
 			float3 position1 = input[2].inPosition + orient1_rotated * tubeRad;
 
 			// SV_POSITION
-			vertex0.outPosition = mul(float4(position0,1.0f), transpose(View));
-			vertex0.outPosition = mul(vertex0.outPosition, transpose(Proj));
+			// SV_POSITION
+			vertex0.outPosition = mul(View, float4(position0, 1.0f));
+			vertex0.outPosition = mul(Proj, vertex0.outPosition);
 
-			vertex1.outPosition = mul(float4(position1, 1.0f), transpose(View));
-			vertex1.outPosition = mul(vertex1.outPosition, transpose(Proj));
+			vertex1.outPosition = mul(View, float4(position1, 1.0f));
+			vertex1.outPosition = mul(Proj, vertex1.outPosition);
+
 
 
 			// Normals

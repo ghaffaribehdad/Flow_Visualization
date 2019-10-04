@@ -62,7 +62,7 @@ void Camera::SetPosition(float x, float y, float z)
 
 void Camera::SetPosition(const float * eyePos)
 {
-	this->pos = XMFLOAT3(eyePos[0], eyePos[1], eyePos[1]);
+	this->pos = XMFLOAT3(eyePos[0], eyePos[1], eyePos[2]);
 	this->posVector = XMLoadFloat3(&this->pos);
 	this->UpdateViewMatrix();
 }

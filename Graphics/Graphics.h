@@ -91,7 +91,7 @@ public:
 private:
 
 	// camera propertis
-	float eyePos[3] = { 0,0,0.0f };
+	float eyePos[3] = { 0,0,-10.0f };
 	Camera_Prop cameraProp = Camera_Prop(30.0f, 0.1f, 1000.0f,eyePos);
 
 

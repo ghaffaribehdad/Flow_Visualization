@@ -69,6 +69,9 @@ public:
 
 	// Log pointer
 	char* log = new char[1000];
+	float eyePos[3] = { 0,0,0 };
+	float viewDir[3] = { 0,0,0 };
+	float upDir[3] = { 0,0,0 };
 
 
 
