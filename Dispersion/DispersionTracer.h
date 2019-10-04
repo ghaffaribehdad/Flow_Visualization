@@ -26,12 +26,13 @@ class DispersionTracer
 {
 public:
 
-	void initialize();
+	bool initialize();
 	void trace();
-	void writeTemp();
-	float * read();
+	bool writeTemp();
+	float * read(); // shouldn't we use the a unified reader for the visualization? (pathline is tricky then!)
 	void read(std::string fileName, std::string filePath);
 	void writeToFile(std::string fileName, std::string filePath);
+	bool 
 
 private:
 
@@ -42,5 +43,7 @@ private:
 	BinaryWriter binaryWriter;
 
 	float* field;
+
+	cudaSurfaceObject_t 
 
 };
