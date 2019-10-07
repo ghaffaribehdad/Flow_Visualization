@@ -182,15 +182,7 @@ __device__ float3 RK4Odd(cudaTextureObject_t t_VelocityField_0, cudaTextureObjec
 
 
 
-
-
-
-
-
-
-
-
-__device__ float3 RK4EStream(cudaTextureObject_t t_VelocityField_0, float3* position, float3 gridDiameter, float dt)
+__device__ float3 RK4Stream(cudaTextureObject_t t_VelocityField_0, float3* position, float3 gridDiameter, float dt)
 {
 	//####################### K1 ######################
 	float3 k1 = { 0,0,0 };
@@ -280,7 +272,7 @@ __device__ float3 RK4EStream(cudaTextureObject_t t_VelocityField_0, float3* posi
 
 
 
-__device__ void RK4EStream(cudaTextureObject_t t_VelocityField_0, Particle* particle, float3 gridDiameter, float dt)
+__device__ void RK4Stream(cudaTextureObject_t t_VelocityField_0, Particle* particle, float3 gridDiameter, float dt)
 {
 	//####################### K1 ######################
 	float3 k1 = { 0,0,0 };

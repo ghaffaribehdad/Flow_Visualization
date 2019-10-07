@@ -53,5 +53,11 @@ namespace IsosurfaceHelper
 
 	};
 
+	struct Position_Y : public Observable
+	{
+		//calculates the value of the field at position XYZ
+		__device__ float ValueAtXYZ(cudaTextureObject_t tex, float3 position) override;
+	};
+
 
 }

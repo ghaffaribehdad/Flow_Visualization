@@ -31,7 +31,7 @@
 class Raycasting
 {
 
-private:
+protected:
 
 
 	float FOV_deg	= 30.0f;
@@ -127,4 +127,7 @@ public:
 
 
 template <typename Observable>
-__global__ void CudaIsoSurfacRenderer(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
+__global__ void CudaIsoSurfacRenderer(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance, float gradientRate);
+
+template <typename direction>
+__global__ void CudaTerrainRenderer(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float samplingRate, float IsosurfaceTolerance, float gradientRate);

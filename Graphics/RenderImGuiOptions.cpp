@@ -335,6 +335,11 @@ void RenderImGuiOptions::drawRaycastingOptions()
 		this->updateRaycasting = true;
 	}
 
+	if (ImGui::DragFloat("Gradient 0", &raycastingOptions->gradientRate_0, 0.00001f, 0.0001f, 5, "%5f"))
+	{
+		this->updateRaycasting = true;
+	}
+
 	ImGui::Text("Surfaces color 0:");
 
 

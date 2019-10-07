@@ -178,7 +178,9 @@
     </CudaLink>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Dispersion\DispersionHelper.cpp" />
+    <CudaCompile Include="Dispersion\DispersionHelper.cu">
+      <FileType>Document</FileType>
+    </CudaCompile>
     <CudaCompile Include="Dispersion\DispersionTracer.cu">
       <FileType>Document</FileType>
     </CudaCompile>

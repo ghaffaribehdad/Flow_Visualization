@@ -185,9 +185,6 @@
     <ClCompile Include="Volume\Volume_IO.cpp">
       <Filter>Source Files\VolumeTexture</Filter>
     </ClCompile>
-    <ClCompile Include="Dispersion\DispersionHelper.cpp">
-      <Filter>Source Files\Dispersion</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Keyboard\KeyboardEvent.h">
@@ -417,6 +414,9 @@
       <Filter>Source Files\Particle</Filter>
     </CudaCompile>
     <CudaCompile Include="Dispersion\DispersionTracer.cu">
+      <Filter>Source Files\Dispersion</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Dispersion\DispersionHelper.cu">
       <Filter>Source Files\Dispersion</Filter>
     </CudaCompile>
   </ItemGroup>

@@ -39,10 +39,10 @@ public:
 	}
 
 private:
-	cudaArray_t cuArray;
-	size_t width;
-	size_t height;
-	size_t depth;
+	cudaArray_t cuArray = nullptr;
+	size_t width	= 0;
+	size_t height	= 0;
+	size_t depth	= 0;
 
 
 

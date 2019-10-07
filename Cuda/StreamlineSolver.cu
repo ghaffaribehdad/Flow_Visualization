@@ -114,7 +114,7 @@ __global__ void TracingStream(Particle* d_particles, cudaTextureObject_t t_Veloc
 			}
 
 			// Do not check if it is out
-			RK4EStream(t_VelocityField, &d_particles[index], gridDiameter, dt);
+			RK4Stream(t_VelocityField, &d_particles[index], gridDiameter, dt);
 
 			// Update position based on the projection
 			switch (solverOptions.projection)

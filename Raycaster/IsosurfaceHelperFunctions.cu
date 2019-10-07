@@ -51,3 +51,8 @@ __device__ float IsosurfaceHelper::ShearStress::ValueAtXYZ(cudaTextureObject_t t
 	return fabsf(sqrtf(dot(ShearStress, ShearStress)));
 }
 
+
+__device__ float IsosurfaceHelper::Position_Y::ValueAtXYZ(cudaTextureObject_t tex, float3 position)
+{
+	return   tex3D<float4>(tex, position.x, position.y, position.z).y;
+}

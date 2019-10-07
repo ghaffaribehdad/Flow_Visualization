@@ -6,12 +6,9 @@ class CudaSurface
 {
 private:
 
-	cudaSurfaceObject_t surfaceObject = 0;
+	cudaSurfaceObject_t surfaceObject;
 
 	cudaArray_t cuInputArray = NULL;
-
-	int width = 0;
-	int height = 0;
 
 public:
 

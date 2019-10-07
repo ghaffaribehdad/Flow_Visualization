@@ -62,6 +62,18 @@ __host__ bool DispersionTracer::InitializeHeightArray()
 	return true;
 }
 
+__host__ bool DispersionTracer::InitializeHeightSurface()
+{
+	cudaArray_t pCudaArray = NULL;
+	pCudaArray = heightArray.getArray();
+	this->heightSurface.setInputArray(pCudaArray);
+	if (!this->heightSurface.initializeSurface())
+		return false;
+
+	return true;
+}
+
+
 __host__ bool DispersionTracer::InitializeVelocityField(int ID)
 {
 	if (!this->volume_IO.readVolume(ID))
@@ -85,9 +97,13 @@ __host__ bool DispersionTracer::InitializeVelocityField(int ID)
 // Release resources 
 void DispersionTracer::release()
 {
-	this->volumeTexture.release();
+	// Host side
 	this->volume_IO.release();
+
+	// Device Side
+	this->volumeTexture.release();
 	this->heightArray.release();
+	this->heightSurface.destroySurface();
 }
 
 void DispersionTracer::trace()

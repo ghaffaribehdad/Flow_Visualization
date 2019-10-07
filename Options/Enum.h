@@ -16,6 +16,7 @@ enum IsoMeasure
 	Velocity_y,
 	Velocity_Z,
 	ShearStress,
+	Position_Y
 };
 
 

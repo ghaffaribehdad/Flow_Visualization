@@ -23,6 +23,7 @@ private:
 	bool InitializeVelocityField(int ID);
 	bool InitializeParticles();
 	bool InitializeHeightArray();
+	bool InitializeHeightSurface();
 
 	DispersionOptions* dispersionOptions;
 	SolverOptions* solverOptions;
