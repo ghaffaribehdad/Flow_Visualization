@@ -358,6 +358,9 @@
     <ClInclude Include="Dispersion\DispersionTracer.h">
       <Filter>Header Files\Dispersion</Filter>
     </ClInclude>
+    <ClInclude Include="Cuda\CudaArray.h">
+      <Filter>Header Files\Cuda</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\geometryshaderLineTube.hlsl">
@@ -412,6 +415,9 @@
     </CudaCompile>
     <CudaCompile Include="Particle\Particle.cu">
       <Filter>Source Files\Particle</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Dispersion\DispersionTracer.cu">
+      <Filter>Source Files\Dispersion</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

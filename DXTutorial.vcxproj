@@ -179,9 +179,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Dispersion\DispersionHelper.cpp" />
+    <CudaCompile Include="Dispersion\DispersionTracer.cu">
+      <FileType>Document</FileType>
+    </CudaCompile>
     <ClCompile Include="Timer\Timer.cpp" />
     <ClCompile Include="Window\RenderWindow.cpp" />
     <ClCompile Include="Window\WindowContainer.cpp" />
+    <ClInclude Include="Cuda\CudaArray.h" />
     <ClInclude Include="DispersionHelper.h" />
     <ClInclude Include="Dispersion\DispersionTracer.h" />
     <ClInclude Include="Options\DispresionOptions.h" />

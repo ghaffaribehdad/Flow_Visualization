@@ -122,8 +122,8 @@ __host__ void Raycasting::rendering()
 
 
 	// Optimize blocks and grid sizes
-	int* minGridSize	= nullptr;
-	int* blockSize		= nullptr;	
+	//int* minGridSize	= nullptr;
+	//int* blockSize		= nullptr;	
 	//cuOccupancyMaxPotentialBlockSize(minGridSize, blockSize,(CUfunction)CudaIsoSurfacRenderer<IsosurfaceHelper::Velocity_Magnitude>, 0, 0,0);
 
 
@@ -431,7 +431,7 @@ __host__ bool Raycasting::initializeCudaSurface()
 	// Pass this cuda Array to the raycasting Surface
 	this->raycastingSurface.setInputArray(pCudaArray);
 
-	this->raycastingSurface.setDimensions(*this->width, *this->height);
+	//this->raycastingSurface.setDimensions(*this->width, *this->height);
 
 	// Create cuda surface 
 	if (!this->raycastingSurface.initializeSurface())

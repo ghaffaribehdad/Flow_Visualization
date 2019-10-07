@@ -24,7 +24,7 @@ public:
 
 	// Create a texture and populate it with h_field
 	// Address modes can be set for X,y,z
-	cudaTextureObject_t initialize
+	bool initialize
 	(
 		cudaTextureAddressMode addressMode_x = cudaAddressModeWrap,
 		cudaTextureAddressMode addressMode_y = cudaAddressModeBorder,
@@ -41,12 +41,12 @@ public:
 
 private:
 
-	SolverOptions * solverOptions;
+	SolverOptions * solverOptions = nullptr;
 
 	cudaTextureObject_t t_field;
 	cudaArray_t cuArray_velocity;
 
-	float* h_field;
+	float* h_field = nullptr;
 
 	float3 gridDiameter;
 

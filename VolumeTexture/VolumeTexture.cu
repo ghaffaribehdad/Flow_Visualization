@@ -7,13 +7,17 @@
 
 
 
-cudaTextureObject_t VolumeTexture::initialize
+bool VolumeTexture::initialize
 (
 	cudaTextureAddressMode addressMode_x ,
 	cudaTextureAddressMode addressMode_y ,
 	cudaTextureAddressMode addressMode_z
 )
 {
+	if (this->solverOptions == nullptr)
+	{
+		return false;
+	}
 
 	cudaExtent extent = make_cudaExtent(this->solverOptions->gridSize[0], this->solverOptions->gridSize[1], this->solverOptions->gridSize[2]);
 
@@ -63,7 +67,7 @@ cudaTextureObject_t VolumeTexture::initialize
 	// Create the texture and bind it to the array
 	gpuErrchk(cudaCreateTextureObject(&this->t_field, &resDesc, &texDesc, NULL));
 
-	return t_field;
+	return true;
 
 }
 void VolumeTexture::release()

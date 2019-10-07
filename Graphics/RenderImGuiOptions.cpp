@@ -247,9 +247,9 @@ void RenderImGuiOptions::drawLog()
 
 
 
-	ImGui::InputFloat3("eye Position", this->eyePos, 2.0f);
-	ImGui::InputFloat3("View Dirrection", this->viewDir, 2.0f);
-	ImGui::InputFloat3("Up Vector", this->upDir, 2.0f);
+	ImGui::InputFloat3("eye Position", this->eyePos, 2);
+	ImGui::InputFloat3("View Dirrection", this->viewDir, 2);
+	ImGui::InputFloat3("Up Vector", this->upDir, 2);
 
 
 
@@ -359,11 +359,27 @@ void RenderImGuiOptions::drawRaycastingOptions()
 
 void RenderImGuiOptions::drawDispersionOptions()
 {
+	ImGui::Begin("Dispersion Options");
 
+	if (ImGui::DragFloat("dt dispersion", &dispersionOptions->dt, 0.0001f,0.001f,1.0f,"%5f"))
+	{
+		this->updateDispersion = true;
+	}
 
-	ImGui::Begin("Raycasting Options");
+	if (ImGui::DragFloat("Wall-normal Distance", &dispersionOptions->seedWallNormalDist,0.001f,0.0,solverOptions->gridDiameter[1],"%4f"))
+	{
+		this->updateDispersion = true;
+	}
 
+	if (ImGui::DragInt("time steps", &dispersionOptions->timeStep,1.0f,1,1024))
+	{
+		this->updateDispersion = true;
+	}
 
+	if (ImGui::InputInt2("Grid Size 2D", dispersionOptions->gridSize_2D, sizeof(dispersionOptions->gridSize_2D)))
+	{
+		this->updateDispersion = true;
+	}
 
 	ImGui::End();
 

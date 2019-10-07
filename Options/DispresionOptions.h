@@ -2,7 +2,8 @@
 
 struct DispersionOptions
 {
-	float seedDirection[3] = { 0.0f,1.0f,0.0f };
-	float seedDelta = 0.01f;
-
+	float seedWallNormalDist = 0.01f;
+	int timeStep = 10;
+	int gridSize_2D[2] = { 10,10 };
+	float dt = 0.01f;
 };

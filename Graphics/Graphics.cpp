@@ -169,6 +169,7 @@ void Graphics::RenderFrame()
 	renderImGuiOptions.drawLineRenderingOptions();
 	renderImGuiOptions.drawLog();
 	renderImGuiOptions.drawRaycastingOptions();
+	renderImGuiOptions.drawDispersionOptions();
 	renderImGuiOptions.render();
 
 
@@ -486,7 +487,15 @@ bool Graphics::InitializeImGui(HWND hwnd)
 		ImGui_ImplDX11_Init(this->device.Get(), this->deviceContext.Get());
 		ImGui::StyleColorsDark();
 
-		this->renderImGuiOptions.setResources(&camera,&fpsTimer,&renderingOptions,&solverOptions,&raycastingOptions);
+		// initializes Options for various visualization
+		this->renderImGuiOptions.setResources
+		(
+			&camera,&fpsTimer,
+			&renderingOptions,
+			&solverOptions,
+			&raycastingOptions,
+			&dispersionOptions
+		);
 
 
 		return true;

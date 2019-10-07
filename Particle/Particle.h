@@ -11,6 +11,11 @@ public:
 	bool outOfScope = false;
 public:
 
+	__device__ void checkPosition(const float3& gridDiameter);
+	__device__ void updatePosition(const float dt);
+	__device__ void updateVelocity(const float3& gridDiameter, cudaTextureObject_t t_VelocityField);
+	__device__ __host__ float3 findRelative(const float3& gridDiameter);
+
 	__device__ __host__ Particle()
 	{
 		m_position = { 0,0,0 };
@@ -43,23 +48,5 @@ public:
 	}
 
 
-	__device__ void move(const float& dt, float3 gridDiameter, cudaTextureObject_t t_VelocityField )
-	{
-
-	}
-
-
-	__device__ void checkPosition(const float3& gridDiameter);
-
-	__device__ void updatePosition(const float dt);
-
-
-	__device__ void updateVelocity
-	(
-		const float3& gridDiameter,
-		cudaTextureObject_t t_VelocityField
-	);
-
-	__device__ __host__ float3 findRelative(const float3& gridDiameter);
 	
 };

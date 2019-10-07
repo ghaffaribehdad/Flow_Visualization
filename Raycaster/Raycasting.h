@@ -35,7 +35,7 @@ private:
 
 
 	float FOV_deg	= 30.0f;
-	float distImagePlane = 0.1;
+	float distImagePlane = 0.1f;
 	unsigned int maxBlockDim = 16;
 
 	int* width = nullptr;

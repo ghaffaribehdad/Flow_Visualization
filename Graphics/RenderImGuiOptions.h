@@ -12,6 +12,7 @@
 #include <map>
 #include <string>
 
+
 class RenderImGuiOptions
 {
 
@@ -31,7 +32,15 @@ private:
 
 public:
 
-	void setResources(Camera* _camera, Timer * _fpsTimer, RenderingOptions * _renderingOptions, SolverOptions * _solverOptions, RaycastingOptions * _raycastingOptions)
+	void setResources
+	(
+		Camera* _camera,
+		Timer * _fpsTimer, 
+		RenderingOptions * _renderingOptions,
+		SolverOptions * _solverOptions,
+		RaycastingOptions * _raycastingOptions,
+		DispersionOptions * _dispersionOptions
+	)
 	{
 		this->camera = _camera;
 	
@@ -42,6 +51,8 @@ public:
 		this->solverOptions = _solverOptions;
 
 		this->raycastingOptions = _raycastingOptions;
+
+		this->dispersionOptions = _dispersionOptions;
 	}
 
 	bool updateRaycasting		= false;
@@ -50,11 +61,12 @@ public:
 	bool updateVolumeBox		= false;
 	bool updateStreamlines		= false;
 	bool updatePathlines		= false;
+	bool updateDispersion		= false;
 
 	bool showStreamlines		= false;
 	bool showPathlines			= false;
 	bool showRaycasting			= false;
-
+	bool showDispersion			= false;
 
 	bool streamlineRendering	= true;
 	bool pathlineRendering		= false;

@@ -15,11 +15,7 @@ private:
 
 public:
 
-	void setDimensions(const int& _width, const int& _height)
-	{
-		this->width		= _width;
-		this->height	= _height;
-	}
+
 	cudaSurfaceObject_t getSurfaceObject()
 	{
 		return this->surfaceObject;
