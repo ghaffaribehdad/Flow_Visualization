@@ -1,30 +1,51 @@
 #include "DispersionTracer.h"
 #include "DispersionHelper.h"
 #include "..//ErrorLogger/ErrorLogger.h"
+#include "..//Raycaster/IsosurfaceHelperFunctions.h"
+#include <cuda_runtime.h>
 
 
-
+void DispersionTracer::retrace()
+{
+	this->InitializeParticles();
+	trace();
+	this->InitializeHeightTexture();
+}
 bool DispersionTracer::initialize()
 {
-	// Seed and initialize particles in a linear array
-	if (!this->InitializeParticles())
-		return false;
 
-	// Read and store velocity field
-	if (!this->InitializeVelocityField(this->solverOptions->currentIdx))
+	// Seed and initialize particles in a linear array
+	Raycasting::initialize();
+
+	if (!this->InitializeParticles())
 		return false;
 
 	// Initialize Height Field as an empty cuda array 3D
 	if (!this->InitializeHeightArray())
 		return false;
 
+	// Bind the array of heights to the cuda surface
+	if (!this->InitializeHeightSurface())
+		return false;
+
+	if (!this->InitializeHeightTexture())
+		return false;
+
 	return true;
 }
 
-void DispersionTracer::setResources(SolverOptions* _solverOption, DispersionOptions* _dispersionOptions)
+void DispersionTracer::setResources(Camera* _camera,
+	int* _width,
+	int* _height,
+	SolverOptions* _solverOption,
+	RaycastingOptions* _raycastingOptions,
+	ID3D11Device* _device,
+	IDXGIAdapter* _pAdapter,
+	ID3D11DeviceContext* _deviceContext,
+	DispersionOptions* _dispersionOptions)
 {
-	this->solverOptions			= _solverOption;
-	this->dispersionOptions		= _dispersionOptions;
+	Raycasting::setResources(_camera, _width,_height,_solverOption,_raycastingOptions,_device,_pAdapter,_deviceContext);
+		this->dispersionOptions		= _dispersionOptions;
 }
 
 
@@ -40,7 +61,7 @@ __host__ bool DispersionTracer::InitializeParticles()
 	gpuErrchk(cudaMalloc((void**)& this->d_particle, Particles_byte));
 	gpuErrchk(cudaMemcpy(this->d_particle, this->h_particle, Particles_byte, cudaMemcpyHostToDevice));
 
-	delete[] this->h_particle;
+	delete[] h_particle;
 
 	return true;
 }
@@ -51,8 +72,7 @@ __host__ bool DispersionTracer::InitializeHeightArray()
 	this->heightArray.setDimension
 	(
 		dispersionOptions->gridSize_2D[0],
-		dispersionOptions->gridSize_2D[1],
-		dispersionOptions->timeStep
+		dispersionOptions->gridSize_2D[1]
 	);
 
 	// initialize the 3D array
@@ -70,43 +90,128 @@ __host__ bool DispersionTracer::InitializeHeightSurface()
 	if (!this->heightSurface.initializeSurface())
 		return false;
 
+	// Trace particles and write their position in to the surface
+	this->trace();
+
 	return true;
 }
 
-
-__host__ bool DispersionTracer::InitializeVelocityField(int ID)
-{
-	if (!this->volume_IO.readVolume(ID))
-		return false;
-
-	std::vector<char>* p_vec_buffer = volume_IO.flushBuffer();
-	char* p_vec_buffer_temp = &(p_vec_buffer->at(0));
-	this->field = reinterpret_cast<float*>(p_vec_buffer_temp);
-
-	// pass a pointer to the velocity field to the volume texture
-	this->volumeTexture.setField(this->field);
-	this->volumeTexture.setSolverOptions(this->solverOptions);
-	// initialize the volume texture
-	if (!this->volumeTexture.initialize())
-		return false;
-
-	return true;
-
-}
 
 // Release resources 
-void DispersionTracer::release()
+bool DispersionTracer::release()
 {
-	// Host side
-	this->volume_IO.release();
-
-	// Device Side
-	this->volumeTexture.release();
+	Raycasting::release();
 	this->heightArray.release();
 	this->heightSurface.destroySurface();
+	cudaDestroyTextureObject(this->heightFieldTexture);
+
+	return true;
 }
 
 void DispersionTracer::trace()
 {
+	// Calculates the block and grid sizes
+	unsigned int blocks;
+	dim3 thread = { maxBlockDim,maxBlockDim,1 };
+	blocks = static_cast<unsigned int>((this->n_particles % (thread.x * thread.y) == 0 ?
+		n_particles / (thread.x * thread.y) : n_particles / (thread.x * thread.y) + 1));
 
+	// After this step the heightSurface is populated with the height of each particle
+	traceDispersion << < blocks, thread >> >
+	(
+		d_particle,
+		heightSurface.getSurfaceObject(),
+		this->volumeTexture.getTexture(),
+		*solverOptions,
+		*dispersionOptions
+	);
+
+
+	cudaFree(d_particle);
+}
+
+
+__host__ void DispersionTracer::rendering()
+{
+	this->deviceContext->PSSetSamplers(0, 1, this->samplerState.GetAddressOf());
+	this->heightSurface.destroySurface();
+	// Create a 2D texture tu read hight array
+
+	float bgcolor[] = { 0.0f,0.0f, 0.0f, 1.0f };
+
+	this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), bgcolor);// Clear the target view
+
+	// Calculates the block and grid sizes
+	unsigned int blocks;
+	dim3 thread = { maxBlockDim,maxBlockDim,1 };
+	blocks = static_cast<unsigned int>((this->rays % (thread.x * thread.y) == 0 ? rays / (thread.x * thread.y) : rays / (thread.x * thread.y) + 1));
+ 
+
+	CudaTerrainRenderer<IsosurfaceHelper::Position_Y> << < blocks, thread >> >
+		(
+			this->raycastingSurface.getSurfaceObject(),
+			this->heightFieldTexture,
+			int(this->rays),
+			this->raycastingOptions->samplingRate_0,
+			this->raycastingOptions->tolerance_0,
+			this->raycastingOptions->gradientRate_0
+		);
+
+}
+
+
+bool DispersionTracer::updateScene()
+{
+	if (!this->initializeRaycastingInteroperability())	// Create interoperability while we need to release it at the end of rendering
+		return false;
+
+	if (!this->initializeCudaSurface())					// reinitilize cudaSurface	
+		return false;
+
+	if (!this->initializeBoundingBox())					//updates constant memory
+		return false;
+
+
+	this->rendering();
+
+
+	if (!this->raycastingSurface.destroySurface())
+		return false;
+
+	this->interoperatibility.release();
+
+
+	return true;
+}
+
+bool DispersionTracer::InitializeHeightTexture()
+{
+	
+	this->heightSurface.destroySurface();
+
+	// Set Texture Description
+	cudaTextureDesc texDesc;
+	cudaResourceDesc resDesc;
+	cudaResourceViewDesc resViewDesc;
+
+	memset(&resDesc, 0, sizeof(resDesc));
+	memset(&texDesc, 0, sizeof(texDesc));
+
+
+
+	resDesc.resType = cudaResourceTypeArray;
+	resDesc.res.array.array = this->heightArray.getArray();
+
+	// Texture Description
+	texDesc.normalizedCoords = true;
+	texDesc.filterMode = cudaFilterModeLinear;
+	texDesc.addressMode[0] = cudaTextureAddressMode::cudaAddressModeClamp;
+	texDesc.addressMode[1] = cudaTextureAddressMode::cudaAddressModeClamp;
+
+	texDesc.readMode = cudaReadModeElementType;
+
+	// Create the texture and bind it to the array
+	gpuErrchk(cudaCreateTextureObject(&this->heightFieldTexture, &resDesc, &texDesc, NULL));
+
+	return true;
 }

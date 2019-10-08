@@ -61,7 +61,7 @@ public:
 	bool updateVolumeBox		= false;
 	bool updateStreamlines		= false;
 	bool updatePathlines		= false;
-	bool updateDispersion		= false;
+	bool updateDispersion		= true;
 
 	bool showStreamlines		= false;
 	bool showPathlines			= false;

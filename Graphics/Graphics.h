@@ -21,6 +21,7 @@
 #include "BoxRenderer.h"
 #include "RenderImGuiOptions.h"
 #include "PathlineRenderer.h"
+#include "..//Dispersion/DispersionTracer.h"
 
 
 typedef long long int llInt;
@@ -34,6 +35,7 @@ public:
 	void viewChanged()
 	{
 		this->renderImGuiOptions.updateRaycasting = true;
+		this->renderImGuiOptions.updateDispersion = true;
 	}
 
 
@@ -164,6 +166,8 @@ private:
 
 	// Raycasting (This object would write into a texture and pass it to the graphics then we need to use sampler state to show it on the backbuffer)
 	Raycasting raycasting;
+	DispersionTracer dispersionTracer;
+
 
 
 	// Solver options

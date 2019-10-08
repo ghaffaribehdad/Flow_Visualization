@@ -115,10 +115,10 @@ void Graphics::RenderFrame()
 	
 	if (this->renderImGuiOptions.showRaycasting)
 	{
-		if (!this->raycastingOptions.initilized)
+		if (!this->raycastingOptions.initialized)
 		{
 			raycasting.initialize();
-			this->raycastingOptions.initilized = true;
+			this->raycastingOptions.initialized = true;
 		}
 		this->raycasting.draw();
 
@@ -129,10 +129,33 @@ void Graphics::RenderFrame()
 			renderImGuiOptions.updateRaycasting = false;
 
 		}
-	
-
-	
 	}
+
+
+	if (this->renderImGuiOptions.showDispersion)
+	{
+		if (this->dispersionOptions.retrace)
+		{
+			this->dispersionTracer.retrace();
+			this->dispersionOptions.retrace = false;
+		}
+		if (!this->dispersionOptions.initialized)
+		{
+			dispersionTracer.initialize();
+			this->dispersionOptions.initialized = true;
+		}
+		// Overrided draw
+		this->dispersionTracer.draw();
+
+		if (renderImGuiOptions.updateDispersion)
+		{
+			this->dispersionTracer.updateScene();
+
+			renderImGuiOptions.updateDispersion = false;
+
+		}
+	}
+
 	/*
 
 	##############################################################
@@ -338,6 +361,21 @@ bool Graphics::InitializeResources()
 		this->device.Get(),
 		this->adapter,
 		this ->deviceContext.Get()
+	);
+
+
+
+	dispersionTracer.setResources
+	(
+		&this->camera,
+		&this->windowWidth,
+		&this->windowHeight,
+		&this->solverOptions,
+		&this->raycastingOptions,
+		this->device.Get(),
+		this->adapter,
+		this->deviceContext.Get(),
+		&this->dispersionOptions
 	);
 	
 	if (!streamlineRenderer.initializeBuffers())

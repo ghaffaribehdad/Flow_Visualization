@@ -7,40 +7,53 @@
 #include "..//VolumeTexture/VolumeTexture.h"
 #include "..//Cuda/cudaSurface.h"
 #include "..//Cuda/CudaArray.h"
+#include "..//Raycaster/Raycasting.h"
 
-class DispersionTracer
+class DispersionTracer : public Raycasting
 {
 public:
 
-	bool initialize();
-	void setResources(SolverOptions* _solverOption, DispersionOptions* _dispersionOptions);
-	void release();
+	bool initialize() override;
+
+	
+	__host__ void setResources 
+	(
+		Camera* _camera,
+		int* _width,
+		int* _height,
+		SolverOptions* _solverOption,
+		RaycastingOptions* _raycastingOptions,
+		ID3D11Device* _device,
+		IDXGIAdapter* _pAdapter,
+		ID3D11DeviceContext* _deviceContext,
+		DispersionOptions* _dispersionOptions
+	);
+
+	bool release() override;
+	void rendering() override;
+	bool updateScene() override;
 	void trace();
-	//float * read(); // shouldn't we use the a unified reader for the visualization? (pathline is tricky then!)
+	void retrace();
 
 
 private:
-	bool InitializeVelocityField(int ID);
+
 	bool InitializeParticles();
 	bool InitializeHeightArray();
 	bool InitializeHeightSurface();
-
+	bool InitializeHeightTexture();
 	DispersionOptions* dispersionOptions;
-	SolverOptions* solverOptions;
 
-	Volume_IO volume_IO;
-	VolumeTexture volumeTexture;
 
-	Particle* h_particle;
-	Particle* d_particle;
+	Particle* h_particle = nullptr;
+	Particle* d_particle = nullptr;
 	
 	unsigned int n_particles;
 	
-	float* field;						// a pointer to the velocity field
 	CudaSurface heightSurface;			// cuda surface storing the results
-	CudaArray_3D<float4> heightArray;
-
-	bool read();		
+	cudaTextureObject_t heightFieldTexture;
+	CudaArray_2D<float4> heightArray;
+		
 };
 
 

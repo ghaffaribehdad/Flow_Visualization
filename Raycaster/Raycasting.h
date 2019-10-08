@@ -22,12 +22,6 @@
 #include "..//Graphics/VertexBuffer.h"
 
 
-
-
-
-
-
-
 class Raycasting
 {
 
@@ -59,20 +53,19 @@ protected:
 
 	Microsoft::WRL::ComPtr<ID3D11Texture2D>			raycastingTexture;
 	Microsoft::WRL::ComPtr< ID3D11RenderTargetView> renderTargetView;
-	Microsoft::WRL::ComPtr<ID3D11RasterizerState> rasterizerstate;
+	Microsoft::WRL::ComPtr<ID3D11RasterizerState>	rasterizerstate;
 	Microsoft::WRL::ComPtr<ID3D11SamplerState>		samplerState;	// For depth test between raycasting and line rendering
 	Microsoft::WRL::ComPtr <ID3D11ShaderResourceView> shaderResourceView;
 
 	ID3D11Device* device		= nullptr;
 	IDXGIAdapter* pAdapter		= nullptr;
 	ID3D11DeviceContext* deviceContext	= nullptr;
-
-
-	VolumeTexture volumeTexture;
-	Volume_IO volume_IO;
+	Camera* camera;
 	CudaSurface raycastingSurface;
 	Interoperability interoperatibility;
-	Camera* camera;
+	VolumeTexture volumeTexture;
+	Volume_IO volume_IO;
+
 
 	// in case of resizing
 
@@ -91,11 +84,11 @@ protected:
 
 public:
 
-	__host__ bool initialize();
-	__host__ bool release();
-	__host__ void rendering();
+	__host__ virtual bool initialize();
+	__host__ virtual bool release();
+	__host__ virtual void rendering();
 	//__host__ void saveTexture();
-	__host__ bool updateScene();
+	__host__ virtual bool updateScene();
 	__host__ bool resize();
 	
 

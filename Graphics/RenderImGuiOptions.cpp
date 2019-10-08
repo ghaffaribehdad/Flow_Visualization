@@ -323,6 +323,8 @@ void RenderImGuiOptions::drawRaycastingOptions()
 			raycastingOptions->samplingRate_0 = 0.0001f;
 		}
 		this->updateRaycasting = true;
+		this->updateDispersion = true;
+
 	}
 
 	if (ImGui::DragFloat("Isovalue 0", &raycastingOptions->isoValue_0, 0.001f))
@@ -338,6 +340,7 @@ void RenderImGuiOptions::drawRaycastingOptions()
 	if (ImGui::DragFloat("Gradient 0", &raycastingOptions->gradientRate_0, 0.00001f, 0.0001f, 5, "%5f"))
 	{
 		this->updateRaycasting = true;
+		this->updateDispersion = true;
 	}
 
 	ImGui::Text("Surfaces color 0:");
@@ -346,6 +349,8 @@ void RenderImGuiOptions::drawRaycastingOptions()
 	if (ImGui::ColorEdit3("Isosurface Color 0", (float*)& raycastingOptions->color_0))
 	{
 		this->updateRaycasting = true;
+		this->updateDispersion = true;
+
 	}
 
 	if (this->raycastingOptions->fileLoaded)
@@ -366,24 +371,39 @@ void RenderImGuiOptions::drawDispersionOptions()
 {
 	ImGui::Begin("Dispersion Options");
 
+	if (ImGui::Checkbox("Enable Dispersion", &this->showDispersion))
+	{
+		this->renderingOptions->isRaycasting = this->showDispersion;
+		this->updateDispersion = true;
+	}
+
 	if (ImGui::DragFloat("dt dispersion", &dispersionOptions->dt, 0.0001f,0.001f,1.0f,"%5f"))
 	{
-		this->updateDispersion = true;
+		this->dispersionOptions->retrace = true;
 	}
 
 	if (ImGui::DragFloat("Wall-normal Distance", &dispersionOptions->seedWallNormalDist,0.001f,0.0,solverOptions->gridDiameter[1],"%4f"))
 	{
-		this->updateDispersion = true;
+		this->dispersionOptions->retrace = true;
 	}
 
-	if (ImGui::DragInt("time steps", &dispersionOptions->timeStep,1.0f,1,1024))
+	if (ImGui::DragInt("time steps", &dispersionOptions->timeStep,1.0f,1,1000000))
 	{
-		this->updateDispersion = true;
+		this->dispersionOptions->retrace = true;
 	}
 
 	if (ImGui::InputInt2("Grid Size 2D", dispersionOptions->gridSize_2D, sizeof(dispersionOptions->gridSize_2D)))
 	{
-		this->updateDispersion = true;
+		if (dispersionOptions->gridSize_2D[0] <= 0)
+		{
+			dispersionOptions->gridSize_2D[0] = 2;
+		}
+
+		if (dispersionOptions->gridSize_2D[1] <= 0)
+		{
+			dispersionOptions->gridSize_2D[1] = 2;
+		}
+		this->dispersionOptions->retrace = true;
 	}
 
 	ImGui::End();

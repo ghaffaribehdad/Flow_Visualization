@@ -111,11 +111,9 @@ __host__ void Raycasting::rendering()
 
 	this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), bgcolor);// Clear the target view
 
-	//this->initializeBoundingBox();
-
 	// Calculates the block and grid sizes
 	unsigned int blocks;
-	dim3 thread = { maxBlockDim,maxBlockDim,1 };
+	dim3 thread = { 32,32,1 };
 	blocks = static_cast<unsigned int>((this->rays % (thread.x * thread.y) == 0 ? rays / (thread.x * thread.y) : rays / (thread.x * thread.y) + 1));
 
 
@@ -430,19 +428,40 @@ __global__ void CudaTerrainRenderer(cudaSurfaceObject_t raycastingSurface, cudaT
 
 				//Relative position calculates the position of the point on the cuda texture
 				float3 relativePos = (position / d_boundingBox.gridDiameter);
-
-
+				float3 posTemp = { 0,0,0 };
+				posTemp.x = relativePos.x;
+				posTemp.z = relativePos.z;
+				relativePos.x = posTemp.z;
+				relativePos.z = posTemp.x;
 
 
 				// check if we have a hit 
-				if (observable.ValueAtXYZ(field1, relativePos) - position.y < 0)
+				if (position.y - observable.ValueAtXY(field1, relativePos) < .1 )
 				{
+
+					if (observable.ValueAtXY(field1, relativePos) == 0)
+						break;
 					// calculates gradient
-					float3 gradient = observable.GradientAtXYZ(field1, relativePos, gradientRate);
+					float3 gradient = observable.GradientAtXY(field1, relativePos, gradientRate);
 
 					// shading (no ambient)
 					float diffuse = max(dot(normalize(gradient), viewDir), 0.0f);
-					float3 rgb = d_raycastingColor * diffuse;
+					float3 rgb_r = { 1,0,0 };
+					float3 rgb_l = { 0, 1, 0 };
+
+					float3 rgb = { 0,0,0 };
+					if (tex2D<float4>(field1, relativePos.x, relativePos.z).z < d_boundingBox.gridDiameter.z / 2.0f)
+					{
+						rgb = rgb_r * diffuse;
+
+					}
+					else 
+					{
+						rgb = rgb_l * diffuse;
+
+					}
+
+					//float3 rgb = d_raycastingColor * diffuse;
 
 
 					// vector from eye to isosurface
@@ -455,7 +474,7 @@ __global__ void CudaTerrainRenderer(cudaSurfaceObject_t raycastingSurface, cudaT
 					float depth = (f) / (f - n);
 					depth += (-1.0f / z_dist) * (f * n) / (f - n);
 
-					float4 rgba = { rgb.x, rgb.y, rgb.z, depth };
+					float4 rgba = { rgb.x , rgb.y, rgb.z, depth };
 
 					// write back color and depth into the texture (surface)
 					surf2Dwrite(rgba, raycastingSurface, 4 * sizeof(float) * pixel.x, pixel.y); // stride size of 4 * floats for each texel

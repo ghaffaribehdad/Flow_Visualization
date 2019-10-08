@@ -18,6 +18,8 @@ __device__  float3 IsosurfaceHelper::Observable::GradientAtXYZ(cudaTextureObject
 	return { dV_dX / h ,dV_dY / h, dV_dZ / h };
 }
 
+
+
 __device__ float IsosurfaceHelper::Velocity_Magnitude::ValueAtXYZ(cudaTextureObject_t tex, float3 position)
 {
 	float4 _velocity = tex3D<float4>(tex, position.x, position.y, position.z);
@@ -52,7 +54,18 @@ __device__ float IsosurfaceHelper::ShearStress::ValueAtXYZ(cudaTextureObject_t t
 }
 
 
-__device__ float IsosurfaceHelper::Position_Y::ValueAtXYZ(cudaTextureObject_t tex, float3 position)
+__device__ float IsosurfaceHelper::Position_Y::ValueAtXY(cudaTextureObject_t tex, float3 position)
 {
-	return   tex3D<float4>(tex, position.x, position.y, position.z).y;
+	return   tex2D<float4>(tex, position.x, position.z).y;
+}
+
+__device__  float3 IsosurfaceHelper::Position_Y::GradientAtXY(cudaTextureObject_t tex, float3 position, float h)
+{
+	float dV_dX = this->ValueAtXY(tex, make_float3(position.x + h / 2.0f, position.y, position.z));
+	float dV_dY = this->ValueAtXY(tex, make_float3(position.x, position.y + h / 2.0f, position.z));
+
+	dV_dX -= this->ValueAtXY(tex, make_float3(position.x - h / 2.0f, position.y, position.z));
+	dV_dY -= this->ValueAtXY(tex, make_float3(position.x, position.y - h / 2.0f, position.z));
+
+	return {dV_dX / h ,-1, dV_dY / h };
 }

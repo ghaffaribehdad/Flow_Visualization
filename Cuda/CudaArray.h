@@ -3,7 +3,7 @@
 #include "..//ErrorLogger/ErrorLogger.h"
 
 template <typename T>
-class CudaArray_3D
+class CudaArray_2D
 {
 public:
 
@@ -12,20 +12,17 @@ public:
 		// Create Format description based on the template typename
 		cudaChannelFormatDesc channelFormatDesc = cudaCreateChannelDesc<T>();
 
-		// Create Extent according to the dimensions of the array
-		cudaExtent extent = make_cudaExtent(this->width, this->height, this->depth);
 
 		// Allocate CUDA array in device memory
-		gpuErrchk(cudaMalloc3DArray(&this->cuArray, &channelFormatDesc, extent));
+		gpuErrchk(cudaMallocArray(&this->cuArray, &channelFormatDesc,width,height));
 
 		return true;
 	}
 
-	void setDimension(const size_t& _width, const size_t& _height, const size_t& _depth)
+	void setDimension(const size_t& _width, const size_t& _height)
 	{
 		this->width		= _width;
 		this->height	= _height;
-		this->depth		= _depth;
 	}
 
 	cudaArray_t getArray()
@@ -42,8 +39,4 @@ private:
 	cudaArray_t cuArray = nullptr;
 	size_t width	= 0;
 	size_t height	= 0;
-	size_t depth	= 0;
-
-
-
 };
