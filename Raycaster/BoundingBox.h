@@ -21,6 +21,7 @@ public:
 	float FOV;
 	float aspectRatio;
 	float3 gridDiameter;
+	int3 gridSize;
 
 	float boxFaces[6];
 

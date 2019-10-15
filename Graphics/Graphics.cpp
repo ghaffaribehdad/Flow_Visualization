@@ -117,7 +117,7 @@ void Graphics::RenderFrame()
 	{
 		if (!this->raycastingOptions.initialized)
 		{
-			raycasting.initialize();
+			raycasting.initialize(cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
 			this->raycastingOptions.initialized = true;
 		}
 		this->raycasting.draw();
@@ -141,7 +141,7 @@ void Graphics::RenderFrame()
 		}
 		if (!this->dispersionOptions.initialized)
 		{
-			dispersionTracer.initialize();
+			dispersionTracer.initialize(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
 			this->dispersionOptions.initialized = true;
 		}
 		// Overrided draw

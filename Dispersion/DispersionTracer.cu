@@ -3,6 +3,7 @@
 #include "..//ErrorLogger/ErrorLogger.h"
 #include "..//Raycaster/IsosurfaceHelperFunctions.h"
 #include <cuda_runtime.h>
+#include "..//Raycaster/Raycasting_Helper.h"
 
 
 void DispersionTracer::retrace()
@@ -11,11 +12,16 @@ void DispersionTracer::retrace()
 	trace();
 	this->InitializeHeightTexture();
 }
-bool DispersionTracer::initialize()
+bool DispersionTracer::initialize
+(
+	cudaTextureAddressMode addressMode_X ,
+	cudaTextureAddressMode addressMode_Y ,
+	cudaTextureAddressMode addressMode_Z 
+)
 {
 
 	// Seed and initialize particles in a linear array
-	Raycasting::initialize();
+	Raycasting::initialize(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
 
 	if (!this->InitializeParticles())
 		return false;
@@ -146,15 +152,17 @@ __host__ void DispersionTracer::rendering()
 	dim3 thread = { maxBlockDim,maxBlockDim,1 };
 	blocks = static_cast<unsigned int>((this->rays % (thread.x * thread.y) == 0 ? rays / (thread.x * thread.y) : rays / (thread.x * thread.y) + 1));
  
+	int2 gridSize = { dispersionOptions->gridSize_2D[0], dispersionOptions->gridSize_2D[1] };
 
-	CudaTerrainRenderer<IsosurfaceHelper::Position_Y> << < blocks, thread >> >
+	CudaTerrainRenderer<IsosurfaceHelper::Position> << < blocks, thread >> >
 		(
 			this->raycastingSurface.getSurfaceObject(),
 			this->heightFieldTexture,
 			int(this->rays),
 			this->raycastingOptions->samplingRate_0,
-			this->raycastingOptions->tolerance_0,
-			this->raycastingOptions->gradientRate_0
+			this->raycastingOptions->tolerance_0, 
+			gridSize,
+			dispersionOptions->seedWallNormalDist
 		);
 
 }
@@ -192,7 +200,6 @@ bool DispersionTracer::InitializeHeightTexture()
 	// Set Texture Description
 	cudaTextureDesc texDesc;
 	cudaResourceDesc resDesc;
-	cudaResourceViewDesc resViewDesc;
 
 	memset(&resDesc, 0, sizeof(resDesc));
 	memset(&texDesc, 0, sizeof(texDesc));
@@ -205,8 +212,8 @@ bool DispersionTracer::InitializeHeightTexture()
 	// Texture Description
 	texDesc.normalizedCoords = true;
 	texDesc.filterMode = cudaFilterModeLinear;
-	texDesc.addressMode[0] = cudaTextureAddressMode::cudaAddressModeClamp;
-	texDesc.addressMode[1] = cudaTextureAddressMode::cudaAddressModeClamp;
+	texDesc.addressMode[0] = cudaTextureAddressMode::cudaAddressModeBorder;
+	texDesc.addressMode[1] = cudaTextureAddressMode::cudaAddressModeBorder;
 
 	texDesc.readMode = cudaReadModeElementType;
 
@@ -215,3 +222,6 @@ bool DispersionTracer::InitializeHeightTexture()
 
 	return true;
 }
+
+
+

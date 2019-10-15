@@ -19,7 +19,7 @@ void seedParticle_ZY_Plane(Particle* particle, float* gridDiameter, const int* g
 			{
 				
 				particle[x * gridSize[0] + z].m_position = { meshSize_x * x,y_slice,meshSize_z * z };
-				particle[x * gridSize[0] + z];
+
 			}
 		}
 
@@ -44,7 +44,7 @@ __global__ void traceDispersion
 	int index = blockIdx.x * blockDim.y * blockDim.x;
 	index += threadIdx.y * blockDim.x;
 	index += threadIdx.x;
-
+	 
 	if (index < nParticles)
 	{
 		float3 gridDiameter =
@@ -54,22 +54,35 @@ __global__ void traceDispersion
 			solverOptions.gridDiameter[2],
 		};
 
+		// find the index of the particle
 		int index_y = index / dispersionOptions.gridSize_2D[1];
 		int index_x = index - (index_y * dispersionOptions.gridSize_2D[1]);
 
+		// projected position in XZ plane
+		float3 initialPos = { particle[index].m_position.x,0.0f, particle[index].m_position.z };
+
+		// Trace particle using RK4 
 		for (int i = 0; i < timeStep; i++)
 		{
 
 			RK4Stream(velocityField, &particle[index], gridDiameter, dt);
 		}
 		
+		// displacement in XZ plane
+		float3 displacement = initialPos - make_float3(particle[index].m_position.x,0.0f, particle[index].m_position.z);
+
+		// calculate the displacement magnitude (projected into XZ plane)
+		float displacementMagnitude = fabs(sqrtf(dot(displacement, displacement)));
+
 		float4 rgba = 
 		{ 
 			particle[index].m_position.x ,
 			particle[index].m_position.y ,
 			particle[index].m_position.z ,
-			0.0f
+			displacementMagnitude
 		};
 		surf2Dwrite(rgba, heightFieldSurface, 4 * sizeof(float) * index_x, index_y);
 	}
 }
+
+

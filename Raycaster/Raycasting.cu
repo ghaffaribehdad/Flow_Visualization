@@ -2,18 +2,18 @@
 #include "IsosurfaceHelperFunctions.h"
 #include "Raycasting_Helper.h"
 #include "cuda_runtime.h"
-
+#include "..//Cuda/CudaHelperFunctions.h"
 
 __constant__ BoundingBox d_boundingBox;
 __constant__ float3 d_raycastingColor;
 
 // Explicit instantiation
-template __global__ void CudaIsoSurfacRenderer<struct IsosurfaceHelper::Velocity_Magnitude>	(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance, float gradientRate);
-template __global__ void CudaIsoSurfacRenderer<struct IsosurfaceHelper::Velocity_X>			(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance, float gradientRate);
-template __global__ void CudaIsoSurfacRenderer<struct IsosurfaceHelper::Velocity_Y>			(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance, float gradientRate);
-template __global__ void CudaIsoSurfacRenderer<struct IsosurfaceHelper::Velocity_Z>			(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance, float gradientRate);
-template __global__ void CudaIsoSurfacRenderer<struct IsosurfaceHelper::ShearStress>		(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance, float gradientRate);
-template __global__ void CudaTerrainRenderer< struct IsosurfaceHelper::Position_Y >			(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float samplingRate, float IsosurfaceTolerance, float gradientRate);
+template __global__ void CudaIsoSurfacRenderer<struct IsosurfaceHelper::Velocity_Magnitude>	(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
+template __global__ void CudaIsoSurfacRenderer<struct IsosurfaceHelper::Velocity_X>			(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
+template __global__ void CudaIsoSurfacRenderer<struct IsosurfaceHelper::Velocity_Y>			(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
+template __global__ void CudaIsoSurfacRenderer<struct IsosurfaceHelper::Velocity_Z>			(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
+template __global__ void CudaIsoSurfacRenderer<struct IsosurfaceHelper::ShearStress>		(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
+template __global__ void CudaTerrainRenderer< struct IsosurfaceHelper::Position >			(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float samplingRate, float IsosurfaceTolerance, int2 gridSize, float seedWallNormalDist);
 
 
 __host__ bool Raycasting::updateScene()
@@ -56,7 +56,12 @@ __host__ bool Raycasting::resize()
 	return true;
 }
 
-__host__ bool Raycasting::initialize()
+__host__ bool Raycasting::initialize
+(
+	cudaTextureAddressMode addressMode_X = cudaAddressModeBorder,
+	cudaTextureAddressMode addressMode_Y = cudaAddressModeBorder,
+	cudaTextureAddressMode addressMode_Z = cudaAddressModeBorder
+)
 {
 	if (!this->initializeRaycastingTexture())				// initilize texture (the texture we need to write to)
 		return false;
@@ -74,7 +79,7 @@ __host__ bool Raycasting::initialize()
 	{
 		this->volume_IO.Initialize(this->solverOptions);
 		this->initializeIO();
-		this->initializeVolumeTexuture();
+		this->initializeVolumeTexuture(addressMode_X, addressMode_Y, addressMode_Z);
 
 		this->raycastingOptions->fileLoaded = true;
 	}
@@ -82,7 +87,7 @@ __host__ bool Raycasting::initialize()
 	{
 		this->initializeIO();
 		this->volumeTexture.release();
-		this->initializeVolumeTexuture();
+		this->initializeVolumeTexuture(addressMode_X, addressMode_Y, addressMode_Z);
 
 		this->raycastingOptions->fileChanged = false;
 	}
@@ -139,8 +144,7 @@ __host__ void Raycasting::rendering()
 					int(this->rays),
 					this->raycastingOptions->isoValue_0,
 					this->raycastingOptions->samplingRate_0,
-					this->raycastingOptions->tolerance_0,
-					this->raycastingOptions->gradientRate_0
+					this->raycastingOptions->tolerance_0
 					);
 			break;
 		}
@@ -154,8 +158,7 @@ __host__ void Raycasting::rendering()
 					int(this->rays),
 					this->raycastingOptions->isoValue_0,
 					this->raycastingOptions->samplingRate_0,
-					this->raycastingOptions->tolerance_0,
-					this->raycastingOptions->gradientRate_0
+					this->raycastingOptions->tolerance_0
 				);
 			break;
 
@@ -170,8 +173,7 @@ __host__ void Raycasting::rendering()
 					int(this->rays),
 					this->raycastingOptions->isoValue_0,
 					this->raycastingOptions->samplingRate_0,
-					this->raycastingOptions->tolerance_0,
-					this->raycastingOptions->gradientRate_0
+					this->raycastingOptions->tolerance_0
 				);
 			break;
 		}
@@ -185,8 +187,7 @@ __host__ void Raycasting::rendering()
 					int(this->rays),
 					this->raycastingOptions->isoValue_0,
 					this->raycastingOptions->samplingRate_0,
-					this->raycastingOptions->tolerance_0,
-					this->raycastingOptions->gradientRate_0
+					this->raycastingOptions->tolerance_0
 				);
 			break;
 		}
@@ -200,23 +201,8 @@ __host__ void Raycasting::rendering()
 					int(this->rays),
 					this->raycastingOptions->isoValue_0,
 					this->raycastingOptions->samplingRate_0,
-					this->raycastingOptions->tolerance_0,
-					this->raycastingOptions->gradientRate_0
+					this->raycastingOptions->tolerance_0
 				);
-			break;
-		}
-
-		case IsoMeasure::Position_Y:
-		{
-			CudaTerrainRenderer<IsosurfaceHelper::Position_Y> << < blocks, thread >> >
-				(
-					this->raycastingSurface.getSurfaceObject(),
-					this->volumeTexture.getTexture(),
-					int(this->rays),
-					this->raycastingOptions->samplingRate_0,
-					this->raycastingOptions->tolerance_0,
-					this->raycastingOptions->gradientRate_0
-					);
 			break;
 		}
 
@@ -243,6 +229,7 @@ __host__ bool Raycasting::initializeBoundingBox()
 	h_boundingBox->width = *width;
 	h_boundingBox->height= *height;
 	h_boundingBox->gridDiameter = ArrayFloat3ToFloat3(solverOptions->gridDiameter);
+	h_boundingBox->gridSize = ArrayInt3ToInt3(solverOptions->gridSize);
 	h_boundingBox->updateBoxFaces();
 	h_boundingBox->updateAspectRatio();
 	h_boundingBox->constructEyeCoordinates();
@@ -260,11 +247,16 @@ __host__ bool Raycasting::initializeBoundingBox()
 }
 
 
-__host__ bool Raycasting::initializeVolumeTexuture()
+__host__ bool Raycasting::initializeVolumeTexuture
+(
+	cudaTextureAddressMode addressMode_X ,
+	cudaTextureAddressMode addressMode_Y ,
+	cudaTextureAddressMode addressMode_Z
+	)
 {
 	this->volumeTexture.setSolverOptions(this->solverOptions);
 	this->volumeTexture.setField(this->field);
-	this->volumeTexture.initialize(cudaAddressModeClamp, cudaAddressModeClamp, cudaAddressModeClamp);
+	this->volumeTexture.initialize(addressMode_X, addressMode_Y, addressMode_Z);
 
 	return true;
 }
@@ -281,13 +273,13 @@ __host__ bool Raycasting::initializeIO()
 }
 
 
-
+ 
 
 
 
 
 template <typename Observable>
-__global__ void CudaIsoSurfacRenderer(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance, float gradientRate)
+__global__ void CudaIsoSurfacRenderer(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance)
 {
 
 	Observable observable;
@@ -340,10 +332,14 @@ __global__ void CudaIsoSurfacRenderer(cudaSurfaceObject_t raycastingSurface, cud
 
 
 				// check if we have a hit 
-				if ( fabsf(observable.ValueAtXYZ(field1, relativePos) - isoValue) < IsosurfaceTolerance)
+				if (observable.ValueAtXYZ(field1, relativePos) - isoValue > 0)
 				{
+
+					position = binarySearch<Observable>(observable, field1, position, d_boundingBox.gridDiameter, rayDir * t, isoValue, IsosurfaceTolerance, 50);
+					relativePos = (position / d_boundingBox.gridDiameter);
+
 					// calculates gradient
-					float3 gradient = observable.GradientAtXYZ(field1, relativePos, gradientRate);
+					float3 gradient = observable.GradientAtGrid(field1, relativePos, d_boundingBox.gridSize);
 
 					// shading (no ambient)
 					float diffuse = max(dot(normalize(gradient), viewDir), 0.0f);
@@ -381,7 +377,7 @@ __global__ void CudaIsoSurfacRenderer(cudaSurfaceObject_t raycastingSurface, cud
 
 
 template <typename Observable>
-__global__ void CudaTerrainRenderer(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float samplingRate, float IsosurfaceTolerance, float gradientRate)
+__global__ void CudaTerrainRenderer(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float samplingRate, float IsosurfaceTolerance, int2 gridSize, float seedWallNormalDist)
 {
 	Observable observable;
 
@@ -434,35 +430,54 @@ __global__ void CudaTerrainRenderer(cudaSurfaceObject_t raycastingSurface, cudaT
 				relativePos.x = posTemp.z;
 				relativePos.z = posTemp.x;
 
-
+				float4 hightFieldVal = observable.ValueAtXY(field1, relativePos);
 				// check if we have a hit 
-				if (position.y - observable.ValueAtXY(field1, relativePos) < .1 )
+				if (hightFieldVal.y - position.y > 0 )
 				{
+					position = binarySearchHeightField<Observable>(observable, field1, position, d_boundingBox.gridDiameter, rayDir * t, IsosurfaceTolerance, 50);
+					relativePos = (position / d_boundingBox.gridDiameter);
 
-					if (observable.ValueAtXY(field1, relativePos) == 0)
-						break;
 					// calculates gradient
-					float3 gradient = observable.GradientAtXY(field1, relativePos, gradientRate);
+					float3 gradient = observable.GradientAtXY_Height(field1, relativePos, gridSize);
 
 					// shading (no ambient)
 					float diffuse = max(dot(normalize(gradient), viewDir), 0.0f);
-					float3 rgb_r = { 1,0,0 };
-					float3 rgb_l = { 0, 1, 0 };
+
+					float3 initialPos = make_float3(position.x, seedWallNormalDist, position.y);
+					float3 finalPos = make_float3(hightFieldVal.x, hightFieldVal.y, hightFieldVal.z);
+
 
 					float3 rgb = { 0,0,0 };
-					if (tex2D<float4>(field1, relativePos.x, relativePos.z).z < d_boundingBox.gridDiameter.z / 2.0f)
+
+					
+
+					if (initialPos.z > finalPos.z)
 					{
-						rgb = rgb_r * diffuse;
+						float red_sat = __saturatef(100.0f/(initialPos.z - finalPos.z) );
+						rgb = make_float3(1, 1-red_sat, 1-red_sat);
 
 					}
 					else 
 					{
-						rgb = rgb_l * diffuse;
+						float green_sat = __saturatef(100.0f/(finalPos.z - initialPos.z));
+						rgb = make_float3(1-green_sat, 1, 1-green_sat);
+
+					}
+					
+
+					float isocontourSegment = 5.0f;
+					float isocontourTolerance = 0.04;
+					float max_level = 5;
+
+					// check for hit of isocontour
+					if (fabs((hightFieldVal.w / isocontourSegment) - round(hightFieldVal.w / isocontourSegment)) < isocontourTolerance)
+					{
+						float level = __saturatef(max_level/(hightFieldVal.w / isocontourSegment));
+						rgb = make_float3(1-level,1-level, 1);
 
 					}
 
-					//float3 rgb = d_raycastingColor * diffuse;
-
+					rgb = rgb * diffuse;
 
 					// vector from eye to isosurface
 					float3 position_viewCoordinate = position - eyePos;

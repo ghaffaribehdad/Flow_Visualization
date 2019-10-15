@@ -2,12 +2,100 @@
 
 #include "cuda_runtime.h"
 #include <corecrt_math.h>
+#include <ctgmath>
+
+#define X_HAT {1.0f,0.0f,0.0f}
+#define Y_HAT {0.0f,1.0f,0.0f}
+#define Z_HAT {0.0f, 0.0f, 1.0f}
+
 
 //float3 operations
 
 inline __host__ __device__ float3 operator*(float3 a, float3 b)
 {
 	return make_float3(a.x * b.x, a.y * b.y, a.z * b.z);
+}
+
+inline __host__ __device__ float2 operator*(float2 a, int2 b)
+{
+	return make_float2(a.x * b.x, a.y * b.y);
+}
+
+inline __host__ __device__ bool operator==(float3 a, float3 b)
+{
+	if (a.x != b.x)
+		return false;
+	if (a.y != b.y)
+		return false;
+	if (a.z != b.z)
+		return false;
+
+	return true;
+}
+
+
+inline __host__ __device__ bool operator==(int3 a, int3 b)
+{
+	if (a.x != b.x)
+		return false;
+	if (a.y != b.y)
+		return false;
+	if (a.z != b.z)
+		return false;
+
+	return true;
+}
+
+inline __host__ __device__ float3 operator*(float3 a, int3 b)
+{
+	return make_float3
+	(
+		a.x * b.x,
+		a.y * b.y,
+		a.z * b.z
+	);
+}
+
+
+
+inline __host__ __device__ float3 operator/(float3 a, int3 b)
+{
+	return make_float3
+	(
+		a.x / b.x,
+		a.y / b.y,
+		a.z / b.z
+	);
+}
+
+inline __host__ __device__ float2 operator/(float2 a, int2 b)
+{
+	return make_float2
+	(
+		a.x / b.x,
+		a.y / b.y
+	);
+}
+
+// multiply float3 and int3 and then round it up  e.g. in one dimension ceilMult(2.3,3) = 7
+inline __host__ __device__ int3 ceilMult(float3 a, int3 b)
+{
+	return make_int3
+	(
+		static_cast<int>(ceil(a.x * b.x)),
+		static_cast<int>(ceil(a.y * b.y)),
+		static_cast<int>(ceil(a.z * b.z))
+	);
+}
+
+inline __host__ __device__ int3 floorMult(float3 a, int3 b)
+{
+	return make_int3
+	(
+		static_cast<int>(floor(a.x * b.x)),
+		static_cast<int>(floor(a.y * b.y)),
+		static_cast<int>(floor(a.z * b.z))
+	);
 }
 
 

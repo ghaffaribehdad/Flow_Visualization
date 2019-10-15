@@ -39,9 +39,8 @@ private:
 
 };
 
-// Kernel of the streamlines
 
-__global__ void TracingStream(Particle* d_particles, cudaTextureObject_t t_VelocityField, SolverOptions solverOptions, Vertex* p_VertexBuffer);
+
 
 
 

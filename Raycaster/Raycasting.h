@@ -69,9 +69,9 @@ protected:
 
 	// in case of resizing
 
-	__host__ bool initializeBoundingBox();
+	__host__ virtual bool initializeBoundingBox();
 	__host__ bool initializeIO();
-	__host__ bool initializeVolumeTexuture();
+	__host__ bool initializeVolumeTexuture(cudaTextureAddressMode , cudaTextureAddressMode, cudaTextureAddressMode);
 	__host__ bool initializeRaycastingTexture();
 	__host__ bool initializeRaycastingInteroperability();
 	__host__ bool initializeCudaSurface();
@@ -84,7 +84,7 @@ protected:
 
 public:
 
-	__host__ virtual bool initialize();
+	__host__ virtual bool initialize(cudaTextureAddressMode, cudaTextureAddressMode, cudaTextureAddressMode);
 	__host__ virtual bool release();
 	__host__ virtual void rendering();
 	//__host__ void saveTexture();
@@ -120,7 +120,7 @@ public:
 
 
 template <typename Observable>
-__global__ void CudaIsoSurfacRenderer(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance, float gradientRate);
+__global__ void CudaIsoSurfacRenderer(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
 
-template <typename direction>
-__global__ void CudaTerrainRenderer(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float samplingRate, float IsosurfaceTolerance, float gradientRate);
+template <typename Observable>
+__global__ void CudaTerrainRenderer(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float samplingRate, float IsosurfaceTolerance, int2 gridSize,float seedWallNormalDist);

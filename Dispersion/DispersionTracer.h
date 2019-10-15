@@ -13,7 +13,12 @@ class DispersionTracer : public Raycasting
 {
 public:
 
-	bool initialize() override;
+	bool initialize
+	(
+		cudaTextureAddressMode addressMode_X ,
+		cudaTextureAddressMode addressMode_Y ,
+		cudaTextureAddressMode addressMode_Z 
+	) override;
 
 	
 	__host__ void setResources 
@@ -42,6 +47,7 @@ private:
 	bool InitializeHeightArray();
 	bool InitializeHeightSurface();
 	bool InitializeHeightTexture();
+
 	DispersionOptions* dispersionOptions;
 
 

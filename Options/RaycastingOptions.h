@@ -6,8 +6,7 @@ struct RaycastingOptions
 public:
 
 	float samplingRate_0 = 0.01f;
-	float gradientRate_0 = 0.01f;
-	float tolerance_0 = 0.5f;
+	float tolerance_0 = 0.001f;
 	float isoValue_0 = 10.0f;
 
 	bool fileLoaded = false;

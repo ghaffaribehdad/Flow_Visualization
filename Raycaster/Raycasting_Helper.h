@@ -28,3 +28,8 @@ inline int3 ArrayInt3ToInt3(int* src)
 {
 	return make_int3(src[0], src[1], src[2]);
 }
+
+inline int3 ArrayInt2ToInt3(int* src)
+{
+	return make_int3(src[0], src[1], 0);
+}

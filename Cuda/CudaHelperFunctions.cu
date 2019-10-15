@@ -428,3 +428,249 @@ __host__ void seedParticleRandom(Particle * particle, const SolverOptions * solv
 	}
 
 }
+
+
+
+__global__ void TracingPath(Particle* d_particles, cudaTextureObject_t t_VelocityField_0, cudaTextureObject_t t_VelocityField_1, SolverOptions solverOptions, Vertex* p_VertexBuffer, bool odd, int step)
+{
+	int index = blockDim.x * blockIdx.x + threadIdx.x;
+
+	if (index < solverOptions.lines_count)
+	{
+		int line_index = index * solverOptions.lineLength;
+		float dt = solverOptions.dt;
+		float3 gridDiameter =
+		{
+			solverOptions.gridDiameter[0],
+			solverOptions.gridDiameter[1],
+			solverOptions.gridDiameter[2]
+		};
+
+
+		float3 newPosition = { 0.0f,0.0f,0.0f };
+
+		if (d_particles[index].isOut())
+		{
+			newPosition =
+			{
+				d_particles[index].getPosition()->x,
+				d_particles[index].getPosition()->y,
+				d_particles[index].getPosition()->z
+			};
+		}
+		else if (odd)
+		{
+			newPosition = RK4Odd(t_VelocityField_0, t_VelocityField_1, d_particles[index].getPosition(), gridDiameter, dt);
+		}
+		else if (!odd) //Even
+		{
+
+			newPosition = RK4Even(t_VelocityField_0, t_VelocityField_1, d_particles[index].getPosition(), gridDiameter, dt);
+		}
+
+		d_particles[index].setPosition(newPosition);
+		d_particles[index].updateVelocity(gridDiameter, t_VelocityField_1);
+
+
+		if (!d_particles[index].isOut())
+		{
+			d_particles[index].checkPosition(gridDiameter);
+		}
+
+		// Write into the Vertex BUffer
+		p_VertexBuffer[line_index + step].pos.x = d_particles[index].getPosition()->x - (gridDiameter.x / 2.0);
+		p_VertexBuffer[line_index + step].pos.y = d_particles[index].getPosition()->y - (gridDiameter.y / 2.0);
+		p_VertexBuffer[line_index + step].pos.z = d_particles[index].getPosition()->z - (gridDiameter.z / 2.0);
+
+
+		float3* velocity = d_particles[index].getVelocity();
+		float3 norm = normalize(make_float3(velocity->x, velocity->y, velocity->z));
+
+		p_VertexBuffer[line_index + step].tangent.x = norm.x;
+		p_VertexBuffer[line_index + step].tangent.y = norm.y;
+		p_VertexBuffer[line_index + step].tangent.z = norm.z;
+
+		p_VertexBuffer[line_index + step].LineID = index;
+
+		switch (solverOptions.colorMode)
+		{
+		case 0: // Velocity
+		{
+			p_VertexBuffer[line_index + step].measure = VecMagnitude(*velocity);
+			break;
+
+		}
+		case 1: // Vx
+		{
+
+			p_VertexBuffer[line_index + step].measure = d_particles[index].getVelocity()->x;
+			break;
+		}
+		case 2: // Vy
+		{
+			p_VertexBuffer[line_index + step].measure = d_particles[index].getVelocity()->y;
+			break;
+		}
+		case 3: // Vz
+		{
+			p_VertexBuffer[line_index + step].measure = d_particles[index].getVelocity()->z;
+			break;
+
+		}
+
+
+		}
+
+
+	}
+}
+
+
+
+__global__ void TracingStream
+(
+	Particle* d_particles,
+	cudaTextureObject_t t_VelocityField,
+	SolverOptions solverOptions,
+	Vertex* p_VertexBuffer
+)
+{
+	unsigned int index = blockDim.x * blockIdx.x + threadIdx.x;
+
+	if (index < solverOptions.lines_count)
+	{
+		int lineLength = solverOptions.lineLength;
+		int index_buffer = index * lineLength;
+		float dt = solverOptions.dt;
+		float3 gridDiameter =
+		{
+			solverOptions.gridDiameter[0],
+			solverOptions.gridDiameter[1],
+			solverOptions.gridDiameter[2]
+		};
+
+		float3 temp_position = *d_particles[index].getPosition();
+
+		d_particles[index].updateVelocity(gridDiameter, t_VelocityField);
+
+
+		float3 upDir = make_float3(0.0f, 1.0f, 0.0f);
+
+		if (abs(dot(upDir, normalize(d_particles[index].m_velocity))) > 0.1f)
+			upDir = make_float3(1.0f, 0.0f, 0.0f);
+
+		if (abs(dot(upDir, normalize(d_particles[index].m_velocity))) > 0.1f)
+			upDir = make_float3(0.0f, 0.0f, 1.0f);
+
+
+
+		for (int i = 0; i < lineLength; i++)
+		{
+			if (solverOptions.periodic)
+			{
+				p_VertexBuffer[index_buffer + i].pos.x = d_particles[index].getPosition()->x - (gridDiameter.x / 2.0);
+				p_VertexBuffer[index_buffer + i].pos.y = d_particles[index].getPosition()->y - (gridDiameter.y / 2.0);
+				p_VertexBuffer[index_buffer + i].pos.z = d_particles[index].getPosition()->z - (gridDiameter.z / 2.0);
+			}
+			else
+			{
+				if (!d_particles[index].isOut())
+				{
+					d_particles[index].checkPosition(gridDiameter);
+				}
+
+				if (d_particles[index].isOut() && i != 0)
+				{
+					p_VertexBuffer[index_buffer + i].pos.x = p_VertexBuffer[index_buffer + i - 1].pos.x;
+					p_VertexBuffer[index_buffer + i].pos.y = p_VertexBuffer[index_buffer + i - 1].pos.y;
+					p_VertexBuffer[index_buffer + i].pos.z = p_VertexBuffer[index_buffer + i - 1].pos.z;
+				}
+				else
+				{
+					p_VertexBuffer[index_buffer + i].pos.x = d_particles[index].getPosition()->x - (gridDiameter.x / 2.0);
+					p_VertexBuffer[index_buffer + i].pos.y = d_particles[index].getPosition()->y - (gridDiameter.y / 2.0);
+					p_VertexBuffer[index_buffer + i].pos.z = d_particles[index].getPosition()->z - (gridDiameter.z / 2.0);
+
+				}
+			}
+
+
+
+			float3* velocity = d_particles[index].getVelocity();
+			float3 tangent = normalize(*velocity);
+
+
+
+			p_VertexBuffer[index_buffer + i].normal.x = upDir.x;
+			p_VertexBuffer[index_buffer + i].normal.y = upDir.y;
+			p_VertexBuffer[index_buffer + i].normal.z = upDir.z;
+
+			p_VertexBuffer[index_buffer + i].tangent.x = tangent.x;
+			p_VertexBuffer[index_buffer + i].tangent.y = tangent.y;
+			p_VertexBuffer[index_buffer + i].tangent.z = tangent.z;
+
+
+
+			p_VertexBuffer[index_buffer + i].LineID = index;
+
+
+			switch (solverOptions.colorMode)
+			{
+				case 0: // Velocity
+				{
+
+					p_VertexBuffer[index_buffer + i].measure = VecMagnitude(*velocity);
+					break;
+
+				}
+				case 1: // Vx
+				{
+					p_VertexBuffer[index_buffer + i].measure = d_particles[index].getVelocity()->x;;
+					break;
+				}
+				case 2: // Vy
+				{
+					p_VertexBuffer[index_buffer + i].measure = d_particles[index].getVelocity()->y;
+					break;
+				}
+				case 3: // Vz
+				{
+					p_VertexBuffer[index_buffer + i].measure = d_particles[index].getVelocity()->z;
+					break;
+				}
+			}
+
+			// Do not check if it is out
+			RK4Stream(t_VelocityField, &d_particles[index], gridDiameter, dt);
+
+			// Update position based on the projection
+			switch (solverOptions.projection)
+			{
+				case Projection::NO_PROJECTION:
+				{
+					break;
+				}
+				case Projection::ZY_PROJECTION:
+				{
+					p_VertexBuffer[index_buffer + i].pos.x = temp_position.x - (gridDiameter.x / 2.0);
+					break;
+				}
+				case Projection::XZ_PROJECTION:
+				{
+					p_VertexBuffer[index_buffer + i].pos.y = temp_position.y - (gridDiameter.y / 2.0);
+					break;
+				}
+				case Projection::XY_PROJECTION:
+				{
+
+					p_VertexBuffer[index_buffer + i].pos.z = temp_position.z - (gridDiameter.z / 2.0);
+					break;
+				}
+			}
+
+
+
+
+		}//end of for loop
+	}
+}
