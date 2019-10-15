@@ -11,6 +11,18 @@
 
 //float3 operations
 
+inline __host__ __device__ bool outofTexture(float3 position)
+{
+	if (position.x > 1)
+		return true;
+	if (position.y > 1)
+		return true;
+	if (position.z > 1)
+		return true;
+
+	return false;
+}
+
 inline __host__ __device__ float3 operator*(float3 a, float3 b)
 {
 	return make_float3(a.x * b.x, a.y * b.y, a.z * b.z);

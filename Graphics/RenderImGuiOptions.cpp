@@ -388,6 +388,11 @@ void RenderImGuiOptions::drawDispersionOptions()
 
 	}
 
+	if (ImGui::DragFloat("RL Deviation", &dispersionOptions->dev_z_range, 0.01f, 0.0))
+	{
+		this->updateDispersion = true;
+	}
+
 	if (ImGui::DragInt("time steps", &dispersionOptions->timeStep,1.0f,1,1000000))
 	{
 		this->dispersionOptions->retrace = true;

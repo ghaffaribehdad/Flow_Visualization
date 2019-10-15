@@ -75,8 +75,8 @@ __device__  float3 IsosurfaceHelper::Position::GradientAtXY_Height(cudaTextureOb
 {
 	// Interpolated gradient
 	float3 result = { 0.0f, 0.0f, 0.0f };
-	// Mesh size in XZ plane
-	float3 h = make_float3(1.0f / gridSize.x, 0.0f, 1.0 / gridSize.y);
+	// Mesh size in XZ plane, the mesh size is (volumeSize / nodes - 1)
+	float3 h = make_float3(1.0f / (gridSize.x-1), 0.0f, 1.0 / (gridSize.y-1));
 
 	float3* edges = new float3[4];
 
@@ -88,10 +88,12 @@ __device__  float3 IsosurfaceHelper::Position::GradientAtXY_Height(cudaTextureOb
 	edges[2] = make_float3(gridPos_ceil.x, 0, gridPos_floor.y);
 	edges[3] = make_float3(gridPos_ceil.x, 0, gridPos_ceil.y);
 	
-	result	 = GradientAtXY_Height_Grid(tex, edges[0], gridSize) *(	position.x - edges[0].x	)*(position.z - edges[0].z) / (h.x * h.z);
-	result	+= GradientAtXY_Height_Grid(tex, edges[0], gridSize) *(	position.x - edges[1].x	)*(edges[1].z - position.z) / (h.x * h.z);
-	result	+= GradientAtXY_Height_Grid(tex, edges[0], gridSize) *(	edges[2].x - position.x )*(position.z - edges[2].z) / (h.x * h.z);
-	result	+= GradientAtXY_Height_Grid(tex, edges[0], gridSize) *( edges[3].x - position.x )*(edges[3].z - position.z) / (h.x * h.z);
+	result	 = GradientAtXY_Height_Grid(tex, edges[0], gridSize) *make_float3((position.x - edges[0].x)/ h.x,1,(position.z - edges[0].z) / h.z);
+	result	+= GradientAtXY_Height_Grid(tex, edges[1], gridSize) *make_float3((position.x - edges[1].x)/ h.x,1,(edges[1].z - position.z) / h.z);
+	result	+= GradientAtXY_Height_Grid(tex, edges[2], gridSize) *make_float3((edges[2].x - position.x)/ h.x,1,(position.z - edges[2].z) / h.z);
+	result	+= GradientAtXY_Height_Grid(tex, edges[3], gridSize) *make_float3((edges[3].x - position.x)/ h.x,1,(edges[3].z - position.z) / h.z);
+
+
 
 	delete[] edges;
 

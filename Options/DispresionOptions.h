@@ -9,4 +9,8 @@ struct DispersionOptions
 	bool initialized = false;
 	bool dispersion = false;
 	bool retrace = false;
+	float hegiht_tolerance = 0.05f;
+	float dev_z_range = 10.0f;
+	float dev_mag_levels = 5.0f;
+	float dev_mag_telorance = 0.1f;
 };

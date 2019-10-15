@@ -20,6 +20,7 @@
 #include "..//Graphics/Shaders.h"
 #include "..//Graphics/Vertex.h"
 #include "..//Graphics/VertexBuffer.h"
+#include "..//Options/DispresionOptions.h"
 
 
 class Raycasting
@@ -123,4 +124,12 @@ template <typename Observable>
 __global__ void CudaIsoSurfacRenderer(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
 
 template <typename Observable>
-__global__ void CudaTerrainRenderer(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float samplingRate, float IsosurfaceTolerance, int2 gridSize,float seedWallNormalDist);
+__global__ void CudaTerrainRenderer
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field1,
+	int rays,
+	float samplingRate,
+	float IsosurfaceTolerance,
+	DispersionOptions dispersionOptions
+);

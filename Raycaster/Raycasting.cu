@@ -3,6 +3,7 @@
 #include "Raycasting_Helper.h"
 #include "cuda_runtime.h"
 #include "..//Cuda/CudaHelperFunctions.h"
+#include "..//Options/DispresionOptions.h"
 
 __constant__ BoundingBox d_boundingBox;
 __constant__ float3 d_raycastingColor;
@@ -13,7 +14,7 @@ template __global__ void CudaIsoSurfacRenderer<struct IsosurfaceHelper::Velocity
 template __global__ void CudaIsoSurfacRenderer<struct IsosurfaceHelper::Velocity_Y>			(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
 template __global__ void CudaIsoSurfacRenderer<struct IsosurfaceHelper::Velocity_Z>			(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
 template __global__ void CudaIsoSurfacRenderer<struct IsosurfaceHelper::ShearStress>		(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
-template __global__ void CudaTerrainRenderer< struct IsosurfaceHelper::Position >			(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float samplingRate, float IsosurfaceTolerance, int2 gridSize, float seedWallNormalDist);
+template __global__ void CudaTerrainRenderer< struct IsosurfaceHelper::Position >			(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float samplingRate, float IsosurfaceTolerance, DispersionOptions dispersionOptions);
 
 
 __host__ bool Raycasting::updateScene()
@@ -377,7 +378,7 @@ __global__ void CudaIsoSurfacRenderer(cudaSurfaceObject_t raycastingSurface, cud
 
 
 template <typename Observable>
-__global__ void CudaTerrainRenderer(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float samplingRate, float IsosurfaceTolerance, int2 gridSize, float seedWallNormalDist)
+__global__ void CudaTerrainRenderer(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float samplingRate, float IsosurfaceTolerance, DispersionOptions dispersionOptions)
 {
 	Observable observable;
 
@@ -432,13 +433,17 @@ __global__ void CudaTerrainRenderer(cudaSurfaceObject_t raycastingSurface, cudaT
 
 				float4 hightFieldVal = observable.ValueAtXY(field1, relativePos);
 				// check if we have a hit 
-				if (hightFieldVal.y - position.y > 0 )
+				if (hightFieldVal.y - position.y > 0 && hightFieldVal.y - position.y <0.01)
 				{
-					position = binarySearchHeightField<Observable>(observable, field1, position, d_boundingBox.gridDiameter, rayDir * t, IsosurfaceTolerance, 50);
-					relativePos = (position / d_boundingBox.gridDiameter);
+					//position = binarySearchHeightField<Observable>(observable, field1, position, d_boundingBox.gridDiameter, rayDir * t, IsosurfaceTolerance, 50);
+					//relativePos = (position / d_boundingBox.gridDiameter);
+
+					int2 gridSize = { dispersionOptions.gridSize_2D[0], dispersionOptions.gridSize_2D[1] };
+					float seedWallNormalDist = dispersionOptions.seedWallNormalDist;
 
 					// calculates gradient
 					float3 gradient = observable.GradientAtXY_Height(field1, relativePos, gridSize);
+
 
 					// shading (no ambient)
 					float diffuse = max(dot(normalize(gradient), viewDir), 0.0f);
@@ -450,16 +455,16 @@ __global__ void CudaTerrainRenderer(cudaSurfaceObject_t raycastingSurface, cudaT
 					float3 rgb = { 0,0,0 };
 
 					
-
+					// shading based on the righ-left deviation
 					if (initialPos.z > finalPos.z)
 					{
-						float red_sat = __saturatef(100.0f/(initialPos.z - finalPos.z) );
+						float red_sat = __saturatef(dispersionOptions.dev_z_range/(initialPos.z - finalPos.z) );
 						rgb = make_float3(1, 1-red_sat, 1-red_sat);
 
 					}
 					else 
 					{
-						float green_sat = __saturatef(100.0f/(finalPos.z - initialPos.z));
+						float green_sat = __saturatef(dispersionOptions.dev_z_range /(finalPos.z - initialPos.z));
 						rgb = make_float3(1-green_sat, 1, 1-green_sat);
 
 					}

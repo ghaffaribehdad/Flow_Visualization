@@ -124,8 +124,13 @@ __device__ float3 binarySearchHeightField
 			{
 				samplingStep = 0.5 * samplingStep;
 			}
+			// return position if we are out of texture
+			if (outofTexture((position + samplingStep)/ gridDiameter))
+				return position;
+
 			position = position - samplingStep;
 			relative_position = position / gridDiameter;
+			
 			value = position.y;
 			side = 0;
 
@@ -138,6 +143,10 @@ __device__ float3 binarySearchHeightField
 				samplingStep = 0.5 * samplingStep;
 			}
 
+			// return position if we are out of texture
+			if (outofTexture((position + samplingStep) / gridDiameter))
+				return position;
+			
 			position = position + samplingStep;
 			relative_position = position / gridDiameter;
 			value = position.y;
