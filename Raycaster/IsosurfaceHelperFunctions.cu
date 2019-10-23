@@ -84,10 +84,31 @@ __device__  float2 IsosurfaceHelper::Position::GradientAtXY_Grid(cudaSurfaceObje
 }
 
 
+
+__device__  float2 IsosurfaceHelper::Position::GradientAtXYZ_Grid(cudaSurfaceObject_t surf, int3 gridPosition)
+{
+	float dH_dX = this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x + 1, gridPosition.y, gridPosition.z)).x;
+	float dH_dY = this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y + 1 , gridPosition.z)).x;
+
+	dH_dX -= this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x - 1, gridPosition.y , gridPosition.z)).x;
+	dH_dY -= this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y - 1, gridPosition.z)).x;
+
+	return make_float2(-dH_dX, -dH_dY);
+}
+
+
 __device__  float IsosurfaceHelper::Position::ValueAtXY_Surface_float(cudaSurfaceObject_t tex, int2 gridPos)
 {
 	float data;
 	surf2Dread(&data, tex, gridPos.x *sizeof(float), gridPos.y);
+
+	return data;
+};
+
+__device__  float4 IsosurfaceHelper::Position::ValueAtXYZ_Surface_float4(cudaSurfaceObject_t tex, int3 gridPos)
+{
+	float4 data;
+	surf3Dread(&data, tex, gridPos.x * sizeof(float4), gridPos.y,gridPos.z);
 
 	return data;
 };

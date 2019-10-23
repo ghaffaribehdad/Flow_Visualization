@@ -16,12 +16,31 @@ __global__ void traceDispersion
 	DispersionOptions dispersionOptions
 );
 
+
+__global__ void traceDispersion3D
+(
+	Particle* particle,
+	cudaSurfaceObject_t heightFieldSurface3D,
+	cudaTextureObject_t velocityField,
+	SolverOptions solverOptions,
+	DispersionOptions dispersionOptions
+);
+
 template <typename Observable>
 __global__ void hieghtfieldGradient
 (
 
 	cudaSurfaceObject_t heightFieldSurface,
 	cudaSurfaceObject_t heightFieldSurface_gradient,
+	DispersionOptions dispersionOptions,
+	SolverOptions	solverOptions
+);
+
+template <typename Observable>
+__global__ void hieghtfieldGradient3D
+(
+
+	cudaSurfaceObject_t heightFieldSurface3D,
 	DispersionOptions dispersionOptions,
 	SolverOptions	solverOptions
 );

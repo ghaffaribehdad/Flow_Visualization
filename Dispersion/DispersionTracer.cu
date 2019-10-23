@@ -199,6 +199,20 @@ __host__ bool DispersionTracer::InitializeHeightSurface()
 	return true;
 }
 
+
+__host__ bool DispersionTracer::InitializeHeightSurface3D()
+{
+	// Assign the hightArray to the hightSurface and initialize the surface
+	cudaArray_t pCudaArray = NULL;
+	pCudaArray = heightArray3D.getArray();
+	this->heightSurface3D.setInputArray(pCudaArray);
+	if (!this->heightSurface3D.initializeSurface())
+		return false;
+
+
+	return true;
+}
+
 __host__ bool DispersionTracer::InitializeHeight_gradient_Surface()
 {
 	//  Assign the hightArray_gradient to the hightSurface_gradient and initialize the surface
@@ -240,6 +254,30 @@ void DispersionTracer::trace()
 		*solverOptions,
 		*dispersionOptions
 	);
+
+
+	// Calculates the gradients and store it in the cuda surface
+	cudaFree(d_particle);
+}
+
+
+void DispersionTracer::trace3D()
+{
+	// Calculates the block and grid sizes
+	unsigned int blocks;
+	dim3 thread = { maxBlockDim,maxBlockDim,1 };
+	blocks = static_cast<unsigned int>((this->n_particles % (thread.x * thread.y) == 0 ?
+		n_particles / (thread.x * thread.y) : n_particles / (thread.x * thread.y) + 1));
+
+	// After this step the heightSurface is populated with the height of each particle
+	traceDispersion3D << < blocks, thread >> >
+		(
+			d_particle,
+			heightSurface3D.getSurfaceObject(),
+			this->volumeTexture.getTexture(),
+			*solverOptions,
+			*dispersionOptions
+			);
 
 
 	// Calculates the gradients and store it in the cuda surface
@@ -332,6 +370,37 @@ bool DispersionTracer::InitializeHeight_gradient_Texture()
 	return true;
 }
 
+bool DispersionTracer::InitializeHeightTexture3D()
+{
+
+
+	// Set Texture Description
+	cudaTextureDesc texDesc;
+	cudaResourceDesc resDesc;
+
+	memset(&resDesc, 0, sizeof(resDesc));
+	memset(&texDesc, 0, sizeof(texDesc));
+
+
+
+	resDesc.resType = cudaResourceTypeArray;
+	resDesc.res.array.array = this->heightArray3D.getArray();
+
+	// Texture Description
+	texDesc.normalizedCoords = true;
+	texDesc.filterMode = cudaFilterModeLinear;
+	texDesc.addressMode[0] = cudaTextureAddressMode::cudaAddressModeClamp;
+	texDesc.addressMode[1] = cudaTextureAddressMode::cudaAddressModeClamp;
+	texDesc.addressMode[2] = cudaTextureAddressMode::cudaAddressModeClamp;
+
+	texDesc.readMode = cudaReadModeElementType;
+
+	// Create the texture and bind it to the array
+	gpuErrchk(cudaCreateTextureObject(&this->heightFieldTexture, &resDesc, &texDesc, NULL));
+
+	return true;
+}
+
 
 
 
@@ -354,6 +423,30 @@ void DispersionTracer::gradient()
 			*dispersionOptions,
 			*solverOptions
 		);
+
+
+}
+
+
+void DispersionTracer::gradient3D()
+{
+
+	// Calculates the block and grid sizes
+	unsigned int blocks;
+	dim3 thread = { maxBlockDim,maxBlockDim,1 };
+	blocks = static_cast<unsigned int>((this->n_particles % (thread.x * thread.y) == 0 ?
+		n_particles / (thread.x * thread.y) : n_particles / (thread.x * thread.y) + 1));
+
+	// After this step the heightSurface is populated with the height of each particle
+
+	hieghtfieldGradient<IsosurfaceHelper::Position> << < blocks, thread >> >
+		(
+
+			heightSurface.getSurfaceObject(),
+			heightSurface_gradient.getSurfaceObject(),
+			*dispersionOptions,
+			*solverOptions
+			);
 
 
 }
