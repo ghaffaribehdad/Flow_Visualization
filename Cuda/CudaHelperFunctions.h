@@ -160,3 +160,16 @@ __device__ float3 binarySearchHeightField
 	return position;
 
 };
+
+
+
+
+__device__ float3 binarySearch_heightField
+(
+	float3 _position,
+	cudaSurfaceObject_t tex,
+	float3 _samplingStep,
+	float3 gridDiameter,
+	float tolerance,
+	int maxIteration
+);

@@ -38,15 +38,21 @@ public:
 	void rendering() override;
 	bool updateScene() override;
 	void trace();
-	void retrace();
+	bool retrace();
+	void gradient();
 
 
 private:
 
 	bool InitializeParticles();
 	bool InitializeHeightArray();
+	bool InitializeHeightArray3D();
+	bool InitializeHeight_gradient_Array();
+
 	bool InitializeHeightSurface();
-	bool InitializeHeightTexture();
+	bool InitializeHeight_gradient_Surface();
+
+	bool InitializeHeight_gradient_Texture();
 
 	DispersionOptions* dispersionOptions;
 
@@ -57,8 +63,11 @@ private:
 	unsigned int n_particles;
 	
 	CudaSurface heightSurface;			// cuda surface storing the results
+	CudaSurface heightSurface_gradient;
 	cudaTextureObject_t heightFieldTexture;
-	CudaArray_2D<float4> heightArray;
+	CudaArray_2D<float4> heightArray_gradient;
+	CudaArray_2D<float> heightArray;
+	CudaArray_3D<float4> heightArray3D;
 		
 };
 

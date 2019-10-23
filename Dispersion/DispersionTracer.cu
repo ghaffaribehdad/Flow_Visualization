@@ -4,13 +4,53 @@
 #include "..//Raycaster/IsosurfaceHelperFunctions.h"
 #include <cuda_runtime.h>
 #include "..//Raycaster/Raycasting_Helper.h"
+#include "..//Options/DispresionOptions.h"
+
+//explicit instantiation
 
 
-void DispersionTracer::retrace()
+
+bool DispersionTracer::retrace()
 {
-	this->InitializeParticles();
-	trace();
-	this->InitializeHeightTexture();
+	this->heightArray_gradient.release();
+	cudaDestroyTextureObject(this->heightFieldTexture);
+
+	if (!this->InitializeParticles())
+		return false;
+
+	// Initialize Height Field as an empty cuda array 3D
+	if (!this->InitializeHeightArray())
+		return false;
+
+	// Bind the array of heights to the cuda surface
+	if (!this->InitializeHeightSurface())
+		return false;
+
+
+	// Trace particle and store their heights on the Height Surface
+	this->trace();
+
+	// Initialize Array for height + gradient
+	if (!this->InitializeHeight_gradient_Array())
+		return false;
+
+	// Initialize Surface to store gradient + height
+	if (!this->InitializeHeight_gradient_Surface())
+		return false;
+
+	// Store gradient and height on the surface
+	this->gradient();
+
+	//Destroy height + gradient surface and height calculations (both surface and array)
+	this->heightSurface.destroySurface();
+	this->heightArray.release();
+	this->heightSurface_gradient.destroySurface();
+
+	// Initialize a texture and bind it to height + gradient array
+	if (!this->InitializeHeight_gradient_Texture())
+		return false;
+
+	return true;
 }
 bool DispersionTracer::initialize
 (
@@ -30,11 +70,34 @@ bool DispersionTracer::initialize
 	if (!this->InitializeHeightArray())
 		return false;
 
+	
+
 	// Bind the array of heights to the cuda surface
 	if (!this->InitializeHeightSurface())
 		return false;
 
-	if (!this->InitializeHeightTexture())
+
+	// Trace particle and store their heights on the Height Surface
+	this->trace();
+	
+	// Initialize Array for height + gradient
+	if (!this->InitializeHeight_gradient_Array())
+		return false;
+
+	// Initialize Surface to store gradient + height
+	if (!this->InitializeHeight_gradient_Surface())
+		return false;
+
+	// Store gradient and height on the surface
+	this->gradient();
+
+	//Destroy height + gradient surface and height calculations (both surface and array)
+	this->heightSurface.destroySurface();
+	this->heightArray.release();
+	this->heightSurface_gradient.destroySurface();
+
+	// Initialize a texture and bind it to height + gradient array
+	if (!this->InitializeHeight_gradient_Texture())
 		return false;
 
 	return true;
@@ -74,15 +137,50 @@ __host__ bool DispersionTracer::InitializeParticles()
 
 __host__ bool DispersionTracer::InitializeHeightArray()
 {	
-	// Set dimensions and initialize height field as a 3D CUDA Array
+	// Set dimensions and initialize height field as a 2D CUDA Array
 	this->heightArray.setDimension
 	(
 		dispersionOptions->gridSize_2D[0],
 		dispersionOptions->gridSize_2D[1]
 	);
 
-	// initialize the 3D array
+	// initialize the 2D array
 	if (!heightArray.initialize())
+		return false;
+
+	return true;
+}
+
+
+__host__ bool DispersionTracer::InitializeHeightArray3D()
+{
+	// Set dimensions and initialize height field as a 2D CUDA Array
+	this->heightArray3D.setDimension
+	(
+		dispersionOptions->gridSize_2D[0],
+		dispersionOptions->gridSize_2D[1],
+		dispersionOptions->timeStep
+	);
+
+	// initialize the 3D array
+	if (!heightArray3D.initialize())
+		return false;
+
+	return true;
+}
+
+
+__host__ bool DispersionTracer::InitializeHeight_gradient_Array()
+{
+	// Set dimensions and initialize height field as a 2D CUDA Array
+	this->heightArray_gradient.setDimension
+	(
+		dispersionOptions->gridSize_2D[0],
+		dispersionOptions->gridSize_2D[1]
+	);
+
+	// initialize the 2D array
+	if (!heightArray_gradient.initialize())
 		return false;
 
 	return true;
@@ -90,14 +188,25 @@ __host__ bool DispersionTracer::InitializeHeightArray()
 
 __host__ bool DispersionTracer::InitializeHeightSurface()
 {
+	// Assign the hightArray to the hightSurface and initialize the surface
 	cudaArray_t pCudaArray = NULL;
 	pCudaArray = heightArray.getArray();
 	this->heightSurface.setInputArray(pCudaArray);
 	if (!this->heightSurface.initializeSurface())
 		return false;
 
-	// Trace particles and write their position in to the surface
-	this->trace();
+
+	return true;
+}
+
+__host__ bool DispersionTracer::InitializeHeight_gradient_Surface()
+{
+	//  Assign the hightArray_gradient to the hightSurface_gradient and initialize the surface
+	cudaArray_t pCudaArray_gradient = NULL;
+	pCudaArray_gradient = heightArray_gradient.getArray();
+	this->heightSurface_gradient.setInputArray(pCudaArray_gradient);
+	if (!this->heightSurface_gradient.initializeSurface())
+		return false;
 
 	return true;
 }
@@ -107,8 +216,8 @@ __host__ bool DispersionTracer::InitializeHeightSurface()
 bool DispersionTracer::release()
 {
 	Raycasting::release();
-	this->heightArray.release();
-	this->heightSurface.destroySurface();
+	this->heightSurface_gradient.destroySurface();
+	this->heightArray_gradient.release();
 	cudaDestroyTextureObject(this->heightFieldTexture);
 
 	return true;
@@ -133,6 +242,7 @@ void DispersionTracer::trace()
 	);
 
 
+	// Calculates the gradients and store it in the cuda surface
 	cudaFree(d_particle);
 }
 
@@ -190,10 +300,11 @@ bool DispersionTracer::updateScene()
 	return true;
 }
 
-bool DispersionTracer::InitializeHeightTexture()
+
+
+bool DispersionTracer::InitializeHeight_gradient_Texture()
 {
-	
-	this->heightSurface.destroySurface();
+
 
 	// Set Texture Description
 	cudaTextureDesc texDesc;
@@ -205,7 +316,7 @@ bool DispersionTracer::InitializeHeightTexture()
 
 
 	resDesc.resType = cudaResourceTypeArray;
-	resDesc.res.array.array = this->heightArray.getArray();
+	resDesc.res.array.array = this->heightArray_gradient.getArray();
 
 	// Texture Description
 	texDesc.normalizedCoords = true;
@@ -222,4 +333,28 @@ bool DispersionTracer::InitializeHeightTexture()
 }
 
 
+
+
+void DispersionTracer::gradient()
+{
+
+	// Calculates the block and grid sizes
+	unsigned int blocks;
+	dim3 thread = { maxBlockDim,maxBlockDim,1 };
+	blocks = static_cast<unsigned int>((this->n_particles % (thread.x * thread.y) == 0 ?
+		n_particles / (thread.x * thread.y) : n_particles / (thread.x * thread.y) + 1));
+
+	// After this step the heightSurface is populated with the height of each particle
+
+	hieghtfieldGradient<IsosurfaceHelper::Position> << < blocks, thread >> >
+		(
+
+			heightSurface.getSurfaceObject(),
+			heightSurface_gradient.getSurfaceObject(),
+			*dispersionOptions,
+			*solverOptions
+		);
+
+
+}
 

@@ -388,9 +388,20 @@ void RenderImGuiOptions::drawDispersionOptions()
 
 	}
 
-	if (ImGui::DragFloat("RL Deviation", &dispersionOptions->dev_z_range, 0.01f, 0.0))
+	if (ImGui::DragFloat("RL Deviation", &dispersionOptions->dev_z_range, 0.001f, 0.0))
 	{
 		this->updateDispersion = true;
+	}
+
+	if (ImGui::DragFloat("Search Tolerance", &dispersionOptions->binarySearchTolerance,0.0001f,0.0001f,1,"%8f"))
+	{
+		this->updateDispersion = true;
+	}
+
+	if (ImGui::DragInt("Search Iteration", &dispersionOptions->binarySearchMaxIteration, 1.0f, 1, 1000))
+	{
+		this->updateDispersion = true;
+
 	}
 
 	if (ImGui::DragInt("time steps", &dispersionOptions->timeStep,1.0f,1,1000000))
@@ -399,6 +410,8 @@ void RenderImGuiOptions::drawDispersionOptions()
 		this->updateDispersion = true;
 
 	}
+
+
 
 	if (ImGui::InputInt2("Grid Size 2D", dispersionOptions->gridSize_2D, sizeof(dispersionOptions->gridSize_2D)))
 	{

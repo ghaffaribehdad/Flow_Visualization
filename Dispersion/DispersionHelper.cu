@@ -3,6 +3,10 @@
 #include "cuda_runtime.h"
 #include "..//Cuda/CudaHelperFunctions.h"
 
+
+template __global__ void hieghtfieldGradient<struct IsosurfaceHelper::Position>(cudaSurfaceObject_t heightFieldSurface, cudaSurfaceObject_t heightFieldSurface_gradient ,DispersionOptions dispersionOptions, SolverOptions	solverOptions);
+
+
 // Seed particles in each ZY-Plane grid points
 // takes arrayes of three floats for gridDiameter and 2 integer gridSize
 
@@ -74,15 +78,61 @@ __global__ void traceDispersion
 		// calculate the displacement magnitude (projected into XZ plane)
 		float displacementMagnitude = fabs(sqrtf(dot(displacement, displacement)));
 
-		float4 rgba = 
-		{ 
-			particle[index].m_position.x ,
-			particle[index].m_position.y ,
-			particle[index].m_position.z ,
-			displacementMagnitude
-		};
-		surf2Dwrite(rgba, heightFieldSurface, 4 * sizeof(float) * index_x, index_y);
+		float height = particle[index].m_position.y;
+	
+		surf2Dwrite(height, heightFieldSurface,  sizeof(float) *index_x, index_y);
 	}
 }
 
 
+
+template <typename Observable>
+__global__ void hieghtfieldGradient
+(
+	cudaSurfaceObject_t heightFieldSurface,
+	cudaSurfaceObject_t heightFieldSurface_gradient,
+	DispersionOptions dispersionOptions,
+	SolverOptions solverOptions
+)
+{
+
+	Observable observable;
+	int index = blockIdx.x * blockDim.y * blockDim.x;
+	index += threadIdx.y * blockDim.x;
+	index += threadIdx.x;
+
+	int gridPoints = dispersionOptions.gridSize_2D[0] * dispersionOptions.gridSize_2D[1];
+
+	if (index < gridPoints)
+	{
+
+
+
+		int index_y = index / dispersionOptions.gridSize_2D[1];
+		int index_x = index - (index_y * dispersionOptions.gridSize_2D[1]);
+		
+		float2 gradient = { 0.0f,0.0f };
+
+		// check the boundaries
+		if (index_x % (dispersionOptions.gridSize_2D[0] - 1) == 0.0f || index_y % (dispersionOptions.gridSize_2D[1] - 1) == 0.0f)
+		{
+			// do nothing
+
+		}
+		else
+		{
+			gradient = observable.GradientAtXY_Grid(heightFieldSurface, make_int2(index_x, index_y));
+		}
+
+
+		
+
+		float4 texel = { 0,0,0,0 };
+		texel.x = observable.ValueAtXY_Surface_float(heightFieldSurface, make_int2(index_x, index_y));
+		texel.y = gradient.x;
+		texel.z = gradient.y;
+
+		surf2Dwrite(texel, heightFieldSurface_gradient, 4 * sizeof(float) * index_x, index_y);
+		
+	}
+}

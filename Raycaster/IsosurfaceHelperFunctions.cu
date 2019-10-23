@@ -64,59 +64,42 @@ __device__ float IsosurfaceHelper::ShearStress::ValueAtXYZ(cudaTextureObject_t t
 }
 
 
-__device__ float4 IsosurfaceHelper::Position::ValueAtXY(cudaTextureObject_t tex, float3 position)
+__device__ float4 IsosurfaceHelper::Position::ValueAtXY(cudaTextureObject_t tex, float2 position)
 {
-	return   tex2D<float4>(tex, position.x, position.z);
-}
-
-
-// position is normalized ->[0,1]
-__device__  float3 IsosurfaceHelper::Position::GradientAtXY_Height(cudaTextureObject_t tex, float3 position, int2 gridSize)
-{
-	// Interpolated gradient
-	float3 result = { 0.0f, 0.0f, 0.0f };
-	// Mesh size in XZ plane, the mesh size is (volumeSize / nodes - 1)
-	float3 h = make_float3(1.0f / (gridSize.x-1), 0.0f, 1.0 / (gridSize.y-1));
-
-	float3* edges = new float3[4];
-
-	float2 gridPos_floor	= make_float2(h.x,h.z)	*  make_int2(floor(position.x / h.x), floor(position.z / h.z));
-	float2 gridPos_ceil		= make_float2(h.x, h.z) *  make_int2(ceil(position.x / h.x), ceil(position.z / h.z));
-	
-	edges[0] = make_float3(gridPos_floor.x, 0, gridPos_floor.y);
-	edges[1] = make_float3(gridPos_floor.x, 0, gridPos_ceil.y);
-	edges[2] = make_float3(gridPos_ceil.x, 0, gridPos_floor.y);
-	edges[3] = make_float3(gridPos_ceil.x, 0, gridPos_ceil.y);
-	
-	result	 = GradientAtXY_Height_Grid(tex, edges[0], gridSize) *make_float3((position.x - edges[0].x)/ h.x,1,(position.z - edges[0].z) / h.z);
-	result	+= GradientAtXY_Height_Grid(tex, edges[1], gridSize) *make_float3((position.x - edges[1].x)/ h.x,1,(edges[1].z - position.z) / h.z);
-	result	+= GradientAtXY_Height_Grid(tex, edges[2], gridSize) *make_float3((edges[2].x - position.x)/ h.x,1,(position.z - edges[2].z) / h.z);
-	result	+= GradientAtXY_Height_Grid(tex, edges[3], gridSize) *make_float3((edges[3].x - position.x)/ h.x,1,(edges[3].z - position.z) / h.z);
-
-
-
-	delete[] edges;
-
-	return result;
-
-
+	return   tex2D<float4>(tex, position.x, position.y);
 }
 
 
 
 
-__device__  float3 IsosurfaceHelper::Position::GradientAtXY_Height_Grid(cudaTextureObject_t tex, float3 position, int2 gridSize)
+__device__  float2 IsosurfaceHelper::Position::GradientAtXY_Grid(cudaSurfaceObject_t surf, int2 gridPosition)
 {
+	float dH_dX = this->ValueAtXY_Surface_float(surf, make_int2(gridPosition.x + 1, gridPosition.y));
+	float dH_dY = this->ValueAtXY_Surface_float(surf, make_int2(gridPosition.x, gridPosition.y + 1));
 
-	float2 h = { 1.0f, 1.0f};
-	h = h / gridSize;
+	dH_dX -= this->ValueAtXY_Surface_float(surf, make_int2(gridPosition.x -1, gridPosition.y));
+	dH_dY -= this->ValueAtXY_Surface_float(surf, make_int2(gridPosition.x, gridPosition.y -1));
 
-
-	float dV_dX = this->ValueAtXY(tex, make_float3(position.x + h.x / 2.0f, position.y, position.z)).y;
-	float dV_dY = this->ValueAtXY(tex, make_float3(position.x, position.y + h.y / 2.0f, position.z)).y;
-
-	dV_dX -= this->ValueAtXY(tex, make_float3(position.x - h.x / 2.0f, position.y, position.z)).y;
-	dV_dY -= this->ValueAtXY(tex, make_float3(position.x, position.y - h.y / 2.0f, position.z)).y;
-
-	return {dV_dX / h.x ,-1, dV_dY / h.y };
+	return make_float2(-dH_dX, -dH_dY);
 }
+
+
+__device__  float IsosurfaceHelper::Position::ValueAtXY_Surface_float(cudaSurfaceObject_t tex, int2 gridPos)
+{
+	float data;
+	surf2Dread(&data, tex, gridPos.x *sizeof(float), gridPos.y);
+
+	return data;
+};
+
+__device__  float4 IsosurfaceHelper::Position::ValueAtXY_Surface_float4(cudaSurfaceObject_t tex, int2 gridPos)
+{
+	float4 data;
+	surf2Dread(&data, tex, gridPos.x * 4 * sizeof(float), gridPos.y);
+
+	return data;
+};
+
+
+
+

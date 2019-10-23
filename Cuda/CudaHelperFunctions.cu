@@ -674,3 +674,70 @@ __global__ void TracingStream
 		}//end of for loop
 	}
 }
+
+
+
+__device__ float3 binarySearch_heightField
+(
+	float3 _position,
+	cudaSurfaceObject_t tex,
+	float3 _samplingStep,
+	float3 gridDiameter,
+	float tolerance,
+	int maxIteration
+
+)
+{
+	float3 position = _position;
+	float3 relative_position = position / gridDiameter;
+
+	float3 samplingStep = _samplingStep;
+
+	bool side = 0; // 0 -> insiede 1-> outside
+
+	int counter = 0;
+
+
+	while (fabsf(tex2D<float4>(tex, relative_position.x, relative_position.y).x - position.y) > tolerance && counter < maxIteration)
+	{
+
+		if ( tex2D<float4>(tex,  relative_position.x, relative_position.y).x - position.y >  0)
+		{
+			if (side)
+			{
+				samplingStep = 0.5 * samplingStep;
+			}
+
+			// return position if we are out of texture
+			if (outofTexture((position - samplingStep) / gridDiameter))
+				return position;
+
+			position = position - samplingStep;
+			relative_position = position / gridDiameter;
+
+			side = 0;
+
+		}
+		else
+		{
+
+			if (!side)
+			{
+				samplingStep = 0.5 * samplingStep;
+			}
+
+			// return position if we are out of texture
+			if (outofTexture((position + samplingStep) / gridDiameter))
+				return position;
+
+			position = position + samplingStep;
+			relative_position = position / gridDiameter;
+			side = 1;
+
+		}
+		counter++;
+
+	}
+
+	return position;
+};

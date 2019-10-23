@@ -257,7 +257,12 @@ __host__ bool Raycasting::initializeVolumeTexuture
 {
 	this->volumeTexture.setSolverOptions(this->solverOptions);
 	this->volumeTexture.setField(this->field);
-	this->volumeTexture.initialize(addressMode_X, addressMode_Y, addressMode_Z);
+	this->volumeTexture.initialize
+	(
+		addressMode_X,
+		addressMode_Y,
+		addressMode_Z
+	);
 
 	return true;
 }
@@ -280,7 +285,14 @@ __host__ bool Raycasting::initializeIO()
 
 
 template <typename Observable>
-__global__ void CudaIsoSurfacRenderer(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance)
+__global__ void CudaIsoSurfacRenderer
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field1,
+	int rays, float isoValue,
+	float samplingRate,
+	float IsosurfaceTolerance
+)
 {
 
 	Observable observable;
@@ -298,7 +310,7 @@ __global__ void CudaIsoSurfacRenderer(cudaSurfaceObject_t raycastingSurface, cud
 		pixel.x = index - pixel.y * d_boundingBox.width;
 
 		// copy values from constant memory to local memory (which one is faster?)
-		float3 viewDir = normalize(d_boundingBox.viewDir);
+		float3 viewDir = d_boundingBox.viewDir;
 		float3 pixelPos = pixelPosition(d_boundingBox, pixel.x, pixel.y);
 		float2 NearFar = findIntersections(pixelPos, d_boundingBox);
 
@@ -360,7 +372,8 @@ __global__ void CudaIsoSurfacRenderer(cudaSurfaceObject_t raycastingSurface, cud
 					float4 rgba = { rgb.x, rgb.y, rgb.z, depth};
 					
 					// write back color and depth into the texture (surface)
-					surf2Dwrite(rgba, raycastingSurface, 4 * sizeof(float) * pixel.x, pixel.y); // stride size of 4 * floats for each texel
+					// stride size of 4 * floats for each texel
+					surf2Dwrite(rgba, raycastingSurface, 4 * sizeof(float) * pixel.x, pixel.y);
 					break;
 				}
 				
@@ -378,7 +391,15 @@ __global__ void CudaIsoSurfacRenderer(cudaSurfaceObject_t raycastingSurface, cud
 
 
 template <typename Observable>
-__global__ void CudaTerrainRenderer(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float samplingRate, float IsosurfaceTolerance, DispersionOptions dispersionOptions)
+__global__ void CudaTerrainRenderer
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field1,
+	int rays,
+	float samplingRate,
+	float IsosurfaceTolerance,
+	DispersionOptions dispersionOptions
+)
 {
 	Observable observable;
 
@@ -395,7 +416,7 @@ __global__ void CudaTerrainRenderer(cudaSurfaceObject_t raycastingSurface, cudaT
 		pixel.x = index - pixel.y * d_boundingBox.width;
 
 		// copy values from constant memory to local memory (which one is faster?)
-		float3 viewDir = normalize(d_boundingBox.viewDir);
+		float3 viewDir = d_boundingBox.viewDir;
 		float3 pixelPos = pixelPosition(d_boundingBox, pixel.x, pixel.y);
 		float2 NearFar = findIntersections(pixelPos, d_boundingBox);
 
@@ -424,63 +445,39 @@ __global__ void CudaTerrainRenderer(cudaSurfaceObject_t raycastingSurface, cudaT
 
 
 				//Relative position calculates the position of the point on the cuda texture
-				float3 relativePos = (position / d_boundingBox.gridDiameter);
-				float3 posTemp = { 0,0,0 };
-				posTemp.x = relativePos.x;
-				posTemp.z = relativePos.z;
-				relativePos.x = posTemp.z;
-				relativePos.z = posTemp.x;
-
+				float2 relativePos = make_float2(position.x / d_boundingBox.gridDiameter.x, position.z / d_boundingBox.gridDiameter.z);
+				
+				// fetch texels from the GPU memory
 				float4 hightFieldVal = observable.ValueAtXY(field1, relativePos);
+
 				// check if we have a hit 
-				if (hightFieldVal.y - position.y > 0 && hightFieldVal.y - position.y <0.01)
+				if (position.y - hightFieldVal.x > 0 &&  position.y - hightFieldVal.x < 0.01 )
 				{
-					//position = binarySearchHeightField<Observable>(observable, field1, position, d_boundingBox.gridDiameter, rayDir * t, IsosurfaceTolerance, 50);
-					//relativePos = (position / d_boundingBox.gridDiameter);
 
-					int2 gridSize = { dispersionOptions.gridSize_2D[0], dispersionOptions.gridSize_2D[1] };
-					float seedWallNormalDist = dispersionOptions.seedWallNormalDist;
+					float3 samplingStep = rayDir * samplingRate;
+					//binary search
+					position = binarySearch_heightField
+					(
+						position,
+						field1,
+						samplingStep,
+						d_boundingBox.gridDiameter,
+						dispersionOptions.binarySearchTolerance,
+						dispersionOptions.binarySearchMaxIteration
+					);
 
-					// calculates gradient
-					float3 gradient = observable.GradientAtXY_Height(field1, relativePos, gridSize);
+					relativePos = make_float2(position.x / d_boundingBox.gridDiameter.x, position.z / d_boundingBox.gridDiameter.z);
+
+					hightFieldVal = observable.ValueAtXY(field1, relativePos);
+
+					float3 gradient = { -hightFieldVal.y,-1,-hightFieldVal.z };
 
 
 					// shading (no ambient)
 					float diffuse = max(dot(normalize(gradient), viewDir), 0.0f);
 
-					float3 initialPos = make_float3(position.x, seedWallNormalDist, position.y);
-					float3 finalPos = make_float3(hightFieldVal.x, hightFieldVal.y, hightFieldVal.z);
+					float3 rgb = { 0,1,0 };
 
-
-					float3 rgb = { 0,0,0 };
-
-					
-					// shading based on the righ-left deviation
-					if (initialPos.z > finalPos.z)
-					{
-						float red_sat = __saturatef(dispersionOptions.dev_z_range/(initialPos.z - finalPos.z) );
-						rgb = make_float3(1, 1-red_sat, 1-red_sat);
-
-					}
-					else 
-					{
-						float green_sat = __saturatef(dispersionOptions.dev_z_range /(finalPos.z - initialPos.z));
-						rgb = make_float3(1-green_sat, 1, 1-green_sat);
-
-					}
-					
-
-					float isocontourSegment = 5.0f;
-					float isocontourTolerance = 0.04;
-					float max_level = 5;
-
-					// check for hit of isocontour
-					if (fabs((hightFieldVal.w / isocontourSegment) - round(hightFieldVal.w / isocontourSegment)) < isocontourTolerance)
-					{
-						float level = __saturatef(max_level/(hightFieldVal.w / isocontourSegment));
-						rgb = make_float3(1-level,1-level, 1);
-
-					}
 
 					rgb = rgb * diffuse;
 
@@ -497,7 +494,8 @@ __global__ void CudaTerrainRenderer(cudaSurfaceObject_t raycastingSurface, cudaT
 					float4 rgba = { rgb.x , rgb.y, rgb.z, depth };
 
 					// write back color and depth into the texture (surface)
-					surf2Dwrite(rgba, raycastingSurface, 4 * sizeof(float) * pixel.x, pixel.y); // stride size of 4 * floats for each texel
+					// stride size of 4 * floats for each texel
+					surf2Dwrite(rgba, raycastingSurface, 4 * sizeof(float) * pixel.x, pixel.y);
 					break;
 				}
 
@@ -644,8 +642,25 @@ bool Raycasting::initializeShaders()
 
 		D3D11_INPUT_ELEMENT_DESC layout[] =
 		{
-			{"POSITION", 0, DXGI_FORMAT::DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_CLASSIFICATION::D3D11_INPUT_PER_VERTEX_DATA, 0  },
-			{"TEXCOORD", 0, DXGI_FORMAT::DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_CLASSIFICATION::D3D11_INPUT_PER_VERTEX_DATA, 0  }
+			{
+				"POSITION",
+				0,
+				DXGI_FORMAT::DXGI_FORMAT_R32G32B32_FLOAT,
+				0,
+				D3D11_APPEND_ALIGNED_ELEMENT,
+				D3D11_INPUT_CLASSIFICATION::D3D11_INPUT_PER_VERTEX_DATA,
+				0
+			},
+
+			{
+				"TEXCOORD",
+				0,
+				DXGI_FORMAT::DXGI_FORMAT_R32G32_FLOAT,
+				0, 
+				D3D11_APPEND_ALIGNED_ELEMENT,
+				D3D11_INPUT_CLASSIFICATION::D3D11_INPUT_PER_VERTEX_DATA,
+				0 
+			}
 		};
 
 		UINT numElements = ARRAYSIZE(layout);
@@ -778,13 +793,17 @@ void Raycasting::setShaders()
 {
 
 	this->deviceContext->IASetInputLayout(this->vertexshader.GetInputLayout());		// Set the input layout
-	this->deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);		// set the primitive topology
+
+	// set the primitive topology
+	this->deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);		
+
 	this->deviceContext->RSSetState(this->rasterizerstate.Get());					// set the rasterizer state
 	this->deviceContext->VSSetShader(vertexshader.GetShader(), NULL, 0);			// set vertex shader
 	this->deviceContext->PSSetShader(pixelshader.GetShader(), NULL, 0);
 	UINT offset = 0;
 
-	this->deviceContext->IASetVertexBuffers(0, 1, this->vertexBuffer.GetAddressOf(), this->vertexBuffer.StridePtr(), &offset); // set Vertex buffer
+	// set Vertex buffer
+	this->deviceContext->IASetVertexBuffers(0, 1, this->vertexBuffer.GetAddressOf(), this->vertexBuffer.StridePtr(), &offset); 
 	this->deviceContext->PSSetSamplers(0, 1, this->samplerState.GetAddressOf());
 	this->deviceContext->PSSetShaderResources(0, 1, this->shaderResourceView.GetAddressOf());
 }
