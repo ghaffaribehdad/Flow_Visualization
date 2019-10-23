@@ -123,4 +123,7 @@ __device__  float4 IsosurfaceHelper::Position::ValueAtXY_Surface_float4(cudaSurf
 
 
 
-
+__device__  float4 IsosurfaceHelper::Observable::ValueAtXYZ_float4(cudaTextureObject_t tex, float3 position)
+{
+	return tex3D<float4>(tex, position.x, position.y, position.z);
+}

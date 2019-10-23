@@ -376,15 +376,15 @@ void RenderImGuiOptions::drawDispersionOptions()
 
 	if (ImGui::DragFloat("dt dispersion", &dispersionOptions->dt, 0.0001f,0.001f,1.0f,"%5f"))
 	{
-		this->dispersionOptions->retrace = true;
 		this->updateDispersion = true;
+		this->dispersionOptions->retrace = true;
 
 	}
 
 	if (ImGui::DragFloat("Wall-normal Distance", &dispersionOptions->seedWallNormalDist,0.001f,0.0,solverOptions->gridDiameter[1],"%4f"))
 	{
-		this->dispersionOptions->retrace = true;
 		this->updateDispersion = true;
+		this->dispersionOptions->retrace = true;
 
 	}
 
@@ -404,7 +404,14 @@ void RenderImGuiOptions::drawDispersionOptions()
 
 	}
 
-	if (ImGui::DragInt("time steps", &dispersionOptions->timeStep,1.0f,1,1000000))
+	if (ImGui::DragInt("time steps", &dispersionOptions->timeStep,1.0f,1, dispersionOptions->tracingTime))
+	{
+		this->updateDispersion = true;
+
+	}
+
+
+	if (ImGui::DragInt("Trace duration", &dispersionOptions->tracingTime,1,1,4096))
 	{
 		this->dispersionOptions->retrace = true;
 		this->updateDispersion = true;
@@ -424,7 +431,7 @@ void RenderImGuiOptions::drawDispersionOptions()
 		{
 			dispersionOptions->gridSize_2D[1] = 2;
 		}
-		this->dispersionOptions->retrace = true;
+		//this->dispersionOptions->retrace = true;
 		this->updateDispersion = true;
 
 	}

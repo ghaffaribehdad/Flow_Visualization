@@ -3,8 +3,18 @@
 #include "cuda_runtime.h"
 #include "..//Cuda/CudaHelperFunctions.h"
 
-
-template __global__ void hieghtfieldGradient<struct IsosurfaceHelper::Position>(cudaSurfaceObject_t heightFieldSurface, cudaSurfaceObject_t heightFieldSurface_gradient ,DispersionOptions dispersionOptions, SolverOptions	solverOptions);
+//Explicit Instantiation
+template __global__ void heightFieldGradient<struct IsosurfaceHelper::Position>(cudaSurfaceObject_t heightFieldSurface,\
+	cudaSurfaceObject_t heightFieldSurface_gradient ,\
+	DispersionOptions dispersionOptions,\
+	SolverOptions	solverOptions
+);
+template __global__ void heightFieldGradient3D<struct IsosurfaceHelper::Position>\
+(\
+	cudaSurfaceObject_t heightFieldSurface,\
+	DispersionOptions dispersionOptions,\
+	SolverOptions	solverOptions\
+);
 
 
 // Seed particles in each ZY-Plane grid points
@@ -80,7 +90,7 @@ __global__ void traceDispersion
 
 
 
-__global__ void traceDispersion3D
+__global__ void  traceDispersion3D
 (
 	Particle* particle,
 	cudaSurfaceObject_t heightFieldSurface3D,
@@ -91,7 +101,7 @@ __global__ void traceDispersion3D
 {
 	// Extract dispersion options
 	float dt = dispersionOptions.dt;
-	int timeStep = dispersionOptions.timeStep;
+	int tracingTime = dispersionOptions.tracingTime;
 	int nParticles = dispersionOptions.gridSize_2D[0] * dispersionOptions.gridSize_2D[1];
 
 
@@ -114,7 +124,7 @@ __global__ void traceDispersion3D
 
 
 		// Trace particle using RK4 
-		for (int time = 0; time < timeStep; time++)
+		for (int time = 0; time < tracingTime; time++)
 		{
 
 			// Advect the particle
@@ -133,7 +143,7 @@ __global__ void traceDispersion3D
 
 
 template <typename Observable>
-__global__ void hieghtfieldGradient
+__global__ void heightFieldGradient
 (
 	cudaSurfaceObject_t heightFieldSurface,
 	cudaSurfaceObject_t heightFieldSurface_gradient,
@@ -186,7 +196,7 @@ __global__ void hieghtfieldGradient
 
 
 template <typename Observable>
-__global__ void hieghtfieldGradient3D
+__global__ void heightFieldGradient3D
 (
 	cudaSurfaceObject_t heightFieldSurface3D,
 	DispersionOptions dispersionOptions,
@@ -205,7 +215,7 @@ __global__ void hieghtfieldGradient3D
 	{
 
 
-		for (int time = 0; time < dispersionOptions.timeStep; time++)
+		for (int time = 0; time < dispersionOptions.tracingTime; time++)
 		{
 			int index_y = index / dispersionOptions.gridSize_2D[1];
 			int index_x = index - (index_y * dispersionOptions.gridSize_2D[1]);

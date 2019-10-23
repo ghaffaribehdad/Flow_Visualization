@@ -445,10 +445,15 @@ __global__ void CudaTerrainRenderer
 
 
 				//Relative position calculates the position of the point on the cuda texture
-				float2 relativePos = make_float2(position.x / d_boundingBox.gridDiameter.x, position.z / d_boundingBox.gridDiameter.z);
+				float3 relativePos = 
+				{ 
+					position.x / d_boundingBox.gridDiameter.x,
+					position.z / d_boundingBox.gridDiameter.z,
+					static_cast<float> (dispersionOptions.timeStep) / static_cast<float> (dispersionOptions.tracingTime)
+				};
 				
 				// fetch texels from the GPU memory
-				float4 hightFieldVal = observable.ValueAtXY(field1, relativePos);
+				float4 hightFieldVal = observable.ValueAtXYZ_float4(field1, relativePos);
 
 				// check if we have a hit 
 				if (position.y - hightFieldVal.x > 0 &&  position.y - hightFieldVal.x < 0.01 )
@@ -456,19 +461,24 @@ __global__ void CudaTerrainRenderer
 
 					float3 samplingStep = rayDir * samplingRate;
 					//binary search
-					position = binarySearch_heightField
+					//position = binarySearch_heightField
+					//(
+					//	position,
+					//	field1,
+					//	samplingStep,
+					//	d_boundingBox.gridDiameter,
+					//	dispersionOptions.binarySearchTolerance,
+					//	dispersionOptions.binarySearchMaxIteration
+					//);
+
+					relativePos = make_float3
 					(
-						position,
-						field1,
-						samplingStep,
-						d_boundingBox.gridDiameter,
-						dispersionOptions.binarySearchTolerance,
-						dispersionOptions.binarySearchMaxIteration
+						position.x / d_boundingBox.gridDiameter.x,
+						position.z / d_boundingBox.gridDiameter.z,
+						static_cast<float> (dispersionOptions.timeStep) / static_cast<float> (dispersionOptions.tracingTime)
 					);
 
-					relativePos = make_float2(position.x / d_boundingBox.gridDiameter.x, position.z / d_boundingBox.gridDiameter.z);
-
-					hightFieldVal = observable.ValueAtXY(field1, relativePos);
+					hightFieldVal = observable.ValueAtXYZ_float4(field1, relativePos);
 
 					float3 gradient = { -hightFieldVal.y,-1,-hightFieldVal.z };
 
@@ -495,7 +505,7 @@ __global__ void CudaTerrainRenderer
 
 					// write back color and depth into the texture (surface)
 					// stride size of 4 * floats for each texel
-					surf2Dwrite(rgba, raycastingSurface, 4 * sizeof(float) * pixel.x, pixel.y);
+					surf2Dwrite(rgba, raycastingSurface, sizeof(float4) * pixel.x, pixel.y);
 					break;
 				}
 

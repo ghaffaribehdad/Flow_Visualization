@@ -66,16 +66,11 @@ public:
 
 		this->extent = make_cudaExtent(this->width, this->height, this->depth);
 
-		// Allocate 3D Array
-		cudaMalloc3DArray(&this->cuArray, &channelFormatDesc, extent);
-
-
 		// Create Format description based on the template typename
 		this->channelFormatDesc = cudaCreateChannelDesc<T>();
 
-
-		// Allocate CUDA array in device memory
-		gpuErrchk(cudaMallocArray(&this->cuArray, &channelFormatDesc, width, height));
+		// Allocate 3D Array
+		cudaMalloc3DArray(&this->cuArray, &channelFormatDesc, extent);
 
 		// set initialization status to true
 		this->initialized = true;

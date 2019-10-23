@@ -2,8 +2,7 @@
 
 struct DispersionOptions
 {
-	float seedWallNormalDist = 0.09f;
-	int timeStep = 1024;
+	float seedWallNormalDist = .09f;
 	int gridSize_2D[2] = { 192,192 };
 	float dt = 0.001f;
 	bool initialized = false;
@@ -15,4 +14,8 @@ struct DispersionOptions
 	float dev_mag_tolerance = 0.1f;
 	float binarySearchTolerance = 0.1f;
 	int binarySearchMaxIteration = 50;
+
+
+	int timeStep = 1000;
+	int tracingTime =  1024;
 };

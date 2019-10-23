@@ -27,7 +27,7 @@ __global__ void traceDispersion3D
 );
 
 template <typename Observable>
-__global__ void hieghtfieldGradient
+__global__ void heightFieldGradient
 (
 
 	cudaSurfaceObject_t heightFieldSurface,
@@ -37,7 +37,7 @@ __global__ void hieghtfieldGradient
 );
 
 template <typename Observable>
-__global__ void hieghtfieldGradient3D
+__global__ void heightFieldGradient3D
 (
 
 	cudaSurfaceObject_t heightFieldSurface3D,

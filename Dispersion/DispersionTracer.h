@@ -66,13 +66,13 @@ private:
 	
 	unsigned int n_particles;
 	
-	CudaSurface heightSurface;			// cuda surface storing the results
-	CudaSurface heightSurface_gradient;
+	//CudaSurface heightSurface;				// cuda surface storing the results
+	//CudaSurface heightSurface_gradient;
 	CudaSurface heightSurface3D;
-	cudaTextureObject_t heightFieldTexture;
+	//cudaTextureObject_t heightFieldTexture;
 	cudaTextureObject_t heightFieldTexture3D;
-	CudaArray_2D<float4> heightArray_gradient;
-	CudaArray_2D<float> heightArray;
+	//CudaArray_2D<float4> heightArray_gradient;
+	//CudaArray_2D<float> heightArray;
 	CudaArray_3D<float4> heightArray3D;
 		
 };
