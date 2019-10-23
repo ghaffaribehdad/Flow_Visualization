@@ -6,6 +6,7 @@
 #include "..//Options/DispresionOptions.h"
 
 void seedParticle_ZY_Plane(Particle* particle, float* gridDiameter, const int* gridSize, const float& y_slice);
+void seedParticle_tiltedPlane(Particle* particle, float* gridDiameter, const int* gridSize, const float& y_slice, const float & tilt);
 
 __global__ void traceDispersion
 (
