@@ -133,3 +133,16 @@ __global__ void CudaTerrainRenderer
 	float IsosurfaceTolerance,
 	DispersionOptions dispersionOptions
 );
+
+
+template <typename Observable>
+__global__ void CudaTerrainRenderer
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t heightField,
+	cudaTextureObject_t extraField,
+	int rays,
+	float samplingRate,
+	float IsosurfaceTolerance,
+	DispersionOptions dispersionOptions
+);

@@ -37,25 +37,16 @@ public:
 	bool release() override;
 	void rendering() override;
 	bool updateScene() override;
-	void trace();
 	void trace3D();
 	bool retrace();
-	void gradient();
 	void gradient3D();
 
 
 private:
 
 	bool InitializeParticles();
-	bool InitializeHeightArray();
 	bool InitializeHeightArray3D();
-	bool InitializeHeight_gradient_Array();
-
-	bool InitializeHeightSurface();
 	bool InitializeHeightSurface3D();
-	bool InitializeHeight_gradient_Surface();
-
-	bool InitializeHeight_gradient_Texture();
 	bool InitializeHeightTexture3D();
 
 	DispersionOptions* dispersionOptions;
@@ -66,14 +57,15 @@ private:
 	
 	unsigned int n_particles;
 	
-	//CudaSurface heightSurface;				// cuda surface storing the results
-	//CudaSurface heightSurface_gradient;
+
 	CudaSurface heightSurface3D;
-	//cudaTextureObject_t heightFieldTexture;
+	CudaSurface heightSurface3D_extra;
+
 	cudaTextureObject_t heightFieldTexture3D;
-	//CudaArray_2D<float4> heightArray_gradient;
-	//CudaArray_2D<float> heightArray;
+	cudaTextureObject_t heightFieldTexture3D_extra;
+
 	CudaArray_3D<float4> heightArray3D;
+	CudaArray_3D<float4> heightArray3D_extra;
 		
 };
 

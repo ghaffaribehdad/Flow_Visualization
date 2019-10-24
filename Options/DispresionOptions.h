@@ -17,5 +17,5 @@ struct DispersionOptions
 
 
 	int timeStep = 1000;
-	int tracingTime =  1024;
+	int tracingTime =  2048;
 };

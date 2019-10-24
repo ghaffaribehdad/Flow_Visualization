@@ -109,6 +109,62 @@ __global__ void traceDispersion
 
 
 
+__global__ void  traceDispersion3D_extra
+(
+	Particle* particle,
+	cudaSurfaceObject_t heightFieldSurface3D,
+	cudaSurfaceObject_t heightFieldSurface3D_extra,
+	cudaTextureObject_t velocityField,
+	SolverOptions solverOptions,
+	DispersionOptions dispersionOptions
+)
+{
+	// Extract dispersion options
+	float dt = dispersionOptions.dt;
+	int tracingTime = dispersionOptions.tracingTime;
+	int nParticles = dispersionOptions.gridSize_2D[0] * dispersionOptions.gridSize_2D[1];
+
+
+	int index = blockIdx.x * blockDim.y * blockDim.x;
+	index += threadIdx.y * blockDim.x;
+	index += threadIdx.x;
+
+	if (index < nParticles)
+	{
+		float3 gridDiameter =
+		{
+			solverOptions.gridDiameter[0],
+			solverOptions.gridDiameter[1],
+			solverOptions.gridDiameter[2],
+		};
+
+		// find the index of the particle
+		int index_y = index / dispersionOptions.gridSize_2D[1];
+		int index_x = index - (index_y * dispersionOptions.gridSize_2D[1]);
+
+
+		// Trace particle using RK4 
+		for (int time = 0; time < tracingTime; time++)
+		{
+
+			// Advect the particle
+			RK4Stream(velocityField, &particle[index], gridDiameter, dt);
+
+			// extract the height
+			float3 position = particle[index].m_position;
+			float3 velocity = particle[index].m_velocity;
+
+			float4 heightTexel = { position.y,0.0,0.0,position.x };
+			float4 extraTexel = { position.z, velocity.x,velocity.y, velocity.z };
+			// copy it in the surface3D
+			surf3Dwrite(heightTexel, heightFieldSurface3D, sizeof(float4) * index_x, index_y, time);
+			surf3Dwrite(extraTexel, heightFieldSurface3D_extra, sizeof(float4) * index_x, index_y, time);
+
+		}
+	}
+}
+
+
 __global__ void  traceDispersion3D
 (
 	Particle* particle,
