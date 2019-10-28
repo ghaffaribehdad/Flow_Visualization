@@ -15,7 +15,7 @@ template __global__ void CudaIsoSurfacRenderer<struct IsosurfaceHelper::Velocity
 template __global__ void CudaIsoSurfacRenderer<struct IsosurfaceHelper::Velocity_Z>			(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
 template __global__ void CudaIsoSurfacRenderer<struct IsosurfaceHelper::ShearStress>		(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
 template __global__ void CudaTerrainRenderer< struct IsosurfaceHelper::Position >			(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float samplingRate, float IsosurfaceTolerance, DispersionOptions dispersionOptions);
-
+template __global__ void CudaTerrainRenderer_extra< struct IsosurfaceHelper::Position >(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t heightField, cudaTextureObject_t extraField, int rays, float samplingRate, float IsosurfaceTolerance, DispersionOptions dispersionOptions);
 
 __host__ bool Raycasting::updateScene()
 {
@@ -591,20 +591,11 @@ __global__ void CudaTerrainRenderer_extra
 				float4 hightFieldVal = observable.ValueAtXYZ_float4(heightField, relativePos);
 
 				// check if we have a hit 
-				if (position.y - hightFieldVal.x > 0 && position.y - hightFieldVal.x < 0.01)
+				if (position.y - hightFieldVal.x > 0 && position.y - hightFieldVal.x < dispersionOptions.hegiht_tolerance)
 				{
 
 					float3 samplingStep = rayDir * samplingRate;
-					//binary search
-					//position = binarySearch_heightField
-					//(
-					//	position,
-					//	field1,
-					//	samplingStep,
-					//	d_boundingBox.gridDiameter,
-					//	dispersionOptions.binarySearchTolerance,
-					//	dispersionOptions.binarySearchMaxIteration
-					//);
+			
 
 					relativePos = make_float3
 					(
@@ -614,15 +605,239 @@ __global__ void CudaTerrainRenderer_extra
 					);
 
 					hightFieldVal = observable.ValueAtXYZ_float4(heightField, relativePos);
-
-					float3 gradient = { -hightFieldVal.y,-1,-hightFieldVal.z };
+					
+					float3 gradient = { hightFieldVal.y,-1,hightFieldVal.z };
 
 
 					// shading (no ambient)
 					float diffuse = max(dot(normalize(gradient), viewDir), 0.0f);
 
-					float3 rgb = { 0,1,0 };
+					
 
+					float3 rgb_min = 
+					{ 
+						dispersionOptions.minColor[0],
+						dispersionOptions.minColor[1],
+						dispersionOptions.minColor[2],
+					};
+
+					float3 rgb_max =
+					{
+						dispersionOptions.maxColor[0],
+						dispersionOptions.maxColor[1],
+						dispersionOptions.maxColor[2],
+					};
+
+					float3 rgb = rgb_min;
+
+					float extractedVal = 0.0f;
+					float3 rgb_complement = { 0.0f,0.0f,0.0f };
+
+					switch (dispersionOptions.colorCode)
+					{
+						case dispersionColorCode::NONE:
+						{
+							break;
+						}
+
+						case dispersionColorCode::V_X_FLUCTUATION:
+						{
+
+							float4 value = observable.ValueAtXYZ_float4(extraField, relativePos);
+							extractedVal = value.y;
+							extractedVal = saturate((extractedVal - dispersionOptions.min_val) / (dispersionOptions.max_val - dispersionOptions.min_val));
+							rgb = (1.0f - extractedVal) * rgb_min + extractedVal * rgb_max;
+
+							break;
+						}
+
+						case dispersionColorCode::V_Y:
+						{
+
+							extractedVal = observable.ValueAtXYZ_float4(extraField, relativePos).z;
+							extractedVal = saturate((extractedVal - dispersionOptions.min_val) / (dispersionOptions.max_val - dispersionOptions.min_val));
+							rgb = (1.0f - extractedVal) * rgb_min + extractedVal * rgb_max;
+
+							break;
+						}
+
+						case dispersionColorCode::V_Z:
+						{
+
+							extractedVal = observable.ValueAtXYZ_float4(extraField, relativePos).w;
+							extractedVal = saturate((extractedVal - dispersionOptions.min_val) / (dispersionOptions.max_val - dispersionOptions.min_val));
+							rgb = (1.0f - extractedVal) * rgb_min + extractedVal * rgb_max;
+
+							break;
+						}
+
+						case dispersionColorCode::DISTANCE:
+						{
+							float4 Vec_0 = observable.ValueAtXYZ_float4(heightField, make_float3(relativePos.x, relativePos.y,0.0));
+							float4 Vec_1 = observable.ValueAtXYZ_float4(extraField, make_float3(relativePos.x, relativePos.y,0.0));
+
+							float3 position_0 = { Vec_0.w,Vec_0.x,Vec_1.x };
+
+							Vec_0 = observable.ValueAtXYZ_float4(heightField, relativePos);
+							Vec_1 = observable.ValueAtXYZ_float4(extraField, relativePos);
+
+							float3 position_1 = { Vec_0.w,Vec_0.x,Vec_1.x };
+
+							extractedVal = sqrtf(dot(position_1 - position_0, position_1 - position_0));
+							extractedVal = saturate((extractedVal - dispersionOptions.min_val) / (dispersionOptions.max_val - dispersionOptions.min_val));
+
+							rgb = (1.0f - extractedVal) * rgb_min + extractedVal * rgb_max;
+
+							break;
+						}
+
+						case dispersionColorCode::DISTANCE_ZY:
+						{
+							float4 Vec_0 = observable.ValueAtXYZ_float4(heightField, make_float3(relativePos.x, relativePos.y, 0.0));
+							float4 Vec_1 = observable.ValueAtXYZ_float4(extraField, make_float3(relativePos.x, relativePos.y, 0.0));
+
+							float3 position_0 = { 0.0f,Vec_0.x,Vec_1.x };
+
+							Vec_0 = observable.ValueAtXYZ_float4(heightField, relativePos);
+							Vec_1 = observable.ValueAtXYZ_float4(extraField, relativePos);
+
+							float3 position_1 = { 0.0f,Vec_0.x,Vec_1.x };
+
+							extractedVal = sqrtf(dot(position_1 - position_0, position_1 - position_0));
+							extractedVal = saturate((extractedVal - dispersionOptions.min_val) / (dispersionOptions.max_val - dispersionOptions.min_val));
+
+							rgb = (1.0f - extractedVal) * rgb_min + extractedVal * rgb_max;
+
+							break;
+						}
+
+						case dispersionColorCode::DEV_Z:
+						{
+							float4 Vec_1 = observable.ValueAtXYZ_float4(extraField, make_float3(relativePos.x, relativePos.y, 0.0));
+
+							float position_0 = Vec_1.x;
+
+							Vec_1 = observable.ValueAtXYZ_float4(extraField, relativePos);
+
+							float position_1 = Vec_1.x;
+
+							extractedVal = position_1 - position_0;
+							rgb_complement = { 0,0,0 };
+
+							if (extractedVal < 0)
+							{
+								extractedVal = saturate((extractedVal - dispersionOptions.min_val) / (-dispersionOptions.min_val));
+								rgb_complement = make_float3(1, 1, 1) - rgb_min;
+								rgb = rgb_complement * extractedVal + rgb_min;
+							}
+							else
+							{
+								extractedVal = saturate((dispersionOptions.max_val - extractedVal) / (dispersionOptions.max_val));
+								rgb_complement = make_float3(1, 1, 1) - rgb_max;
+								rgb = rgb_complement * extractedVal + rgb_max;
+
+							}
+
+
+						}
+						case dispersionColorCode::QUADRANT_DEV:
+						{
+							float4 Vec_0 = observable.ValueAtXYZ_float4(heightField, make_float3(relativePos.x, relativePos.y, 0.0));
+							float4 Vec_1 = observable.ValueAtXYZ_float4(extraField, make_float3(relativePos.x, relativePos.y, 0.0));
+
+							float3 position_0 = { Vec_0.w,Vec_0.x,Vec_1.x };
+
+							Vec_0 = observable.ValueAtXYZ_float4(heightField, relativePos);
+							Vec_1 = observable.ValueAtXYZ_float4(extraField, relativePos);
+
+							float3 position_1 = { Vec_0.w,Vec_0.x,Vec_1.x };
+
+							float2 dev_XZ =
+							{
+								(position_1.x - position_0.x),
+								position_1.z - position_0.z
+							};
+
+							extractedVal = sqrtf(dot(position_1 - position_0, position_1 - position_0));
+							extractedVal = saturate((extractedVal - dispersionOptions.min_val) / (dispersionOptions.max_val - dispersionOptions.min_val));
+
+							float3 color1 = {	228.0f	/	255.0f,		26.0f	/ 255.0f,	28.0f	/ 255.0f };
+							float3 color2 = {	55.0f	/	255.0f,		126.0f	/ 255.0f,	184.0f	/ 255.0f };
+							float3 color3 = {	77.0f	/	255.0f,		175.0f	/ 255.0f,	74.0f	/ 255.0f };
+							float3 color4 = {	152.0f	/	255.0f,		78.0f	/ 255.0f,	163.0f	/ 255.0f };
+
+
+
+
+							if (dev_XZ.x < 0)
+							{
+								if (dev_XZ.y > 0)
+								{
+									rgb_complement = make_float3(1, 1, 1) - color1;
+									rgb = rgb_complement * (1.0f - extractedVal) + color1;
+								}
+								else
+								{
+									rgb_complement = make_float3(1, 1, 1) - color2;
+									rgb = rgb_complement * (1.0f - extractedVal) + color2;
+								}
+
+							}
+							else
+							{
+								if (dev_XZ.y > 0)
+								{
+									rgb_complement = make_float3(1, 1, 1) - color3;
+									rgb = rgb_complement * (1.0f - extractedVal) + color3;
+								}
+								else
+								{
+									rgb_complement = make_float3(1, 1, 1) - color4;
+									rgb = rgb_complement * (1.0f - extractedVal) + color4;
+
+								}
+
+
+							}
+
+							break;
+						}
+
+
+
+						case dispersionColorCode::DEV_ZY:
+						{
+							float4 Vec_0 = observable.ValueAtXYZ_float4(heightField, make_float3(relativePos.x, relativePos.y, 0.0));
+							float4 Vec_1 = observable.ValueAtXYZ_float4(extraField, make_float3(relativePos.x, relativePos.y, 0.0));
+
+							float3 position_0 = { Vec_0.w,Vec_0.x,Vec_1.x };
+
+							Vec_0 = observable.ValueAtXYZ_float4(heightField, relativePos);
+							Vec_1 = observable.ValueAtXYZ_float4(extraField, relativePos);
+
+							float3 position_1 = { Vec_0.w,Vec_0.x,Vec_1.x };
+
+
+
+							float delta_x = (position_1.x - position_0.x)/10;
+							float delta_z = position_1.z - position_0.z;
+							
+							float delta_x_col = saturate((delta_x - dispersionOptions.min_val) / (dispersionOptions.max_val - dispersionOptions.min_val));
+							float delta_z_col = saturate((delta_z - dispersionOptions.min_val) / (dispersionOptions.max_val - dispersionOptions.min_val));
+
+							float3 color1 = {1,		0,		0 };
+							float3 color2 = {0,		0,	1 };
+
+
+							rgb_complement = make_float3(1, 1, 1) - color1;
+							rgb = rgb_complement * (1.0f - delta_x_col) + color1;
+
+							rgb_complement = make_float3(1, 1, 1) - color2;
+							rgb += rgb_complement * (1.0f - delta_z_col) + color2;
+
+							break;
+						}
+					}
 
 					rgb = rgb * diffuse;
 

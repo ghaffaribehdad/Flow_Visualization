@@ -357,8 +357,9 @@ __device__ void RK4Stream(cudaTextureObject_t t_VelocityField_0, Particle* parti
 	newPosition.y = particle->m_position.y + (1.0 / 6.0) * (k1.y + 2.0 * k2.y + 2 * k3.y + k4.y);
 	newPosition.z = particle->m_position.z + (1.0 / 6.0) * (k1.z + 2.0 * k2.z + 2 * k3.z + k4.z);
 
-	particle->updateVelocity(gridDiameter, t_VelocityField_0);
 	particle->m_position = newPosition;
+	particle->updateVelocity(gridDiameter, t_VelocityField_0);
+	
 }
 
 

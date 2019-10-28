@@ -39,6 +39,17 @@ __global__ void traceDispersion3D_extra
 );
 
 
+__global__ void traceDispersion3D_extra_fluctuation
+(
+	Particle* particle,
+	cudaSurfaceObject_t heightFieldSurface3D,
+	cudaSurfaceObject_t heightFieldSurface3D_extra,
+	cudaTextureObject_t velocityField,
+	SolverOptions solverOptions,
+	DispersionOptions dispersionOptions
+);
+
+
 template <typename Observable>
 __global__ void heightFieldGradient
 (

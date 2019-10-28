@@ -136,7 +136,7 @@ __global__ void CudaTerrainRenderer
 
 
 template <typename Observable>
-__global__ void CudaTerrainRenderer
+__global__ void CudaTerrainRenderer_extra
 (
 	cudaSurfaceObject_t raycastingSurface,
 	cudaTextureObject_t heightField,

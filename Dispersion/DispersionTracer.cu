@@ -13,7 +13,10 @@
 bool DispersionTracer::retrace()
 {
 	this->heightArray3D.release();
+	this->heightArray3D_extra.release();
+
 	cudaDestroyTextureObject(this->heightFieldTexture3D);
+	cudaDestroyTextureObject(this->heightFieldTexture3D_extra);
 
 	if (!this->InitializeParticles())
 		return false;
@@ -107,7 +110,7 @@ __host__ bool DispersionTracer::InitializeParticles()
 	this->n_particles = dispersionOptions->gridSize_2D[0] * dispersionOptions->gridSize_2D[1];
 	this->h_particle = new Particle[dispersionOptions->gridSize_2D[0] * dispersionOptions->gridSize_2D[1]];
 	//seedParticle_ZY_Plane(h_particle, solverOptions->gridDiameter, dispersionOptions->gridSize_2D, dispersionOptions->seedWallNormalDist);
-	seedParticle_tiltedPlane(h_particle, solverOptions->gridDiameter, dispersionOptions->gridSize_2D, dispersionOptions->seedWallNormalDist, 30.0f);
+	seedParticle_tiltedPlane(h_particle, solverOptions->gridDiameter, dispersionOptions->gridSize_2D, dispersionOptions->seedWallNormalDist, dispersionOptions->tilt_deg);
 
 	size_t Particles_byte = sizeof(Particle) * n_particles;
 
@@ -201,7 +204,7 @@ void DispersionTracer::trace3D()
 			this->volumeTexture.getTexture(),
 			*solverOptions,
 			*dispersionOptions
-			);
+		);
 
 
 	// Calculates the gradients and store it in the cuda surface
@@ -225,10 +228,11 @@ __host__ void DispersionTracer::rendering()
 	blocks = static_cast<unsigned int>((this->rays % (thread.x * thread.y) == 0 ? rays / (thread.x * thread.y) : rays / (thread.x * thread.y) + 1));
  
 
-	CudaTerrainRenderer<IsosurfaceHelper::Position> << < blocks, thread >> >
+	CudaTerrainRenderer_extra<IsosurfaceHelper::Position> << < blocks, thread >> >
 		(
 			this->raycastingSurface.getSurfaceObject(),
 			this->heightFieldTexture3D,
+			this->heightFieldTexture3D_extra,
 			int(this->rays),
 			this->raycastingOptions->samplingRate_0,
 			this->raycastingOptions->tolerance_0, 
@@ -293,6 +297,10 @@ bool DispersionTracer::InitializeHeightTexture3D()
 
 	// Create the texture and bind it to the array
 	gpuErrchk(cudaCreateTextureObject(&this->heightFieldTexture3D, &resDesc, &texDesc, NULL));
+
+
+	// Use same properties with another array
+	resDesc.res.array.array = this->heightArray3D_extra.getArray();
 	gpuErrchk(cudaCreateTextureObject(&this->heightFieldTexture3D_extra, &resDesc, &texDesc, NULL));
 
 	return true;

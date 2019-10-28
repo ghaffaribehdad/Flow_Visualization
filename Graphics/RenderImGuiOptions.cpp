@@ -368,10 +368,24 @@ void RenderImGuiOptions::drawDispersionOptions()
 {
 	ImGui::Begin("Dispersion Options");
 
-	if (ImGui::Checkbox("Enable Dispersion", &this->showDispersion))
+	if (ImGui::Checkbox("Enable Terrain Rendering", &this->showDispersion))
 	{
 		this->renderingOptions->isRaycasting = this->showDispersion;
 		this->updateDispersion = true;
+	}
+
+	if (ImGui::DragInt("Trace duration", &dispersionOptions->tracingTime, 1, 1, 4096))
+	{
+		this->dispersionOptions->retrace = true;
+		this->updateDispersion = true;
+
+	}
+
+
+	if (ImGui::DragInt("time steps", &dispersionOptions->timeStep, 1.0f, 1, dispersionOptions->tracingTime))
+	{
+		this->updateDispersion = true;
+
 	}
 
 	if (ImGui::DragFloat("dt dispersion", &dispersionOptions->dt, 0.0001f,0.001f,1.0f,"%5f"))
@@ -381,6 +395,14 @@ void RenderImGuiOptions::drawDispersionOptions()
 
 	}
 
+	if (ImGui::DragInt("sampling step", &dispersionOptions->sampling_step,1,1,1000))
+	{
+		this->updateDispersion = true;
+		this->dispersionOptions->retrace = true;
+
+	}
+
+
 	if (ImGui::DragFloat("Wall-normal Distance", &dispersionOptions->seedWallNormalDist,0.001f,0.0,solverOptions->gridDiameter[1],"%4f"))
 	{
 		this->updateDispersion = true;
@@ -388,36 +410,54 @@ void RenderImGuiOptions::drawDispersionOptions()
 
 	}
 
-	if (ImGui::DragFloat("RL Deviation", &dispersionOptions->dev_z_range, 0.001f, 0.0))
+	if (ImGui::DragFloat("Tilt Deg", &dispersionOptions->tilt_deg, 0.1f, 0.0, 45.0f))
 	{
 		this->updateDispersion = true;
-	}
-
-	if (ImGui::DragFloat("Search Tolerance", &dispersionOptions->binarySearchTolerance,0.0001f,0.0001f,1,"%8f"))
-	{
-		this->updateDispersion = true;
-	}
-
-	if (ImGui::DragInt("Search Iteration", &dispersionOptions->binarySearchMaxIteration, 1.0f, 1, 1000))
-	{
-		this->updateDispersion = true;
-
-	}
-
-	if (ImGui::DragInt("time steps", &dispersionOptions->timeStep,1.0f,1, dispersionOptions->tracingTime))
-	{
-		this->updateDispersion = true;
-
-	}
-
-
-	if (ImGui::DragInt("Trace duration", &dispersionOptions->tracingTime,1,1,4096))
-	{
 		this->dispersionOptions->retrace = true;
+
+	}
+
+
+	if (ImGui::DragFloat("Height Tolerance", &dispersionOptions->hegiht_tolerance,0.0001f,0.0001f,1,"%8f"))
+	{
+		this->updateDispersion = true;
+	}
+
+	//if (ImGui::DragInt("Search Iteration", &dispersionOptions->binarySearchMaxIteration, 1.0f, 1, 1000))
+	//{
+	//	this->updateDispersion = true;
+
+	//}
+
+
+
+	if (ImGui::Combo("Color Coding", &dispersionOptions->colorCode, ColorCode_DispersionList, 9))
+	{
 		this->updateDispersion = true;
 
 	}
 
+
+	ImGui::Text("Color Coding:");
+
+	if (ImGui::ColorEdit4("Minimum", (float*)& dispersionOptions->minColor))
+	{
+		updateDispersion = true;
+	}
+	if (ImGui::InputFloat("Min Value", (float*)& dispersionOptions->min_val, 0.1f))
+	{
+		updateDispersion = true;
+	}
+
+	if (ImGui::ColorEdit4("Maximum", (float*)& dispersionOptions->maxColor))
+	{	
+		updateDispersion = true;	
+	}
+
+	if (ImGui::InputFloat("Max Value", (float*)& dispersionOptions->max_val, 0.1f)) 
+	{
+		updateDispersion = true;
+	}
 
 
 	if (ImGui::InputInt2("Grid Size 2D", dispersionOptions->gridSize_2D, sizeof(dispersionOptions->gridSize_2D)))

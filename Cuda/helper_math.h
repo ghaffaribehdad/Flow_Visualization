@@ -116,6 +116,12 @@ inline __host__ __device__ float2 operator*(float2 a, float b)
 	return make_float2(a.x * b, a.y * b);
 }
 
+inline __host__ __device__ float2 operator*(float2 a, float2 b)
+{
+	return make_float2(a.x * b.x, a.y * b.y);
+}
+
+
 inline __host__ __device__ float3 operator*(float3 a, float b)
 {
 	return make_float3(a.x * b, a.y * b, a.z * b);
@@ -156,6 +162,12 @@ inline __host__ __device__ float3 operator/(const float3& a, const float& b)
 	return make_float3(a.x / b, a.y / b, a.z / b);
 }
 
+inline __host__ __device__ float2 operator/(const float2& a, const float2& b)
+{
+	return make_float2(a.x / b.x, a.y / b.y);
+}
+
+
 inline __host__ __device__ float3 operator+(const float3& a, const float3& b)
 {
 	return make_float3(a.x + b.x, a.y + b.y, a.z + b.z);
@@ -191,6 +203,13 @@ inline __host__ __device__ float dot(const float4&  a, const float4& b)
 inline __host__ __device__ float3 normalize(const float3 & v)
 {
 	float invLen = 1.0f/sqrtf(dot(v, v));
+	return v * invLen;
+}
+
+
+inline __host__ __device__ float2 normalize(const float2& v)
+{
+	float invLen = 1.0f / sqrtf(dot(v, v));
 	return v * invLen;
 }
 

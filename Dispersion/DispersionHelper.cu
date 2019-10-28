@@ -44,7 +44,7 @@ void seedParticle_tiltedPlane(Particle* particle, float* gridDiameter, const int
 	// Size of the mesh in X, Y and Z direction
 	float meshSize_x = (float)gridDiameter[0] / (gridSize[0] - 1);
 	float meshSize_z = (float)gridDiameter[2] / (gridSize[1] - 1);
-	float height_step = gridDiameter[1] * sinf(tilt * 3.1515 / 180.0f)/ gridSize[0];
+	float height_step = gridDiameter[1] * sinf(tilt * 3.1415f / 180.0f)/ gridSize[0];
 
 	for (int x = 0; x < gridSize[0]; x++)
 	{
@@ -109,6 +109,69 @@ __global__ void traceDispersion
 
 
 
+__global__ void  traceDispersion3D_extra_fluctuation
+(
+	Particle* particle,
+	cudaSurfaceObject_t heightFieldSurface3D,
+	cudaSurfaceObject_t heightFieldSurface3D_extra,
+	cudaTextureObject_t velocityField,
+	SolverOptions solverOptions,
+	DispersionOptions dispersionOptions
+)
+{
+	// Extract dispersion options
+	float dt = dispersionOptions.dt;
+	int tracingTime = dispersionOptions.tracingTime;
+	int nParticles = dispersionOptions.gridSize_2D[0] * dispersionOptions.gridSize_2D[1];
+
+
+	int index = blockIdx.x * blockDim.y * blockDim.x;
+	index += threadIdx.y * blockDim.x;
+	index += threadIdx.x;
+
+	if (index < nParticles)
+	{
+		float3 gridDiameter =
+		{
+			solverOptions.gridDiameter[0],
+			solverOptions.gridDiameter[1],
+			solverOptions.gridDiameter[2],
+		};
+
+		// find the index of the particle
+		int index_y = index / dispersionOptions.gridSize_2D[1];
+		int index_x = index - (index_y * dispersionOptions.gridSize_2D[1]);
+
+
+
+
+		// Trace particle using RK4 
+		for (int time = 0; time < tracingTime; time++)
+		{
+			for (int i = 0; i < dispersionOptions.sampling_step; i++)
+			{
+				// Advect the particle
+				RK4Stream(velocityField, &particle[index], gridDiameter, dt);
+			}
+			// extract the height
+			float3 position = particle[index].m_position;
+			float3 velocity = particle[index].m_velocity;
+
+			float4 heightTexel = { position.y,0.0,0.0,position.x };
+			float4 extraTexel = { position.z, velocity.x ,velocity.x, velocity.z };
+
+
+			
+				// copy it in the surface3D
+				surf3Dwrite(heightTexel, heightFieldSurface3D, sizeof(float4) * index_x, index_y, time);
+			surf3Dwrite(extraTexel, heightFieldSurface3D_extra, sizeof(float4) * index_x, index_y, time);
+
+
+		}
+	}
+}
+
+
 __global__ void  traceDispersion3D_extra
 (
 	Particle* particle,
@@ -146,19 +209,23 @@ __global__ void  traceDispersion3D_extra
 		// Trace particle using RK4 
 		for (int time = 0; time < tracingTime; time++)
 		{
-
-			// Advect the particle
-			RK4Stream(velocityField, &particle[index], gridDiameter, dt);
-
+			for(int i = 0 ; i < dispersionOptions.sampling_step; i++)
+			{ 
+				// Advect the particle
+				RK4Stream(velocityField, &particle[index], gridDiameter, dt);
+			}
 			// extract the height
 			float3 position = particle[index].m_position;
 			float3 velocity = particle[index].m_velocity;
 
 			float4 heightTexel = { position.y,0.0,0.0,position.x };
-			float4 extraTexel = { position.z, velocity.x,velocity.y, velocity.z };
+			float4 extraTexel = { position.z, velocity.x ,velocity.x, velocity.z };
+
+
 			// copy it in the surface3D
 			surf3Dwrite(heightTexel, heightFieldSurface3D, sizeof(float4) * index_x, index_y, time);
 			surf3Dwrite(extraTexel, heightFieldSurface3D_extra, sizeof(float4) * index_x, index_y, time);
+
 
 		}
 	}
@@ -306,6 +373,15 @@ __global__ void heightFieldGradient3D
 			else
 			{
 				gradient = observable.GradientAtXYZ_Grid(heightFieldSurface3D, make_int3(index_x, index_y,time));
+				gradient = gradient / 
+					make_float2
+				(
+					 2.0f* solverOptions.gridDiameter[0] / (dispersionOptions.gridSize_2D[0]-1),
+					 2.0f * solverOptions.gridDiameter[2] /( dispersionOptions.gridSize_2D[1]-1)
+				);
+
+
+				gradient = { normalize(make_float3(1.0,gradient.x, gradient.y)).x, normalize(make_float3(1.0,gradient.x, gradient.y)).y };
 			}
 
 
@@ -315,6 +391,7 @@ __global__ void heightFieldGradient3D
 			texel.x = observable.ValueAtXYZ_Surface_float4(heightFieldSurface3D, make_int3(index_x, index_y,time)).x;
 			texel.y = gradient.x;
 			texel.z = gradient.y;
+			texel.w = observable.ValueAtXYZ_Surface_float4(heightFieldSurface3D, make_int3(index_x, index_y, time)).w;
 
 			surf3Dwrite(texel, heightFieldSurface3D, sizeof(float4) * index_x, index_y,time);
 

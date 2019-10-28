@@ -93,7 +93,9 @@ __device__  float2 IsosurfaceHelper::Position::GradientAtXYZ_Grid(cudaSurfaceObj
 	dH_dX -= this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x - 1, gridPosition.y , gridPosition.z)).x;
 	dH_dY -= this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y - 1, gridPosition.z)).x;
 
-	return make_float2(-dH_dX, -dH_dY);
+	
+
+	return make_float2(dH_dX, dH_dY);
 }
 
 
