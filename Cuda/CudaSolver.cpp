@@ -68,11 +68,8 @@ bool CUDASolver::InitializeCUDA()
 __host__ float* CUDASolver::InitializeVelocityField(int ID)
 {
 	this->volume_IO.readVolume(ID);
-	std::vector<char>* p_vec_buffer = volume_IO.flushBuffer();
-	char* p_vec_buffer_temp = &(p_vec_buffer->at(0));
-
-
-	return reinterpret_cast<float*>(p_vec_buffer_temp);
+	
+	return reinterpret_cast<float*>(&volume_IO.flushBuffer()->at(0));
 }
 
 

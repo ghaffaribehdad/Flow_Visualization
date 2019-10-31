@@ -18,9 +18,7 @@ void PathlineSolver::release()
 __host__ bool PathlineSolver::solve()
 {
 	//At least two timesteps is needed
-	int timeSteps = solverOptions->lastIdx - solverOptions->firstIdx;
-	if (solverOptions->lastIdx - solverOptions->firstIdx < 2)
-		return false; 
+	int timeSteps = solverOptions->lastIdx - solverOptions->currentIdx;
 
 	// Initialize Volume IO (Save file path and file names)
 	this->volume_IO.Initialize(this->solverOptions);
@@ -47,14 +45,15 @@ __host__ bool PathlineSolver::solve()
 		{
 
 			// For the first timestep we need to load two fields
-			this->h_VelocityField = this->InitializeVelocityField(solverOptions->firstIdx);
+			this->h_VelocityField = this->InitializeVelocityField(solverOptions->currentIdx);
 			this->volumeTexture_0.setField(h_VelocityField);
-			this->volumeTexture_0.initialize();
+			this->volumeTexture_0.initialize(cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
 			volume_IO.release();
 
 
 
-			this->h_VelocityField = this->InitializeVelocityField(solverOptions->firstIdx+1);
+
+			this->h_VelocityField = this->InitializeVelocityField(solverOptions->currentIdx+1);
 			this->volumeTexture_1.setField(h_VelocityField);
 			this->volumeTexture_1.initialize();
 			volume_IO.release();
@@ -74,6 +73,7 @@ __host__ bool PathlineSolver::solve()
 
 			volume_IO.release();
 
+			odd = true;
 			
 		}
 
@@ -90,9 +90,20 @@ __host__ bool PathlineSolver::solve()
 
 			volume_IO.release();
 
+			odd = false;
+	
 		}
 
-		TracingPath << <blockDim, thread >> > (this->d_Particles, volumeTexture_0.getTexture(), volumeTexture_1.getTexture(), *solverOptions, reinterpret_cast<Vertex*>(this->p_VertexBuffer),odd, step);
+		TracingPath << <blockDim, thread >> > 
+			(
+				this->d_Particles,
+				volumeTexture_0.getTexture(),
+				volumeTexture_1.getTexture(),
+				*solverOptions,
+				reinterpret_cast<Vertex*>(this->p_VertexBuffer),
+				odd,
+				step
+			);
 
 
 

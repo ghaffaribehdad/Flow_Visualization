@@ -249,3 +249,26 @@ inline __host__ __device__ float DecodeFloatRGBA(float4 rgba) {
 
 
 
+inline __host__ __device__ bool operator<(const float3& a, const float3& b)
+{
+	if (a.x >= b.x)
+		return false;
+	if (a.y >= b.y)
+		return false;
+	if (a.z >= b.z)
+		return false;
+
+	return true;
+}
+
+inline __host__ __device__ bool operator>(const float3& a, const float3& b)
+{
+	if (a.x <= b.x)
+		return false;
+	if (a.y <= b.y)
+		return false;
+	if (a.z <= b.z)
+		return false;
+
+	return true;
+}

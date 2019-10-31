@@ -39,12 +39,13 @@ struct DispersionOptions
 
 	// Advection Options
 	int timeStep = 1000;
-	int tracingTime =  2048;
-	float dt = 0.0001f;
+	int tracingTime =  0;
+	float dt = 0.001f;
 	int sampling_step = 10;
 
 	// Rendering status
 	bool initialized = false;
+	bool released = true;
 	bool dispersion = false;
 	bool retrace = false;
 };

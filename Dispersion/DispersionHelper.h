@@ -8,6 +8,13 @@
 void seedParticle_ZY_Plane(Particle* particle, float* gridDiameter, const int* gridSize, const float& y_slice);
 void seedParticle_tiltedPlane(Particle* particle, float* gridDiameter, const int* gridSize, const float& y_slice, const float & tilt);
 
+
+enum RK4STEP
+{
+	EVEN = 0,
+	ODD
+};
+
 __global__ void traceDispersion
 (
 	Particle* particle,
@@ -38,16 +45,21 @@ __global__ void traceDispersion3D_extra
 	DispersionOptions dispersionOptions
 );
 
-
-__global__ void traceDispersion3D_extra_fluctuation
+__global__ void traceDispersion3D_path
 (
 	Particle* particle,
 	cudaSurfaceObject_t heightFieldSurface3D,
 	cudaSurfaceObject_t heightFieldSurface3D_extra,
-	cudaTextureObject_t velocityField,
+	cudaTextureObject_t velocityField_0,
+	cudaTextureObject_t velocityField_1,
 	SolverOptions solverOptions,
-	DispersionOptions dispersionOptions
+	DispersionOptions dispersionOptions,
+	RK4STEP RK4step,
+	int timestep
 );
+
+
+
 
 
 template <typename Observable>

@@ -1,196 +1,21 @@
 #include "CudaHelperFunctions.h"
 
 
-__device__ float3 RK4Even(cudaTextureObject_t t_VelocityField_0, cudaTextureObject_t t_VelocityField_1, float3 * position, float3 gridDiameter, float dt)
+__device__ void RK4Path
+(
+	cudaTextureObject_t t_VelocityField_0,
+	cudaTextureObject_t t_VelocityField_1,
+	Particle* particle,
+	float3 gridDiameter,
+	float dt,
+	bool periodicity
+)
 {
 	//####################### K1 ######################
 	float3 k1 = { 0,0,0 };
-	float3 relativePos = {
-		position->x  / gridDiameter.x,
-		position->y  / gridDiameter.y,
-		position->z  / gridDiameter.z
-	};
-	float4 velocity4D = tex3D<float4>(t_VelocityField_0, relativePos.x, relativePos.y, relativePos.z);
-	float3 velocity = { velocity4D.x,velocity4D.y,velocity4D.z};
-	k1 = velocity*dt;
 
+	float3 relativePos = particle->m_position / gridDiameter;
 
-	//####################### K2 ######################
-	float3 k2 = { 0,0,0 };
-
-	relativePos = {
-	   (position->x + k1.x) / gridDiameter.x,
-	   (position->y + k1.y) / gridDiameter.y,
-	   (position->z + k1.z) / gridDiameter.z
-	};
-	velocity4D = tex3D<float4>(t_VelocityField_0, relativePos.x, relativePos.y, relativePos.z);
-	velocity = { velocity4D.x,velocity4D.y,velocity4D.z };
-
-	k2 = velocity;
-
-	relativePos = {
-	   (position->x + k1.x) / gridDiameter.x,
-	   (position->y + k1.y) / gridDiameter.y,
-	   (position->z + k1.z) / gridDiameter.z
-	};
-	velocity4D = tex3D<float4>(t_VelocityField_1, relativePos.x, relativePos.y, relativePos.z);
-	velocity = { velocity4D.x,velocity4D.y,velocity4D.z };
-
-	// Using the linear interpolation
-	k2 += velocity;
-	k2 = k2 / 2.0;
-	k2 = dt * k2;
-
-	//####################### K3 ######################
-	float3 k3 = { 0,0,0 };
-
-	relativePos = {
-	   (position->x + k2.x) / gridDiameter.x,
-	   (position->y + k2.y) / gridDiameter.y,
-	   (position->z + k2.z) / gridDiameter.z
-	};
-	velocity4D = tex3D<float4>(t_VelocityField_0, relativePos.x, relativePos.y, relativePos.z);
-	velocity = { velocity4D.x,velocity4D.y,velocity4D.z };
-
-	k3 = velocity;
-
-	relativePos = {
-	   (position->x + k2.x) / gridDiameter.x,
-	   (position->y + k2.y) / gridDiameter.y,
-	   (position->z + k2.z) / gridDiameter.z
-	};
-	velocity4D = tex3D<float4>(t_VelocityField_1, relativePos.x, relativePos.y, relativePos.z);
-	velocity = { velocity4D.x,velocity4D.y,velocity4D.z };
-
-	// Using the linear interpolation
-	k3 += velocity;
-	k3 = k3 / 2.0;
-	k3 = dt * k3;
-
-	//####################### K4 ######################
-	
-	float3 k4 = { 0,0,0 };
-
-	relativePos = {
-   (position->x + k3.x) / gridDiameter.x,
-   (position->y + k3.y) / gridDiameter.y,
-   (position->z + k3.z) / gridDiameter.z
-	};
-	velocity4D = tex3D<float4>(t_VelocityField_1, relativePos.x, relativePos.y, relativePos.z);
-	velocity = { velocity4D.x,velocity4D.y,velocity4D.z };
-
-	k4 = dt*velocity;
-
-	float3 newPosition = { 0,0,0 };
-	newPosition.x = position->x + (1.0 / 6.0) * (k1.x + 2.0 * k2.x + 2 * k3.x + k4.x);
-	newPosition.y = position->y + (1.0 / 6.0) * (k1.y + 2.0 * k2.y + 2 * k3.y + k4.y);
-	newPosition.z = position->z + (1.0 / 6.0) * (k1.z + 2.0 * k2.z + 2 * k3.z + k4.z);
-
-	return newPosition;
-}
-
-
-__device__ float3 RK4Odd(cudaTextureObject_t t_VelocityField_0, cudaTextureObject_t t_VelocityField_1, float3* position, float3 gridDiameter, float dt)
-{
-	//####################### K1 ######################
-	float3 k1 = { 0,0,0 };
-	float3 relativePos = {
-		position->x / gridDiameter.x,
-		position->y / gridDiameter.y,
-		position->z / gridDiameter.z
-	};
-	float4 velocity4D = tex3D<float4>(t_VelocityField_1, relativePos.x, relativePos.y, relativePos.z);
-	float3 velocity = { velocity4D.x,velocity4D.y,velocity4D.z };
-	k1 = velocity * dt;
-
-
-	//####################### K2 ######################
-	float3 k2 = { 0,0,0 };
-
-	relativePos = {
-	   (position->x + k1.x) / gridDiameter.x,
-	   (position->y + k1.y) / gridDiameter.y,
-	   (position->z + k1.z) / gridDiameter.z
-	};
-	velocity4D = tex3D<float4>(t_VelocityField_1, relativePos.x, relativePos.y, relativePos.z);
-	velocity = { velocity4D.x,velocity4D.y,velocity4D.z };
-
-	k2 = velocity;
-
-	relativePos = {
-	   (position->x + k1.x) / gridDiameter.x,
-	   (position->y + k1.y) / gridDiameter.y,
-	   (position->z + k1.z) / gridDiameter.z
-	};
-	velocity4D = tex3D<float4>(t_VelocityField_0, relativePos.x, relativePos.y, relativePos.z);
-	velocity = { velocity4D.x,velocity4D.y,velocity4D.z };
-
-	// Using the linear interpolation
-	k2 += velocity;
-	k2 = k2 / 2.0;
-	k2 = dt * k2;
-
-	//####################### K3 ######################
-	float3 k3 = { 0,0,0 };
-
-	relativePos = {
-	   (position->x + k2.x) / gridDiameter.x,
-	   (position->y + k2.y) / gridDiameter.y,
-	   (position->z + k2.z) / gridDiameter.z
-	};
-	velocity4D = tex3D<float4>(t_VelocityField_1, relativePos.x, relativePos.y, relativePos.z);
-	velocity = { velocity4D.x,velocity4D.y,velocity4D.z };
-
-	k3 = velocity;
-
-	relativePos = {
-	   (position->x + k2.x) / gridDiameter.x,
-	   (position->y + k2.y) / gridDiameter.y,
-	   (position->z + k2.z) / gridDiameter.z
-	};
-	velocity4D = tex3D<float4>(t_VelocityField_0, relativePos.x, relativePos.y, relativePos.z);
-	velocity = { velocity4D.x,velocity4D.y,velocity4D.z };
-
-	// Using the linear interpolation
-	k3 += velocity;
-	k3 = k3 / 2.0;
-	k3 = dt * k3;
-
-	//####################### K4 ######################
-
-	float3 k4 = { 0,0,0 };
-
-	relativePos = {
-   (position->x + k3.x) / gridDiameter.x,
-   (position->y + k3.y) / gridDiameter.y,
-   (position->z + k3.z) / gridDiameter.z
-	};
-	velocity4D = tex3D<float4>(t_VelocityField_0, relativePos.x, relativePos.y, relativePos.z);
-	velocity = { velocity4D.x,velocity4D.y,velocity4D.z };
-
-	k4 = dt * velocity;
-
-	float3 newPosition = { 0,0,0 };
-	newPosition.x = position->x + (1.0 / 6.0) * (k1.x + 2.0 * k2.x + 2 * k3.x + k4.x);
-	newPosition.y = position->y + (1.0 / 6.0) * (k1.y + 2.0 * k2.y + 2 * k3.y + k4.y);
-	newPosition.z = position->z + (1.0 / 6.0) * (k1.z + 2.0 * k2.z + 2 * k3.z + k4.z);
-
-	return newPosition;
-}
-
-
-
-
-
-__device__ float3 RK4Stream(cudaTextureObject_t t_VelocityField_0, float3* position, float3 gridDiameter, float dt)
-{
-	//####################### K1 ######################
-	float3 k1 = { 0,0,0 };
-	float3 relativePos = {
-		position->x / gridDiameter.x,
-		position->y / gridDiameter.y,
-		position->z / gridDiameter.z
-	};
 	float4 velocity4D = tex3D<float4>(t_VelocityField_0, relativePos.x, relativePos.y, relativePos.z);
 	float3 velocity = { velocity4D.x,velocity4D.y,velocity4D.z };
 	k1 = velocity * dt;
@@ -199,22 +24,15 @@ __device__ float3 RK4Stream(cudaTextureObject_t t_VelocityField_0, float3* posit
 	//####################### K2 ######################
 	float3 k2 = { 0,0,0 };
 
-	relativePos = {
-	   (position->x + k1.x) / gridDiameter.x,
-	   (position->y + k1.y) / gridDiameter.y,
-	   (position->z + k1.z) / gridDiameter.z
-	};
+	relativePos = (particle->m_position + k1) / gridDiameter;
+
 	velocity4D = tex3D<float4>(t_VelocityField_0, relativePos.x, relativePos.y, relativePos.z);
 	velocity = { velocity4D.x,velocity4D.y,velocity4D.z };
 
 	k2 = velocity;
 
-	relativePos = {
-	   (position->x + k1.x) / gridDiameter.x,
-	   (position->y + k1.y) / gridDiameter.y,
-	   (position->z + k1.z) / gridDiameter.z
-	};
-	velocity4D = tex3D<float4>(t_VelocityField_0, relativePos.x, relativePos.y, relativePos.z);
+
+	velocity4D = tex3D<float4>(t_VelocityField_1, relativePos.x, relativePos.y, relativePos.z);
 	velocity = { velocity4D.x,velocity4D.y,velocity4D.z };
 
 	// Using the linear interpolation
@@ -225,22 +43,14 @@ __device__ float3 RK4Stream(cudaTextureObject_t t_VelocityField_0, float3* posit
 	//####################### K3 ######################
 	float3 k3 = { 0,0,0 };
 
-	relativePos = {
-	   (position->x + k2.x) / gridDiameter.x,
-	   (position->y + k2.y) / gridDiameter.y,
-	   (position->z + k2.z) / gridDiameter.z
-	};
+	relativePos = (particle->m_position + k2) / gridDiameter;
+
 	velocity4D = tex3D<float4>(t_VelocityField_0, relativePos.x, relativePos.y, relativePos.z);
 	velocity = { velocity4D.x,velocity4D.y,velocity4D.z };
 
 	k3 = velocity;
 
-	relativePos = {
-	   (position->x + k2.x) / gridDiameter.x,
-	   (position->y + k2.y) / gridDiameter.y,
-	   (position->z + k2.z) / gridDiameter.z
-	};
-	velocity4D = tex3D<float4>(t_VelocityField_0, relativePos.x, relativePos.y, relativePos.z);
+	velocity4D = tex3D<float4>(t_VelocityField_1, relativePos.x, relativePos.y, relativePos.z);
 	velocity = { velocity4D.x,velocity4D.y,velocity4D.z };
 
 	// Using the linear interpolation
@@ -252,23 +62,37 @@ __device__ float3 RK4Stream(cudaTextureObject_t t_VelocityField_0, float3* posit
 
 	float3 k4 = { 0,0,0 };
 
-	relativePos = {
-   (position->x + k3.x) / gridDiameter.x,
-   (position->y + k3.y) / gridDiameter.y,
-   (position->z + k3.z) / gridDiameter.z
-	};
-	velocity4D = tex3D<float4>(t_VelocityField_0, relativePos.x, relativePos.y, relativePos.z);
+	relativePos = (particle->m_position + k3) / gridDiameter;
+	velocity4D = tex3D<float4>(t_VelocityField_1, relativePos.x, relativePos.y, relativePos.z);
 	velocity = { velocity4D.x,velocity4D.y,velocity4D.z };
 
 	k4 = dt * velocity;
 
-	float3 newPosition = { 0,0,0 };
-	newPosition.x = position->x + (1.0 / 6.0) * (k1.x + 2.0 * k2.x + 2 * k3.x + k4.x);
-	newPosition.y = position->y + (1.0 / 6.0) * (k1.y + 2.0 * k2.y + 2 * k3.y + k4.y);
-	newPosition.z = position->z + (1.0 / 6.0) * (k1.z + 2.0 * k2.z + 2 * k3.z + k4.z);
+	if (periodicity)
+	{
+		particle->m_position = particle->m_position + (1.0 / 6.0) * (k1 + 2.0 * k2 + 2 * k3 + k4);
+		particle->updateVelocity(gridDiameter, t_VelocityField_1);
+	}
+	else
+	{
+		if (particle->m_position < gridDiameter && particle->m_position > make_float3(0.0f, 0.0f, 0.0f))
+		{
+			particle->m_position = particle->m_position + (1.0 / 6.0) * (k1 + 2.0 * k2 + 2 * k3 + k4);
+			particle->updateVelocity(gridDiameter, t_VelocityField_1);
+		}
+		else
+		{
+			particle->outOfScope = true;
+		}
+	}
 
-	return newPosition;
+
 }
+
+
+
+
+
 
 
 
@@ -276,34 +100,25 @@ __device__ void RK4Stream(cudaTextureObject_t t_VelocityField_0, Particle* parti
 {
 	//####################### K1 ######################
 	float3 k1 = { 0,0,0 };
-	float3 relativePos = {
-		particle->m_position.x / gridDiameter.x,
-		particle->m_position.y / gridDiameter.y,
-		particle->m_position.z / gridDiameter.z
-	};
+	float3 relativePos = particle->m_position / gridDiameter; 
 	float4 velocity4D = tex3D<float4>(t_VelocityField_0, relativePos.x, relativePos.y, relativePos.z);
+
 	float3 velocity = { velocity4D.x,velocity4D.y,velocity4D.z };
+
 	k1 = velocity * dt;
 
 
 	//####################### K2 ######################
 	float3 k2 = { 0,0,0 };
 
-	relativePos = {
-	   (particle->m_position.x + k1.x) / gridDiameter.x,
-	   (particle->m_position.y + k1.y) / gridDiameter.y,
-	   (particle->m_position.z + k1.z) / gridDiameter.z
-	};
+	relativePos =    (particle->m_position + k1) / gridDiameter;
+	 
 	velocity4D = tex3D<float4>(t_VelocityField_0, relativePos.x, relativePos.y, relativePos.z);
 	velocity = { velocity4D.x,velocity4D.y,velocity4D.z };
 
 	k2 = velocity;
 
-	relativePos = {
-	   (particle->m_position.x + k1.x) / gridDiameter.x,
-	   (particle->m_position.y + k1.y) / gridDiameter.y,
-	   (particle->m_position.z + k1.z) / gridDiameter.z
-	};
+
 	velocity4D = tex3D<float4>(t_VelocityField_0, relativePos.x, relativePos.y, relativePos.z);
 	velocity = { velocity4D.x,velocity4D.y,velocity4D.z };
 
@@ -315,21 +130,14 @@ __device__ void RK4Stream(cudaTextureObject_t t_VelocityField_0, Particle* parti
 	//####################### K3 ######################
 	float3 k3 = { 0,0,0 };
 
-	relativePos = {
-	   (particle->m_position.x + k2.x) / gridDiameter.x,
-	   (particle->m_position.y + k2.y) / gridDiameter.y,
-	   (particle->m_position.z + k2.z) / gridDiameter.z
-	};
+	relativePos = (particle->m_position + k2) / gridDiameter;
+
 	velocity4D = tex3D<float4>(t_VelocityField_0, relativePos.x, relativePos.y, relativePos.z);
 	velocity = { velocity4D.x,velocity4D.y,velocity4D.z };
 
 	k3 = velocity;
 
-	relativePos = {
-	   (particle->m_position.x + k2.x) / gridDiameter.x,
-	   (particle->m_position.y + k2.y) / gridDiameter.y,
-	   (particle->m_position.z + k2.z) / gridDiameter.z
-	};
+
 	velocity4D = tex3D<float4>(t_VelocityField_0, relativePos.x, relativePos.y, relativePos.z);
 	velocity = { velocity4D.x,velocity4D.y,velocity4D.z };
 
@@ -342,22 +150,15 @@ __device__ void RK4Stream(cudaTextureObject_t t_VelocityField_0, Particle* parti
 
 	float3 k4 = { 0,0,0 };
 
-	relativePos = {
-   (particle->m_position.x + k3.x) / gridDiameter.x,
-   (particle->m_position.y + k3.y) / gridDiameter.y,
-   (particle->m_position.z + k3.z) / gridDiameter.z
-	};
+	relativePos = (particle->m_position + k3) / gridDiameter;
+
 	velocity4D = tex3D<float4>(t_VelocityField_0, relativePos.x, relativePos.y, relativePos.z);
 	velocity = { velocity4D.x,velocity4D.y,velocity4D.z };
 
 	k4 = dt * velocity;
 
-	float3 newPosition = { 0,0,0 };
-	newPosition.x = particle->m_position.x + (1.0 / 6.0) * (k1.x + 2.0 * k2.x + 2 * k3.x + k4.x);
-	newPosition.y = particle->m_position.y + (1.0 / 6.0) * (k1.y + 2.0 * k2.y + 2 * k3.y + k4.y);
-	newPosition.z = particle->m_position.z + (1.0 / 6.0) * (k1.z + 2.0 * k2.z + 2 * k3.z + k4.z);
+	particle->m_position = particle->m_position + (1.0 / 6.0) * (k1 + 2.0 * k2 + 2 * k3 + k4);
 
-	particle->m_position = newPosition;
 	particle->updateVelocity(gridDiameter, t_VelocityField_0);
 	
 }
@@ -438,94 +239,91 @@ __global__ void TracingPath(Particle* d_particles, cudaTextureObject_t t_Velocit
 
 	if (index < solverOptions.lines_count)
 	{
-		int line_index = index * solverOptions.lineLength;
-		float dt = solverOptions.dt;
-		float3 gridDiameter =
+
+		if (!d_particles[index].outOfScope)
 		{
-			solverOptions.gridDiameter[0],
-			solverOptions.gridDiameter[1],
-			solverOptions.gridDiameter[2]
-		};
+			// line_index indicates the line segment index
+			int line_index = index * solverOptions.lineLength;
 
-
-		float3 newPosition = { 0.0f,0.0f,0.0f };
-
-		if (d_particles[index].isOut())
-		{
-			newPosition =
+			float3 gridDiameter = 
 			{
-				d_particles[index].getPosition()->x,
-				d_particles[index].getPosition()->y,
-				d_particles[index].getPosition()->z
+				solverOptions.gridDiameter[0],
+				solverOptions.gridDiameter[1],
+				solverOptions.gridDiameter[2]
 			};
-		}
-		else if (odd)
-		{
-			newPosition = RK4Odd(t_VelocityField_0, t_VelocityField_1, d_particles[index].getPosition(), gridDiameter, dt);
-		}
-		else if (!odd) //Even
-		{
-
-			newPosition = RK4Even(t_VelocityField_0, t_VelocityField_1, d_particles[index].getPosition(), gridDiameter, dt);
-		}
-
-		d_particles[index].setPosition(newPosition);
-		d_particles[index].updateVelocity(gridDiameter, t_VelocityField_1);
 
 
-		if (!d_particles[index].isOut())
-		{
-			d_particles[index].checkPosition(gridDiameter);
-		}
+			if (odd)
+			{
+				RK4Path(t_VelocityField_1, t_VelocityField_0, &d_particles[index], gridDiameter, solverOptions.dt,false);
+			}
+			else //Even
+			{
 
-		// Write into the Vertex BUffer
-		p_VertexBuffer[line_index + step].pos.x = d_particles[index].getPosition()->x - (gridDiameter.x / 2.0);
-		p_VertexBuffer[line_index + step].pos.y = d_particles[index].getPosition()->y - (gridDiameter.y / 2.0);
-		p_VertexBuffer[line_index + step].pos.z = d_particles[index].getPosition()->z - (gridDiameter.z / 2.0);
+				RK4Path(t_VelocityField_0, t_VelocityField_1, &d_particles[index], gridDiameter, solverOptions.dt,false);
+			}
 
+			// use the up vector as normal
+			float3 upDir = make_float3(0.0f, 1.0f, 0.0f);
 
-		float3* velocity = d_particles[index].getVelocity();
-		float3 norm = normalize(make_float3(velocity->x, velocity->y, velocity->z));
+			// check if the up vector is parallel to the tangent
+			if (abs(dot(upDir, normalize(d_particles[index].m_velocity))) > 0.1f)
+				upDir = make_float3(1.0f, 0.0f, 0.0f); // if yes switch the up vector
 
-		p_VertexBuffer[line_index + step].tangent.x = norm.x;
-		p_VertexBuffer[line_index + step].tangent.y = norm.y;
-		p_VertexBuffer[line_index + step].tangent.z = norm.z;
-
-		p_VertexBuffer[line_index + step].LineID = index;
-
-		switch (solverOptions.colorMode)
-		{
-		case 0: // Velocity
-		{
-			p_VertexBuffer[line_index + step].measure = VecMagnitude(*velocity);
-			break;
-
-		}
-		case 1: // Vx
-		{
-
-			p_VertexBuffer[line_index + step].measure = d_particles[index].getVelocity()->x;
-			break;
-		}
-		case 2: // Vy
-		{
-			p_VertexBuffer[line_index + step].measure = d_particles[index].getVelocity()->y;
-			break;
-		}
-		case 3: // Vz
-		{
-			p_VertexBuffer[line_index + step].measure = d_particles[index].getVelocity()->z;
-			break;
-
-		}
+			if (abs(dot(upDir, normalize(d_particles[index].m_velocity))) > 0.1f)
+				upDir = make_float3(0.0f, 0.0f, 1.0f);
 
 
-		}
+			// Write into the Vertex BUffer
+			p_VertexBuffer[line_index + step].pos.x = d_particles[index].getPosition()->x - (gridDiameter.x / 2.0);
+			p_VertexBuffer[line_index + step].pos.y = d_particles[index].getPosition()->y - (gridDiameter.y / 2.0);
+			p_VertexBuffer[line_index + step].pos.z = d_particles[index].getPosition()->z - (gridDiameter.z / 2.0);
 
 
+			float3* velocity = d_particles[index].getVelocity();
+			float3 tangent = normalize(*velocity);
+
+
+			p_VertexBuffer[line_index + step].normal.x = upDir.x;
+			p_VertexBuffer[line_index + step].normal.y = upDir.y;
+			p_VertexBuffer[line_index + step].normal.z = upDir.z;
+
+
+			p_VertexBuffer[line_index + step].tangent.x = tangent.x;
+			p_VertexBuffer[line_index + step].tangent.y = tangent.y;
+			p_VertexBuffer[line_index + step].tangent.z = tangent.z;
+
+			p_VertexBuffer[line_index + step].LineID = index;
+
+			switch (solverOptions.colorMode)
+			{
+				case 0: // Velocity
+				{
+					p_VertexBuffer[line_index + step].measure = VecMagnitude(*velocity);
+					break;
+
+				}
+				case 1: // Vx
+				{
+
+					p_VertexBuffer[line_index + step].measure = d_particles[index].getVelocity()->x;
+					break;
+				}
+				case 2: // Vy
+				{
+					p_VertexBuffer[line_index + step].measure = d_particles[index].getVelocity()->y;
+					break;
+				}
+				case 3: // Vz
+				{
+					p_VertexBuffer[line_index + step].measure = d_particles[index].getVelocity()->z;
+					break;
+
+				}
+			}
+		}		
 	}
 }
-
 
 
 __global__ void TracingStream

@@ -100,16 +100,42 @@ void RenderImGuiOptions::drawSolverOptions()
 	ImGui::PushItemWidth(75);
 	if (ImGui::InputInt("First Index", &(solverOptions->firstIdx)))
 	{
+		if (solverOptions->lastIdx < solverOptions->firstIdx)
+		{
+			solverOptions->firstIdx = solverOptions->lastIdx;
+		}
 		this->updatePathlines = true;
+		if (solverOptions->currentIdx < solverOptions->firstIdx)
+		{
+			solverOptions->currentIdx = solverOptions->firstIdx;
+			this->dispersionOptions->tracingTime = solverOptions->lastIdx - solverOptions->firstIdx;
+			this->updateStreamlines = true;
+
+		}
+
 	}
+
 	ImGui::SameLine();
+
 	if (ImGui::InputInt("Last Index", &(solverOptions->lastIdx)))
 	{
+		this->dispersionOptions->tracingTime = solverOptions->lastIdx - solverOptions->firstIdx;
 		this->updatePathlines = true;
 
 	}
-	if (ImGui::DragInt("Current Index", &(solverOptions->currentIdx), 1.0f, 0, solverOptions->lastIdx, "%d"))
+
+	if (ImGui::InputInt("Current Index", &(solverOptions->currentIdx),1,2))
 	{
+		if (solverOptions->currentIdx < solverOptions->firstIdx)
+		{
+			solverOptions->currentIdx = solverOptions->firstIdx;
+		}
+
+		if (solverOptions->currentIdx > solverOptions->lastIdx)
+		{
+			solverOptions->currentIdx = solverOptions->lastIdx;
+		}
+
 		this->updateStreamlines = true;
 		this->updatePathlines = true;
 	}
@@ -368,18 +394,23 @@ void RenderImGuiOptions::drawDispersionOptions()
 {
 	ImGui::Begin("Dispersion Options");
 
-	if (ImGui::Checkbox("Enable Terrain Rendering", &this->showDispersion))
+	if (solverOptions->lastIdx - solverOptions->firstIdx > 0)
 	{
-		this->renderingOptions->isRaycasting = this->showDispersion;
-		this->updateDispersion = true;
+		if (ImGui::Checkbox("Enable Terrain Rendering", &this->showDispersion))
+		{
+			this->renderingOptions->isRaycasting = this->showDispersion;
+			this->updateDispersion = true;
+			this->dispersionOptions->released = false;
+		}
 	}
 
-	if (ImGui::DragInt("Trace duration", &dispersionOptions->tracingTime, 1, 1, 4096))
-	{
-		this->dispersionOptions->retrace = true;
-		this->updateDispersion = true;
 
-	}
+	//if (ImGui::DragInt("Trace duration", &dispersionOptions->tracingTime, 1, 1, 4096))
+	//{
+	//	this->dispersionOptions->retrace = true;
+	//	this->updateDispersion = true;
+
+	//}
 
 
 	if (ImGui::DragInt("time steps", &dispersionOptions->timeStep, 1.0f, 1, dispersionOptions->tracingTime))
@@ -395,12 +426,12 @@ void RenderImGuiOptions::drawDispersionOptions()
 
 	}
 
-	if (ImGui::DragInt("sampling step", &dispersionOptions->sampling_step,1,1,1000))
-	{
-		this->updateDispersion = true;
-		this->dispersionOptions->retrace = true;
+	//if (ImGui::DragInt("sampling step", &dispersionOptions->sampling_step,1,1,1000))
+	//{
+	//	this->updateDispersion = true;
+	//	this->dispersionOptions->retrace = true;
 
-	}
+	//}
 
 
 	if (ImGui::DragFloat("Wall-normal Distance", &dispersionOptions->seedWallNormalDist,0.001f,0.0,solverOptions->gridDiameter[1],"%4f"))

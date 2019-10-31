@@ -267,6 +267,27 @@ __host__ bool Raycasting::initializeVolumeTexuture
 	return true;
 }
 
+
+__host__ bool Raycasting::initializeVolumeTexuture
+(
+	cudaTextureAddressMode addressMode_X,
+	cudaTextureAddressMode addressMode_Y,
+	cudaTextureAddressMode addressMode_Z,
+	VolumeTexture & _volumeTexture
+)
+{
+	_volumeTexture.setSolverOptions(this->solverOptions);
+	_volumeTexture.setField(this->field);
+	_volumeTexture.initialize
+	(
+		addressMode_X,
+		addressMode_Y,
+		addressMode_Z
+	);
+
+	return true;
+}
+
 __host__ bool Raycasting::initializeIO()
 {
 	

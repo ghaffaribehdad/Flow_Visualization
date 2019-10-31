@@ -171,6 +171,7 @@
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
       <CodeGeneration>compute_61,sm_61</CodeGeneration>
+      <Optimization>O3</Optimization>
     </CudaCompile>
     <CudaLink>
       <AdditionalDependencies>cudart.lib;%(AdditionalDependencies)</AdditionalDependencies>

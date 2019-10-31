@@ -107,23 +107,21 @@ __global__ void traceDispersion
 	}
 }
 
-
-
-__global__ void  traceDispersion3D_extra_fluctuation
+__global__ void  traceDispersion3D_path
 (
 	Particle* particle,
 	cudaSurfaceObject_t heightFieldSurface3D,
 	cudaSurfaceObject_t heightFieldSurface3D_extra,
-	cudaTextureObject_t velocityField,
+	cudaTextureObject_t velocityField_0,
+	cudaTextureObject_t velocityField_1,
 	SolverOptions solverOptions,
-	DispersionOptions dispersionOptions
+	DispersionOptions dispersionOptions,
+	RK4STEP RK4step,
+	int timestep
 )
 {
 	// Extract dispersion options
-	float dt = dispersionOptions.dt;
-	int tracingTime = dispersionOptions.tracingTime;
 	int nParticles = dispersionOptions.gridSize_2D[0] * dispersionOptions.gridSize_2D[1];
-
 
 	int index = blockIdx.x * blockDim.y * blockDim.x;
 	index += threadIdx.y * blockDim.x;
@@ -143,16 +141,24 @@ __global__ void  traceDispersion3D_extra_fluctuation
 		int index_x = index - (index_y * dispersionOptions.gridSize_2D[1]);
 
 
-
-
 		// Trace particle using RK4 
-		for (int time = 0; time < tracingTime; time++)
+
+		switch (RK4step)
 		{
-			for (int i = 0; i < dispersionOptions.sampling_step; i++)
-			{
-				// Advect the particle
-				RK4Stream(velocityField, &particle[index], gridDiameter, dt);
-			}
+		case 0: // => EVEN
+
+			RK4Path(velocityField_0, velocityField_1, &particle[index], gridDiameter, dispersionOptions.dt,true);
+
+			break;
+
+		case 1: // => ODD
+
+			RK4Path(velocityField_1, velocityField_0, &particle[index], gridDiameter, dispersionOptions.dt,true);
+
+			break;
+		}
+	
+
 			// extract the height
 			float3 position = particle[index].m_position;
 			float3 velocity = particle[index].m_velocity;
@@ -161,15 +167,13 @@ __global__ void  traceDispersion3D_extra_fluctuation
 			float4 extraTexel = { position.z, velocity.x ,velocity.x, velocity.z };
 
 
-			
-				// copy it in the surface3D
-				surf3Dwrite(heightTexel, heightFieldSurface3D, sizeof(float4) * index_x, index_y, time);
-			surf3Dwrite(extraTexel, heightFieldSurface3D_extra, sizeof(float4) * index_x, index_y, time);
+			// copy it in the surface3D
+			surf3Dwrite(heightTexel, heightFieldSurface3D, sizeof(float4) * index_x, index_y, timestep);
+			surf3Dwrite(extraTexel, heightFieldSurface3D_extra, sizeof(float4) * index_x, index_y, timestep);
 
-
-		}
 	}
 }
+
 
 
 __global__ void  traceDispersion3D_extra

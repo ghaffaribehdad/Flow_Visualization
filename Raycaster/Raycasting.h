@@ -26,6 +26,10 @@
 class Raycasting
 {
 
+
+private:
+	VolumeTexture volumeTexture;
+
 protected:
 
 
@@ -64,8 +68,8 @@ protected:
 	Camera* camera;
 	CudaSurface raycastingSurface;
 	Interoperability interoperatibility;
-	VolumeTexture volumeTexture;
 	Volume_IO volume_IO;
+
 
 
 	// in case of resizing
@@ -73,6 +77,7 @@ protected:
 	__host__ virtual bool initializeBoundingBox();
 	__host__ bool initializeIO();
 	__host__ bool initializeVolumeTexuture(cudaTextureAddressMode , cudaTextureAddressMode, cudaTextureAddressMode);
+	__host__ bool initializeVolumeTexuture(cudaTextureAddressMode , cudaTextureAddressMode, cudaTextureAddressMode, VolumeTexture & volumeTexture);
 	__host__ bool initializeRaycastingTexture();
 	__host__ bool initializeRaycastingInteroperability();
 	__host__ bool initializeCudaSurface();

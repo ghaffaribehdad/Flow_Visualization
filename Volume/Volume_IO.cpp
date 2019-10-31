@@ -5,7 +5,7 @@ bool Volume_IO::readVolume(unsigned int idx)
 {
 	// Generate absolute path of the file
 	this->fullName = "";
-	this->fullName = filePath + fileName + std::to_string(idx) + ".bin";
+	this->fullName = filePath + fileName + std::to_string(index.at(idx)) + ".bin";
 
 	// Read volume into the buffer
 	return Read();
@@ -16,10 +16,17 @@ std::vector<char>* Volume_IO::flushBuffer()
 	return &this->buffer;
 }
 
+
+float* Volume_IO::flushBuffer_float()
+{
+	return field;
+}
+
 void Volume_IO::release()
 {
 
 	this->buffer.clear();
+	this->field = nullptr;
 
 }
 
@@ -66,6 +73,9 @@ bool Volume_IO::Read()
 	// close the file
 	myFile.close();
 
+
+	this->field = reinterpret_cast<float*>(&(buffer.at(0)));
+
 	return true;
 }
 
@@ -83,10 +93,17 @@ void Volume_IO::Initialize(SolverOptions* solverOptions)
 {
 	fileName = solverOptions->fileName;
 	filePath = solverOptions->filePath;
-	this->index.resize(solverOptions->lastIdx - solverOptions->firstIdx);
-	int counter = 0;
+	this->index.resize(solverOptions->lastIdx - solverOptions->currentIdx);
+
 	for (int i = 0; i <index.size(); i++)
 	{
 		index[i] = solverOptions->firstIdx + i;
 	}
+}
+
+bool Volume_IO::isEmpty()
+{
+	if (field == nullptr)
+		return true;
+	return false;
 }

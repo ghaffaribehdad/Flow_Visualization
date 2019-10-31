@@ -56,8 +56,20 @@ bool DispersionTracer::initialize
 )
 {
 
-	// Seed and initialize particles in a linear array
-	Raycasting::initialize(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
+	if (!this->initializeRaycastingTexture())				// initilize texture (the texture we need to write to)
+		return false;
+
+
+	if (!this->initializeBoundingBox())		// initialize the bounding box ( copy data to the constant memory of GPU about Bounding Box)
+		return false;
+
+
+	// set the number of rays = number of pixels
+	this->rays = (*this->width) * (*this->height);	// Set number of rays based on the number of pixels
+
+
+	// initialize volume Input Output
+	volume_IO.Initialize(this->solverOptions);
 
 	if (!this->InitializeParticles())
 		return false;
@@ -68,14 +80,13 @@ bool DispersionTracer::initialize
 
 
 	
-
 	// Bind the array of heights to the cuda surface
 	if (!this->InitializeHeightSurface3D())
 		return false;
 
 
 	// Trace particle and store their heights on the Height Surface
-	this->trace3D();
+	this->trace3D_path();
 	
 
 	// Store gradient and height on the surface
@@ -178,14 +189,88 @@ __host__ bool DispersionTracer::InitializeHeightSurface3D()
 bool DispersionTracer::release()
 {
 	Raycasting::release();
-	this->heightSurface3D.destroySurface();
-	this->heightArray3D.release();
 	cudaDestroyTextureObject(this->heightFieldTexture3D);
+	this->heightArray3D.release();
 
 	return true;
 }
 
+void DispersionTracer::trace3D_path()
+{
+	// Calculates the block and grid sizes
+	unsigned int blocks;
+	dim3 thread = { maxBlockDim,maxBlockDim,1 };
+	blocks = static_cast<unsigned int>((this->n_particles % (thread.x * thread.y) == 0 ?
+		n_particles / (thread.x * thread.y) : n_particles / (thread.x * thread.y) + 1));
 
+	RK4STEP RK4Step = RK4STEP::ODD;
+	
+	for (int i = 0; i < dispersionOptions->tracingTime; i++)
+	{
+		if (i == 0)
+		{
+			// Load i 'dx field in volume_IO into field
+			this->LoadVelocityfield(i);
+			// Copy and initialize velocityfield texture
+			this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, velocityField_0);
+			// Release the velocityfield from host (volume_IO)
+			volume_IO.release();
+
+			// Same procedure for the second texture
+			this->LoadVelocityfield(i+1);
+			this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, velocityField_1);
+			volume_IO.release();
+
+		}
+		else
+		{
+			// Even integration steps
+			if (i % 2 == 0)
+			{
+				
+				this->LoadVelocityfield(i);
+				this->velocityField_1.release();
+				this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, velocityField_1);
+				volume_IO.release();
+
+				RK4Step = RK4STEP::ODD;
+			}
+			// Odd integration steps
+			else
+			{
+				this->LoadVelocityfield(i);
+				this->velocityField_0.release();
+				this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, velocityField_0);
+				volume_IO.release();
+
+				RK4Step = RK4STEP::EVEN;
+
+			}
+
+		}
+
+		// initialize proper velocityfield
+
+		// trace
+		traceDispersion3D_path << < blocks, thread >> >
+			(
+				d_particle,
+				heightSurface3D.getSurfaceObject(),
+				heightSurface3D_extra.getSurfaceObject(),
+				this->velocityField_0.getTexture(),
+				this->velocityField_1.getTexture(),
+				*solverOptions,
+				*dispersionOptions,
+				RK4Step,
+				i
+			);
+	}
+
+
+
+	// Calculates the gradients and store it in the cuda surface
+	cudaFree(d_particle);
+}
 
 void DispersionTracer::trace3D()
 {
@@ -201,7 +286,7 @@ void DispersionTracer::trace3D()
 			d_particle,
 			heightSurface3D.getSurfaceObject(),
 			heightSurface3D_extra.getSurfaceObject(),
-			this->volumeTexture.getTexture(),
+			this->velocityField_0.getTexture(),
 			*solverOptions,
 			*dispersionOptions
 		);
@@ -333,3 +418,13 @@ void DispersionTracer::gradient3D()
 
 }
 
+bool DispersionTracer::LoadVelocityfield(const unsigned int& idx)
+{
+
+	if (!volume_IO.readVolume(idx))
+		return false;
+
+	this->field = volume_IO.flushBuffer_float();
+
+	return true;
+}

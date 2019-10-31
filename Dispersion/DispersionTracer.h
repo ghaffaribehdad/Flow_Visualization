@@ -38,6 +38,7 @@ public:
 	void rendering() override;
 	bool updateScene() override;
 	void trace3D();
+	void trace3D_path();
 	bool retrace();
 	void gradient3D();
 
@@ -48,6 +49,7 @@ private:
 	bool InitializeHeightArray3D();
 	bool InitializeHeightSurface3D();
 	bool InitializeHeightTexture3D();
+	bool LoadVelocityfield(const unsigned int & idx);
 
 	DispersionOptions* dispersionOptions;
 
@@ -66,6 +68,11 @@ private:
 
 	CudaArray_3D<float4> heightArray3D;
 	CudaArray_3D<float4> heightArray3D_extra;
+
+	VolumeTexture velocityField_0;
+	VolumeTexture velocityField_1;
+
+	Volume_IO Field_IO;
 		
 };
 

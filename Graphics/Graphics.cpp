@@ -132,6 +132,8 @@ void Graphics::RenderFrame()
 	}
 
 
+
+	// Heightfield Rendering
 	if (this->renderImGuiOptions.showDispersion)
 	{
 		if (this->dispersionOptions.retrace)
@@ -141,6 +143,19 @@ void Graphics::RenderFrame()
 		}
 		if (!this->dispersionOptions.initialized)
 		{
+			dispersionTracer.setResources
+			(
+				&this->camera,
+				&this->windowWidth,
+				&this->windowHeight,
+				&this->solverOptions,
+				&this->raycastingOptions,
+				this->device.Get(),
+				this->adapter,
+				this->deviceContext.Get(),
+				&this->dispersionOptions
+			);
+
 			dispersionTracer.initialize(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
 			this->dispersionOptions.initialized = true;
 		}
@@ -153,6 +168,14 @@ void Graphics::RenderFrame()
 
 			renderImGuiOptions.updateDispersion = false;
 
+		}
+	}
+	else
+	{
+		if (!dispersionOptions.released)
+		{
+			this->dispersionTracer.release();
+			dispersionOptions.released = true;
 		}
 	}
 
@@ -175,7 +198,7 @@ void Graphics::RenderFrame()
 
 	if (this->renderImGuiOptions.showPathlines)
 	{
-		this->pathlineRenderer.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_LINESTRIP);
+		this->pathlineRenderer.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ);
 	}
 
 
@@ -242,10 +265,10 @@ bool Graphics::InitializeDirectXResources()
 	D3D11_TEXTURE2D_DESC depthStencilDesc;
 	depthStencilDesc.Width = this->windowWidth;
 	depthStencilDesc.Height = this->windowHeight;
-	depthStencilDesc.MipLevels = 0;
+	depthStencilDesc.MipLevels = 1;
 	depthStencilDesc.ArraySize = 1;
 	depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	depthStencilDesc.SampleDesc.Count = 1;
+	depthStencilDesc.SampleDesc.Count = 4;
 	depthStencilDesc.SampleDesc.Quality = 0;
 	depthStencilDesc.Usage = D3D11_USAGE_DEFAULT;
 	depthStencilDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
@@ -365,18 +388,7 @@ bool Graphics::InitializeResources()
 
 
 
-	dispersionTracer.setResources
-	(
-		&this->camera,
-		&this->windowWidth,
-		&this->windowHeight,
-		&this->solverOptions,
-		&this->raycastingOptions,
-		this->device.Get(),
-		this->adapter,
-		this->deviceContext.Get(),
-		&this->dispersionOptions
-	);
+
 	
 	if (!streamlineRenderer.initializeBuffers())
 		return false;
@@ -419,7 +431,7 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 	scd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	scd.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
 	scd.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
-	scd.SampleDesc.Count = 1;
+	scd.SampleDesc.Count = 4;
 	scd.SampleDesc.Quality = 0;
 	scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	scd.BufferCount = 1;
@@ -430,6 +442,9 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 
 	HRESULT hr;
 
+
+
+
 	D3D_FEATURE_LEVEL feature;
 
 	// Create Device and swapchain
@@ -437,6 +452,7 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 		adapters[0].pAdapter,	//IDXGI adapter (noramlly the first adapter is the hardware and the second one is the software accelarator)
 		D3D_DRIVER_TYPE_UNKNOWN,
 		NULL,						// For software driver type
+
 
 
 
@@ -458,6 +474,9 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 		&feature,					// supported feature level
 		this->deviceContext.GetAddressOf() // Pointer to the address of device context
 	);
+
+
+
 
 	if (FAILED(hr))
 	{
