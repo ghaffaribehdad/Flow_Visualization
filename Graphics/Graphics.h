@@ -166,7 +166,7 @@ private:
 
 	// Raycasting (This object would write into a texture and pass it to the graphics then we need to use sampler state to show it on the backbuffer)
 	Raycasting raycasting;
-	DispersionTracer dispersionTracer;
+	HeightfieldGenerator dispersionTracer;
 
 
 

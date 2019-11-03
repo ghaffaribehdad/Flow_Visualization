@@ -9,11 +9,12 @@
 #include "..//Cuda/CudaArray.h"
 #include "..//Raycaster/Raycasting.h"
 
-class DispersionTracer : public Raycasting
+
+class HeightfieldGenerator : public Raycasting
 {
 public:
 
-	bool initialize
+	virtual bool initialize
 	(
 		cudaTextureAddressMode addressMode_X ,
 		cudaTextureAddressMode addressMode_Y ,
@@ -43,10 +44,10 @@ public:
 	void gradient3D();
 
 
-private:
+protected:
 
 	bool InitializeParticles();
-	bool InitializeHeightArray3D();
+	bool InitializeHeightArray3D(int x, int y ,int z);
 	bool InitializeHeightSurface3D();
 	bool InitializeHeightTexture3D();
 	bool LoadVelocityfield(const unsigned int & idx);

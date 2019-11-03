@@ -10,7 +10,7 @@
 
 
 
-bool DispersionTracer::retrace()
+bool HeightfieldGenerator::retrace()
 {
 	this->heightArray3D.release();
 	this->heightArray3D_extra.release();
@@ -48,7 +48,7 @@ bool DispersionTracer::retrace()
 	return true;
 }
 
-bool DispersionTracer::initialize
+bool HeightfieldGenerator::initialize
 (
 	cudaTextureAddressMode addressMode_X ,
 	cudaTextureAddressMode addressMode_Y ,
@@ -75,7 +75,12 @@ bool DispersionTracer::initialize
 		return false;
 
 	// Initialize Height Field as an empty cuda array 3D
-	if (!this->InitializeHeightArray3D())
+	if (!this->InitializeHeightArray3D
+	(
+		dispersionOptions->gridSize_2D[0],
+		dispersionOptions->gridSize_2D[1],
+		dispersionOptions->tracingTime
+	))
 		return false;
 
 
@@ -101,7 +106,7 @@ bool DispersionTracer::initialize
 	return true;
 }
 
-void DispersionTracer::setResources(Camera* _camera,
+void HeightfieldGenerator::setResources(Camera* _camera,
 	int* _width,
 	int* _height,
 	SolverOptions* _solverOption,
@@ -116,7 +121,7 @@ void DispersionTracer::setResources(Camera* _camera,
 }
 
 
-__host__ bool DispersionTracer::InitializeParticles()
+__host__ bool HeightfieldGenerator::InitializeParticles()
 {
 	this->n_particles = dispersionOptions->gridSize_2D[0] * dispersionOptions->gridSize_2D[1];
 	this->h_particle = new Particle[dispersionOptions->gridSize_2D[0] * dispersionOptions->gridSize_2D[1]];
@@ -135,22 +140,13 @@ __host__ bool DispersionTracer::InitializeParticles()
 
 
 
-__host__ bool DispersionTracer::InitializeHeightArray3D()
+__host__ bool HeightfieldGenerator::InitializeHeightArray3D(int x, int y, int z)
 {
 	// Set dimensions and initialize height field as a 3D CUDA Array
-	this->heightArray3D.setDimension
-	(
-		dispersionOptions->gridSize_2D[0],
-		dispersionOptions->gridSize_2D[1],
-		dispersionOptions->tracingTime
-	);
+	this->heightArray3D.setDimension(x, y, z);
 
-	this->heightArray3D_extra.setDimension
-	(
-		dispersionOptions->gridSize_2D[0],
-		dispersionOptions->gridSize_2D[1],
-		dispersionOptions->tracingTime
-	);
+
+	this->heightArray3D_extra.setDimension(x, y, z);
 
 	// initialize the 3D array
 	if (!heightArray3D.initialize())
@@ -163,7 +159,7 @@ __host__ bool DispersionTracer::InitializeHeightArray3D()
 
 
 
-__host__ bool DispersionTracer::InitializeHeightSurface3D()
+__host__ bool HeightfieldGenerator::InitializeHeightSurface3D()
 {
 	// Assign the hightArray to the hightSurface and initialize the surface
 	cudaArray_t pCudaArray = NULL;
@@ -186,7 +182,7 @@ __host__ bool DispersionTracer::InitializeHeightSurface3D()
 
 
 // Release resources 
-bool DispersionTracer::release()
+bool HeightfieldGenerator::release()
 {
 	Raycasting::release();
 	cudaDestroyTextureObject(this->heightFieldTexture3D);
@@ -195,7 +191,7 @@ bool DispersionTracer::release()
 	return true;
 }
 
-void DispersionTracer::trace3D_path()
+void HeightfieldGenerator::trace3D_path()
 {
 	// Calculates the block and grid sizes
 	unsigned int blocks;
@@ -272,7 +268,7 @@ void DispersionTracer::trace3D_path()
 	cudaFree(d_particle);
 }
 
-void DispersionTracer::trace3D()
+void HeightfieldGenerator::trace3D()
 {
 	// Calculates the block and grid sizes
 	unsigned int blocks;
@@ -297,7 +293,7 @@ void DispersionTracer::trace3D()
 }
 
 
-__host__ void DispersionTracer::rendering()
+__host__ void HeightfieldGenerator::rendering()
 {
 	this->deviceContext->PSSetSamplers(0, 1, this->samplerState.GetAddressOf());
 
@@ -327,7 +323,7 @@ __host__ void DispersionTracer::rendering()
 }
 
 
-bool DispersionTracer::updateScene()
+bool HeightfieldGenerator::updateScene()
 {
 	if (!this->initializeRaycastingInteroperability())	// Create interoperability while we need to release it at the end of rendering
 		return false;
@@ -355,7 +351,7 @@ bool DispersionTracer::updateScene()
 
 
 
-bool DispersionTracer::InitializeHeightTexture3D()
+bool HeightfieldGenerator::InitializeHeightTexture3D()
 {
 
 
@@ -397,7 +393,7 @@ bool DispersionTracer::InitializeHeightTexture3D()
 
 
 
-void DispersionTracer::gradient3D()
+void HeightfieldGenerator::gradient3D()
 {
 
 	// Calculates the block and grid sizes
@@ -418,7 +414,7 @@ void DispersionTracer::gradient3D()
 
 }
 
-bool DispersionTracer::LoadVelocityfield(const unsigned int& idx)
+bool HeightfieldGenerator::LoadVelocityfield(const unsigned int& idx)
 {
 
 	if (!volume_IO.readVolume(idx))

@@ -4,8 +4,8 @@
 bool Volume_IO::readVolume(unsigned int idx)
 {
 	// Generate absolute path of the file
-	this->fullName = "";
-	this->fullName = filePath + fileName + std::to_string(index.at(idx)) + ".bin";
+	
+	this->fullName = filePath + fileName + std::to_string(index.at(idx-1)) + ".bin";
 
 	// Read volume into the buffer
 	return Read();
@@ -93,11 +93,11 @@ void Volume_IO::Initialize(SolverOptions* solverOptions)
 {
 	fileName = solverOptions->fileName;
 	filePath = solverOptions->filePath;
-	this->index.resize(solverOptions->lastIdx - solverOptions->currentIdx);
+	this->index.resize(solverOptions->lastIdx - solverOptions->firstIdx+1);
 
-	for (int i = 0; i <index.size(); i++)
+	for (int i = solverOptions->firstIdx; i <= solverOptions->lastIdx; i++)
 	{
-		index[i] = solverOptions->firstIdx + i;
+		index[i] = solverOptions->firstIdx;
 	}
 }
 

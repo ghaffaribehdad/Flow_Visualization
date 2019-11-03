@@ -191,10 +191,12 @@
     <ClInclude Include="Cuda\CudaArray.h" />
     <ClInclude Include="DispersionHelper.h" />
     <ClInclude Include="Dispersion\DispersionTracer.h" />
+    <ClInclude Include="Dispersion\fluctuationHeightfield.h" />
     <ClInclude Include="Options\DispresionOptions.h" />
     <ClInclude Include="Timer\Timer.h" />
     <ClInclude Include="Window\RenderWindow.h" />
     <ClInclude Include="Window\WindowContainer.h" />
+    <CudaCompile Include="Dispersion\fluctuationHeightfield.cu" />
     <CudaCompile Include="Particle\Particle.cu" />
     <CudaCompile Include="Raycaster\BoundingBox.cu">
       <FileType>Document</FileType>
@@ -238,7 +240,6 @@
       <FileType>Document</FileType>
     </CudaCompile>
     <ClInclude Include="Cuda\helper_math.h" />
-    <ClInclude Include="Dispersion\DispersionOptions.h" />
     <ClInclude Include="Engine\Engine.h" />
     <ClInclude Include="ErrorLogger\ErrorLogger.h" />
     <ClInclude Include="ErrorLogger\StringConverter.h" />

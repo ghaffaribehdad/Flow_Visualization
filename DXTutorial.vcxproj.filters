@@ -69,9 +69,6 @@
     <Filter Include="Header Files\Raycasting">
       <UniqueIdentifier>{a7f30409-2634-45c1-8712-477c4e1ad2b1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Dispersion">
-      <UniqueIdentifier>{c25bb9f7-a9fd-47d3-9d26-c241db3ba495}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\ErrorLogger">
       <UniqueIdentifier>{bb59446f-eced-4cb9-ac42-fc40f8fbe060}</UniqueIdentifier>
     </Filter>
@@ -105,7 +102,10 @@
     <Filter Include="Source Files\HelperFunctions">
       <UniqueIdentifier>{ff7e0db5-ea5e-40b6-82b2-fa40d7e931da}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Dispersion">
+    <Filter Include="Header Files\Heightfield">
+      <UniqueIdentifier>{c25bb9f7-a9fd-47d3-9d26-c241db3ba495}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Heightfield">
       <UniqueIdentifier>{d74fde98-29be-4f40-84a1-e276cf4dde29}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -304,9 +304,6 @@
     <ClInclude Include="Cuda\cudaSurface.h">
       <Filter>Header Files\Cuda</Filter>
     </ClInclude>
-    <ClInclude Include="Dispersion\DispersionOptions.h">
-      <Filter>Header Files\Dispersion</Filter>
-    </ClInclude>
     <ClInclude Include="Cuda\CudaHelperFunctions.h">
       <Filter>Header Files\Cuda</Filter>
     </ClInclude>
@@ -347,16 +344,19 @@
       <Filter>Header Files\HelperFunctions</Filter>
     </ClInclude>
     <ClInclude Include="DispersionHelper.h">
-      <Filter>Header Files\Dispersion</Filter>
+      <Filter>Header Files\Heightfield</Filter>
     </ClInclude>
     <ClInclude Include="Options\DispresionOptions.h">
       <Filter>Header Files\Options</Filter>
     </ClInclude>
     <ClInclude Include="Dispersion\DispersionTracer.h">
-      <Filter>Header Files\Dispersion</Filter>
+      <Filter>Header Files\Heightfield</Filter>
     </ClInclude>
     <ClInclude Include="Cuda\CudaArray.h">
       <Filter>Header Files\Cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="Dispersion\fluctuationHeightfield.h">
+      <Filter>Header Files\Heightfield</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -414,10 +414,13 @@
       <Filter>Source Files\Particle</Filter>
     </CudaCompile>
     <CudaCompile Include="Dispersion\DispersionTracer.cu">
-      <Filter>Source Files\Dispersion</Filter>
+      <Filter>Source Files\Heightfield</Filter>
     </CudaCompile>
     <CudaCompile Include="Dispersion\DispersionHelper.cu">
-      <Filter>Source Files\Dispersion</Filter>
+      <Filter>Source Files\Heightfield</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Dispersion\fluctuationHeightfield.cu">
+      <Filter>Source Files\Heightfield</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>
