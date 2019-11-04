@@ -99,9 +99,6 @@
     <Filter Include="Header Files\HelperFunctions">
       <UniqueIdentifier>{3f36fdce-061e-4399-b2fa-4ede3597b786}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\HelperFunctions">
-      <UniqueIdentifier>{ff7e0db5-ea5e-40b6-82b2-fa40d7e931da}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\Heightfield">
       <UniqueIdentifier>{c25bb9f7-a9fd-47d3-9d26-c241db3ba495}</UniqueIdentifier>
     </Filter>
@@ -357,6 +354,9 @@
     </ClInclude>
     <ClInclude Include="Dispersion\fluctuationHeightfield.h">
       <Filter>Header Files\Heightfield</Filter>
+    </ClInclude>
+    <ClInclude Include="Options\fluctuationheightfieldOptions.h">
+      <Filter>Header Files\Options</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

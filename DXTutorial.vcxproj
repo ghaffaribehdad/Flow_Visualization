@@ -193,6 +193,7 @@
     <ClInclude Include="Dispersion\DispersionTracer.h" />
     <ClInclude Include="Dispersion\fluctuationHeightfield.h" />
     <ClInclude Include="Options\DispresionOptions.h" />
+    <ClInclude Include="Options\fluctuationheightfieldOptions.h" />
     <ClInclude Include="Timer\Timer.h" />
     <ClInclude Include="Window\RenderWindow.h" />
     <ClInclude Include="Window\WindowContainer.h" />

@@ -19,8 +19,7 @@ public:
 
 	bool Initialize(SolverOptions * _solverOptions);
 
-	// Read volume and store it in a vector, returns a pointer to the first element of the vector
-	__host__ float* InitializeVelocityField(int ID);
+	
 
 	// Solve must be defined in the derived classes
 	virtual bool solve()

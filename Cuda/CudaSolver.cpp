@@ -65,12 +65,6 @@ bool CUDASolver::InitializeCUDA()
 	return true;
 }
 
-__host__ float* CUDASolver::InitializeVelocityField(int ID)
-{
-	this->volume_IO.readVolume(ID);
-	
-	return reinterpret_cast<float*>(&volume_IO.flushBuffer()->at(0));
-}
 
 
 

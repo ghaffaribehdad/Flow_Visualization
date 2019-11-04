@@ -107,6 +107,56 @@ __global__ void traceDispersion
 	}
 }
 
+
+
+__global__ void trace_fluctuation3D
+(
+	cudaSurfaceObject_t heightFieldSurface3D,
+	cudaTextureObject_t velocityField_0,
+	SolverOptions solverOptions,
+	DispersionOptions dispersionOptions,
+	int timestep,
+	float streamwisePos
+)
+{
+	// Extract dispersion options
+	int nMesh = solverOptions.gridSize[2];
+
+	int index = blockIdx.x * blockDim.y * blockDim.x;
+	index += threadIdx.y * blockDim.x;
+	index += threadIdx.x;
+
+	if (index < nMesh)
+	{
+		float3 gridDiameter =
+		{
+			solverOptions.gridDiameter[0],
+			solverOptions.gridDiameter[1],
+			solverOptions.gridDiameter[2],
+		};
+
+
+		//Read fluctuation value
+		for (int y = 0; y < solverOptions.gridSize[1]; y++)
+		{
+			float3 relativePos = {
+				(float)y / (float)solverOptions.gridSize[0], //=>span over y
+				streamwisePos ,  //=> fixed position along streamwise direction
+				(float)index / (float)solverOptions.gridSize[2] //=>threads read different z-components
+			};
+
+			float4 velocity_fluc = tex3D<float4>(velocityField_0, relativePos.x, relativePos.y, relativePos.z);
+
+			//
+			surf3Dwrite(velocity_fluc, heightFieldSurface3D, sizeof(float4) * index, y, timestep);
+
+
+		}
+
+
+	}
+}
+
 __global__ void  traceDispersion3D_path
 (
 	Particle* particle,

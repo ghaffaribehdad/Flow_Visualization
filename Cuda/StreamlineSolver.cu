@@ -17,7 +17,9 @@ __host__ bool StreamlineSolver::solve()
 {
 	// Read Dataset
 	this->volume_IO.Initialize(this->solverOptions);
-	this->h_VelocityField = InitializeVelocityField(this->solverOptions->currentIdx);
+	this->volume_IO.readVolume(this->solverOptions->currentIdx);
+
+	this->h_VelocityField = this->volume_IO.flushBuffer_float();
 	
 	// Copy data to the texture memory
 	this->volumeTexture.setField(h_VelocityField);

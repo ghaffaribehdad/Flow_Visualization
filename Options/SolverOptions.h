@@ -6,7 +6,7 @@ struct SolverOptions
 {
 public:
 	char fileName[100] = "FLUC_FIELD_PAD";
-	char  filePath[100] = "E:\\Datasets\\KIT3\\Fields_fld\\binary_fluct\\";
+	char  filePath[100] = "E:\\Datasets\\KIT3\\binary_fluctuation\\";
 
 	int gridSize[3] = { 64,503,2048 };
 	int seedGrid[3] = { 1,5,10 };

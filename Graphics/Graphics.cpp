@@ -179,6 +179,55 @@ void Graphics::RenderFrame()
 		}
 	}
 
+
+
+	// Heightfield Rendering
+	if (this->renderImGuiOptions.showFluctuationHeightfield)
+	{
+		if (this->dispersionOptions.retrace)
+		{
+			this->dispersionTracer.retrace();
+			this->dispersionOptions.retrace = false;
+		}
+		if (!this->dispersionOptions.initialized)
+		{
+			fluctuationHeightfield.setResources
+			(
+				&this->camera,
+				&this->windowWidth,
+				&this->windowHeight,
+				&this->solverOptions,
+				&this->raycastingOptions,
+				this->device.Get(),
+				this->adapter,
+				this->deviceContext.Get(),
+				&this->dispersionOptions
+			);
+
+			fluctuationHeightfield.initialize(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
+			this->dispersionOptions.initialized = true;
+		}
+		// Overrided draw
+		this->fluctuationHeightfield.draw();
+
+		if (renderImGuiOptions.updateDispersion)
+		{
+			this->fluctuationHeightfield.updateScene();
+
+			renderImGuiOptions.updateDispersion = false;
+
+		}
+	}
+	else
+	{
+		if (!dispersionOptions.released)
+		{
+			this->fluctuationHeightfield.release();
+			dispersionOptions.released = true;
+		}
+	}
+
+
 	/*
 
 	##############################################################

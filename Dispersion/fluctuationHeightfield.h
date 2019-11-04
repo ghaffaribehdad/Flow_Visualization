@@ -5,6 +5,7 @@
 class FluctuationHeightfield : public HeightfieldGenerator
 {
 	// 
+public:
 	bool initialize
 	(
 		cudaTextureAddressMode addressMode_X,

@@ -22,6 +22,8 @@
 #include "RenderImGuiOptions.h"
 #include "PathlineRenderer.h"
 #include "..//Dispersion/DispersionTracer.h"
+#include "..//Dispersion/fluctuationHeightfield.h"
+#include "..//Options/fluctuationheightfieldOptions.h"
 
 
 typedef long long int llInt;
@@ -55,6 +57,7 @@ public:
 	RenderingOptions renderingOptions;
 	RaycastingOptions raycastingOptions;
 	DispersionOptions dispersionOptions;
+	FluctuationheightfieldOptions fluctuationheightfieldOptions;
 
 	// Getter Functions
 	IDXGIAdapter* GetAdapter();
@@ -92,7 +95,7 @@ public:
 
 private:
 
-	// camera propertis
+	// camera properties
 	float eyePos[3] = { 0,0,-10.0f };
 	Camera_Prop cameraProp = Camera_Prop(30.0f, 0.1f, 1000.0f,eyePos);
 
@@ -167,6 +170,7 @@ private:
 	// Raycasting (This object would write into a texture and pass it to the graphics then we need to use sampler state to show it on the backbuffer)
 	Raycasting raycasting;
 	HeightfieldGenerator dispersionTracer;
+	FluctuationHeightfield fluctuationHeightfield;
 
 
 

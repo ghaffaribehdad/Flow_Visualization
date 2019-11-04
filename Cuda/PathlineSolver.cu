@@ -41,35 +41,41 @@ __host__ bool PathlineSolver::solve()
 	// while the second texture is updated for odd time steps
 	for (int step = 0; step < timeSteps; step++)
 	{
+		// First Step
 		if (step == 0)
 		{
 
-			// For the first timestep we need to load two fields
-			this->h_VelocityField = this->InitializeVelocityField(solverOptions->currentIdx);
-			this->volumeTexture_0.setField(h_VelocityField);
-			this->volumeTexture_0.initialize(cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
+			// Read current volume
+			this->volume_IO.readVolume(solverOptions->currentIdx);				
+			// Return a pointer to volume
+			this->h_VelocityField = this->volume_IO.flushBuffer_float();		
+			// set the pointer to the volume texture
+			this->volumeTexture_0.setField(h_VelocityField);					
+			// initialize the volume texture
+			this->volumeTexture_0.initialize(cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);	
+			// release host memory
 			volume_IO.release();
+			
 
 
-
-
-			this->h_VelocityField = this->InitializeVelocityField(solverOptions->currentIdx+1);
+			// same procedure for the second field
+			this->volume_IO.readVolume(solverOptions->currentIdx+1);
+			this->h_VelocityField = this->volume_IO.flushBuffer_float();
 			this->volumeTexture_1.setField(h_VelocityField);
 			this->volumeTexture_1.initialize();
+
 			volume_IO.release();
 
-			odd = false;
-
 		}
-		// for the even timesteps we need to reload only one field (tn+1 in the first texture)
-		else if (step %2 == 0)
-		{
-			this->h_VelocityField = this->InitializeVelocityField(solverOptions->firstIdx + 1);
 
-			this->volumeTexture_0.release();
-			this->h_VelocityField = this->InitializeVelocityField(solverOptions->firstIdx + 1);
-			this->volumeTexture_0.setField(h_VelocityField);
-			this->volumeTexture_0.initialize();
+		else if (step %2 == 0) // => EVEN
+		{
+			this->volume_IO.readVolume(solverOptions->currentIdx + step +1);
+			this->h_VelocityField = this->volume_IO.flushBuffer_float();
+
+			this->volumeTexture_1.release();
+			this->volumeTexture_1.setField(h_VelocityField);
+			this->volumeTexture_1.initialize();
 
 			volume_IO.release();
 
@@ -77,16 +83,15 @@ __host__ bool PathlineSolver::solve()
 			
 		}
 
-		// for the odd timesteps we need to reload only one field (tn+1 in the second texture)
-		else if (step % 2 != 0)
+		else if (step % 2 != 0) // => ODD
 		{
 
-			this->h_VelocityField = this->InitializeVelocityField(solverOptions->firstIdx + 1);
+			this->volume_IO.readVolume(solverOptions->currentIdx + step + 1);
+			this->h_VelocityField = this->volume_IO.flushBuffer_float();
 
-			this->volumeTexture_1.release();
-			this->h_VelocityField = this->InitializeVelocityField(solverOptions->firstIdx + 1);
-			this->volumeTexture_1.setField(h_VelocityField);
-			this->volumeTexture_1.initialize();
+			this->volumeTexture_0.release();
+			this->volumeTexture_0.setField(h_VelocityField);
+			this->volumeTexture_0.initialize();
 
 			volume_IO.release();
 

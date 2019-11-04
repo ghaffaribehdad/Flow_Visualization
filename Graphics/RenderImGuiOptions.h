@@ -67,6 +67,7 @@ public:
 	bool showPathlines			= false;
 	bool showRaycasting			= false;
 	bool showDispersion			= false;
+	bool showFluctuationHeightfield = false;
 
 	bool streamlineRendering	= true;
 	bool pathlineRendering		= false;
