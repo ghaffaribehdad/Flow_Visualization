@@ -25,7 +25,7 @@ public:
 private:
 
 	Particle* d_particles;
-	VolumeTexture volumeTexture;
+	VolumeTexture3D volumeTexture;
 
 	float * h_VelocityField;
 	float * d_VelocityField;

@@ -45,7 +45,7 @@ protected:
 	IDXGIAdapter* adapter = NULL;
 	ID3D11Device* device = NULL;
 
-	Volume_IO volume_IO;
+	volumeIO::Volume_IO volume_IO;
 
 	// The probe particles
 	Particle* d_Particles = nullptr;

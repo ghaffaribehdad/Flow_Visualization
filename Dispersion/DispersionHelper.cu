@@ -16,6 +16,12 @@ template __global__ void heightFieldGradient3D<struct IsosurfaceHelper::Position
 	SolverOptions	solverOptions\
 );
 
+template __global__ void fluctuationfieldGradient3D<struct IsosurfaceHelper::Position>\
+(\
+	cudaSurfaceObject_t heightFieldSurface3D,
+	SolverOptions solverOptions
+);
+
 
 // Seed particles in each ZY-Plane grid points
 // takes arrayes of three floats for gridDiameter and 2 integer gridSize
@@ -112,6 +118,7 @@ __global__ void traceDispersion
 __global__ void trace_fluctuation3D
 (
 	cudaSurfaceObject_t heightFieldSurface3D,
+	cudaSurfaceObject_t heightFieldSurface3D_extra,
 	cudaTextureObject_t velocityField_0,
 	SolverOptions solverOptions,
 	DispersionOptions dispersionOptions,
@@ -128,32 +135,21 @@ __global__ void trace_fluctuation3D
 
 	if (index < nMesh)
 	{
-		float3 gridDiameter =
-		{
-			solverOptions.gridDiameter[0],
-			solverOptions.gridDiameter[1],
-			solverOptions.gridDiameter[2],
-		};
 
 
 		//Read fluctuation value
-		for (int y = 0; y < solverOptions.gridSize[1]; y++)
+		for (float y = 0; y < solverOptions.gridSize[1]; y++)
 		{
-			float3 relativePos = {
-				(float)y / (float)solverOptions.gridSize[0], //=>span over y
-				streamwisePos ,  //=> fixed position along streamwise direction
-				(float)index / (float)solverOptions.gridSize[2] //=>threads read different z-components
+			float2 relativePos = {
+				y / static_cast<float>(solverOptions.gridSize[1]-1),							//=>span over y
+				static_cast<float>(index) / static_cast<float>(solverOptions.gridSize[2]-1)		//=> span over Z
 			};
 
-			float4 velocity_fluc = tex3D<float4>(velocityField_0, relativePos.x, relativePos.y, relativePos.z);
+			float4 velocity_fluc = tex2D<float4>(velocityField_0, relativePos.x, relativePos.y);
+			velocity_fluc = velocity_fluc * 0.5;
 
-			//
 			surf3Dwrite(velocity_fluc, heightFieldSurface3D, sizeof(float4) * index, y, timestep);
-
-
 		}
-
-
 	}
 }
 
@@ -435,7 +431,7 @@ __global__ void heightFieldGradient3D
 				);
 
 
-				gradient = { normalize(make_float3(1.0,gradient.x, gradient.y)).x, normalize(make_float3(1.0,gradient.x, gradient.y)).y };
+				gradient = { normalize(make_float3(1.0,gradient.x, gradient.y)).y, normalize(make_float3(1.0,gradient.x, gradient.y)).z };
 			}
 
 
@@ -448,6 +444,67 @@ __global__ void heightFieldGradient3D
 			texel.w = observable.ValueAtXYZ_Surface_float4(heightFieldSurface3D, make_int3(index_x, index_y, time)).w;
 
 			surf3Dwrite(texel, heightFieldSurface3D, sizeof(float4) * index_x, index_y,time);
+
+		}
+
+
+	}
+}
+
+
+
+
+template <typename Observable>
+__global__ void fluctuationfieldGradient3D
+(
+	cudaSurfaceObject_t heightFieldSurface3D,
+	SolverOptions solverOptions
+)
+{
+
+	Observable observable;
+	int index = blockIdx.x * blockDim.y * blockDim.x;
+	index += threadIdx.y * blockDim.x;
+	index += threadIdx.x;
+	
+	int timeDim = 1 + solverOptions.lastIdx - solverOptions.firstIdx;
+
+	int gridPoints = solverOptions.gridSize[2];
+
+	if (index < gridPoints)
+	{
+
+
+		for (int y = 0; y < solverOptions.gridSize[1]; y++)
+		{
+			for (int t = 0; t < timeDim; t++)
+			{
+
+
+				float2 gradient = { 0.0f,0.0f };
+
+	
+				gradient = observable.GradientFluctuatuionAtXT(heightFieldSurface3D, make_int3(index, y, t));
+				gradient = gradient /
+					make_float2
+					(
+						2.0f * solverOptions.gridDiameter[0] / (solverOptions.gridSize[2] - 1),
+						2.0f * solverOptions.gridDiameter[2] / (timeDim - 1)
+					);
+
+				float3 gradient3D = normalize(make_float3(1.0, gradient.x, gradient.y));
+				gradient = { gradient3D.y, gradient3D.z };
+			
+
+				float4 texel = observable.ValueAtXYZ_Surface_float4(heightFieldSurface3D, make_int3(index, y, t));
+
+				texel.z = gradient.x;
+				texel.w = gradient.y;
+
+				surf3Dwrite(texel, heightFieldSurface3D, sizeof(float4) * index, y, t);
+
+
+			}
 
 		}
 

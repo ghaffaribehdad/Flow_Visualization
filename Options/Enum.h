@@ -43,6 +43,14 @@ static const char* const ColorCode_DispersionList[] =
 	"Quadrant Dev"
 };
 
+static const char* const ColorCode_fluctuationField[] =
+{
+	"None",
+	"Vx_fluctuation",
+	"Vy_fluctuation",
+	"Vz_fluctuation"
+};
+
 static const char* const SeedPatternList[] = 
 {
 	"Random",

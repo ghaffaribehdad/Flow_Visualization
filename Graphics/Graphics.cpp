@@ -172,24 +172,24 @@ void Graphics::RenderFrame()
 	}
 	else
 	{
-		if (!dispersionOptions.released)
+		if (dispersionOptions.released)
 		{
 			this->dispersionTracer.release();
-			dispersionOptions.released = true;
+			dispersionOptions.released = false;
 		}
 	}
 
 
 
-	// Heightfield Rendering
+	// Fluctuation Heightfield Rendering
 	if (this->renderImGuiOptions.showFluctuationHeightfield)
 	{
 		if (this->dispersionOptions.retrace)
 		{
-			this->dispersionTracer.retrace();
-			this->dispersionOptions.retrace = false;
+			this->fluctuationHeightfield.retrace();
+			this->fluctuationheightfieldOptions .retrace = false;
 		}
-		if (!this->dispersionOptions.initialized)
+		if (!this->fluctuationheightfieldOptions.initialized)
 		{
 			fluctuationHeightfield.setResources
 			(
@@ -203,27 +203,27 @@ void Graphics::RenderFrame()
 				this->deviceContext.Get(),
 				&this->dispersionOptions
 			);
-
+			fluctuationHeightfield.fluctuationOptions = &this->fluctuationheightfieldOptions;
 			fluctuationHeightfield.initialize(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
-			this->dispersionOptions.initialized = true;
+			this->fluctuationheightfieldOptions.initialized = true;
 		}
 		// Overrided draw
 		this->fluctuationHeightfield.draw();
 
-		if (renderImGuiOptions.updateDispersion)
+		if (renderImGuiOptions.updatefluctuation)
 		{
 			this->fluctuationHeightfield.updateScene();
 
-			renderImGuiOptions.updateDispersion = false;
+			renderImGuiOptions.updatefluctuation = false;
 
 		}
 	}
 	else
 	{
-		if (!dispersionOptions.released)
+		if (fluctuationheightfieldOptions.released)
 		{
 			this->fluctuationHeightfield.release();
-			dispersionOptions.released = true;
+			fluctuationheightfieldOptions.released = false;
 		}
 	}
 
@@ -265,6 +265,7 @@ void Graphics::RenderFrame()
 	renderImGuiOptions.drawLog();
 	renderImGuiOptions.drawRaycastingOptions();
 	renderImGuiOptions.drawDispersionOptions();
+	renderImGuiOptions.drawFluctuationHeightfieldOptions();
 	renderImGuiOptions.render();
 
 
@@ -600,7 +601,8 @@ bool Graphics::InitializeImGui(HWND hwnd)
 			&renderingOptions,
 			&solverOptions,
 			&raycastingOptions,
-			&dispersionOptions
+			&dispersionOptions,
+			&fluctuationheightfieldOptions
 		);
 
 

@@ -157,6 +157,22 @@ __host__ bool HeightfieldGenerator::InitializeHeightArray3D(int x, int y, int z)
 	return true;
 }
 
+__host__ bool HeightfieldGenerator::InitializeHeightArray3D(int3 & gridSize)
+{
+	// Set dimensions and initialize height field as a 3D CUDA Array
+	this->heightArray3D.setDimension(gridSize.x, gridSize.y, gridSize.z);
+
+
+	this->heightArray3D_extra.setDimension(gridSize.x, gridSize.y, gridSize.z);
+
+	// initialize the 3D array
+	if (!heightArray3D.initialize())
+		return false;
+	if (!heightArray3D_extra.initialize())
+		return false;
+
+	return true;
+}
 
 
 __host__ bool HeightfieldGenerator::InitializeHeightSurface3D()
@@ -409,7 +425,7 @@ void HeightfieldGenerator::gradient3D()
 			heightSurface3D.getSurfaceObject(),
 			*dispersionOptions,
 			*solverOptions
-			);
+		);
 
 
 }

@@ -19,7 +19,7 @@ struct FluctuationheightfieldOptions
 
 	// Terrain Rendering Options
 	float hegiht_tolerance = 0.01f;
-
+	int wallNoramlPos = 0;
 
 	// Color Coding
 	int colorCode = static_cast<int>(fluctuationOptions::fluctuationColorCode::NONE);
@@ -31,9 +31,9 @@ struct FluctuationheightfieldOptions
 
 	// Rendering status
 	bool initialized = false;
-	bool released = true;
 	bool dispersion = false;
 	bool retrace = false;
+	bool released = false;
 };
 
 

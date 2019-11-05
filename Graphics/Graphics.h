@@ -38,6 +38,7 @@ public:
 	{
 		this->renderImGuiOptions.updateRaycasting = true;
 		this->renderImGuiOptions.updateDispersion = true;
+		this->renderImGuiOptions.updatefluctuation = true;
 	}
 
 

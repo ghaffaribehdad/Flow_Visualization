@@ -19,7 +19,7 @@ __device__ float2 findIntersections(const float3 pixelPos, const BoundingBox bou
 	float tNear = -10000000;
 	float tFar = +10000000;
 
-	float3 _D = normalize(pixelPos - boundingBox.eyePos);
+	float3 _D = normalize(pixelPos - boundingBox.m_eyePos);
 	float D[3] = { _D.x,_D.y,_D.z };
 
 	// iterates over x,y,z planes
@@ -102,13 +102,13 @@ __device__ float3 pixelPosition(const BoundingBox  boundingBox, const int i, con
 	float W = H * boundingBox.aspectRatio;
 
 	// Center of Image Plane
-	float3 centerPos = boundingBox.eyePos + (boundingBox.nuv[0] * boundingBox.distImagePlane);
+	float3 centerPos = boundingBox.m_eyePos + (boundingBox.nuv[0] * boundingBox.distImagePlane);
 
 	// Left Corner of Image Plane
 	float3 leftCornerPos = (centerPos + (boundingBox.nuv[1] * W / 2.0f) - (boundingBox.nuv[2] * H / 2.0f));
 
-	float3 pixelPos = leftCornerPos - (boundingBox.nuv[1] * float(i) * W / float(boundingBox.width));
-	pixelPos += boundingBox.nuv[2] * float(j) * H / float(boundingBox.height);
+	float3 pixelPos = leftCornerPos - (boundingBox.nuv[1] * float(i) * W / float(boundingBox.m_width));
+	pixelPos += boundingBox.nuv[2] * float(j) * H / float(boundingBox.m_height);
 
 	return pixelPos;
 }

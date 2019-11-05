@@ -45,7 +45,7 @@ struct DispersionOptions
 
 	// Rendering status
 	bool initialized = false;
-	bool released = true;
+	bool released = false;
 	bool dispersion = false;
 	bool retrace = false;
 };

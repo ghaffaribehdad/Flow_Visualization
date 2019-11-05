@@ -207,7 +207,7 @@ void RenderImGuiOptions::drawSolverOptions()
 
 	if (ImGui::Button("Reset", ImVec2(80, 25)))
 	{
-		this->camera->SetPosition(0, 0, -10);
+		this->camera->SetPosition(0, 5, -10);
 		this->camera->SetLookAtPos({ 0, 0, 0 });
 	}
 
@@ -348,8 +348,9 @@ void RenderImGuiOptions::drawRaycastingOptions()
 		{
 			raycastingOptions->samplingRate_0 = 0.0001f;
 		}
-		this->updateRaycasting = true;
-		this->updateDispersion = true;
+		this->updateRaycasting	= true;
+		this->updateDispersion	= true;
+		this->updatefluctuation = true;
 
 	}
 
@@ -506,6 +507,74 @@ void RenderImGuiOptions::drawDispersionOptions()
 		this->updateDispersion = true;
 
 	}
+
+	ImGui::End();
+
+}
+
+
+
+void RenderImGuiOptions::drawFluctuationHeightfieldOptions()
+{
+	ImGui::Begin("Fluctuation Height-field");
+
+	if (solverOptions->lastIdx - solverOptions->firstIdx > 0)
+	{
+		if (ImGui::Checkbox("Enable Rendering", &this->showFluctuationHeightfield))
+		{
+			this->renderingOptions->isRaycasting = this->showFluctuationHeightfield;
+			this->updatefluctuation = true;
+		}
+	}
+
+
+
+
+
+	if (ImGui::DragFloat("Height Tolerance", &fluctuationheightfieldOptions->hegiht_tolerance, 0.0001f, 0.0001f, 1, "%8f"))
+	{
+		this->updatefluctuation = true;
+	}
+
+
+
+
+	if (ImGui::Combo("Color Coding", &fluctuationheightfieldOptions->colorCode, ColorCode_fluctuationField, 4))
+	{
+		this->updatefluctuation = true;
+
+	}
+
+
+	ImGui::Text("Color Coding:");
+
+	if (ImGui::ColorEdit4("Minimum", (float*)& fluctuationheightfieldOptions->minColor))
+	{
+		updatefluctuation = true;
+	}
+	if (ImGui::InputFloat("Min Value", (float*)& fluctuationheightfieldOptions->min_val, 0.1f))
+	{
+		updatefluctuation = true;
+	}
+
+	if (ImGui::ColorEdit4("Maximum", (float*)& fluctuationheightfieldOptions->maxColor))
+	{
+		updatefluctuation = true;
+	}
+
+	if (ImGui::InputFloat("Max Value", (float*)& fluctuationheightfieldOptions->max_val, 0.1f))
+	{
+		updatefluctuation = true;
+	}
+
+	if (ImGui::DragInt("wall-normal", &fluctuationheightfieldOptions->wallNoramlPos, 1.0f, 0, solverOptions->gridSize[1]))
+	{
+		this->updatefluctuation = true;
+
+	}
+
+
+
 
 	ImGui::End();
 

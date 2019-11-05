@@ -43,23 +43,30 @@ public:
 	bool retrace();
 	void gradient3D();
 
+private:
 
-protected:
+	VolumeTexture3D velocityField_0;
+	VolumeTexture3D velocityField_1;
+
+	Particle* h_particle = nullptr;
+	Particle* d_particle = nullptr;
+
+	unsigned int n_particles;
 
 	bool InitializeParticles();
+protected:
+
+
+
+
 	bool InitializeHeightArray3D(int x, int y ,int z);
+	bool InitializeHeightArray3D(int3 & gridSize);
 	bool InitializeHeightSurface3D();
 	bool InitializeHeightTexture3D();
 	bool LoadVelocityfield(const unsigned int & idx);
 
 	DispersionOptions* dispersionOptions;
 
-
-	Particle* h_particle = nullptr;
-	Particle* d_particle = nullptr;
-	
-	unsigned int n_particles;
-	
 
 	CudaSurface heightSurface3D;
 	CudaSurface heightSurface3D_extra;
@@ -70,10 +77,8 @@ protected:
 	CudaArray_3D<float4> heightArray3D;
 	CudaArray_3D<float4> heightArray3D_extra;
 
-	VolumeTexture velocityField_0;
-	VolumeTexture velocityField_1;
 
-	Volume_IO Field_IO;
+	volumeIO::Volume_IO Field_IO;
 		
 };
 

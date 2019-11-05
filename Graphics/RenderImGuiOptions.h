@@ -6,6 +6,7 @@
 #include "../Options/SolverOptions.h"
 #include "../Options/RaycastingOptions.h"
 #include "..//Options/DispresionOptions.h"
+#include "..//Options/fluctuationheightfieldOptions.h"
 #include "RenderingOptions.h"
 #include "Camera.h"
 #include "../Timer/Timer.h"
@@ -26,7 +27,7 @@ private:
 	RenderingOptions	*	renderingOptions;
 	RaycastingOptions	*	raycastingOptions;
 	DispersionOptions	*	dispersionOptions;
-
+	FluctuationheightfieldOptions* fluctuationheightfieldOptions;
 	
 
 
@@ -39,7 +40,8 @@ public:
 		RenderingOptions * _renderingOptions,
 		SolverOptions * _solverOptions,
 		RaycastingOptions * _raycastingOptions,
-		DispersionOptions * _dispersionOptions
+		DispersionOptions * _dispersionOptions,
+		FluctuationheightfieldOptions * _fluctuationheightfieldOptions
 	)
 	{
 		this->camera = _camera;
@@ -53,6 +55,8 @@ public:
 		this->raycastingOptions = _raycastingOptions;
 
 		this->dispersionOptions = _dispersionOptions;
+
+		this->fluctuationheightfieldOptions = _fluctuationheightfieldOptions;
 	}
 
 	bool updateRaycasting		= false;
@@ -62,6 +66,7 @@ public:
 	bool updateStreamlines		= false;
 	bool updatePathlines		= false;
 	bool updateDispersion		= true;
+	bool updatefluctuation		= false;
 
 	bool showStreamlines		= false;
 	bool showPathlines			= false;
@@ -72,13 +77,14 @@ public:
 	bool streamlineRendering	= true;
 	bool pathlineRendering		= false;
 
-	void drawSolverOptions();			// draw the solver option window
-	void drawLog();						// draw Log window
-	void drawLineRenderingOptions();	// draw options of stream/pathline rendering
-	void drawRaycastingOptions();		// draw options of isosurface rendering (raycasting)
-	void drawDispersionOptions();		// draw options of dispersion calculation
+	void drawSolverOptions();					// draw the solver option window
+	void drawLog();								// draw Log window
+	void drawLineRenderingOptions();			// draw options of stream/pathline rendering
+	void drawRaycastingOptions();				// draw options of isosurface rendering (raycasting)
+	void drawDispersionOptions();				// draw options of dispersion calculation
+	void drawFluctuationHeightfieldOptions();	// draw options of heightfield of fluctuation 
 
-	void render();						// render Dear ImGui
+	void render();								// render Dear ImGui
 
 	// Log pointer
 	char* log = new char[1000];

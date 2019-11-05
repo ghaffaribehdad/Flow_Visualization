@@ -6,31 +6,46 @@
 
 #include "../Options/SolverOptions.h"
 
-class Volume_IO
+namespace volumeIO
 {
-private:
+	enum readPlaneMode
+	{
+		YZ = 0,
+		ZX,
+		XY
+	};
+
+
+	class Volume_IO
+	{
+	private:
 	
-	std::string fileName = "";
-	std::string filePath = "";
-	std::string fullName = "";
-	std::vector<unsigned int> index;
-	std::vector<char> buffer;
-	float * field = nullptr;
-public:
+		std::string m_fileName = "";
+		std::string m_filePath = "";
+		std::string fullName = "";
+		std::vector<unsigned int> index;
+		std::vector<char> buffer;
+		float * field = nullptr;
+		SolverOptions * m_solverOptions;
+	public:
 	
-	void Initialize(SolverOptions * solverOption);
-	void setFileName(std::string _fileName);
-	void setFilePath(std::string _filePath);
+		void Initialize(SolverOptions * _solverOption);
+		void setFileName(std::string _fileName);
+		void setFilePath(std::string _filePath);
 
-	bool isEmpty();
-	bool readVolume(unsigned int idx);
+		bool isEmpty();
+		bool readVolume(unsigned int idx);
+		bool readVolumePlane(unsigned int idx, readPlaneMode planeMode, int plane);
 
-	std::vector<char>* flushBuffer();
-	float* flushBuffer_float();
+		std::vector<char>* flushBuffer();
+		float* flushBuffer_float();
 
-	void release();
-protected:
+		void release();
+	protected:
 
-	bool Read();
+		bool Read();
+		bool Read(std::streampos begin, size_t size);
 
-};
+	};
+
+}

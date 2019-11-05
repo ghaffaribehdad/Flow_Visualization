@@ -21,6 +21,9 @@
 #include "..//Graphics/Vertex.h"
 #include "..//Graphics/VertexBuffer.h"
 #include "..//Options/DispresionOptions.h"
+#include "..//Options/fluctuationheightfieldOptions.h"
+
+
 
 
 class Raycasting
@@ -28,9 +31,10 @@ class Raycasting
 
 
 private:
-	VolumeTexture volumeTexture;
+	VolumeTexture3D volumeTexture;
 
 protected:
+
 
 
 	float FOV_deg	= 30.0f;
@@ -46,7 +50,6 @@ protected:
 	SolverOptions* solverOptions;
 	RaycastingOptions* raycastingOptions;
 	
-	BoundingBox* d_BoundingBox;
 	float* field = nullptr;
 
 
@@ -68,16 +71,15 @@ protected:
 	Camera* camera;
 	CudaSurface raycastingSurface;
 	Interoperability interoperatibility;
-	Volume_IO volume_IO;
+	volumeIO::Volume_IO volume_IO;
 
 
 
-	// in case of resizing
 
-	__host__ virtual bool initializeBoundingBox();
+	__host__ virtual bool initializeBoundingBox(); // Create and copy a Boundingbox in the Device constant memory
 	__host__ bool initializeIO();
 	__host__ bool initializeVolumeTexuture(cudaTextureAddressMode , cudaTextureAddressMode, cudaTextureAddressMode);
-	__host__ bool initializeVolumeTexuture(cudaTextureAddressMode , cudaTextureAddressMode, cudaTextureAddressMode, VolumeTexture & volumeTexture);
+	__host__ bool initializeVolumeTexuture(cudaTextureAddressMode , cudaTextureAddressMode, cudaTextureAddressMode, VolumeTexture3D & volumeTexture);
 	__host__ bool initializeRaycastingTexture();
 	__host__ bool initializeRaycastingInteroperability();
 	__host__ bool initializeCudaSurface();
@@ -150,4 +152,17 @@ __global__ void CudaTerrainRenderer_extra
 	float samplingRate,
 	float IsosurfaceTolerance,
 	DispersionOptions dispersionOptions
+);
+
+
+template <typename Observable>
+__global__ void CudaTerrainRenderer_extra_fluctuation
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t heightField,
+	cudaTextureObject_t extraField,
+	int rays,
+	float samplingRate,
+	float IsosurfaceTolerance,
+	FluctuationheightfieldOptions fluctuationOptions
 );

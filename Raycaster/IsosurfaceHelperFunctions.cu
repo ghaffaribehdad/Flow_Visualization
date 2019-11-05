@@ -2,6 +2,9 @@
 #include "IsosurfaceHelperFunctions.h"
 #include "cuda_runtime.h"
 #include "..//Cuda/helper_math.h"
+#include "BoundingBox.h"
+
+
 
 
 __device__ float3 IsosurfaceHelper::Observable::GradientAtXYZ(cudaTextureObject_t tex, float3 relativePos, int3 gridSize)
@@ -94,6 +97,19 @@ __device__  float2 IsosurfaceHelper::Position::GradientAtXYZ_Grid(cudaSurfaceObj
 	dH_dY -= this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y - 1, gridPosition.z)).x;
 
 	
+
+	return make_float2(dH_dX, dH_dY);
+}
+
+__device__ float2 IsosurfaceHelper::Position::GradientFluctuatuionAtXT(cudaSurfaceObject_t surf, int3 gridPosition)
+{
+	float dH_dX = this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x + 1, gridPosition.y, gridPosition.z)).y;
+	float dH_dY = this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y, gridPosition.z+1)).y;
+
+	dH_dX -= this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x - 1, gridPosition.y, gridPosition.z)).y;
+	dH_dY -= this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y, gridPosition.z+1)).y;
+
+
 
 	return make_float2(dH_dX, dH_dY);
 }

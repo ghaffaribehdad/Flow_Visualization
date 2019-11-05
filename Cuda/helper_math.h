@@ -3,6 +3,7 @@
 #include "cuda_runtime.h"
 #include <corecrt_math.h>
 #include <ctgmath>
+#include <DirectXMath.h>
 
 #define X_HAT {1.0f,0.0f,0.0f}
 #define Y_HAT {0.0f,1.0f,0.0f}
@@ -130,6 +131,11 @@ inline __host__ __device__ float3 operator*(float3 a, float b)
 inline __host__ __device__ float4 operator*(const float4& a ,const float & b)
 {
 	return make_float4(a.x * b, a.y * b, a.z * b,a.w * b);
+}
+
+inline __host__ __device__ float4 operator+(const float4& a, const float& b)
+{
+	return make_float4(a.x + b, a.y + b, a.z + b, a.w + b);
 }
 
 inline __host__ __device__ float3 operator/(float3 a, float3 b)
@@ -271,4 +277,25 @@ inline __host__ __device__ bool operator>(const float3& a, const float3& b)
 		return false;
 
 	return true;
+}
+
+
+inline float3 XMFloat3ToFloat3(const DirectX::XMFLOAT3& src)
+{
+	return make_float3(src.x, src.y, src.z);
+}
+
+inline float3 ArrayFloat3ToFloat3(float* src)
+{
+	return make_float3(src[0], src[1], src[2]);
+}
+
+inline int3 ArrayInt3ToInt3(int* src)
+{
+	return make_int3(src[0], src[1], src[2]);
+}
+
+inline int3 ArrayInt2ToInt3(int* src)
+{
+	return make_int3(src[0], src[1], 0);
 }

@@ -3,13 +3,18 @@
 #include <fstream>
 
 
-__device__ __host__ void BoundingBox::constructEyeCoordinates()
+__device__ __host__ void BoundingBox::constructEyeCoordinates(const float3& eyePos, const float3& viewDir, const float3& upVec)
 {
+
+	this->m_eyePos = eyePos;
+	this->m_viewDir = viewDir;
+	this->m_upVec = upVec;
+
 	// N vector
-	this->nuv[0] = normalize(this->viewDir);
+	this->nuv[0] = normalize(this->m_viewDir);
 
 	// U vector
-	float3 upVectNorm = normalize(this->upVec);
+	float3 upVectNorm = normalize(this->m_upVec);
 	this->nuv[1] = cross(nuv[0], upVectNorm);
 
 	// V vector
@@ -17,168 +22,24 @@ __device__ __host__ void BoundingBox::constructEyeCoordinates()
 }
 
 
-//__device__ __host__ float3 BoundingBox::pixelPosition(const int& i, const int& j)
-//{
-//	// Height of the Image Plane
-//	float H = static_cast<float>(tan(this->FOV / 2.0) * 2.0 * this->distImagePlane);
-//	// Width of the Image Plane
-//	float W = H * this->aspectRatio;
-//
-//	// Center of Image Plane
-//	float3 centerPos = (this->eyePos + this->nuv[0]) * this->distImagePlane;
-//
-//	// Left Corner of Image Plane
-//	float3 leftCornerPos = (centerPos + (this->nuv[1] * W / 2.0f) - (this->nuv[2] * H / 2.0f));
-//
-//	float3 pixelPos = leftCornerPos - (this->nuv[1] * i * W / this->width);
-//	pixelPos += this->nuv[2] * j * H / this->height;
-//
-//	return pixelPos;
-//}
-//
-//
-//
-//__device__ __host__ float2 BoundingBox::findIntersections(float3& pixelPos)
-//{
-//
-//	bool hit = true;
-//
-//
-//	float arrayEyePos[3] = { this->eyePos.x,this->eyePos.y,this->eyePos.z };
-//	float arrayPixelPos[3] = { pixelPos.x, pixelPos.y, pixelPos.z };
-//
-//	float tNear = -1000;
-//	float tFar = +1000;
-//
-//	float3 _D = normalize(pixelPos - eyePos);
-//	float D[3] = { _D.x,_D.y,_D.z };
-//
-//	// iterates over x,y,z planes
-//	for (int i = 0; i < 3; i++)
-//	{
-//		float plane1 = this->boxFaces[2 * i];
-//		float plane2 = this->boxFaces[2 * i + 1];
-//		float t1 = 0;
-//		float t2 = 0;
-//
-//
-//		// check if ray and axis are aligned
-//		if (D[i] == 0)
-//		{
-//			if (arrayPixelPos[i] < plane1 || arrayPixelPos[i] > plane2)
-//			{
-//				hit = false;
-//				break;
-//			}
-//		}
-//		else
-//		{
-//			t1 = (plane1 - arrayPixelPos[i]) / D[i];
-//			float tTemp = (plane2 - arrayPixelPos[i]) / D[i];
-//
-//			// Sort t1 and t2
-//			if (t1 <= tTemp)
-//			{
-//				t2 = tTemp;
-//			}
-//			else
-//			{
-//				t2 = t1;
-//				t1 = tTemp;
-//			}
-//			//
-//
-//			if (t1 > tNear)
-//				tNear = t1;
-//			if (t2 < tFar)
-//				tFar = t2;
-//			if (tNear > tFar)
-//			{
-//				hit = false;
-//				break;
-//			}
-//			if (tFar < 0)
-//			{
-//				hit = false;
-//				break;
-//			}
-//		}
-//
-//	}
-//
-//	if (hit)
-//	{
-//		return { tNear,tFar };
-//	}
-//	else
-//	{
-//		return { -1,-1 };
-//	}
-//
-//}
-
-//void BoundingBox::reconstruct()
-//{
-//	std::ofstream myfile;
-//	myfile.open("example.csv");
-//	
-//
-//	
-//	constructEyeCoordinates();
-//	for (int i = 0; i < width; i++)
-//	{
-//		for (int j = 0; j < height; j++)
-//		{
-//			Ray ray;
-//			ray.setPixel(i, j);
-//			ray.setPixelPos = pixelPosition(i, j);
-//			
-//			float2 t = findIntersections(ray.getPixelPos());
-//			
-//			if (t.x == -1 )
-//			{
-//				continue;
-//			}
-//			else
-//			{
-//				
-//				float3 position = ray.getPos(t.x);
-//				//std::cout <<"[" << position.x << ", " << position.y << ", " << position.z << ", " << "]\n";
-//				myfile << position.x << ", " << position.y << "," << position.z << "," << "\n";
-//				position = ray.getPos(t.y);
-//				//std::cout <<"[" << position.x << ", " << position.y << ", " << position.z << ", " << "]\n";
-//				myfile << position.x << ", " << position.y << "," << position.z << "," << "\n";
-//			}
-//			
-//		}
-//	}
-//	myfile.close();
-//}
-
-
-//__device__ __host__ void BoundingBox::initialize()
-//{
-//	this->updateAspectRatio();
-//	this->updateBoxFaces();
-//	this->constructEyeCoordinates();
-//}
-
-__host__ __device__ void BoundingBox::updateBoxFaces()
+__host__ __device__ void BoundingBox::updateBoxFaces(const float3 & dimensions)
 {
-	
-		this->boxFaces[0] = this->gridDiameter.x / -2.0f;
-		this->boxFaces[1] = this->gridDiameter.x / 2.0f;
+	m_dimensions = dimensions;
+	this->boxFaces[0] = dimensions.x / -2.0f;
+	this->boxFaces[1] = dimensions.x / 2.0f;
 
-		this->boxFaces[2] = this->gridDiameter.y / -2.0f;
-		this->boxFaces[3] = this->gridDiameter.y / 2.0f;
+	this->boxFaces[2] = dimensions.y / -2.0f;
+	this->boxFaces[3] = dimensions.y / 2.0f;
 
-		this->boxFaces[4] = this->gridDiameter.z / -2.0f;
-		this->boxFaces[5] = this->gridDiameter.z / 2.0f;
+	this->boxFaces[4] = dimensions.z / -2.0f;
+	this->boxFaces[5] = dimensions.z / 2.0f;
 
 
 }
 
-__host__ __device__ void BoundingBox::updateAspectRatio()
+__host__ __device__ void BoundingBox::updateAspectRatio(const int & width, const int & height)
 {
-	this->aspectRatio = static_cast<float>(this->width) / static_cast<float>(this->height);
+	this->m_width = width;
+	this->m_height = height;
+	this->aspectRatio = static_cast<float>(this->m_width) / static_cast<float>(this->m_height);
 }

@@ -30,8 +30,8 @@ private:
 	float* h_VelocityField;
 	float* d_VelocityField;
 
-	VolumeTexture volumeTexture_0;
-	VolumeTexture volumeTexture_1;
+	VolumeTexture3D volumeTexture_0;
+	VolumeTexture3D volumeTexture_1;
 
 	// https://devblogs.nvidia.com/cuda-pro-tip-kepler-texture-objects-improve-performance-and-flexibility/
 	// Reference to Velocity Field as a Texture 

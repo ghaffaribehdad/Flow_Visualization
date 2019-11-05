@@ -5,7 +5,7 @@
 #include "texture_fetch_functions.h"
 #include "../Options/SolverOptions.h"
 
-class VolumeTexture
+class VolumeTexture3D
 {
 
 public:
@@ -54,4 +54,48 @@ private:
 
 };
 
+
+class VolumeTexture2D
+{
+
+public:
+
+	// setter functions
+	void setField(float* _h_field)
+	{
+		this->h_field = _h_field;
+	}
+
+	// Create a texture and populate it with h_field
+	// Address modes can be set for X,y,z
+	bool initialize
+	(
+		size_t width,
+		size_t height,
+		cudaTextureAddressMode addressMode_x = cudaAddressModeWrap,
+		cudaTextureAddressMode addressMode_z = cudaAddressModeWrap
+	);
+
+	void release();
+
+	cudaTextureObject_t getTexture()
+	{
+		return this->t_field;
+	}
+
+
+private:
+
+	SolverOptions* solverOptions = nullptr;
+
+	cudaTextureObject_t t_field;
+	cudaArray_t cuArray_velocity;
+
+	float* h_field = nullptr;
+
+	float3 gridDiameter;
+
+
+
+};
 
