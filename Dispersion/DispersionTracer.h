@@ -60,7 +60,7 @@ protected:
 
 
 	bool InitializeHeightArray3D(int x, int y ,int z);
-	bool InitializeHeightArray3D(int3 & gridSize);
+	bool InitializeHeightArray3D(int3 gridSize);
 	bool InitializeHeightSurface3D();
 	bool InitializeHeightTexture3D();
 	bool LoadVelocityfield(const unsigned int & idx);

@@ -21,6 +21,8 @@ struct FluctuationheightfieldOptions
 	float hegiht_tolerance = 0.01f;
 	int wallNoramlPos = 0;
 
+	int wallNormalgridSize = 100;
+
 	// Color Coding
 	int colorCode = static_cast<int>(fluctuationOptions::fluctuationColorCode::NONE);
 	float max_val = 1.0f;
@@ -34,6 +36,8 @@ struct FluctuationheightfieldOptions
 	bool dispersion = false;
 	bool retrace = false;
 	bool released = false;
+
+
 };
 
 

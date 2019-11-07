@@ -35,7 +35,7 @@ namespace volumeIO
 
 		bool isEmpty();
 		bool readVolume(unsigned int idx);
-		bool readVolumePlane(unsigned int idx, readPlaneMode planeMode, int plane);
+		bool readVolumePlane(unsigned int idx, readPlaneMode planeMode, int plane, size_t buffer_size = 0);
 
 		std::vector<char>* flushBuffer();
 		float* flushBuffer_float();

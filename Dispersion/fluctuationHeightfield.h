@@ -2,6 +2,7 @@
 
 #include "DispersionTracer.h"
 #include "..//Options/fluctuationheightfieldOptions.h"
+#include "..//Raycaster/BoundingBox.h"
 
 class FluctuationHeightfield : public HeightfieldGenerator
 {
@@ -23,7 +24,6 @@ public:
 	FluctuationheightfieldOptions* fluctuationOptions;
 private:
 
-	VolumeTexture2D velocityField_2D;
 	bool LoadVelocityfieldPlane(const unsigned int& idx, const int & plane);
 	int3 m_gridSize = { 0,0,0 };
 

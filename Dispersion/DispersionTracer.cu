@@ -157,7 +157,7 @@ __host__ bool HeightfieldGenerator::InitializeHeightArray3D(int x, int y, int z)
 	return true;
 }
 
-__host__ bool HeightfieldGenerator::InitializeHeightArray3D(int3 & gridSize)
+__host__ bool HeightfieldGenerator::InitializeHeightArray3D(int3 gridSize)
 {
 	// Set dimensions and initialize height field as a 3D CUDA Array
 	this->heightArray3D.setDimension(gridSize.x, gridSize.y, gridSize.z);
@@ -313,7 +313,7 @@ __host__ void HeightfieldGenerator::rendering()
 {
 	this->deviceContext->PSSetSamplers(0, 1, this->samplerState.GetAddressOf());
 
-	// Create a 2D texture tu read hight array
+	// Create a 2D texture to read hight array
 
 	float bgcolor[] = { 0.0f,0.0f, 0.0f, 1.0f };
 
@@ -386,9 +386,9 @@ bool HeightfieldGenerator::InitializeHeightTexture3D()
 	// Texture Description
 	texDesc.normalizedCoords = true;
 	texDesc.filterMode = cudaFilterModeLinear;
-	texDesc.addressMode[0] = cudaTextureAddressMode::cudaAddressModeClamp;
-	texDesc.addressMode[1] = cudaTextureAddressMode::cudaAddressModeClamp;
-	texDesc.addressMode[2] = cudaTextureAddressMode::cudaAddressModeClamp;
+	texDesc.addressMode[0] = cudaTextureAddressMode::cudaAddressModeBorder;
+	texDesc.addressMode[1] = cudaTextureAddressMode::cudaAddressModeBorder;
+	texDesc.addressMode[2] = cudaTextureAddressMode::cudaAddressModeBorder;
 
 	texDesc.readMode = cudaReadModeElementType;
 

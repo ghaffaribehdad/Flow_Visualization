@@ -12,7 +12,7 @@ bool volumeIO::Volume_IO::readVolume(unsigned int idx)
 }
 
 
-bool volumeIO::Volume_IO::readVolumePlane(unsigned int idx, readPlaneMode planeMode, int plane)
+bool volumeIO::Volume_IO::readVolumePlane(unsigned int idx, readPlaneMode planeMode, int plane, size_t bufferSize)
 {
 	// Generate absolute path of the file
 
@@ -21,26 +21,45 @@ bool volumeIO::Volume_IO::readVolumePlane(unsigned int idx, readPlaneMode planeM
 	std::streampos begin = 0;
 	size_t size = 0;
 
-	switch (static_cast<int>(planeMode))
+	if (bufferSize == 0)
 	{
-	case 0: // => YZ
-		size = (size_t)m_solverOptions->gridSize[1] * (size_t)m_solverOptions->gridSize[2] * sizeof(float4);
-		begin = plane * size;
-		return this->Read(begin, size);
-		break;
-		
-	case 1: // => ZX
-		size = (size_t)m_solverOptions->gridSize[0] * (size_t)m_solverOptions->gridSize[2] * sizeof(float4);
-		ErrorLogger::Log("Not implemented yet");
+		switch (static_cast<int>(planeMode))
+		{
+		case 0: // => YZ
+			size = (size_t)m_solverOptions->gridSize[1] * (size_t)m_solverOptions->gridSize[2] * sizeof(float4);
+			begin = plane * size;
+			return this->Read(begin, size);
 
-		break;
 
-	case 2: // => XY
-		size = (size_t)m_solverOptions->gridSize[0] * (size_t)m_solverOptions->gridSize[1] * sizeof(float4);
-		ErrorLogger::Log("Not implemented yet");
-		break;
+		case 1: // => ZX
+			ErrorLogger::Log("Not implemented yet");
+			break;
+
+		case 2: // => XY
+			ErrorLogger::Log("Not implemented yet");
+			break;
+		}
+	}
+	else
+	{
+		switch (static_cast<int>(planeMode))
+		{
+		case 0: // => YZ
+			size = (size_t)m_solverOptions->gridSize[1] * (size_t)m_solverOptions->gridSize[2] * sizeof(float4);
+			begin = plane * size;
+			return this->Read(begin, bufferSize);
+
+		case 1: // => ZX
+			ErrorLogger::Log("Not implemented yet");
+			break;
+
+		case 2: // => XY
+			ErrorLogger::Log("Not implemented yet");
+			break;
+		}
 	}
 
+	return false;
 	
 }
 
@@ -91,15 +110,13 @@ bool volumeIO::Volume_IO::Read(std::streampos begin, size_t size)
 	// return to starting position
 	myFile.seekg(begin);
 
-	// size of the buffer
-	size_t buffer_size = static_cast<size_t>(size);
-
 
 	// resize it to fit the dataset
-	(this->buffer).resize(buffer_size);
+	(this->buffer).resize(size);
 
 	//read file and store it into buffer 
-	myFile.read(&(buffer.at(0)), buffer_size);
+	myFile.read(&(buffer.at(0)), size);
+
 
 	// close the file
 	myFile.close();

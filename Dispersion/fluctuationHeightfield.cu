@@ -16,7 +16,7 @@ bool FluctuationHeightfield::initialize
 	this->m_gridSize = 
 	{
 		solverOptions->gridSize[2],								//=> spanwise(z)
-		solverOptions->gridSize[1],								//=> # time snaps
+		fluctuationOptions->wallNormalgridSize, 				//=> # time snaps
 		1 + solverOptions->lastIdx - solverOptions->firstIdx	//=> wall-normal grid size (+1 for inclusive indexes)
 	};
 
@@ -40,14 +40,15 @@ bool FluctuationHeightfield::initialize
 	if (!this->InitializeHeightArray3D(m_gridSize))
 		return false;
 
-	// Bind the array of heights to the CUDA surface
-	if (!this->InitializeHeightSurface3D())
-		return false;
 
 	// Trace the fluctuation field
 	this->traceFluctuationfield();
 
-	this->gradientFluctuationfield();
+	// Bind the array of heights to the CUDA surface
+	if (!this->InitializeHeightSurface3D())
+		return false;
+
+	//this->gradientFluctuationfield();
 
 	this->heightSurface3D.destroySurface();
 
@@ -60,49 +61,42 @@ bool FluctuationHeightfield::initialize
 
 void  FluctuationHeightfield::traceFluctuationfield()
 {
-	// Calculates the block and grid sizes
-	unsigned int blocks;
-	dim3 thread = { maxBlockDim,maxBlockDim,1 };
 
-	int nMesh_z = solverOptions->gridSize[2]; // mesh size in spanwise direction
-
-	blocks = static_cast<unsigned int>((nMesh_z % (thread.x * thread.y) == 0 ?
-		nMesh_z / (thread.x * thread.y) : nMesh_z / (thread.x * thread.y) + 1));
 
 	// Set properties of velocity field texture
 
-	int timeDimension = 0;
+	size_t timeDimension = 1+ solverOptions->lastIdx - solverOptions->firstIdx;
+	size_t field_2D_Size = solverOptions->gridSize[2] * fluctuationOptions->wallNormalgridSize * sizeof(float4);
+	size_t field_3D_Size = field_2D_Size * timeDimension;
+	size_t offset = 0;
 
-	for (int timestep = solverOptions->firstIdx; timestep <= solverOptions->lastIdx; timestep++)
+
+
+	// Allocate memory in Device
+	float* d_velocityField = nullptr;
+	cudaMalloc(&d_velocityField, field_3D_Size);
+
+
+	// Populate the Device memory
+	for (int timestep = solverOptions->firstIdx; timestep < solverOptions->lastIdx; timestep++)
 	{
-		// loads the velocity field into the host memory (accessible by this->field pointer)  !!!! only one plane
-		this->LoadVelocityfieldPlane(timestep,solverOptions->gridSize[0]/2);
-		this->velocityField_2D.setField(this->field);
+		// loads the velocity field into the host memory (accessible by this->field pointer) plane by plane
+		this->volume_IO.readVolumePlane(timestep, volumeIO::readPlaneMode::YZ,0, field_2D_Size);
+		this->field = volume_IO.flushBuffer_float();
 
 
-		// Copy host memory into the device texture (using border mode since no advection desired here!)
-		velocityField_2D.initialize(solverOptions->gridSize[1], solverOptions->gridSize[2]);
+		cudaMemcpy(d_velocityField + offset, field, field_2D_Size,cudaMemcpyHostToDevice);
+
 
 		// Release the volume in the host memory
 		this->volume_IO.release();
 
-		// Now is time to populate the texture
-		trace_fluctuation3D << < blocks, thread >> >
-			(
-				heightSurface3D.getSurfaceObject(),
-				heightSurface3D_extra.getSurfaceObject(),
-				this->velocityField_2D.getTexture(),
-				*solverOptions,
-				*dispersionOptions,
-				timeDimension,
-				0.5f //=> Streamwise position
-			);
-		velocityField_2D.release();
-
-		// Go to next timestep
-		timeDimension++;
+		offset += solverOptions->gridSize[2] * fluctuationOptions->wallNormalgridSize * 4;
 
 	}
+
+	// Copy linear memory to 3D array, so we can then bind it to CUDA texture
+	cudaMemcpyToArray(this->heightArray3D.getArray(), 0, 0, d_velocityField, field_3D_Size, cudaMemcpyDeviceToDevice);
 
 }
 
@@ -135,7 +129,8 @@ void FluctuationHeightfield::gradientFluctuationfield()
 	fluctuationfieldGradient3D<IsosurfaceHelper::Position> << < blocks, thread >> >
 		(
 			heightSurface3D.getSurfaceObject(),
-			*this->solverOptions
+			*this->solverOptions,
+			*this->fluctuationOptions
 		);
 }
 

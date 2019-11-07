@@ -5,6 +5,7 @@
 #include "..//Cuda/CudaHelperFunctions.h"
 #include "..//Options/DispresionOptions.h"
 #include "..//Options/SolverOptions.h"
+#include "..//Options/fluctuationheightfieldOptions.h"
 
 void seedParticle_ZY_Plane(Particle* particle, float* gridDiameter, const int* gridSize, const float& y_slice);
 void seedParticle_tiltedPlane(Particle* particle, float* gridDiameter, const int* gridSize, const float& y_slice, const float & tilt);
@@ -65,9 +66,8 @@ __global__ void trace_fluctuation3D
 	cudaSurfaceObject_t heightFieldSurface3D_extra,
 	cudaTextureObject_t velocityField_0,
 	SolverOptions solverOptions,
-	DispersionOptions dispersionOptions,
-	int timestep,
-	float streamwise
+	FluctuationheightfieldOptions fluctuationOptions,
+	int timestep
 );
 
 
@@ -98,7 +98,9 @@ template <typename Observable>
 __global__ void fluctuationfieldGradient3D
 (
 	cudaSurfaceObject_t heightFieldSurface3D,
-	SolverOptions solverOptions
+	SolverOptions solverOptions,
+	FluctuationheightfieldOptions fluctuationOptions
+
 );
 
 

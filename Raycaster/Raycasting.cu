@@ -23,7 +23,7 @@ __host__ bool Raycasting::updateScene()
 	if (!this->initializeRaycastingInteroperability())	// Create interoperability while we need to release it at the end of rendering
 		return false;
 
-	if (!this->initializeCudaSurface())					// reinitilize cudaSurface	
+	if (!this->initializeCudaSurface())					// initialize cudaSurface	
 		return false;
 
 	if (!this->initializeBoundingBox())					//updates constant memory
@@ -235,7 +235,6 @@ __host__ bool Raycasting::initializeBoundingBox()
 
 	h_boundingBox->FOV = (this->FOV_deg / 360.0f)* XM_2PI;
 	h_boundingBox->distImagePlane = this->distImagePlane;
-
 	gpuErrchk(cudaMemcpyToSymbol(d_boundingBox, h_boundingBox, sizeof(BoundingBox)));
 	
 	gpuErrchk(cudaMemcpyToSymbol(d_raycastingColor, this->raycastingOptions->color_0, sizeof(float3)));
@@ -360,8 +359,6 @@ __global__ void CudaIsoSurfacRenderer
 
 				//Relative position calculates the position of the point on the cuda texture
 				float3 relativePos = (position / d_boundingBox.m_dimensions);
-
-
 
 
 				// check if we have a hit 
@@ -893,7 +890,7 @@ bool Raycasting::initializeRaycastingTexture()
 	textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 	textureDesc.Height = *this->height;
 	textureDesc.Width = *this->width;
-	textureDesc.MipLevels = 2;
+	textureDesc.MipLevels = 1;
 	textureDesc.MiscFlags = 0;
 	textureDesc.SampleDesc.Count = 1;
 	textureDesc.SampleDesc.Quality = 0;
@@ -1085,7 +1082,7 @@ bool Raycasting::createRaycastingShaderResourceView()
 		ZeroMemory(&shader_resource_view_desc, sizeof(shader_resource_view_desc));
 
 		shader_resource_view_desc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-		shader_resource_view_desc.Texture2D.MipLevels = 2;
+		shader_resource_view_desc.Texture2D.MipLevels = 1;
 		shader_resource_view_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 
 		HRESULT hr = this->device->CreateShaderResourceView(
@@ -1208,7 +1205,7 @@ __global__ void CudaTerrainRenderer_extra_fluctuation
 	int rays,
 	float samplingRate,
 	float IsosurfaceTolerance,
-	FluctuationheightfieldOptions fluctuationOption
+	FluctuationheightfieldOptions fluctuationOptions
 )
 {
 	Observable observable;
@@ -1255,19 +1252,22 @@ __global__ void CudaTerrainRenderer_extra_fluctuation
 
 
 				//Relative position calculates the position of the point on the cuda texture
+
 				float3 relativePos =
 				{
+					position.z / d_boundingBox.m_dimensions.z,
+					0,
 					position.x / d_boundingBox.m_dimensions.x,
-					fluctuationOption.wallNoramlPos/ 502.0f, // TODO using solverOption
-					position.z / d_boundingBox.m_dimensions.z
 				};
+
 
 				// fetch texels from the GPU memory
 				float4 hightFieldVal = observable.ValueAtXYZ_float4(heightField, relativePos);
+				hightFieldVal.y = hightFieldVal.y * 0.2f;
 
 				// check if we have a hit 
 				// heightfield texel => (v_x, v_y, v_z)
-				if (position.y - hightFieldVal.y > 0 && position.y - hightFieldVal.y < fluctuationOption.hegiht_tolerance)
+				if (position.y - hightFieldVal.y > 0 && position.y - hightFieldVal.y < fluctuationOptions.hegiht_tolerance)
 				{
 
 					float3 samplingStep = rayDir * samplingRate;
@@ -1282,32 +1282,36 @@ __global__ void CudaTerrainRenderer_extra_fluctuation
 
 					float3 rgb_min =
 					{
-						fluctuationOption.minColor[0],
-						fluctuationOption.minColor[1],
-						fluctuationOption.minColor[2],
+						fluctuationOptions.minColor[0],
+						fluctuationOptions.minColor[1],
+						fluctuationOptions.minColor[2],
 					};
 
 					float3 rgb_max =
 					{
-						fluctuationOption.maxColor[0],
-						fluctuationOption.maxColor[1],
-						fluctuationOption.maxColor[2],
+						fluctuationOptions.maxColor[0],
+						fluctuationOptions.maxColor[1],
+						fluctuationOptions.maxColor[2],
 					};
 
 					float3 rgb = rgb_min;
+					float y_saturated = 0.0f;
 
-					float extractedVal = 0.0f;
-					float3 rgb_complement = { 0.0f,0.0f,0.0f };
-
-					//switch (fluctuationOption.colorCode)
+					//if (hightFieldVal.y < 0)
 					//{
-					//case fluctuationOptions::fluctuationColorCode::NONE:
-					//
-					//	break;
-					//
+					//	float3 rgb_min_complement = make_float3(1, 1, 1) - rgb_min;
+					//	y_saturated = saturate((hightFieldVal.y - fluctuationOptions.min_val) / fluctuationOptions.min_val);
+					//	rgb = rgb_min_complement * (1.0f - y_saturated) + rgb_min;
+					//}
+					//else
+					//{
+					//	float3 rgb_max_complement = make_float3(1, 1, 1) - rgb_max;
+					//	y_saturated = saturate((hightFieldVal.y - fluctuationOptions.max_val) / (fluctuationOptions.max_val - fluctuationOptions.min_val));
+					//	rgb = rgb_max_complement * (1.0f - y_saturated) + rgb_max;
+
 					//}
 
-					rgb = rgb * diffuse;
+					//rgb = rgb * diffuse;
 
 					// vector from eye to isosurface
 					float3 position_viewCoordinate = position - eyePos;
