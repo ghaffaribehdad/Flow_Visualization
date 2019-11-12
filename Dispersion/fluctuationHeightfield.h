@@ -4,6 +4,13 @@
 #include "..//Options/fluctuationheightfieldOptions.h"
 #include "..//Raycaster/BoundingBox.h"
 
+struct size_t3
+{
+	size_t x;
+	size_t y;
+	size_t z;
+};
+
 class FluctuationHeightfield : public HeightfieldGenerator
 {
 	// 
@@ -16,15 +23,28 @@ public:
 	) override;
 
 
-	void traceFluctuationfield();
+
+	void traceFluctuationfield3D();
 	void gradientFluctuationfield();
-	void rendering() override;
+	virtual void rendering() override;
+	virtual bool InitializeHeightTexture3D() override;
 	__host__ bool initializeBoundingBox() override;
+
 
 	FluctuationheightfieldOptions* fluctuationOptions;
 private:
+	size_t3 m_gridSize3D = { 0,0,0 };
+	int2 m_gridSize2D = { 0,0 };
+	CudaArray_2D<float> heightArray2D;
+	cudaTextureObject_t heightFieldTexture2D;
 
-	bool LoadVelocityfieldPlane(const unsigned int& idx, const int & plane);
-	int3 m_gridSize = { 0,0,0 };
+	virtual bool InitializeHeightSurface3D() override;
+	virtual bool InitializeHeightArray3D(int3 gridSize) override;
+
 
 };
+
+
+
+
+

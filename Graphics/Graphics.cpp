@@ -184,11 +184,11 @@ void Graphics::RenderFrame()
 	// Fluctuation Heightfield Rendering
 	if (this->renderImGuiOptions.showFluctuationHeightfield)
 	{
-		if (this->dispersionOptions.retrace)
-		{
-			this->fluctuationHeightfield.retrace();
-			this->fluctuationheightfieldOptions .retrace = false;
-		}
+		//if (this->dispersionOptions.retrace)
+		//{
+		//	this->fluctuationHeightfield.retrace();
+		//	this->fluctuationheightfieldOptions .retrace = false;
+		//}
 		if (!this->fluctuationheightfieldOptions.initialized)
 		{
 			fluctuationHeightfield.setResources
@@ -204,7 +204,7 @@ void Graphics::RenderFrame()
 				&this->dispersionOptions
 			);
 			fluctuationHeightfield.fluctuationOptions = &this->fluctuationheightfieldOptions;
-			fluctuationHeightfield.initialize(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
+			fluctuationHeightfield.initialize(cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
 			this->fluctuationheightfieldOptions.initialized = true;
 		}
 		// Overrided draw
@@ -318,7 +318,7 @@ bool Graphics::InitializeDirectXResources()
 	depthStencilDesc.MipLevels = 1;
 	depthStencilDesc.ArraySize = 1;
 	depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	depthStencilDesc.SampleDesc.Count = 4;
+	depthStencilDesc.SampleDesc.Count = 1;
 	depthStencilDesc.SampleDesc.Quality = 0;
 	depthStencilDesc.Usage = D3D11_USAGE_DEFAULT;
 	depthStencilDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
@@ -481,7 +481,7 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 	scd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	scd.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
 	scd.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
-	scd.SampleDesc.Count = 4;
+	scd.SampleDesc.Count = 1;
 	scd.SampleDesc.Quality = 0;
 	scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	scd.BufferCount = 1;

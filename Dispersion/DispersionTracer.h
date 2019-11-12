@@ -37,7 +37,7 @@ public:
 
 	bool release() override;
 	void rendering() override;
-	bool updateScene() override;
+	virtual bool updateScene() override;
 	void trace3D();
 	void trace3D_path();
 	bool retrace();
@@ -60,9 +60,9 @@ protected:
 
 
 	bool InitializeHeightArray3D(int x, int y ,int z);
-	bool InitializeHeightArray3D(int3 gridSize);
-	bool InitializeHeightSurface3D();
-	bool InitializeHeightTexture3D();
+	virtual bool InitializeHeightArray3D(int3 gridSize);
+	virtual bool InitializeHeightSurface3D();
+	virtual bool InitializeHeightTexture3D();
 	bool LoadVelocityfield(const unsigned int & idx);
 
 	DispersionOptions* dispersionOptions;
@@ -72,6 +72,7 @@ protected:
 	CudaSurface heightSurface3D_extra;
 
 	cudaTextureObject_t heightFieldTexture3D;
+
 	cudaTextureObject_t heightFieldTexture3D_extra;
 
 	CudaArray_3D<float4> heightArray3D;

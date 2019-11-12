@@ -60,15 +60,15 @@ __global__ void traceDispersion3D_path
 	int timestep
 );
 
-__global__ void trace_fluctuation3D
-(
-	cudaSurfaceObject_t heightFieldSurface3D,
-	cudaSurfaceObject_t heightFieldSurface3D_extra,
-	cudaTextureObject_t velocityField_0,
-	SolverOptions solverOptions,
-	FluctuationheightfieldOptions fluctuationOptions,
-	int timestep
-);
+//__global__ void trace_fluctuation3D
+//(
+//	cudaSurfaceObject_t heightFieldSurface3D,
+//	cudaSurfaceObject_t heightFieldSurface3D_extra,
+//	cudaTextureObject_t velocityField_0,
+//	SolverOptions solverOptions,
+//	FluctuationheightfieldOptions fluctuationOptions,
+//	int timestep
+//);
 
 
 

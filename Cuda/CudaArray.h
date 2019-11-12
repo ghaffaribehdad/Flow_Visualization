@@ -49,7 +49,7 @@ class CudaArray_3D
 
 
 private:
-	cudaArray_t cuArray = nullptr;
+	cudaArray_t cuArray;
 	size_t width = 0;
 	size_t height = 0;
 	size_t depth = 0;
@@ -78,21 +78,21 @@ public:
 		return true;
 	}
 
-	bool memoeryCopy(void * h_field)
+	bool memoryCopy(float * h_field)
 	{
 		if (this->initialized == true)
 		{
 			// set copy parameters to copy from velocity field to array
 			cudaMemcpy3DParms cpyParams = { 0 };
 
-			cpyParams.srcPtr = make_cudaPitchedPtr((void*)h_field, extent.width * sizeof(float4), extent.width, extent.height);
+			cpyParams.srcPtr = make_cudaPitchedPtr((void*)h_field,  sizeof(T) * extent.width, extent.width, extent.height);
 			cpyParams.dstArray = this->cuArray;
 			cpyParams.kind = cudaMemcpyHostToDevice;
 			cpyParams.extent = extent;
 
 			// Copy velocities to 3D Array
 			gpuErrchk(cudaMemcpy3D(&cpyParams));
-
+			
 			return true;
 		}
 		else

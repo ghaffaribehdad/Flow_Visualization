@@ -13,13 +13,13 @@ bool FluctuationHeightfield::initialize
 	cudaTextureAddressMode addressMode_Z
 )
 {
-	this->m_gridSize = 
+	this->m_gridSize3D =
 	{
-		solverOptions->gridSize[2],								//=> spanwise(z)
-		fluctuationOptions->wallNormalgridSize, 				//=> # time snaps
-		1 + solverOptions->lastIdx - solverOptions->firstIdx	//=> wall-normal grid size (+1 for inclusive indexes)
-	};
+		(size_t)solverOptions->gridSize[2],
+		(size_t)fluctuationOptions->wallNormalgridSize,
+		(size_t)1 + (size_t)fluctuationOptions->lastIdx - (size_t)fluctuationOptions->firstIdx
 
+	};
 
 
 	if (!this->initializeRaycastingTexture())					// initialize texture (the texture we need to write to)
@@ -33,22 +33,22 @@ bool FluctuationHeightfield::initialize
 	this->rays = (*this->width) * (*this->height);				// Set number of rays based on the number of pixels
 
 	// initialize volume Input Output
-	volume_IO.Initialize(this->solverOptions);
+	volume_IO.Initialize(this->fluctuationOptions);
 
 
 	// Initialize Height Field as an empty CUDA array 3D
-	if (!this->InitializeHeightArray3D(m_gridSize))
+	if (!this->InitializeHeightArray3D(make_int3((int)m_gridSize3D.x, (int)m_gridSize3D.y, (int)m_gridSize3D.z)))
 		return false;
 
 
 	// Trace the fluctuation field
-	this->traceFluctuationfield();
+	this->traceFluctuationfield3D();
 
 	// Bind the array of heights to the CUDA surface
 	if (!this->InitializeHeightSurface3D())
 		return false;
 
-	//this->gradientFluctuationfield();
+	this->gradientFluctuationfield();
 
 	this->heightSurface3D.destroySurface();
 
@@ -59,58 +59,52 @@ bool FluctuationHeightfield::initialize
 	return true;
 }
 
-void  FluctuationHeightfield::traceFluctuationfield()
+void  FluctuationHeightfield::traceFluctuationfield3D()
 {
+	float* h_velocityField = new float[m_gridSize3D.x * m_gridSize3D.y * m_gridSize3D.z * (size_t)4];
+
+	size_t offset = solverOptions->gridSize[2] * solverOptions->gridSize[1] * sizeof(float4);
+	size_t buffer_size = solverOptions->gridSize[2] * (size_t)fluctuationOptions->wallNormalgridSize * sizeof(float4);
+	
 
 
-	// Set properties of velocity field texture
+	size_t counter = 0;
 
-	size_t timeDimension = 1+ solverOptions->lastIdx - solverOptions->firstIdx;
-	size_t field_2D_Size = solverOptions->gridSize[2] * fluctuationOptions->wallNormalgridSize * sizeof(float4);
-	size_t field_3D_Size = field_2D_Size * timeDimension;
-	size_t offset = 0;
-
-
-
-	// Allocate memory in Device
-	float* d_velocityField = nullptr;
-	cudaMalloc(&d_velocityField, field_3D_Size);
-
-
-	// Populate the Device memory
-	for (int timestep = solverOptions->firstIdx; timestep < solverOptions->lastIdx; timestep++)
+	for (int t = 0; t < m_gridSize3D.z; t++)
 	{
-		// loads the velocity field into the host memory (accessible by this->field pointer) plane by plane
-		this->volume_IO.readVolumePlane(timestep, volumeIO::readPlaneMode::YZ,0, field_2D_Size);
-		this->field = volume_IO.flushBuffer_float();
+		this->volume_IO.readVolumePlane(t + fluctuationOptions->firstIdx, volumeIO::readPlaneMode::YZ, fluctuationOptions->spanwisePos, offset, buffer_size);
+		float* p_temp = volume_IO.flushBuffer_float();
+
+		size_t counter_t = 0;
 
 
-		cudaMemcpy(d_velocityField + offset, field, field_2D_Size,cudaMemcpyHostToDevice);
+		for (int wall = 0; wall < m_gridSize3D.y; wall++)
+		{
 
+			for (int span = 0; span < m_gridSize3D.x; span++)
+			{
+				for (int d = 0; d < 4; d++)
+				{
 
-		// Release the volume in the host memory
-		this->volume_IO.release();
+					h_velocityField[counter] = p_temp[counter_t];
+					counter++;
+					counter_t++;
 
-		offset += solverOptions->gridSize[2] * fluctuationOptions->wallNormalgridSize * 4;
+				}
 
+			}
+		}
+
+		volume_IO.release();
 	}
 
-	// Copy linear memory to 3D array, so we can then bind it to CUDA texture
-	cudaMemcpyToArray(this->heightArray3D.getArray(), 0, 0, d_velocityField, field_3D_Size, cudaMemcpyDeviceToDevice);
 
+	
+	this->heightArray3D.memoryCopy(h_velocityField);
+
+	delete[] h_velocityField;
+	
 }
-
-
-bool FluctuationHeightfield::LoadVelocityfieldPlane(const unsigned int& idx, const int& plane)
-{
-	if (!volume_IO.readVolumePlane(idx,volumeIO::readPlaneMode::YZ,plane))
-		return false;
-
-	this->field = volume_IO.flushBuffer_float();
-
-	return true;
-}
-
 
 
 
@@ -119,10 +113,10 @@ void FluctuationHeightfield::gradientFluctuationfield()
 	// Calculates the block and grid sizes
 	unsigned int blocks;
 	dim3 thread = { maxBlockDim,maxBlockDim,1 };
-	int nMesh_z = solverOptions->gridSize[2]; // mesh size in spanwise direction
+	int nMesh_x = (int)m_gridSize3D.x; // mesh size in spanwise direction
 
-	blocks = static_cast<unsigned int>((nMesh_z % (thread.x * thread.y) == 0 ?
-		nMesh_z / (thread.x * thread.y) : nMesh_z / (thread.x * thread.y) + 1));
+	blocks = static_cast<unsigned int>((nMesh_x % (thread.x * thread.y) == 0 ?
+		nMesh_x / (thread.x * thread.y) : nMesh_x / (thread.x * thread.y) + 1));
 
 	// After this step the heightSurface is populated with the height of each particle
 
@@ -140,7 +134,7 @@ __host__ void FluctuationHeightfield::rendering()
 {
 	this->deviceContext->PSSetSamplers(0, 1, this->samplerState.GetAddressOf());
 
-	// Create a 2D texture tu read hight array
+	// Create a 2D texture to read hight array
 
 	float bgcolor[] = { 0.0f,0.0f, 0.0f, 1.0f };
 
@@ -158,7 +152,7 @@ __host__ void FluctuationHeightfield::rendering()
 			this->heightFieldTexture3D,
 			this->heightFieldTexture3D_extra,
 			int(this->rays),
-			this->raycastingOptions->samplingRate_0,
+			this->fluctuationOptions->samplingRate_0,
 			this->raycastingOptions->tolerance_0,
 			*fluctuationOptions
 			);
@@ -170,8 +164,8 @@ __host__ bool FluctuationHeightfield::initializeBoundingBox()
 {
 	BoundingBox* h_boundingBox = new BoundingBox;
 
-	h_boundingBox->gridSize = this->m_gridSize; // Use the heightfield dimension instead of velocity volume
-	h_boundingBox->updateBoxFaces(ArrayFloat3ToFloat3(solverOptions->gridDiameter)); // what if we use this??
+	h_boundingBox->gridSize = make_int3((int)this->m_gridSize3D.x, (int)this->m_gridSize3D.y, (int)this->m_gridSize3D.z); // Use the heightfield dimension instead of velocity volume
+	h_boundingBox->updateBoxFaces(ArrayFloat3ToFloat3(solverOptions->gridDiameter)); 
 	h_boundingBox->updateAspectRatio(*width, *height);						
 	h_boundingBox->constructEyeCoordinates
 	(
@@ -192,3 +186,65 @@ __host__ bool FluctuationHeightfield::initializeBoundingBox()
 	return true;
 }
 
+__host__ bool FluctuationHeightfield::InitializeHeightTexture3D()
+{
+
+	// Set Texture Description
+	cudaTextureDesc texDesc;
+	cudaResourceDesc resDesc;
+
+	memset(&resDesc, 0, sizeof(resDesc));
+	memset(&texDesc, 0, sizeof(texDesc));
+
+
+	resDesc.resType = cudaResourceTypeArray;
+	resDesc.res.array.array = this->heightArray3D.getArray();
+	
+
+	// Texture Description
+	texDesc.normalizedCoords = true;
+	texDesc.filterMode = cudaFilterModeLinear;
+	texDesc.addressMode[0] = cudaTextureAddressMode::cudaAddressModeBorder;
+	texDesc.addressMode[1] = cudaTextureAddressMode::cudaAddressModeBorder;
+	texDesc.addressMode[2] = cudaTextureAddressMode::cudaAddressModeBorder;
+	texDesc.readMode = cudaReadModeElementType;
+
+	// Create the texture and bind it to the array
+	gpuErrchk(cudaCreateTextureObject(&this->heightFieldTexture3D, &resDesc, &texDesc, NULL));
+
+
+
+	return true;
+
+}
+
+
+
+__host__ bool FluctuationHeightfield::InitializeHeightArray3D(int3 gridSize)
+{
+	// Set dimensions and initialize height field as a 3D CUDA Array
+	this->heightArray3D.setDimension(gridSize.x, gridSize.y, gridSize.z);
+
+	// initialize the 3D array
+	if (!heightArray3D.initialize())
+		return false;
+
+
+	return true;
+}
+
+
+__host__ bool FluctuationHeightfield::InitializeHeightSurface3D()
+{
+	// Assign the hightArray to the hightSurface and initialize the surface
+	cudaArray_t pCudaArray = NULL;
+
+	pCudaArray = heightArray3D.getArray();
+
+	this->heightSurface3D.setInputArray(pCudaArray);
+	if (!this->heightSurface3D.initializeSurface())
+		return false;
+
+
+	return true;
+}

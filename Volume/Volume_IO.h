@@ -5,6 +5,7 @@
 #include <fstream>
 
 #include "../Options/SolverOptions.h"
+#include "..//Options/fluctuationheightfieldOptions.h"
 
 namespace volumeIO
 {
@@ -30,12 +31,13 @@ namespace volumeIO
 	public:
 	
 		void Initialize(SolverOptions * _solverOption);
+		void Initialize(FluctuationheightfieldOptions * _fluctuationOptions);
 		void setFileName(std::string _fileName);
 		void setFilePath(std::string _filePath);
 
 		bool isEmpty();
 		bool readVolume(unsigned int idx);
-		bool readVolumePlane(unsigned int idx, readPlaneMode planeMode, int plane, size_t buffer_size = 0);
+		bool readVolumePlane(unsigned int idx, readPlaneMode planeMode, size_t plane, size_t offset ,size_t buffer_size);
 
 		std::vector<char>* flushBuffer();
 		float* flushBuffer_float();

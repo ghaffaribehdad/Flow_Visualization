@@ -12,7 +12,7 @@ bool volumeIO::Volume_IO::readVolume(unsigned int idx)
 }
 
 
-bool volumeIO::Volume_IO::readVolumePlane(unsigned int idx, readPlaneMode planeMode, int plane, size_t bufferSize)
+bool volumeIO::Volume_IO::readVolumePlane(unsigned int idx, readPlaneMode planeMode, size_t plane, size_t offset,size_t bufferSize)
 {
 	// Generate absolute path of the file
 
@@ -21,44 +21,23 @@ bool volumeIO::Volume_IO::readVolumePlane(unsigned int idx, readPlaneMode planeM
 	std::streampos begin = 0;
 	size_t size = 0;
 
-	if (bufferSize == 0)
+
+	switch (static_cast<int>(planeMode))
 	{
-		switch (static_cast<int>(planeMode))
-		{
-		case 0: // => YZ
-			size = (size_t)m_solverOptions->gridSize[1] * (size_t)m_solverOptions->gridSize[2] * sizeof(float4);
-			begin = plane * size;
-			return this->Read(begin, size);
+	case 0: // => YZ
+		begin = plane * offset;
+		return this->Read(begin, bufferSize);
 
 
-		case 1: // => ZX
-			ErrorLogger::Log("Not implemented yet");
-			break;
+	case 1: // => ZX
+		ErrorLogger::Log("Not implemented yet");
+		break;
 
-		case 2: // => XY
-			ErrorLogger::Log("Not implemented yet");
-			break;
-		}
+	case 2: // => XY
+		ErrorLogger::Log("Not implemented yet");
+		break;
 	}
-	else
-	{
-		switch (static_cast<int>(planeMode))
-		{
-		case 0: // => YZ
-			size = (size_t)m_solverOptions->gridSize[1] * (size_t)m_solverOptions->gridSize[2] * sizeof(float4);
-			begin = plane * size;
-			return this->Read(begin, bufferSize);
-
-		case 1: // => ZX
-			ErrorLogger::Log("Not implemented yet");
-			break;
-
-		case 2: // => XY
-			ErrorLogger::Log("Not implemented yet");
-			break;
-		}
-	}
-
+	
 	return false;
 	
 }
@@ -82,7 +61,7 @@ void volumeIO::Volume_IO::release()
 
 }
 
-bool volumeIO::Volume_IO::Read(std::streampos begin, size_t size)
+bool volumeIO::Volume_IO::Read(std::streampos _begin, size_t size)
 {
 
 
@@ -104,11 +83,12 @@ bool volumeIO::Volume_IO::Read(std::streampos begin, size_t size)
 		std::printf(std::string("Successfully Open File: " + m_fileName).c_str());
 	}
 
-	// return to starting position
-	myFile.seekg(0, myFile.beg);
+	//
+	myFile.seekg(0, std::ios::beg);
+
 
 	// return to starting position
-	myFile.seekg(begin);
+	myFile.seekg(_begin, std::ios::beg);
 
 
 	// resize it to fit the dataset
@@ -192,6 +172,12 @@ void volumeIO::Volume_IO::Initialize(SolverOptions* _solverOptions)
 	m_fileName = _solverOptions->fileName;
 	m_filePath = _solverOptions->filePath;
 	m_solverOptions = _solverOptions;
+}
+
+void volumeIO::Volume_IO::Initialize(FluctuationheightfieldOptions* _fluctuationOptions)
+{
+	m_fileName = _fluctuationOptions->fileName;
+	m_filePath = _fluctuationOptions->filePath;
 }
 
 bool volumeIO::Volume_IO::isEmpty()

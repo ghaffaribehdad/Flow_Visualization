@@ -374,9 +374,11 @@ bool HeightfieldGenerator::InitializeHeightTexture3D()
 	// Set Texture Description
 	cudaTextureDesc texDesc;
 	cudaResourceDesc resDesc;
+	cudaResourceViewDesc viewDes;
 
 	memset(&resDesc, 0, sizeof(resDesc));
 	memset(&texDesc, 0, sizeof(texDesc));
+	memset(&viewDes, 0, sizeof(viewDes));
 
 
 
@@ -386,10 +388,9 @@ bool HeightfieldGenerator::InitializeHeightTexture3D()
 	// Texture Description
 	texDesc.normalizedCoords = true;
 	texDesc.filterMode = cudaFilterModeLinear;
-	texDesc.addressMode[0] = cudaTextureAddressMode::cudaAddressModeBorder;
-	texDesc.addressMode[1] = cudaTextureAddressMode::cudaAddressModeBorder;
-	texDesc.addressMode[2] = cudaTextureAddressMode::cudaAddressModeBorder;
-
+	texDesc.addressMode[0] = cudaTextureAddressMode::cudaAddressModeClamp;
+	texDesc.addressMode[1] = cudaTextureAddressMode::cudaAddressModeClamp;
+	texDesc.addressMode[2] = cudaTextureAddressMode::cudaAddressModeClamp;
 	texDesc.readMode = cudaReadModeElementType;
 
 	// Create the texture and bind it to the array
@@ -397,8 +398,8 @@ bool HeightfieldGenerator::InitializeHeightTexture3D()
 
 
 	// Use same properties with another array
-	resDesc.res.array.array = this->heightArray3D_extra.getArray();
-	gpuErrchk(cudaCreateTextureObject(&this->heightFieldTexture3D_extra, &resDesc, &texDesc, NULL));
+	//resDesc.res.array.array = this->heightArray3D_extra.getArray();
+	//gpuErrchk(cudaCreateTextureObject(&this->heightFieldTexture3D_extra, &resDesc, &texDesc, NULL));
 
 	return true;
 }

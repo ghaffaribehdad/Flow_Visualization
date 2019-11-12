@@ -5,15 +5,15 @@
 struct SolverOptions
 {
 public:
-	char fileName[100] = "FLUC_FIELD_PAD";
-	char  filePath[100] = "E:\\Datasets\\KIT3\\binary_fluctuation\\";
+	char fileName[100] ="FieldPadded";
+	char  filePath[100] ="E:\\Datasets\\KIT3\\Fields_fld\\binary_fluct_x_major\\";
 
 	int gridSize[3] = { 64,503,2048 };
-	int seedGrid[3] = { 1,5,10 };
-	float gridDiameter[3] = { 1,5,10 };
+	int seedGrid[3] = { 10,5,10 };
+	float gridDiameter[3] = { 10,5,10 };
 
 
-	float seedBox[3] = { 1,5,10 };
+	float seedBox[3] = { 10,5,10 };
 	float seedBoxPos[3] = { 0.0f, 0.0f, 0.0f };
 
 	int precision = 32;
@@ -26,8 +26,8 @@ public:
 	float line_thickness = 0.0f;
 
 
-	int firstIdx = 1;
-	int lastIdx = 500;
+	int firstIdx = 200;
+	int lastIdx = 800;
 	int currentIdx = 1;
 
 	

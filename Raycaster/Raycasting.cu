@@ -953,7 +953,7 @@ __host__ bool Raycasting::initializeCudaSurface()
 	if (!this->raycastingSurface.initializeSurface())
 		return false;
 
-	// To release we need to destory surface and free the cuda array kept in the interpoly
+	// To release we need to destroy surface and free the CUDA array kept in the interpoly
 
 	return true;
 }
@@ -1208,7 +1208,6 @@ __global__ void CudaTerrainRenderer_extra_fluctuation
 	FluctuationheightfieldOptions fluctuationOptions
 )
 {
-	Observable observable;
 
 	int index = blockIdx.x * blockDim.y * blockDim.x;
 	index += threadIdx.y * blockDim.x;
@@ -1228,7 +1227,8 @@ __global__ void CudaTerrainRenderer_extra_fluctuation
 		float2 NearFar = findIntersections(pixelPos, d_boundingBox);
 
 
-		// if inside the bounding box
+
+		//  if inside the bounding box
 		if (NearFar.y != -1)
 		{
 
@@ -1249,26 +1249,38 @@ __global__ void CudaTerrainRenderer_extra_fluctuation
 				// Adds an offset to position while the center of the grid is at gridDiamter/2
 				position += d_boundingBox.m_dimensions / 2.0;
 
-
+		
 
 				//Relative position calculates the position of the point on the cuda texture
 
 				float3 relativePos =
 				{
 					position.z / d_boundingBox.m_dimensions.z,
-					0,
-					position.x / d_boundingBox.m_dimensions.x,
+					static_cast<float>(fluctuationOptions.wallNoramlPos)/ static_cast<float>(fluctuationOptions.wallNormalgridSize),
+					position.x / d_boundingBox.m_dimensions.x
 				};
 
 
 				// fetch texels from the GPU memory
-				float4 hightFieldVal = observable.ValueAtXYZ_float4(heightField, relativePos);
-				hightFieldVal.y = hightFieldVal.y * 0.2f;
 
-				// check if we have a hit 
-				// heightfield texel => (v_x, v_y, v_z)
-				if (position.y - hightFieldVal.y > 0 && position.y - hightFieldVal.y < fluctuationOptions.hegiht_tolerance)
+				float4 hightFieldVal = tex3D<float4>(heightField, relativePos.x, relativePos.y, relativePos.z);
+				float height = 0;
+
+				if (fluctuationOptions.usingAbsolute)
 				{
+					height = abs(hightFieldVal.y * fluctuationOptions.height_scale + fluctuationOptions.offset);
+
+				}
+				else
+				{
+					height = (hightFieldVal.y * fluctuationOptions.height_scale) + fluctuationOptions.offset;
+				}
+
+
+				if (position.y - height > 0 && position.y - height < fluctuationOptions.hegiht_tolerance)
+				{
+					float value = hightFieldVal.x;
+				
 
 					float3 samplingStep = rayDir * samplingRate;
 
@@ -1297,21 +1309,22 @@ __global__ void CudaTerrainRenderer_extra_fluctuation
 					float3 rgb = rgb_min;
 					float y_saturated = 0.0f;
 
-					//if (hightFieldVal.y < 0)
-					//{
-					//	float3 rgb_min_complement = make_float3(1, 1, 1) - rgb_min;
-					//	y_saturated = saturate((hightFieldVal.y - fluctuationOptions.min_val) / fluctuationOptions.min_val);
-					//	rgb = rgb_min_complement * (1.0f - y_saturated) + rgb_min;
-					//}
-					//else
-					//{
-					//	float3 rgb_max_complement = make_float3(1, 1, 1) - rgb_max;
-					//	y_saturated = saturate((hightFieldVal.y - fluctuationOptions.max_val) / (fluctuationOptions.max_val - fluctuationOptions.min_val));
-					//	rgb = rgb_max_complement * (1.0f - y_saturated) + rgb_max;
 
-					//}
+					if (value < 0)
+					{
+						float3 rgb_min_complement = make_float3(1, 1, 1) - rgb_min;
+						y_saturated = saturate(abs(value / fluctuationOptions.min_val));
+						rgb = rgb_min_complement * (1 - y_saturated) + rgb_min;
+					}
+					else
+					{
+						float3 rgb_max_complement = make_float3(1, 1, 1) - rgb_max;
+						y_saturated = saturate(value / fluctuationOptions.max_val);
+						rgb = rgb_max_complement * (1 - y_saturated) + rgb_max;
+					}
 
-					//rgb = rgb * diffuse;
+
+					rgb = rgb * diffuse;
 
 					// vector from eye to isosurface
 					float3 position_viewCoordinate = position - eyePos;

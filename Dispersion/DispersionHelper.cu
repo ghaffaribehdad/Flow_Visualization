@@ -116,44 +116,44 @@ __global__ void traceDispersion
 
 
 
-__global__ void trace_fluctuation3D
-(
-	cudaSurfaceObject_t heightFieldSurface3D,
-	cudaSurfaceObject_t heightFieldSurface3D_extra,
-	cudaTextureObject_t velocityField_0,
-	SolverOptions solverOptions,
-	FluctuationheightfieldOptions fluctuationOptions,
-	int timestep
-)
-{
-	// Extract dispersion options
-	int nMesh = solverOptions.gridSize[2];
-
-	int index = blockIdx.x * blockDim.y * blockDim.x;
-	index += threadIdx.y * blockDim.x;
-	index += threadIdx.x;
-
-	if (index < nMesh)
-	{
-		//TODO: Try linear memory instead of texture
-
-		//Read fluctuation value
-		for (float y = 0; y < fluctuationOptions.wallNormalgridSize; y++)
-		{
-			float2 relativePos = {
-				y / static_cast<float>(solverOptions.gridSize[1]-1),							//=>span over y
-				static_cast<float>(index) / static_cast<float>(solverOptions.gridSize[2]-1)		//=> span over Z
-			};
-
-
-			//float4 velocity_fluc = tex2D<float4>(velocityField_0, relativePos.x, relativePos.y);
-			float4 velocity_fluc;
-			////velocity_fluc.x = velocity_fluc.x*0.10f + 5.0f;
-			velocity_fluc = { 1,0,0,0 };
-			surf3Dwrite(velocity_fluc, heightFieldSurface3D, sizeof(float4) * index, 0, timestep);
-		}
-	}
-}
+//__global__ void trace_fluctuation3D
+//(
+//	cudaSurfaceObject_t heightFieldSurface3D,
+//	cudaSurfaceObject_t heightFieldSurface3D_extra,
+//	cudaTextureObject_t velocityField_0,
+//	SolverOptions solverOptions,
+//	FluctuationheightfieldOptions fluctuationOptions,
+//	int timestep
+//)
+//{
+//	// Extract dispersion options
+//	int nMesh = solverOptions.gridSize[2];
+//
+//	int index = blockIdx.x * blockDim.y * blockDim.x;
+//	index += threadIdx.y * blockDim.x;
+//	index += threadIdx.x;
+//
+//	if (index < nMesh)
+//	{
+//		//TODO: Try linear memory instead of texture
+//
+//		//Read fluctuation value
+//		for (float y = 0; y < fluctuationOptions.wallNormalgridSize; y++)
+//		{
+//			float2 relativePos = {
+//				y / static_cast<float>(solverOptions.gridSize[1]-1),							//=>span over y
+//				static_cast<float>(index) / static_cast<float>(solverOptions.gridSize[2]-1)		//=> span over Z
+//			};
+//
+//
+//			//float4 velocity_fluc = tex2D<float4>(velocityField_0, relativePos.x, relativePos.y);
+//			float4 velocity_fluc;
+//			////velocity_fluc.x = velocity_fluc.x*0.10f + 5.0f;
+//			velocity_fluc = { 1,0,0,0 };
+//			surf3Dwrite(velocity_fluc, heightFieldSurface3D, sizeof(float4) * index, 0, timestep);
+//		}
+//	}
+//}
 
 __global__ void  traceDispersion3D_path
 (
@@ -472,7 +472,7 @@ __global__ void fluctuationfieldGradient3D
 	
 	int timeDim = 1 + solverOptions.lastIdx - solverOptions.firstIdx;
 
-	int3 gridSize = { solverOptions.gridSize[2],solverOptions.gridSize[1], timeDim };
+	int3 gridSize = { solverOptions.gridSize[2],static_cast<int>(fluctuationOptions.wallNormalgridSize), timeDim };
 
 	if (index < gridSize.x)
 	{
