@@ -76,10 +76,10 @@ static const char* const FieldMode[] =
 
 
 
-//enum Projection
-//{
-//	NO_PROJECTION =0,
-//	ZY_PROJECTION,
-//	XZ_PROJECTION,
-//	XY_PROJECTION
-//};
+enum Projection
+{
+	NO_PROJECTION =0,
+	ZY_PROJECTION,
+	XZ_PROJECTION,
+	XY_PROJECTION
+};

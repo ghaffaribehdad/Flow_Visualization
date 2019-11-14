@@ -526,10 +526,8 @@ void RenderImGuiOptions::drawFluctuationHeightfieldOptions()
 		}
 	}
 
-	if (ImGui::Combo("Field Mode", &fluctuationOptions->fieldMode, ColorModeList, 4))
+	if (ImGui::Combo("Field Mode", &fluctuationOptions->fieldMode, FieldMode, 3))
 	{
-		this->updateStreamlines = true;
-		this->updatePathlines = true;
 
 	}
 

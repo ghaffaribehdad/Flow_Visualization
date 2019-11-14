@@ -355,10 +355,10 @@ __global__ void TracingStream
 
 		float3 upDir = make_float3(0.0f, 1.0f, 0.0f);
 
-		if (abs(dot(upDir, normalize(d_particles[index].m_velocity))) > 0.1f)
+		if (abs(dot(upDir, normalize(d_particles[index].m_velocity))) > 0.01f)
 			upDir = make_float3(1.0f, 0.0f, 0.0f);
 
-		if (abs(dot(upDir, normalize(d_particles[index].m_velocity))) > 0.1f)
+		else if (abs(dot(upDir, normalize(d_particles[index].m_velocity)))> 0.01f)
 			upDir = make_float3(0.0f, 0.0f, 1.0f);
 
 

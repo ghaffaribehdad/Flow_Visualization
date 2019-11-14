@@ -47,7 +47,8 @@ void main(lineadj GS_INPUT input[4], inout TriangleStream<GS_OUTPUT> output)
 
 
 
-		float3 vecNormal = input[1].inNormal;
+		float3 vecNormal1 = input[1].inNormal;
+		float3 vecNormal2 = input[2].inNormal;
 
 		// Radius of the tubes
 		float tubeRad = tubeRadius;
@@ -85,8 +86,8 @@ void main(lineadj GS_INPUT input[4], inout TriangleStream<GS_OUTPUT> output)
 		float3 tangent = normalize(tangent0 + tangent1);
 
 
-		float3 orient0_rotated = normalize(cross(vecNormal, tangent));
-		float3 orient1_rotated = normalize(cross(vecNormal, tangent));
+		float3 orient0_rotated = normalize(cross(vecNormal1, tangent0));
+		float3 orient1_rotated = normalize(cross(vecNormal2, tangent1));
 
 		for (int i = 0; i < 9; i++)
 		{
@@ -122,8 +123,8 @@ void main(lineadj GS_INPUT input[4], inout TriangleStream<GS_OUTPUT> output)
 			// Tangent
 
 
-			vertex0.outTangent = tangent0;
-			vertex1.outTangent = tangent1;
+			vertex0.outTangent = tangent;
+			vertex1.outTangent = tangent;
 
 			// World Position
 			vertex0.outLightDir = viewDir;
