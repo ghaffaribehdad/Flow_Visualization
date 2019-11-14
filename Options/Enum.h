@@ -67,10 +67,19 @@ static const char* const ProjectionList[] =
 
 
 
-enum Projection
+static const char* const FieldMode[] =
 {
-	NO_PROJECTION =0,
-	ZY_PROJECTION,
-	XZ_PROJECTION,
-	XY_PROJECTION
+	"ff (Vx,Vy)",
+	"ff (Vz,Vy)",
+	"fi (Vx,Vy)"
 };
+
+
+
+//enum Projection
+//{
+//	NO_PROJECTION =0,
+//	ZY_PROJECTION,
+//	XZ_PROJECTION,
+//	XY_PROJECTION
+//};

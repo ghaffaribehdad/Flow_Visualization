@@ -526,58 +526,55 @@ void RenderImGuiOptions::drawFluctuationHeightfieldOptions()
 		}
 	}
 
-
-
-
-
-	if (ImGui::DragFloat("Height Tolerance", &fluctuationheightfieldOptions->hegiht_tolerance, 0.0001f, 0.0001f, 1, "%8f"))
+	if (ImGui::Combo("Field Mode", &fluctuationOptions->fieldMode, ColorModeList, 4))
 	{
-		this->updatefluctuation = true;
+		this->updateStreamlines = true;
+		this->updatePathlines = true;
+
 	}
 
 
 
+	if (ImGui::DragFloat("Height Tolerance", &fluctuationOptions->hegiht_tolerance, 0.0001f, 0.0001f, 1, "%8f"))
+	{
+		this->updatefluctuation = true;
+	}
 
-	//if (ImGui::Combo("Color Coding", &fluctuationheightfieldOptions->colorCode, ColorCode_fluctuationField, 4))
-	//{
-	//	this->updatefluctuation = true;
-
-	//}
 
 
 	ImGui::Text("Color Coding:");
 
-	if (ImGui::ColorEdit4("Minimum", (float*)& fluctuationheightfieldOptions->minColor))
+	if (ImGui::ColorEdit4("Minimum", (float*)& fluctuationOptions->minColor))
 	{
 		updatefluctuation = true;
 	}
-	if (ImGui::InputFloat("Min Value", (float*)& fluctuationheightfieldOptions->min_val, 0.1f))
-	{
-		updatefluctuation = true;
-	}
-
-	if (ImGui::ColorEdit4("Maximum", (float*)& fluctuationheightfieldOptions->maxColor))
+	if (ImGui::InputFloat("Min Value", (float*)& fluctuationOptions->min_val, 0.1f))
 	{
 		updatefluctuation = true;
 	}
 
-	if (ImGui::InputFloat("Max Value", (float*)& fluctuationheightfieldOptions->max_val, 0.1f))
+	if (ImGui::ColorEdit4("Maximum", (float*)& fluctuationOptions->maxColor))
+	{
+		updatefluctuation = true;
+	}
+
+	if (ImGui::InputFloat("Max Value", (float*)& fluctuationOptions->max_val, 0.1f))
 	{
 		updatefluctuation = true;
 	}
 
 	ImGui::Separator();
 
-	if (ImGui::DragInt("wall-normal Size", &fluctuationheightfieldOptions->wallNormalgridSize,1,1,solverOptions->gridSize[1]))
+	if (ImGui::DragInt("wall-normal Size", &fluctuationOptions->wallNormalgridSize,1,1,solverOptions->gridSize[1]))
 	{
 
 	}
 
-	if (ImGui::InputInt("wall-normal", &fluctuationheightfieldOptions->wallNoramlPos,1,5))
+	if (ImGui::InputInt("wall-normal", &fluctuationOptions->wallNoramlPos,1,5))
 	{
-		if (fluctuationheightfieldOptions->wallNoramlPos > fluctuationheightfieldOptions->wallNormalgridSize)
+		if (fluctuationOptions->wallNoramlPos > fluctuationOptions->wallNormalgridSize)
 		{
-			fluctuationheightfieldOptions->wallNoramlPos = fluctuationheightfieldOptions->wallNormalgridSize;
+			fluctuationOptions->wallNoramlPos = fluctuationOptions->wallNormalgridSize;
 		}
 		this->updatefluctuation = true;
 
@@ -585,60 +582,67 @@ void RenderImGuiOptions::drawFluctuationHeightfieldOptions()
 	}
 
 
-	if (ImGui::Checkbox("Absolute Value", &fluctuationheightfieldOptions->usingAbsolute))
+	if (ImGui::Checkbox("Absolute Value", &fluctuationOptions->usingAbsolute))
 	{
 		this->updatefluctuation = true;
 	}
 
 
-	if (ImGui::DragFloat("height scale", &fluctuationheightfieldOptions->height_scale,0.01f,0,10.0f))
+	if (ImGui::DragFloat("height scale", &fluctuationOptions->height_scale,0.01f,0,10.0f))
 	{
 		this->updatefluctuation = true;
 
 	}
 
-	if (ImGui::DragFloat("height offset", &fluctuationheightfieldOptions->offset, 0.01f, 0, 10.0f))
+	if (ImGui::DragFloat("height offset", &fluctuationOptions->offset, 0.01f, 0, 10.0f))
 	{
 		this->updatefluctuation = true;
 
 	}
+	
+	if (ImGui::DragFloat("height clamp", &fluctuationOptions->heightLimit, 0.01f, 0, 5.0f))
+	{
+		this->updatefluctuation = true;
+
+	}
+
 
 	ImGui::Separator();
 
 	// Solver Options
-	if (ImGui::InputText("File Path", fluctuationheightfieldOptions->filePath, sizeof(fluctuationheightfieldOptions->filePath)))
+	if (ImGui::InputText("File Path", fluctuationOptions->filePath, sizeof(fluctuationOptions->filePath)))
 	{
 	}
 
-	if (ImGui::InputText("File Name", fluctuationheightfieldOptions->fileName, sizeof(fluctuationheightfieldOptions->fileName)))
+	if (ImGui::InputText("File Name", fluctuationOptions->fileName, sizeof(fluctuationOptions->fileName)))
 	{
 	}
 
 
 
-	if (ImGui::InputInt("First Index", &(fluctuationheightfieldOptions->firstIdx)))
+	if (ImGui::InputInt("First Index", &(fluctuationOptions->firstIdx)))
 	{
-		if (fluctuationheightfieldOptions->lastIdx < fluctuationheightfieldOptions->firstIdx)
+		if (fluctuationOptions->lastIdx < fluctuationOptions->firstIdx)
 		{
-			fluctuationheightfieldOptions->firstIdx = fluctuationheightfieldOptions->lastIdx;
+			fluctuationOptions->firstIdx = fluctuationOptions->lastIdx;
 		}
 	}
 
-	if (ImGui::InputInt("Last Index", &(fluctuationheightfieldOptions->lastIdx)))
+	if (ImGui::InputInt("Last Index", &(fluctuationOptions->lastIdx)))
 	{
-		if (fluctuationheightfieldOptions->lastIdx < fluctuationheightfieldOptions->firstIdx)
+		if (fluctuationOptions->lastIdx < fluctuationOptions->firstIdx)
 		{
-			fluctuationheightfieldOptions->firstIdx = fluctuationheightfieldOptions->lastIdx;
+			fluctuationOptions->firstIdx = fluctuationOptions->lastIdx;
 		}
 
 	}
 
 
-	if (ImGui::DragFloat("Sampling Rate 0", &fluctuationheightfieldOptions->samplingRate_0, 0.00001f, 0.0001f, 1.0f, "%.5f"))
+	if (ImGui::DragFloat("Sampling Rate 0", &fluctuationOptions->samplingRate_0, 0.00001f, 0.0001f, 1.0f, "%.5f"))
 	{
-		if (fluctuationheightfieldOptions->samplingRate_0 < 0.0001f)
+		if (fluctuationOptions->samplingRate_0 < 0.0001f)
 		{
-			fluctuationheightfieldOptions->samplingRate_0 = 0.0001f;
+			fluctuationOptions->samplingRate_0 = 0.0001f;
 		}
 
 		this->updatefluctuation = true;

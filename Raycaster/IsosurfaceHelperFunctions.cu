@@ -108,38 +108,38 @@ __device__ float2 IsosurfaceHelper::Position::GradientFluctuatuionAtXT(cudaSurfa
 
 	if(gridPosition.x != 0 && gridPosition.x != gridSize.x -1)
 	{ 
-		dH_dX = this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x + 1, gridPosition.y, gridPosition.z)).x;
-		dH_dX -= this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x - 1, gridPosition.y, gridPosition.z)).x;
+		dH_dX = this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x + 1, gridPosition.y, gridPosition.z)).y;
+		dH_dX -= this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x - 1, gridPosition.y, gridPosition.z)).y;
 	}
 	else if (gridPosition.x == 0)
 	{
-		dH_dX = this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x + 1, gridPosition.y, gridPosition.z)).x;
-		dH_dX -= this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y, gridPosition.z)).x;
+		dH_dX = this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x + 1, gridPosition.y, gridPosition.z)).y;
+		dH_dX -= this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y, gridPosition.z)).y;
 		dH_dX = 2 * dH_dX;
 	}
 	else if (gridPosition.x == gridSize.x - 1)
 	{
-		dH_dX = this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y, gridPosition.z)).x;
-		dH_dX -= this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x-1, gridPosition.y, gridPosition.z)).x;
+		dH_dX = this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y, gridPosition.z)).y;
+		dH_dX -= this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x-1, gridPosition.y, gridPosition.z)).y;
 		dH_dX = 2 * dH_dX;
 	}
 
 	// Y direction
 	if (gridPosition.z != 0 && gridPosition.z != gridSize.z - 1)
 	{
-		dH_dY = this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y, gridPosition.z + 1)).x;
-		dH_dY -= this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y, gridPosition.z - 1)).x;
+		dH_dY = this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y, gridPosition.z + 1)).y;
+		dH_dY -= this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y, gridPosition.z - 1)).y;
 	}
 	else if (gridPosition.z == 0)
 	{
-		dH_dY = this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x , gridPosition.y, gridPosition.z+1)).x;
-		dH_dY -= this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y, gridPosition.z)).x;
+		dH_dY = this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x , gridPosition.y, gridPosition.z+1)).y;
+		dH_dY -= this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y, gridPosition.z)).y;
 		dH_dY = 2 * dH_dY;
 	}
 	else if (gridPosition.z == gridSize.z - 1)
 	{
-		dH_dY = this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y, gridPosition.z)).x;
-		dH_dY -= this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x , gridPosition.y, gridPosition.z-1)).x;
+		dH_dY = this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y, gridPosition.z)).y;
+		dH_dY -= this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x , gridPosition.y, gridPosition.z-1)).y;
 		dH_dY = 2 * dH_dY;
 	}
 

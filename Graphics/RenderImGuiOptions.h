@@ -27,7 +27,7 @@ private:
 	RenderingOptions	*	renderingOptions;
 	RaycastingOptions	*	raycastingOptions;
 	DispersionOptions	*	dispersionOptions;
-	FluctuationheightfieldOptions* fluctuationheightfieldOptions;
+	FluctuationheightfieldOptions* fluctuationOptions;
 	
 
 
@@ -56,7 +56,7 @@ public:
 
 		this->dispersionOptions = _dispersionOptions;
 
-		this->fluctuationheightfieldOptions = _fluctuationheightfieldOptions;
+		this->fluctuationOptions = _fluctuationheightfieldOptions;
 	}
 
 	bool updateRaycasting		= false;

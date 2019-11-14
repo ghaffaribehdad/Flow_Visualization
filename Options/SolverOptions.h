@@ -5,8 +5,8 @@
 struct SolverOptions
 {
 public:
-	char fileName[100] ="FieldPadded";
-	char  filePath[100] ="E:\\Datasets\\KIT3\\Fields_fld\\binary_fluct_x_major\\";
+	char fileName[100] ="FLUC_FIELD_PAD";
+	char  filePath[100] ="E:\\Datasets\\KIT3\\binary_fluctuation\\";
 
 	int gridSize[3] = { 64,503,2048 };
 	int seedGrid[3] = { 10,5,10 };
@@ -26,9 +26,9 @@ public:
 	float line_thickness = 0.0f;
 
 
-	int firstIdx = 200;
-	int lastIdx = 800;
-	int currentIdx = 1;
+	int firstIdx = 1;
+	int lastIdx = 100;
+	int currentIdx =1;
 
 	
 	int colorMode = 0;

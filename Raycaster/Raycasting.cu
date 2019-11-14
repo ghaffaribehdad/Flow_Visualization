@@ -1276,15 +1276,18 @@ __global__ void CudaTerrainRenderer_extra_fluctuation
 					height = (hightFieldVal.y * fluctuationOptions.height_scale) + fluctuationOptions.offset;
 				}
 
+				height = fluctuationOptions.heightLimit * saturate(height / fluctuationOptions.heightLimit);
 
 				if (position.y - height > 0 && position.y - height < fluctuationOptions.hegiht_tolerance)
 				{
 					float value = hightFieldVal.x;
 				
 
+					
+
 					float3 samplingStep = rayDir * samplingRate;
 
-					float3 gradient = { hightFieldVal.z,-1,hightFieldVal.w };
+					float3 gradient = { hightFieldVal.w,-1, hightFieldVal.z };
 
 
 					// shading (no ambient)
@@ -1306,25 +1309,28 @@ __global__ void CudaTerrainRenderer_extra_fluctuation
 						fluctuationOptions.maxColor[2],
 					};
 
-					float3 rgb = rgb_min;
+					float3 rgb = { 0,0,0 };
 					float y_saturated = 0.0f;
 
-
-					if (value < 0)
+					if (height == fluctuationOptions.heightLimit)
 					{
-						float3 rgb_min_complement = make_float3(1, 1, 1) - rgb_min;
-						y_saturated = saturate(abs(value / fluctuationOptions.min_val));
-						rgb = rgb_min_complement * (1 - y_saturated) + rgb_min;
+						if (value < 0)
+						{
+							float3 rgb_min_complement = make_float3(1, 1, 1) - rgb_min;
+							y_saturated = saturate(abs(value / fluctuationOptions.min_val));
+							rgb = rgb_min_complement * (1 - y_saturated) + rgb_min;
+						}
+						else
+						{
+							float3 rgb_max_complement = make_float3(1, 1, 1) - rgb_max;
+							y_saturated = saturate(value / fluctuationOptions.max_val);
+							rgb = rgb_max_complement * (1 - y_saturated) + rgb_max;
+						}
 					}
-					else
-					{
-						float3 rgb_max_complement = make_float3(1, 1, 1) - rgb_max;
-						y_saturated = saturate(value / fluctuationOptions.max_val);
-						rgb = rgb_max_complement * (1 - y_saturated) + rgb_max;
-					}
+				
 
 
-					rgb = rgb * diffuse;
+					//rgb = rgb * diffuse;
 
 					// vector from eye to isosurface
 					float3 position_viewCoordinate = position - eyePos;
