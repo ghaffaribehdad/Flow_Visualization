@@ -48,7 +48,7 @@ void main(lineadj GS_INPUT input[4], inout TriangleStream<GS_OUTPUT> output)
 
 
 		float3 vecNormal1 = input[1].inNormal;
-		float3 vecNormal2 = input[2].inNormal;
+		float3 vecNormal2 = input[1].inNormal;
 
 		// Radius of the tubes
 		float tubeRad = tubeRadius;

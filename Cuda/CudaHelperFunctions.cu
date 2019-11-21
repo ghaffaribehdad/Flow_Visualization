@@ -1,5 +1,5 @@
 #include "CudaHelperFunctions.h"
-
+#include <random>
 
 __device__ void RK4Path
 (
@@ -208,26 +208,32 @@ __host__ void seedParticleGridPoints(Particle* particle, const SolverOptions* so
 
 __host__ void seedParticleRandom(Particle * particle, const SolverOptions * solverOptions)
 {
+
+	std::default_random_engine generator;
+	std::uniform_real_distribution<double> distribution(0.0, 1.0);
+	generator.seed(solverOptions->counter);
+
 	for (int i = 0; i < solverOptions->lines_count; i++)
 	{
 		particle[i].m_position.x = solverOptions->gridDiameter[0] / 2.0f -
 			solverOptions->seedBox[0] / 2.0f + solverOptions->seedBoxPos[0] +
-			static_cast <float> (rand()) /
-			static_cast <float> (RAND_MAX /
-				solverOptions->seedBox[0]);
+			distribution(generator) * solverOptions->seedBox[0];
 
+		distribution.reset();
 
 		particle[i].m_position.y = solverOptions->gridDiameter[1] / 2.0f -
 			solverOptions->seedBox[1] / 2.0f + solverOptions->seedBoxPos[1] +
-			static_cast <float> (rand()) /
-			static_cast <float> (RAND_MAX / solverOptions->seedBox[1]);
+			distribution(generator) * solverOptions->seedBox[1];
 
+		distribution.reset();
 
 		particle[i].m_position.z = solverOptions->gridDiameter[2] / 2.0f -
 			solverOptions->seedBox[2] / 2.0f + solverOptions->seedBoxPos[2] +
-			static_cast <float> (rand()) /
-			static_cast <float> (RAND_MAX / solverOptions->seedBox[2]);
+			distribution(generator) * solverOptions->seedBox[2];
+		distribution.reset();
+
 	}
+
 
 }
 
@@ -352,14 +358,15 @@ __global__ void TracingStream
 
 		d_particles[index].updateVelocity(gridDiameter, t_VelocityField);
 
+		
 
-		float3 upDir = make_float3(0.0f, 1.0f, 0.0f);
+		float3 upDir = make_float3(0.0f, 0.0f, 1.0f);
 
-		if (abs(dot(upDir, normalize(d_particles[index].m_velocity))) > 0.01f)
+		if (abs(dot(upDir, normalize(d_particles[index].m_velocity))) > 0.1f)
 			upDir = make_float3(1.0f, 0.0f, 0.0f);
 
-		else if (abs(dot(upDir, normalize(d_particles[index].m_velocity)))> 0.01f)
-			upDir = make_float3(0.0f, 0.0f, 1.0f);
+		else if (abs(dot(upDir, normalize(d_particles[index].m_velocity)))> 0.1f)
+			upDir = make_float3(0.0f, 1.0f, 0.0f);
 
 
 
@@ -475,6 +482,364 @@ __global__ void TracingStream
 }
 
 
+__global__ void TracingStream
+(
+	Particle* d_particles,
+	cudaTextureObject_t t_VelocityField,
+	SolverOptions solverOptions,
+	Vertex* p_VertexBuffer,
+	float4 * d_VertexBuffer
+)
+{
+	unsigned int index = blockDim.x * blockIdx.x + threadIdx.x;
+
+	if (index < solverOptions.lines_count)
+	{
+		int lineLength = solverOptions.lineLength;
+		int index_buffer = index * lineLength;
+		float dt = solverOptions.dt;
+		float3 gridDiameter =
+		{
+			solverOptions.gridDiameter[0],
+			solverOptions.gridDiameter[1],
+			solverOptions.gridDiameter[2]
+		};
+
+		float3 temp_position = *d_particles[index].getPosition();
+
+		d_particles[index].updateVelocity(gridDiameter, t_VelocityField);
+
+
+
+		float3 upDir = make_float3(0.0f, 0.0f, 1.0f);
+
+		if (abs(dot(upDir, normalize(d_particles[index].m_velocity))) > 0.1f)
+			upDir = make_float3(1.0f, 0.0f, 0.0f);
+
+		else if (abs(dot(upDir, normalize(d_particles[index].m_velocity))) > 0.1f)
+			upDir = make_float3(0.0f, 1.0f, 0.0f);
+
+
+
+		for (int i = 0; i < lineLength; i++)
+		{
+			if (solverOptions.periodic)
+			{
+				p_VertexBuffer[index_buffer + i].pos.x = d_particles[index].getPosition()->x - (gridDiameter.x / 2.0);
+				p_VertexBuffer[index_buffer + i].pos.y = d_particles[index].getPosition()->y - (gridDiameter.y / 2.0);
+				p_VertexBuffer[index_buffer + i].pos.z = d_particles[index].getPosition()->z - (gridDiameter.z / 2.0);
+
+
+				// Write into d_VertexBuffer
+				d_VertexBuffer[index_buffer + i].x = d_particles[index].getPosition()->x - (gridDiameter.x / 2.0);
+				d_VertexBuffer[index_buffer + i].y = d_particles[index].getPosition()->y - (gridDiameter.y / 2.0);
+				d_VertexBuffer[index_buffer + i].z = d_particles[index].getPosition()->z - (gridDiameter.z / 2.0);
+			}
+			else
+			{
+				if (!d_particles[index].isOut())
+				{
+					d_particles[index].checkPosition(gridDiameter);
+				}
+
+				if (d_particles[index].isOut() && i != 0)
+				{
+					p_VertexBuffer[index_buffer + i].pos.x = p_VertexBuffer[index_buffer + i - 1].pos.x;
+					p_VertexBuffer[index_buffer + i].pos.y = p_VertexBuffer[index_buffer + i - 1].pos.y;
+					p_VertexBuffer[index_buffer + i].pos.z = p_VertexBuffer[index_buffer + i - 1].pos.z;
+
+					d_VertexBuffer[index_buffer + i].x = p_VertexBuffer[index_buffer + i - 1].pos.x;
+					d_VertexBuffer[index_buffer + i].y = p_VertexBuffer[index_buffer + i - 1].pos.y;
+					d_VertexBuffer[index_buffer + i].z = p_VertexBuffer[index_buffer + i - 1].pos.z;
+				}
+				else
+				{
+					p_VertexBuffer[index_buffer + i].pos.x = d_particles[index].getPosition()->x - (gridDiameter.x / 2.0);
+					p_VertexBuffer[index_buffer + i].pos.y = d_particles[index].getPosition()->y - (gridDiameter.y / 2.0);
+					p_VertexBuffer[index_buffer + i].pos.z = d_particles[index].getPosition()->z - (gridDiameter.z / 2.0);
+
+
+					d_VertexBuffer[index_buffer + i].x = d_particles[index].getPosition()->x - (gridDiameter.x / 2.0);
+					d_VertexBuffer[index_buffer + i].y = d_particles[index].getPosition()->y - (gridDiameter.y / 2.0);
+					d_VertexBuffer[index_buffer + i].z = d_particles[index].getPosition()->z - (gridDiameter.z / 2.0);
+
+
+				}
+			}
+
+
+
+			float3* velocity = d_particles[index].getVelocity();
+			float3 tangent = normalize(*velocity);
+
+
+
+			p_VertexBuffer[index_buffer + i].normal.x = upDir.x;
+			p_VertexBuffer[index_buffer + i].normal.y = upDir.y;
+			p_VertexBuffer[index_buffer + i].normal.z = upDir.z;
+
+			p_VertexBuffer[index_buffer + i].tangent.x = tangent.x;
+			p_VertexBuffer[index_buffer + i].tangent.y = tangent.y;
+			p_VertexBuffer[index_buffer + i].tangent.z = tangent.z;
+
+
+
+			p_VertexBuffer[index_buffer + i].LineID = index;
+
+
+			switch (solverOptions.colorMode)
+			{
+			case 0: // Velocity
+			{
+
+				p_VertexBuffer[index_buffer + i].measure = VecMagnitude(*velocity);
+
+				d_VertexBuffer[index_buffer + i].w = VecMagnitude(*velocity);
+
+				break;
+
+			}
+			case 1: // Vx
+			{
+				p_VertexBuffer[index_buffer + i].measure = d_particles[index].getVelocity()->x;
+				
+				d_VertexBuffer[index_buffer + i].w = d_particles[index].getVelocity()->x;
+
+				break;
+			}
+			case 2: // Vy
+			{
+				p_VertexBuffer[index_buffer + i].measure = d_particles[index].getVelocity()->y;
+
+				d_VertexBuffer[index_buffer + i].w = d_particles[index].getVelocity()->y;
+				break;
+			}
+			case 3: // Vz
+			{
+				p_VertexBuffer[index_buffer + i].measure = d_particles[index].getVelocity()->z;
+
+				d_VertexBuffer[index_buffer + i].w = d_particles[index].getVelocity()->z;
+				break;
+			}
+			}
+
+			// Do not check if it is out
+			RK4Stream(t_VelocityField, &d_particles[index], gridDiameter, dt);
+
+			// Update position based on the projection
+			switch (solverOptions.projection)
+			{
+			case Projection::NO_PROJECTION:
+			{
+				break;
+			}
+			case Projection::ZY_PROJECTION:
+			{
+				p_VertexBuffer[index_buffer + i].pos.x = temp_position.x - (gridDiameter.x / 2.0);
+				break;
+			}
+			case Projection::XZ_PROJECTION:
+			{
+				p_VertexBuffer[index_buffer + i].pos.y = temp_position.y - (gridDiameter.y / 2.0);
+				break;
+			}
+			case Projection::XY_PROJECTION:
+			{
+
+				p_VertexBuffer[index_buffer + i].pos.z = temp_position.z - (gridDiameter.z / 2.0);
+				break;
+			}
+			}
+
+
+
+
+		}//end of for loop
+	}
+}
+
+
+
+__global__ void TracingStream
+(
+	Particle* d_particles,
+	cudaTextureObject_t t_VelocityField,
+	cudaTextureObject_t t_Vorticity,
+	SolverOptions solverOptions,
+	Vertex* p_VertexBuffer,
+	float4* d_VertexBuffer
+)
+{
+	unsigned int index = blockDim.x * blockIdx.x + threadIdx.x;
+
+	if (index < solverOptions.lines_count)
+	{
+		int lineLength = solverOptions.lineLength;
+		int index_buffer = index * lineLength;
+		float dt = solverOptions.dt;
+		float3 gridDiameter =
+		{
+			solverOptions.gridDiameter[0],
+			solverOptions.gridDiameter[1],
+			solverOptions.gridDiameter[2]
+		};
+
+		float3 temp_position = *d_particles[index].getPosition();
+
+		d_particles[index].updateVelocity(gridDiameter, t_VelocityField);
+
+
+
+		float3 upDir = make_float3(0.0f, 0.0f, 1.0f);
+
+		if (abs(dot(upDir, normalize(d_particles[index].m_velocity))) > 0.1f)
+			upDir = make_float3(1.0f, 0.0f, 0.0f);
+
+		else if (abs(dot(upDir, normalize(d_particles[index].m_velocity))) > 0.1f)
+			upDir = make_float3(0.0f, 1.0f, 0.0f);
+
+
+
+		for (int i = 0; i < lineLength; i++)
+		{
+			if (solverOptions.periodic)
+			{
+				p_VertexBuffer[index_buffer + i].pos.x = d_particles[index].getPosition()->x - (gridDiameter.x / 2.0);
+				p_VertexBuffer[index_buffer + i].pos.y = d_particles[index].getPosition()->y - (gridDiameter.y / 2.0);
+				p_VertexBuffer[index_buffer + i].pos.z = d_particles[index].getPosition()->z - (gridDiameter.z / 2.0);
+
+
+				// Write into d_VertexBuffer
+				d_VertexBuffer[index_buffer + i].x = d_particles[index].getPosition()->x - (gridDiameter.x / 2.0);
+				d_VertexBuffer[index_buffer + i].y = d_particles[index].getPosition()->y - (gridDiameter.y / 2.0);
+				d_VertexBuffer[index_buffer + i].z = d_particles[index].getPosition()->z - (gridDiameter.z / 2.0);
+			}
+			else
+			{
+				if (!d_particles[index].isOut())
+				{
+					d_particles[index].checkPosition(gridDiameter);
+				}
+
+				if (d_particles[index].isOut() && i != 0)
+				{
+					p_VertexBuffer[index_buffer + i].pos.x = p_VertexBuffer[index_buffer + i - 1].pos.x;
+					p_VertexBuffer[index_buffer + i].pos.y = p_VertexBuffer[index_buffer + i - 1].pos.y;
+					p_VertexBuffer[index_buffer + i].pos.z = p_VertexBuffer[index_buffer + i - 1].pos.z;
+
+					d_VertexBuffer[index_buffer + i].x = p_VertexBuffer[index_buffer + i - 1].pos.x;
+					d_VertexBuffer[index_buffer + i].y = p_VertexBuffer[index_buffer + i - 1].pos.y;
+					d_VertexBuffer[index_buffer + i].z = p_VertexBuffer[index_buffer + i - 1].pos.z;
+				}
+				else
+				{
+					p_VertexBuffer[index_buffer + i].pos.x = d_particles[index].getPosition()->x - (gridDiameter.x / 2.0);
+					p_VertexBuffer[index_buffer + i].pos.y = d_particles[index].getPosition()->y - (gridDiameter.y / 2.0);
+					p_VertexBuffer[index_buffer + i].pos.z = d_particles[index].getPosition()->z - (gridDiameter.z / 2.0);
+
+
+					d_VertexBuffer[index_buffer + i].x = d_particles[index].getPosition()->x - (gridDiameter.x / 2.0);
+					d_VertexBuffer[index_buffer + i].y = d_particles[index].getPosition()->y - (gridDiameter.y / 2.0);
+					d_VertexBuffer[index_buffer + i].z = d_particles[index].getPosition()->z - (gridDiameter.z / 2.0);
+
+
+				}
+			}
+
+
+
+			float3* velocity = d_particles[index].getVelocity();
+			float3 tangent = normalize(*velocity);
+
+
+
+			p_VertexBuffer[index_buffer + i].normal.x = upDir.x;
+			p_VertexBuffer[index_buffer + i].normal.y = upDir.y;
+			p_VertexBuffer[index_buffer + i].normal.z = upDir.z;
+
+			p_VertexBuffer[index_buffer + i].tangent.x = tangent.x;
+			p_VertexBuffer[index_buffer + i].tangent.y = tangent.y;
+			p_VertexBuffer[index_buffer + i].tangent.z = tangent.z;
+
+
+
+			p_VertexBuffer[index_buffer + i].LineID = index;
+
+
+			switch (solverOptions.colorMode)
+			{
+			case 0: // Velocity
+			{
+
+				float3  relativePos = *d_particles[index].getPosition();
+				relativePos = relativePos / make_float3(solverOptions.gridDiameter[0], solverOptions.gridDiameter[1], solverOptions.gridDiameter[2]);
+				p_VertexBuffer[index_buffer + i].measure = tex3D<float4>(t_Vorticity, relativePos.x, relativePos.y, relativePos.z).x;
+
+				d_VertexBuffer[index_buffer + i].w = tex3D<float4>(t_Vorticity, relativePos.x, relativePos.y, relativePos.z).x;
+
+				break;
+
+			}
+			case 1: // Vx
+			{
+				p_VertexBuffer[index_buffer + i].measure = d_particles[index].getVelocity()->x;
+
+				d_VertexBuffer[index_buffer + i].w = d_particles[index].getVelocity()->x;
+
+				break;
+			}
+			case 2: // Vy
+			{
+				p_VertexBuffer[index_buffer + i].measure = d_particles[index].getVelocity()->y;
+
+				d_VertexBuffer[index_buffer + i].w = d_particles[index].getVelocity()->y;
+				break;
+			}
+			case 3: // Vz
+			{
+				p_VertexBuffer[index_buffer + i].measure = d_particles[index].getVelocity()->z;
+
+				d_VertexBuffer[index_buffer + i].w = d_particles[index].getVelocity()->z;
+				break;
+			}
+			}
+
+			// Do not check if it is out
+			RK4Stream(t_VelocityField, &d_particles[index], gridDiameter, dt);
+
+			// Update position based on the projection
+			switch (solverOptions.projection)
+			{
+			case Projection::NO_PROJECTION:
+			{
+				break;
+			}
+			case Projection::ZY_PROJECTION:
+			{
+				p_VertexBuffer[index_buffer + i].pos.x = temp_position.x - (gridDiameter.x / 2.0);
+				break;
+			}
+			case Projection::XZ_PROJECTION:
+			{
+				p_VertexBuffer[index_buffer + i].pos.y = temp_position.y - (gridDiameter.y / 2.0);
+				break;
+			}
+			case Projection::XY_PROJECTION:
+			{
+
+				p_VertexBuffer[index_buffer + i].pos.z = temp_position.z - (gridDiameter.z / 2.0);
+				break;
+			}
+			}
+
+
+
+
+		}//end of for loop
+	}
+}
+
+
 
 __device__ float3 binarySearch_heightField
 (
@@ -540,3 +905,93 @@ __device__ float3 binarySearch_heightField
 
 	return position;
 };
+
+
+
+__global__ void Vorticity
+(
+	cudaTextureObject_t t_VelocityField,
+	SolverOptions solverOptions,
+	cudaSurfaceObject_t	s_measure
+)
+{
+	int index = blockIdx.x * blockDim.y * blockDim.x;
+	index += threadIdx.y * blockDim.x;
+	index += threadIdx.x;
+
+
+	if (index < solverOptions.gridSize[0])
+	{
+
+
+		float3 gridDiameter =
+		{
+			solverOptions.gridDiameter[0],
+			solverOptions.gridDiameter[1],
+			solverOptions.gridDiameter[2]
+		};
+
+		float3 gridSize =
+		{
+			(float)solverOptions.gridSize[0],
+			(float)solverOptions.gridSize[1],
+			(float)solverOptions.gridSize[2]
+
+		};
+
+		float3 relativePos = { 0,0,0 };
+		float3 h = gridDiameter / make_float3
+		(
+			solverOptions.gridSize[0],
+			solverOptions.gridSize[1],
+			solverOptions.gridSize[2]
+		);
+
+		float4	dVx = { 0,0,0,0 };
+		float4	dVy = { 0, 0, 0,0 };
+		float4  dVz = { 0, 0, 0 ,0 };
+
+
+
+		for (int i = 0; i < solverOptions.gridSize[1]; i++)
+		{
+			for (int j = 0; j < solverOptions.gridSize[2]; j++)
+			{
+				relativePos = make_float3((float)index, (float)i, (float)j);
+				relativePos = relativePos / gridSize;
+
+
+				dVx = tex3D<float4>(t_VelocityField, relativePos.x + h.x / 2.0, relativePos.y, relativePos.z);
+				dVx -= tex3D<float4>(t_VelocityField, relativePos.x - h.x / 2.0, relativePos.y, relativePos.z);
+
+				dVy = tex3D<float4>(t_VelocityField, relativePos.x, relativePos.y + h.x / 2.0, relativePos.z);
+				dVy -= tex3D<float4>(t_VelocityField, relativePos.x, relativePos.y - h.x / 2.0, relativePos.z);
+
+				dVz = tex3D<float4>(t_VelocityField, relativePos.x, relativePos.y, relativePos.z + h.x / 2.0);
+				dVz -= tex3D<float4>(t_VelocityField, relativePos.x, relativePos.y, relativePos.z - h.x / 2.0);
+
+				// This would give us the Jacobian Matrix
+				dVx = dVx / h.x;
+				dVy = dVy / h.y;
+				dVz = dVz / h.z;
+
+				// Calculate the curl (vorticity vector)
+				float3 vorticity_vec = make_float3
+				(
+					dVy.z - dVz.y,
+					dVz.x - dVx.z,
+					dVx.y - dVy.x
+				);
+				// calculate the vorticity magnitude
+				float vorticity_mag = sqrtf(dot(vorticity_vec, vorticity_vec));
+
+				float4 value = { vorticity_mag,0,0,0 };
+				// Now write it back to the CUDA Surface
+
+				surf3Dwrite(value, s_measure, sizeof(float4) * index, i, j);
+
+			}
+		}
+	}
+	
+}

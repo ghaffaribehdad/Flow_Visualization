@@ -5,20 +5,26 @@
 struct SolverOptions
 {
 public:
-	char fileName[100] ="Field_IF_Padded_Z";
-	char  filePath[100] ="F:\\Dataset\\KIT3\\binary_initial_z_major\\";
-
-	int gridSize[3] = { 64,503,2048 };
-	int seedGrid[3] = { 2,5,10 };
-	float gridDiameter[3] = { 2,5,10 };
+	char fileName[100] ="UCLA_CTBL";
+	char  filePath[100] ="O:\\Share\\Behdad\\UCLA_Michi\\";
 
 
-	float seedBox[3] = { 2,5,10 };
+	char filePath_out[100] = "D:\\git_projects\\LineOutput\\";
+	char fileName_out[100] = "Lineset";
+	int counter = 0;
+	int fileToSave = 1000;
+
+	int gridSize[3] = { 130,384,384 };
+	int seedGrid[3] = { 5,20,100 };
+	float gridDiameter[3] = { 1.7f,5,5 };
+
+
+	float seedBox[3] = { 1.7f,5,5 };
 	float seedBoxPos[3] = { 0.0f, 0.0f, 0.0f };
 
 	int precision = 32;
 
-	float dt = 0.001f;
+	float dt = 0.1f;
 	float advectTime = 0.0f;
 
 	int lineLength = 1024;
@@ -27,7 +33,7 @@ public:
 
 
 	int firstIdx = 1;
-	int lastIdx = 3;
+	int lastIdx = 1;
 	int currentIdx =1;
 
 	

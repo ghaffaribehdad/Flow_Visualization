@@ -44,7 +44,7 @@ public:
 		return this->stride.get();
 	}
 
-	HRESULT Initialize(ID3D11Device * device, T * data, UINT numVertices)
+	HRESULT Initialize(ID3D11Device * device, T * data, UINT numVertices, unsigned int accessFlag = 0 )
 	{
 		// Release if it is already alocated
 		if (buffer.Get() != nullptr)
@@ -65,7 +65,7 @@ public:
 		vertexBufferDesc.ByteWidth = sizeof(T)*numVertices;
 		vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 		vertexBufferDesc.CPUAccessFlags = 0;
-		vertexBufferDesc.MiscFlags = 0;
+		vertexBufferDesc.MiscFlags = accessFlag;
 	
 
 		// Create Vertex buffer Data structure

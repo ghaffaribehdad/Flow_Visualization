@@ -76,6 +76,7 @@ public:
 
 	bool streamlineRendering	= true;
 	bool pathlineRendering		= false;
+	bool streamlineGenerating	= false;
 
 	void drawSolverOptions();					// draw the solver option window
 	void drawLog();								// draw Log window

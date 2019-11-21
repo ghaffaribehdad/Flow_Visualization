@@ -97,9 +97,6 @@ void main(line GS_INPUT input[2], inout TriangleStream<GS_OUTPUT> output)
 			vertex1.outPosition = mul(View, float4(position1, 1.0f));
 			vertex1.outPosition = mul(Proj, vertex1.outPosition );
 
-			//vertex1.outPosition = mul(float4(position1, 1.0f), transpose(View));
-			//vertex1.outPosition = mul(vertex1.outPosition, transpose(Proj));
-
 
 			// Normals
 			if (input[0].inLineID == 0)

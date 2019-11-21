@@ -186,6 +186,7 @@
       <FileType>Document</FileType>
     </CudaCompile>
     <ClCompile Include="Timer\Timer.cpp" />
+    <ClCompile Include="Volume\BinaryWriter.cpp" />
     <ClCompile Include="Window\RenderWindow.cpp" />
     <ClCompile Include="Window\WindowContainer.cpp" />
     <ClInclude Include="Cuda\CudaArray.h" />
@@ -195,6 +196,7 @@
     <ClInclude Include="Options\DispresionOptions.h" />
     <ClInclude Include="Options\fluctuationheightfieldOptions.h" />
     <ClInclude Include="Timer\Timer.h" />
+    <ClInclude Include="Volume\BinaryWriter.h" />
     <ClInclude Include="Window\RenderWindow.h" />
     <ClInclude Include="Window\WindowContainer.h" />
     <CudaCompile Include="Dispersion\fluctuationHeightfield.cu" />

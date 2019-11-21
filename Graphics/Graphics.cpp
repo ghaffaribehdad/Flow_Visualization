@@ -97,10 +97,23 @@ void Graphics::RenderFrame()
 
 	if (this->renderImGuiOptions.showStreamlines)
 	{
-		if (renderImGuiOptions.updateStreamlines)
+		if (renderImGuiOptions.updateStreamlines && renderImGuiOptions.streamlineGenerating)
+		{
+			this->streamlineRenderer.updateScene(true);
+			if (solverOptions.counter < solverOptions.fileToSave)
+			{
+				solverOptions.counter++;
+			}
+			else
+			{
+				renderImGuiOptions.updateStreamlines = false;
+			}
+		}
+		else if(renderImGuiOptions.updateStreamlines)
 		{
 			this->streamlineRenderer.updateScene();
 			renderImGuiOptions.updateStreamlines = false;
+
 		}
 	}
 
@@ -159,7 +172,7 @@ void Graphics::RenderFrame()
 			dispersionTracer.initialize(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
 			this->dispersionOptions.initialized = true;
 		}
-		// Overrided draw
+		// Override draw
 		this->dispersionTracer.draw();
 
 		if (renderImGuiOptions.updateDispersion)
@@ -242,7 +255,9 @@ void Graphics::RenderFrame()
 
 	if (this->renderImGuiOptions.showStreamlines)
 	{	
+
 		this->streamlineRenderer.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ);
+
 	}
 
 	if (this->renderImGuiOptions.showPathlines)

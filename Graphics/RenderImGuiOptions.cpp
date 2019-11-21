@@ -16,11 +16,22 @@ void RenderImGuiOptions::drawSolverOptions()
 	if (ImGui::Checkbox("Streamline", &this->streamlineRendering))
 	{
 		this->pathlineRendering = !this->streamlineRendering;
+		this->streamlineGenerating = !this->streamlineRendering;
 	}
 	ImGui::SameLine();
 	if (ImGui::Checkbox("Pathline", &this->pathlineRendering))
 	{
+		this->streamlineGenerating = !this->pathlineRendering;
 		this->streamlineRendering = !this->pathlineRendering;
+
+	}
+
+	if (ImGui::Checkbox("Streamline Gen.", &this->streamlineGenerating))
+	{
+		this->streamlineRendering = !this->streamlineGenerating;
+		this->pathlineRendering = !this->streamlineGenerating;
+		this->solverOptions->lines_count = 1000;
+		this->solverOptions->lineLength = 1000;
 
 	}
 
@@ -161,7 +172,7 @@ void RenderImGuiOptions::drawSolverOptions()
 	}
 
 	// length of the line is fixed for the pathlines
-	if (this->streamlineRendering)
+	if (this->streamlineRendering || this->streamlineGenerating)
 	{
 		if (ImGui::InputInt("Line Length", &(solverOptions->lineLength)))
 		{
@@ -176,6 +187,8 @@ void RenderImGuiOptions::drawSolverOptions()
 	}
 
 
+
+
 	if (ImGui::Combo("Color Mode", &solverOptions->colorMode, ColorModeList, 4))
 	{
 		this->updateStreamlines = true;
@@ -184,14 +197,31 @@ void RenderImGuiOptions::drawSolverOptions()
 	}
 
 
+
+
+	if (this->streamlineGenerating)
+	{
+		if (ImGui::InputText("File Path Out", solverOptions->filePath_out, sizeof(solverOptions->filePath_out)))
+		{
+		}
+
+		if (ImGui::InputText("File Name Out", solverOptions->fileName_out, sizeof(solverOptions->fileName_out)))
+		{
+		}
+	}
+
+
+
 	// Show Lines
-	if (this->streamlineRendering)
+	if (this->streamlineRendering || this->streamlineGenerating)
 	{
 		if (ImGui::Checkbox("Render Streamlines", &this->showStreamlines))
 		{
 			this->updateStreamlines = true;
 		}
 	}
+
+
 	else // PathlineRendering
 	{
 		if (this->solverOptions->lastIdx - this->solverOptions->firstIdx >= 2)
@@ -210,6 +240,9 @@ void RenderImGuiOptions::drawSolverOptions()
 		this->camera->SetPosition(0, 5, -10);
 		this->camera->SetLookAtPos({ 0, 0, 0 });
 	}
+
+
+
 
 
 	ImGui::End();

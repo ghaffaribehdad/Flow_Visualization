@@ -46,6 +46,32 @@ __global__ void TracingStream
 	Vertex* p_VertexBuffer
 );
 
+__global__ void TracingStream
+(
+	Particle* d_particles,
+	cudaTextureObject_t t_VelocityField,
+	SolverOptions solverOptions,
+	Vertex* p_VertexBuffer,
+	float4* d_VertexBuffer
+);
+__global__ void TracingStream
+(
+	Particle* d_particles,
+	cudaTextureObject_t t_VelocityField,
+	cudaTextureObject_t t_Vorticity,
+	SolverOptions solverOptions,
+	Vertex* p_VertexBuffer,
+	float4* d_VertexBuffer
+);
+
+__global__ void Vorticity
+(
+	cudaTextureObject_t t_VelocityField,
+	SolverOptions solverOptions,
+	cudaSurfaceObject_t	s_measure
+);
+
+
 template <typename Observable>
 __device__ float3 binarySearch
 (
@@ -178,3 +204,5 @@ __device__ float3 binarySearch_heightField
 	float tolerance,
 	int maxIteration
 );
+
+
