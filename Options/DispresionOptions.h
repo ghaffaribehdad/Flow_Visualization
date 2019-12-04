@@ -20,7 +20,7 @@ struct DispersionOptions
 	// Seeding Options
 	float seedWallNormalDist = .09f;
 	int gridSize_2D[2] = { 256,256 }; //TODO:: Add dynamic seed size
-	float tilt_deg = 30.0f;
+	float tilt_deg = 20.0f;
 
 
 	// Terrain Rendering Options
@@ -34,12 +34,11 @@ struct DispersionOptions
 	int colorCode = static_cast<int>(dispersionColorCode::NONE);
 	float max_val = 1.0f;
 	float min_val = 0.0f;
-	float minColor[4] = { 0,1,0,1 };
-	float maxColor[4] = { 0,0,1,1 };
+	float minColor[4] = { 0.0f,1.0f,0.0f,1.0f };
+	float maxColor[4] = { 0.0f,0.0f,1.0f,1.0f };
 
 	// Advection Options
-	int timeStep = 1000;
-	int tracingTime =  0;
+	int timeStep = 100;
 	float dt = 0.001f;
 	int sampling_step = 10;
 

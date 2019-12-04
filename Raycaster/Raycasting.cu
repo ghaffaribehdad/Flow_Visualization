@@ -14,8 +14,8 @@ template __global__ void CudaIsoSurfacRenderer<struct IsosurfaceHelper::Velocity
 template __global__ void CudaIsoSurfacRenderer<struct IsosurfaceHelper::Velocity_Y>			(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
 template __global__ void CudaIsoSurfacRenderer<struct IsosurfaceHelper::Velocity_Z>			(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
 template __global__ void CudaIsoSurfacRenderer<struct IsosurfaceHelper::ShearStress>		(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
-template __global__ void CudaTerrainRenderer< struct IsosurfaceHelper::Position >			(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float samplingRate, float IsosurfaceTolerance, DispersionOptions dispersionOptions);
-template __global__ void CudaTerrainRenderer_extra< struct IsosurfaceHelper::Position >(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t heightField, cudaTextureObject_t extraField, int rays, float samplingRate, float IsosurfaceTolerance, DispersionOptions dispersionOptions);
+template __global__ void CudaTerrainRenderer< struct IsosurfaceHelper::Position >			(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float samplingRate, float IsosurfaceTolerance, DispersionOptions dispersionOptions, int traceTime);
+template __global__ void CudaTerrainRenderer_extra< struct IsosurfaceHelper::Position >(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t heightField, cudaTextureObject_t extraField, int rays, float samplingRate, float IsosurfaceTolerance, DispersionOptions dispersionOptions, int traceTime);
 template __global__ void CudaTerrainRenderer_extra_fluctuation< struct IsosurfaceHelper::Position >(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t heightField, cudaTextureObject_t extraField, int rays, float samplingRate, float IsosurfaceTolerance, FluctuationheightfieldOptions fluctuationOptions);
 
 __host__ bool Raycasting::updateScene()
@@ -79,7 +79,7 @@ __host__ bool Raycasting::initialize
 	// Read and set field
 	if(!this->raycastingOptions->fileLoaded)		// Load data set into the texture memory
 	{
-		this->volume_IO.Initialize(this->solverOptions);
+		this->primary_IO.Initialize(this->solverOptions);
 		this->initializeIO();
 		this->initializeVolumeTexuture(addressMode_X, addressMode_Y, addressMode_Z);
 
@@ -114,9 +114,7 @@ __host__ void Raycasting::rendering()
 
 
 
-	float bgcolor[] = { 0.0f,0.0f, 0.0f, 1.0f };
-
-	this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), bgcolor);// Clear the target view
+	this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), renderingOptions->bgColor);// Clear the target view
 
 	// Calculates the block and grid sizes
 	unsigned int blocks;
@@ -289,8 +287,8 @@ __host__  bool Raycasting::initializeVolumeTexuture
 __host__ bool Raycasting::initializeIO()
 {
 	
-	this->volume_IO.readVolume(this->solverOptions->currentIdx);
-	std::vector<char>* p_vec_buffer = volume_IO.flushBuffer();
+	this->primary_IO.readVolume(this->solverOptions->currentIdx);
+	std::vector<char>* p_vec_buffer = primary_IO.flushBuffer();
 	char* p_vec_buffer_temp = &(p_vec_buffer->at(0));
 	this->field = reinterpret_cast<float*>(p_vec_buffer_temp);
 	
@@ -415,7 +413,8 @@ __global__ void CudaTerrainRenderer
 	int rays,
 	float samplingRate,
 	float IsosurfaceTolerance,
-	DispersionOptions dispersionOptions
+	DispersionOptions dispersionOptions,
+	int traceTime
 )
 {
 	Observable observable;
@@ -466,7 +465,7 @@ __global__ void CudaTerrainRenderer
 				{ 
 					position.x / d_boundingBox.m_dimensions.x,
 					position.z / d_boundingBox.m_dimensions.z,
-					static_cast<float> (dispersionOptions.timeStep) / static_cast<float> (dispersionOptions.tracingTime)
+					static_cast<float> (dispersionOptions.timeStep) / static_cast<float> (traceTime)
 				};
 				
 				// fetch texels from the GPU memory
@@ -475,25 +474,6 @@ __global__ void CudaTerrainRenderer
 				// check if we have a hit 
 				if (position.y - hightFieldVal.x > 0 &&  position.y - hightFieldVal.x < 0.01 )
 				{
-
-					float3 samplingStep = rayDir * samplingRate;
-					//binary search
-					//position = binarySearch_heightField
-					//(
-					//	position,
-					//	field1,
-					//	samplingStep,
-					//	d_boundingBox.gridDiameter,
-					//	dispersionOptions.binarySearchTolerance,
-					//	dispersionOptions.binarySearchMaxIteration
-					//);
-
-					relativePos = make_float3
-					(
-						position.x / d_boundingBox.m_dimensions.x,
-						position.z / d_boundingBox.m_dimensions.z,
-						static_cast<float> (dispersionOptions.timeStep) / static_cast<float> (dispersionOptions.tracingTime)
-					);
 
 					hightFieldVal = observable.ValueAtXYZ_float4(heightField, relativePos);
 
@@ -550,7 +530,8 @@ __global__ void CudaTerrainRenderer_extra
 	int rays,
 	float samplingRate,
 	float IsosurfaceTolerance,
-	DispersionOptions dispersionOptions
+	DispersionOptions dispersionOptions,
+	int traceTime
 )
 {
 	Observable observable;
@@ -601,7 +582,7 @@ __global__ void CudaTerrainRenderer_extra
 				{
 					position.x / d_boundingBox.m_dimensions.x,
 					position.z / d_boundingBox.m_dimensions.z,
-					static_cast<float> (dispersionOptions.timeStep) / static_cast<float> (dispersionOptions.tracingTime)
+					static_cast<float> (dispersionOptions.timeStep) / static_cast<float> (traceTime)
 				};
 
 				// fetch texels from the GPU memory
@@ -966,6 +947,7 @@ __host__ void Raycasting::setResources
 	int* _height,
 	SolverOptions* _solverOption,
 	RaycastingOptions* _raycastingOptions,
+	RenderingOptions* _renderingOptions,
 	ID3D11Device* _device,
 	IDXGIAdapter* _pAdapter,
 	ID3D11DeviceContext* _deviceContext
@@ -978,10 +960,12 @@ __host__ void Raycasting::setResources
 
 	this->solverOptions = _solverOption;
 	this->raycastingOptions = _raycastingOptions;
+	this->renderingOptions = _renderingOptions;
 
 	this->device = _device;
 	this->pAdapter = _pAdapter;
 	this->deviceContext = _deviceContext;
+
 }
 
 
@@ -1084,6 +1068,7 @@ bool Raycasting::createRaycastingShaderResourceView()
 		shader_resource_view_desc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 		shader_resource_view_desc.Texture2D.MipLevels = 1;
 		shader_resource_view_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	
 
 		HRESULT hr = this->device->CreateShaderResourceView(
 			this->getTexture(),
@@ -1141,8 +1126,8 @@ bool Raycasting::initializeRasterizer()
 
 		rasterizerDesc.FillMode = D3D11_FILL_MODE::D3D11_FILL_SOLID;
 		rasterizerDesc.CullMode = D3D11_CULL_MODE::D3D11_CULL_NONE; // CULLING could be set to none
-		rasterizerDesc.MultisampleEnable = false;
-		rasterizerDesc.AntialiasedLineEnable = false;
+		rasterizerDesc.MultisampleEnable = true;
+		rasterizerDesc.AntialiasedLineEnable = true;
 		//rasterizerDesc.FrontCounterClockwise = TRUE;//= 1;
 
 		HRESULT hr = this->device->CreateRasterizerState(&rasterizerDesc, this->rasterizerstate.GetAddressOf());

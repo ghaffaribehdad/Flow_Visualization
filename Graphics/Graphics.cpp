@@ -63,10 +63,10 @@ bool Graphics::Initialize(HWND hwnd, int width, int height)
 void Graphics::RenderFrame()
 {
 
-	float bgcolor[] = { 0.0f,0.0f, 0.0f, 0.0f };
+
 
 	// For the raycasting we need a workaround!
-	this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), bgcolor);// Clear the target view
+	this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), renderingOptions.bgColor);// Clear the target view
 	this->deviceContext->ClearDepthStencilView(this->depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);// Clear the depth stencil view
 	this->deviceContext->OMSetDepthStencilState(this->depthStencilState.Get(), 0);	// add depth  stencil state to rendering routin
 
@@ -163,6 +163,7 @@ void Graphics::RenderFrame()
 				&this->windowHeight,
 				&this->solverOptions,
 				&this->raycastingOptions,
+				&this->renderingOptions,
 				this->device.Get(),
 				this->adapter,
 				this->deviceContext.Get(),
@@ -211,6 +212,7 @@ void Graphics::RenderFrame()
 				&this->windowHeight,
 				&this->solverOptions,
 				&this->raycastingOptions,
+				&this->renderingOptions,
 				this->device.Get(),
 				this->adapter,
 				this->deviceContext.Get(),
@@ -333,7 +335,7 @@ bool Graphics::InitializeDirectXResources()
 	depthStencilDesc.MipLevels = 1;
 	depthStencilDesc.ArraySize = 1;
 	depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	depthStencilDesc.SampleDesc.Count = 1;
+	depthStencilDesc.SampleDesc.Count = 4;
 	depthStencilDesc.SampleDesc.Quality = 0;
 	depthStencilDesc.Usage = D3D11_USAGE_DEFAULT;
 	depthStencilDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
@@ -446,6 +448,7 @@ bool Graphics::InitializeResources()
 		&this->windowHeight,
 		&this->solverOptions,
 		&this->raycastingOptions,
+		&this->renderingOptions,
 		this->device.Get(),
 		this->adapter,
 		this ->deviceContext.Get()
@@ -496,7 +499,7 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 	scd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	scd.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
 	scd.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
-	scd.SampleDesc.Count = 1;
+	scd.SampleDesc.Count = 4;
 	scd.SampleDesc.Quality = 0;
 	scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	scd.BufferCount = 1;

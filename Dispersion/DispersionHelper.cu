@@ -116,44 +116,6 @@ __global__ void traceDispersion
 
 
 
-//__global__ void trace_fluctuation3D
-//(
-//	cudaSurfaceObject_t heightFieldSurface3D,
-//	cudaSurfaceObject_t heightFieldSurface3D_extra,
-//	cudaTextureObject_t velocityField_0,
-//	SolverOptions solverOptions,
-//	FluctuationheightfieldOptions fluctuationOptions,
-//	int timestep
-//)
-//{
-//	// Extract dispersion options
-//	int nMesh = solverOptions.gridSize[2];
-//
-//	int index = blockIdx.x * blockDim.y * blockDim.x;
-//	index += threadIdx.y * blockDim.x;
-//	index += threadIdx.x;
-//
-//	if (index < nMesh)
-//	{
-//		//TODO: Try linear memory instead of texture
-//
-//		//Read fluctuation value
-//		for (float y = 0; y < fluctuationOptions.wallNormalgridSize; y++)
-//		{
-//			float2 relativePos = {
-//				y / static_cast<float>(solverOptions.gridSize[1]-1),							//=>span over y
-//				static_cast<float>(index) / static_cast<float>(solverOptions.gridSize[2]-1)		//=> span over Z
-//			};
-//
-//
-//			//float4 velocity_fluc = tex2D<float4>(velocityField_0, relativePos.x, relativePos.y);
-//			float4 velocity_fluc;
-//			////velocity_fluc.x = velocity_fluc.x*0.10f + 5.0f;
-//			velocity_fluc = { 1,0,0,0 };
-//			surf3Dwrite(velocity_fluc, heightFieldSurface3D, sizeof(float4) * index, 0, timestep);
-//		}
-//	}
-//}
 
 __global__ void  traceDispersion3D_path
 (
@@ -236,7 +198,7 @@ __global__ void  traceDispersion3D_extra
 {
 	// Extract dispersion options
 	float dt = dispersionOptions.dt;
-	int tracingTime = dispersionOptions.tracingTime;
+	int tracingTime = solverOptions.lastIdx - solverOptions.firstIdx;
 	int nParticles = dispersionOptions.gridSize_2D[0] * dispersionOptions.gridSize_2D[1];
 
 
@@ -295,7 +257,7 @@ __global__ void  traceDispersion3D
 {
 	// Extract dispersion options
 	float dt = dispersionOptions.dt;
-	int tracingTime = dispersionOptions.tracingTime;
+	int traceTime = solverOptions.lastIdx-solverOptions.firstIdx;
 	int nParticles = dispersionOptions.gridSize_2D[0] * dispersionOptions.gridSize_2D[1];
 
 
@@ -318,7 +280,7 @@ __global__ void  traceDispersion3D
 
 
 		// Trace particle using RK4 
-		for (int time = 0; time < tracingTime; time++)
+		for (int time = 0; time < traceTime; time++)
 		{
 
 			// Advect the particle
@@ -409,7 +371,7 @@ __global__ void heightFieldGradient3D
 	{
 
 
-		for (int time = 0; time < dispersionOptions.tracingTime; time++)
+		for (int time = 0; time < solverOptions.lastIdx - solverOptions.firstIdx; time++)
 		{
 			int index_y = index / dispersionOptions.gridSize_2D[1];
 			int index_x = index - (index_y * dispersionOptions.gridSize_2D[1]);

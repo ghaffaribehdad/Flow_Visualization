@@ -69,7 +69,8 @@ bool HeightfieldGenerator::initialize
 
 
 	// initialize volume Input Output
-	volume_IO.Initialize(this->solverOptions);
+	primary_IO.Initialize(this->solverOptions);
+	
 
 	if (!this->InitializeParticles())
 		return false;
@@ -79,7 +80,7 @@ bool HeightfieldGenerator::initialize
 	(
 		dispersionOptions->gridSize_2D[0],
 		dispersionOptions->gridSize_2D[1],
-		dispersionOptions->tracingTime
+		solverOptions->lastIdx - solverOptions->firstIdx
 	))
 		return false;
 
@@ -111,12 +112,13 @@ void HeightfieldGenerator::setResources(Camera* _camera,
 	int* _height,
 	SolverOptions* _solverOption,
 	RaycastingOptions* _raycastingOptions,
+	RenderingOptions* _renderingOptions,
 	ID3D11Device* _device,
 	IDXGIAdapter* _pAdapter,
 	ID3D11DeviceContext* _deviceContext,
 	DispersionOptions* _dispersionOptions)
 {
-	Raycasting::setResources(_camera, _width,_height,_solverOption,_raycastingOptions,_device,_pAdapter,_deviceContext);
+	Raycasting::setResources(_camera, _width,_height,_solverOption,_raycastingOptions,_renderingOptions,_device,_pAdapter,_deviceContext);
 		this->dispersionOptions		= _dispersionOptions;
 }
 
@@ -217,21 +219,21 @@ void HeightfieldGenerator::trace3D_path()
 
 	RK4STEP RK4Step = RK4STEP::ODD;
 	
-	for (int i = 0; i < dispersionOptions->tracingTime; i++)
+	for (int i = 0; i < solverOptions->lastIdx - solverOptions->firstIdx ; i++)
 	{
 		if (i == 0)
 		{
 			// Load i 'dx field in volume_IO into field
-			this->LoadVelocityfield(i);
+			this->LoadVelocityfield(i + solverOptions->currentIdx);
 			// Copy and initialize velocityfield texture
 			this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, velocityField_0);
 			// Release the velocityfield from host (volume_IO)
-			volume_IO.release();
+			primary_IO.release();
 
 			// Same procedure for the second texture
-			this->LoadVelocityfield(i+1);
+			this->LoadVelocityfield(i+ solverOptions->currentIdx + 1);
 			this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, velocityField_1);
-			volume_IO.release();
+			primary_IO.release();
 
 		}
 		else
@@ -240,20 +242,20 @@ void HeightfieldGenerator::trace3D_path()
 			if (i % 2 == 0)
 			{
 				
-				this->LoadVelocityfield(i);
+				this->LoadVelocityfield(i + solverOptions->currentIdx);
 				this->velocityField_1.release();
 				this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, velocityField_1);
-				volume_IO.release();
+				primary_IO.release();
 
 				RK4Step = RK4STEP::ODD;
 			}
 			// Odd integration steps
 			else
 			{
-				this->LoadVelocityfield(i);
+				this->LoadVelocityfield(i + solverOptions->currentIdx);
 				this->velocityField_0.release();
 				this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, velocityField_0);
-				volume_IO.release();
+				primary_IO.release();
 
 				RK4Step = RK4STEP::EVEN;
 
@@ -313,18 +315,15 @@ __host__ void HeightfieldGenerator::rendering()
 {
 	this->deviceContext->PSSetSamplers(0, 1, this->samplerState.GetAddressOf());
 
-	// Create a 2D texture to read hight array
 
-	float bgcolor[] = { 0.0f,0.0f, 0.0f, 1.0f };
-
-	this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), bgcolor);// Clear the target view
+	this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), renderingOptions->bgColor);// Clear the target view
 
 	// Calculates the block and grid sizes
 	unsigned int blocks;
 	dim3 thread = { maxBlockDim,maxBlockDim,1 };
 	blocks = static_cast<unsigned int>((this->rays % (thread.x * thread.y) == 0 ? rays / (thread.x * thread.y) : rays / (thread.x * thread.y) + 1));
  
-
+	
 	CudaTerrainRenderer_extra<IsosurfaceHelper::Position> << < blocks, thread >> >
 		(
 			this->raycastingSurface.getSurfaceObject(),
@@ -333,7 +332,8 @@ __host__ void HeightfieldGenerator::rendering()
 			int(this->rays),
 			this->raycastingOptions->samplingRate_0,
 			this->raycastingOptions->tolerance_0, 
-			*dispersionOptions
+			*dispersionOptions,
+			solverOptions->lastIdx - solverOptions->firstIdx
 		);
 
 }
@@ -434,10 +434,10 @@ void HeightfieldGenerator::gradient3D()
 bool HeightfieldGenerator::LoadVelocityfield(const unsigned int& idx)
 {
 
-	if (!volume_IO.readVolume(idx))
+	if (!primary_IO.readVolume(idx))
 		return false;
 
-	this->field = volume_IO.flushBuffer_float();
+	this->field = primary_IO.flushBuffer_float();
 
 	return true;
 }

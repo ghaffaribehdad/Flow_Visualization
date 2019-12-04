@@ -5,8 +5,8 @@
 struct SolverOptions
 {
 public:
-	char fileName[100] ="UCLA_CTBL";
-	char  filePath[100] ="O:\\Share\\Behdad\\UCLA_Michi\\";
+	char fileName[100] ="FieldP";
+	char  filePath[100] ="D:\\copy\\ow\\Binary_z_Major\\Padded\\";
 
 
 	char filePath_out[100] = "D:\\git_projects\\LineOutput\\";
@@ -14,17 +14,17 @@ public:
 	int counter = 0;
 	int fileToSave = 1000;
 
-	int gridSize[3] = { 130,384,384 };
+	int gridSize[3] = { 192,192,192 };
 	int seedGrid[3] = { 5,20,100 };
-	float gridDiameter[3] = { 1.7f,5,5 };
+	float gridDiameter[3] = { 7.854f,2.0f,3.1415f };
 
 
-	float seedBox[3] = { 1.7f,5,5 };
+	float seedBox[3] = { 7.854f,2.0f,3.1415f };
 	float seedBoxPos[3] = { 0.0f, 0.0f, 0.0f };
 
 	int precision = 32;
 
-	float dt = 0.1f;
+	float dt = 0.001f;
 	float advectTime = 0.0f;
 
 	int lineLength = 1024;
@@ -33,7 +33,7 @@ public:
 
 
 	int firstIdx = 1;
-	int lastIdx = 1;
+	int lastIdx = 200;
 	int currentIdx =1;
 
 	

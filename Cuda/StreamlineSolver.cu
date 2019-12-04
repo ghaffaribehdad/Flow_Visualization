@@ -75,7 +75,7 @@ __host__ bool StreamlineSolver::solveAndWrite()
 
 	InitializeVorticityTexture();
 	
-	TracingStream << <blockDim, thread >> > (this->d_Particles, volumeTexture.getTexture(), t_measure ,*this->solverOptions, reinterpret_cast<Vertex*>(this->p_VertexBuffer), d_vertexBuffer);
+	TracingStream << <blockDim, thread >> > (this->d_Particles, volumeTexture.getTexture(),*this->solverOptions, reinterpret_cast<Vertex*>(this->p_VertexBuffer), d_vertexBuffer);
 
 	this->release();
 

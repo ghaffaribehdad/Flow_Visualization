@@ -7,7 +7,7 @@
 #include "Vertex.h"
 #include "ConsantBufferTypes.h"
 #include <d3d11.h>
-#include "RenderingOptions.h"
+#include "../Options/RenderingOptions.h"
 #include "../Options/SolverOptions.h"
 #include <Windows.h>
 #include "Camera.h"

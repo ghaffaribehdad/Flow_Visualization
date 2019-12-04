@@ -7,8 +7,11 @@
 #include "..//Graphics/Camera.h"
 
 #include "..//Graphics/ConstantBuffer.h"
+
 #include "../Options/SolverOptions.h"
 #include "../Options/RaycastingOptions.h"
+#include "../Options/RenderingOptions.h"
+
 #include<wrl/client.h>
 #include <vector>
 
@@ -49,6 +52,7 @@ protected:
 
 	SolverOptions* solverOptions;
 	RaycastingOptions* raycastingOptions;
+	RenderingOptions* renderingOptions;
 	
 	float* field = nullptr;
 
@@ -68,10 +72,18 @@ protected:
 	ID3D11Device* device		= nullptr;
 	IDXGIAdapter* pAdapter		= nullptr;
 	ID3D11DeviceContext* deviceContext	= nullptr;
-	Camera* camera;
+
+	Camera* camera = nullptr;
+
 	CudaSurface raycastingSurface;
+
 	Interoperability interoperatibility;
-	volumeIO::Volume_IO volume_IO;
+
+	// To handle first dataset
+	volumeIO::Volume_IO primary_IO;
+
+	// To handle second dataset
+	volumeIO::Volume_IO secondary_IO;
 
 
 
@@ -116,6 +128,7 @@ public:
 		int * _height,
 		SolverOptions* _solverOption,
 		RaycastingOptions* _raycastingOptions,
+		RenderingOptions* _renderingOptions,
 		ID3D11Device* _device,
 		IDXGIAdapter* _pAdapter,
 		ID3D11DeviceContext* _deviceContext
@@ -138,7 +151,8 @@ __global__ void CudaTerrainRenderer
 	int rays,
 	float samplingRate,
 	float IsosurfaceTolerance,
-	DispersionOptions dispersionOptions
+	DispersionOptions dispersionOptions,
+	int traceTime
 );
 
 
@@ -151,7 +165,8 @@ __global__ void CudaTerrainRenderer_extra
 	int rays,
 	float samplingRate,
 	float IsosurfaceTolerance,
-	DispersionOptions dispersionOptions
+	DispersionOptions dispersionOptions,
+	int traceTime
 );
 
 

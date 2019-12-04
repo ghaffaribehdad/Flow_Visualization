@@ -57,7 +57,7 @@ __global__ void traceDispersion3D_path
 	SolverOptions solverOptions,
 	DispersionOptions dispersionOptions,
 	RK4STEP RK4step,
-	int timestep
+	int timeStep
 );
 
 //__global__ void trace_fluctuation3D

@@ -119,7 +119,6 @@ void RenderImGuiOptions::drawSolverOptions()
 		if (solverOptions->currentIdx < solverOptions->firstIdx)
 		{
 			solverOptions->currentIdx = solverOptions->firstIdx;
-			this->dispersionOptions->tracingTime = solverOptions->lastIdx - solverOptions->firstIdx;
 			this->updateStreamlines = true;
 
 		}
@@ -130,7 +129,6 @@ void RenderImGuiOptions::drawSolverOptions()
 
 	if (ImGui::InputInt("Last Index", &(solverOptions->lastIdx)))
 	{
-		this->dispersionOptions->tracingTime = solverOptions->lastIdx - solverOptions->firstIdx;
 		this->updatePathlines = true;
 
 	}
@@ -235,10 +233,24 @@ void RenderImGuiOptions::drawSolverOptions()
 
 	}
 
-	if (ImGui::Button("Reset", ImVec2(80, 25)))
+	if (ImGui::Button("Reset View", ImVec2(80, 25)))
 	{
 		this->camera->SetPosition(0, 5, -10);
 		this->camera->SetLookAtPos({ 0, 0, 0 });
+
+		this->updateRaycasting = true;
+		this->updateDispersion = true;
+		this->updatefluctuation = true;
+	}
+
+	if (ImGui::Button("Edge View", ImVec2(80, 25)))
+	{
+		this->camera->SetPosition(-10.7f, 4.0f, -5.37f);
+		this->camera->SetLookAtPos({ 0.75f,-0.35,0.55 });
+
+		this->updateRaycasting = true;
+		this->updateDispersion = true;
+		this->updatefluctuation = true;
 	}
 
 
@@ -334,8 +346,21 @@ void RenderImGuiOptions::render()
 void RenderImGuiOptions::drawLineRenderingOptions()
 {
 
-
 	ImGui::Begin("Line Rendering Options");
+
+
+	if (ImGui::ColorEdit3("Background", (float*)&bgColor))
+	{
+		renderingOptions->bgColor[0] = bgColor[0];
+		renderingOptions->bgColor[1] = bgColor[1];
+		renderingOptions->bgColor[2] = bgColor[2];
+
+
+		this->updateRaycasting = true;
+		this->updateDispersion = true;
+	}
+	
+
 	ImGui::SliderFloat("Tube Radius", &renderingOptions->tubeRadius, 0.0f, 0.02f,"%.4f");            // Edit 1 float using a slider from 0.0f to 1.0f
 
 
@@ -438,19 +463,13 @@ void RenderImGuiOptions::drawDispersionOptions()
 	}
 
 
-	//if (ImGui::DragInt("Trace duration", &dispersionOptions->tracingTime, 1, 1, 4096))
-	//{
-	//	this->dispersionOptions->retrace = true;
-	//	this->updateDispersion = true;
-
-	//}
-
-
-	if (ImGui::DragInt("time steps", &dispersionOptions->timeStep, 1.0f, 1, dispersionOptions->tracingTime))
+	if (ImGui::DragInt("timeStep", &dispersionOptions->timeStep,1,0,solverOptions->lastIdx - solverOptions->firstIdx))
 	{
 		this->updateDispersion = true;
-
 	}
+
+
+
 
 	if (ImGui::DragFloat("dt dispersion", &dispersionOptions->dt, 0.0001f,0.001f,1.0f,"%5f"))
 	{
@@ -458,13 +477,6 @@ void RenderImGuiOptions::drawDispersionOptions()
 		this->dispersionOptions->retrace = true;
 
 	}
-
-	//if (ImGui::DragInt("sampling step", &dispersionOptions->sampling_step,1,1,1000))
-	//{
-	//	this->updateDispersion = true;
-	//	this->dispersionOptions->retrace = true;
-
-	//}
 
 
 	if (ImGui::DragFloat("Wall-normal Distance", &dispersionOptions->seedWallNormalDist,0.001f,0.0,solverOptions->gridDiameter[1],"%4f"))
@@ -486,12 +498,6 @@ void RenderImGuiOptions::drawDispersionOptions()
 	{
 		this->updateDispersion = true;
 	}
-
-	//if (ImGui::DragInt("Search Iteration", &dispersionOptions->binarySearchMaxIteration, 1.0f, 1, 1000))
-	//{
-	//	this->updateDispersion = true;
-
-	//}
 
 
 

@@ -7,7 +7,7 @@
 #include "../Options/RaycastingOptions.h"
 #include "..//Options/DispresionOptions.h"
 #include "..//Options/fluctuationheightfieldOptions.h"
-#include "RenderingOptions.h"
+#include "../Options/RenderingOptions.h"
 #include "Camera.h"
 #include "../Timer/Timer.h"
 #include <map>
@@ -29,7 +29,7 @@ private:
 	DispersionOptions	*	dispersionOptions;
 	FluctuationheightfieldOptions* fluctuationOptions;
 	
-
+	float bgColor[3] = { 0,0,0 };
 
 public:
 

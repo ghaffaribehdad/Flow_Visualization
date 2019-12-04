@@ -271,9 +271,6 @@
     <ClInclude Include="Raycaster\BoundingBox.h">
       <Filter>Header Files\Raycasting</Filter>
     </ClInclude>
-    <ClInclude Include="Graphics\RenderingOptions.h">
-      <Filter>Header Files\Graphics</Filter>
-    </ClInclude>
     <ClInclude Include="Graphics\StreamlineRenderer.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
@@ -363,6 +360,9 @@
     </ClInclude>
     <ClInclude Include="Volume\BinaryWriter.h">
       <Filter>Header Files\VolumeTexture</Filter>
+    </ClInclude>
+    <ClInclude Include="Options\RenderingOptions.h">
+      <Filter>Header Files\Options</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

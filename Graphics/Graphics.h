@@ -16,7 +16,7 @@
 #include <d3d11.h>
 #include "..\\Raycaster\Raycasting.h"
 
-#include "RenderingOptions.h"
+#include "..//Options/RenderingOptions.h"
 #include "StreamlineRenderer.h"
 #include "BoxRenderer.h"
 #include "RenderImGuiOptions.h"

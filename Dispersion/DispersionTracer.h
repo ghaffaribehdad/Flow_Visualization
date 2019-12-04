@@ -29,6 +29,7 @@ public:
 		int* _height,
 		SolverOptions* _solverOption,
 		RaycastingOptions* _raycastingOptions,
+		RenderingOptions* _renderingOptions,
 		ID3D11Device* _device,
 		IDXGIAdapter* _pAdapter,
 		ID3D11DeviceContext* _deviceContext,
@@ -76,11 +77,7 @@ protected:
 	cudaTextureObject_t heightFieldTexture3D_extra;
 
 	CudaArray_3D<float4> heightArray3D;
-	CudaArray_3D<float4> heightArray3D_extra;
-
-
-	volumeIO::Volume_IO Field_IO;
-		
+	CudaArray_3D<float4> heightArray3D_extra;		
 };
 
 

@@ -45,6 +45,7 @@ public:
 	void AdjustRotation(const XMVECTOR & rot);
 	void AdjustRotation(float x, float y, float z);
 	void SetLookAtPos(XMFLOAT3 lookAtPos);
+
 	const XMVECTOR & GetForwardVector();
 	const XMVECTOR & GetRightVector();
 	const XMVECTOR & GetBackwardVector();

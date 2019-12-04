@@ -137,7 +137,7 @@ bool LineRenderer::initilizeRasterizer()
 		rasterizerDesc.FillMode = D3D11_FILL_MODE::D3D11_FILL_SOLID;
 		rasterizerDesc.CullMode = D3D11_CULL_MODE::D3D11_CULL_FRONT; // CULLING could be set to none
 		rasterizerDesc.MultisampleEnable = true;
-		rasterizerDesc.AntialiasedLineEnable = false;
+		rasterizerDesc.AntialiasedLineEnable = true;
 		//rasterizerDesc.FrontCounterClockwise = TRUE;//= 1;
 
 		HRESULT hr = this->device->CreateRasterizerState(&rasterizerDesc, this->rasterizerstate.GetAddressOf());

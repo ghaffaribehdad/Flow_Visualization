@@ -195,6 +195,7 @@
     <ClInclude Include="Dispersion\fluctuationHeightfield.h" />
     <ClInclude Include="Options\DispresionOptions.h" />
     <ClInclude Include="Options\fluctuationheightfieldOptions.h" />
+    <ClInclude Include="Options\RenderingOptions.h" />
     <ClInclude Include="Timer\Timer.h" />
     <ClInclude Include="Volume\BinaryWriter.h" />
     <ClInclude Include="Window\RenderWindow.h" />
@@ -249,7 +250,6 @@
     <ClInclude Include="Graphics\LineRenderer.h" />
     <ClInclude Include="Graphics\BoxRenderer.h" />
     <ClInclude Include="Graphics\PathlineRenderer.h" />
-    <ClInclude Include="Graphics\RenderingOptions.h" />
     <ClInclude Include="Graphics\StreamlineRenderer.h" />
     <ClInclude Include="HelperFunctions\HelperFunctions.h" />
     <ClInclude Include="Options\Enum.h" />

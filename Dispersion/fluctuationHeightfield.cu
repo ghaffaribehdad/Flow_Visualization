@@ -33,7 +33,7 @@ bool FluctuationHeightfield::initialize
 	this->rays = (*this->width) * (*this->height);				// Set number of rays based on the number of pixels
 
 	// initialize volume Input Output
-	volume_IO.Initialize(this->fluctuationOptions);
+	primary_IO.Initialize(this->fluctuationOptions);
 
 
 	// Initialize Height Field as an empty CUDA array 3D
@@ -72,8 +72,8 @@ void  FluctuationHeightfield::traceFluctuationfield3D()
 
 	for (int t = 0; t < m_gridSize3D.z; t++)
 	{
-		this->volume_IO.readVolumePlane(t + fluctuationOptions->firstIdx, volumeIO::readPlaneMode::YZ, fluctuationOptions->spanwisePos, offset, buffer_size);
-		float* p_temp = volume_IO.flushBuffer_float();
+		this->primary_IO.readVolumePlane(t + fluctuationOptions->firstIdx, volumeIO::readPlaneMode::YZ, fluctuationOptions->spanwisePos, offset, buffer_size);
+		float* p_temp = primary_IO.flushBuffer_float();
 
 		size_t counter_t = 0;
 
@@ -95,7 +95,7 @@ void  FluctuationHeightfield::traceFluctuationfield3D()
 			}
 		}
 
-		volume_IO.release();
+		primary_IO.release();
 	}
 
 
@@ -136,9 +136,8 @@ __host__ void FluctuationHeightfield::rendering()
 
 	// Create a 2D texture to read hight array
 
-	float bgcolor[] = { 0.0f,0.0f, 0.0f, 1.0f };
 
-	this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), bgcolor);// Clear the target view
+	this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), renderingOptions->bgColor);// Clear the target view
 
 	// Calculates the block and grid sizes
 	unsigned int blocks;
