@@ -436,20 +436,19 @@ __global__ void fluctuationfieldGradient3D
 
 	int3 gridSize = { solverOptions.gridSize[2],static_cast<int>(fluctuationOptions.wallNormalgridSize), timeDim };
 
-	if (index < gridSize.x)
+	// index in this case it the wall-normal position ( second index)
+	if (index < gridSize.y)
 	{
-
-		for (int y = 0; y < fluctuationOptions.wallNormalgridSize; y++)
+		// is the first index 
+		for (int z = 0; z < solverOptions.gridDiameter[2] ; z++)
 		{
+			// t is the third index
 			for (int t = 0; t < timeDim; t++)
 			{
-
-				
-
 				float2 gradient = { 0.0f,0.0f };
 
 
-				gradient = observable.GradientFluctuatuionAtXT(heightFieldSurface3D, make_int3(index, y, t), gridSize);
+				gradient = observable.GradientFluctuatuionAtXZ(heightFieldSurface3D, make_int3(z,index, t), gridSize);
 				gradient = gradient /
 					make_float2
 					(
@@ -461,12 +460,12 @@ __global__ void fluctuationfieldGradient3D
 				gradient = { gradient3D.y, gradient3D.z };
 			
 
-				float4 texel = observable.ValueAtXYZ_Surface_float4(heightFieldSurface3D, make_int3(index, y, t));
+				float4 texel = observable.ValueAtXYZ_Surface_float4(heightFieldSurface3D, make_int3(z, index, t));
 
 				texel.z = gradient.x;
 				texel.w = gradient.y;
 
-				surf3Dwrite(texel, heightFieldSurface3D, sizeof(float4) * index, y, t);
+				surf3Dwrite(texel, heightFieldSurface3D, sizeof(float4) * z, index, t);
 
 
 			}

@@ -25,6 +25,7 @@
 #include "..//Graphics/VertexBuffer.h"
 #include "..//Options/DispresionOptions.h"
 #include "..//Options/fluctuationheightfieldOptions.h"
+#include "../Options/CrossSectionOptions.h"
 
 
 
@@ -68,6 +69,7 @@ protected:
 	Microsoft::WRL::ComPtr<ID3D11RasterizerState>	rasterizerstate;
 	Microsoft::WRL::ComPtr<ID3D11SamplerState>		samplerState;	// For depth test between raycasting and line rendering
 	Microsoft::WRL::ComPtr <ID3D11ShaderResourceView> shaderResourceView;
+	Microsoft::WRL::ComPtr<ID3D11BlendState>		blendState;
 
 	ID3D11Device* device		= nullptr;
 	IDXGIAdapter* pAdapter		= nullptr;
@@ -99,7 +101,7 @@ protected:
 	__host__ bool initializeSamplerstate();
 	__host__ bool createRaycastingShaderResourceView();
 	__host__ bool initializeScene();
-	__host__ bool initializeShaders();
+	__host__ virtual bool initializeShaders();
 	__host__ void setShaders();
 
 public:
@@ -112,7 +114,7 @@ public:
 	__host__ bool resize();
 	
 
-	__host__ void draw();
+	__host__  void draw();
 
 
 
@@ -141,7 +143,28 @@ public:
 
 
 template <typename Observable>
-__global__ void CudaIsoSurfacRenderer(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
+__global__ void CudaIsoSurfacRenderer
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field1,
+	int rays,
+	float isoValue,
+	float samplingRate,
+	float IsosurfaceTolerance
+);
+
+
+template <typename Observable>
+__global__ void CudaCrossSectionRenderer
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field1,
+	int rays,
+	float samplingRate,
+	float IsosurfaceTolerance,
+	CrossSectionOptions crossSectionOptions
+);
+
 
 template <typename Observable>
 __global__ void CudaTerrainRenderer
@@ -162,6 +185,23 @@ __global__ void CudaTerrainRenderer_extra
 	cudaSurfaceObject_t raycastingSurface,
 	cudaTextureObject_t heightField,
 	cudaTextureObject_t extraField,
+	int rays,
+	float samplingRate,
+	float IsosurfaceTolerance,
+	DispersionOptions dispersionOptions,
+	int traceTime
+);
+
+
+
+template <typename Observable>
+__global__ void CudaTerrainRenderer_extra_double
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t heightField_Primary,
+	cudaTextureObject_t extraField_Primary,
+	cudaTextureObject_t heightField_Secondary,
+	cudaTextureObject_t extraField_Seconary,
 	int rays,
 	float samplingRate,
 	float IsosurfaceTolerance,

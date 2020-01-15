@@ -358,7 +358,7 @@ __global__ void TracingStream
 
 		d_particles[index].updateVelocity(gridDiameter, t_VelocityField);
 
-		
+		float3 initialVelocity = d_particles[index].m_velocity;
 
 		float3 upDir = make_float3(0.0f, 0.0f, 1.0f);
 
@@ -444,6 +444,21 @@ __global__ void TracingStream
 					p_VertexBuffer[index_buffer + i].measure = d_particles[index].getVelocity()->z;
 					break;
 				}
+				case 4: // initial Vx
+				{
+					p_VertexBuffer[index_buffer + i].measure = initialVelocity.x;
+					break;
+				}
+				case 5: // initial Vy
+				{
+					p_VertexBuffer[index_buffer + i].measure = initialVelocity.y;
+					break;
+				}
+				case 6: // initial Vz
+				{
+					p_VertexBuffer[index_buffer + i].measure = initialVelocity.z;
+					break;
+				}
 			}
 
 			// Do not check if it is out
@@ -520,6 +535,9 @@ __global__ void TracingStream
 			upDir = make_float3(0.0f, 1.0f, 0.0f);
 
 
+		float3 relativePos = d_particles[index].m_position / gridDiameter;
+		float4 velocity4D_initial = tex3D<float4>(t_VelocityField, relativePos.x, relativePos.y, relativePos.z);
+
 
 		for (int i = 0; i < lineLength; i++)
 		{
@@ -589,38 +607,39 @@ __global__ void TracingStream
 
 			switch (solverOptions.colorMode)
 			{
-			case 0: // Velocity
-			{
+				case 0: // Velocity
+				{
 
-				p_VertexBuffer[index_buffer + i].measure = VecMagnitude(*velocity);
+					p_VertexBuffer[index_buffer + i].measure = VecMagnitude(*velocity);
 
-				d_VertexBuffer[index_buffer + i].w = VecMagnitude(*velocity);
+					d_VertexBuffer[index_buffer + i].w = VecMagnitude(*velocity);
 
-				break;
+					break;
 
-			}
-			case 1: // Vx
-			{
-				p_VertexBuffer[index_buffer + i].measure = d_particles[index].getVelocity()->x;
-				
-				d_VertexBuffer[index_buffer + i].w = d_particles[index].getVelocity()->x;
+				}
+				case 1: // Vx
+				{
+					p_VertexBuffer[index_buffer + i].measure = d_particles[index].getVelocity()->x;
 
-				break;
-			}
-			case 2: // Vy
-			{
-				p_VertexBuffer[index_buffer + i].measure = d_particles[index].getVelocity()->y;
+					d_VertexBuffer[index_buffer + i].w = d_particles[index].getVelocity()->x;
 
-				d_VertexBuffer[index_buffer + i].w = d_particles[index].getVelocity()->y;
-				break;
-			}
-			case 3: // Vz
-			{
-				p_VertexBuffer[index_buffer + i].measure = d_particles[index].getVelocity()->z;
+					break;
+				}
+				case 2: // Vy
+				{
+					p_VertexBuffer[index_buffer + i].measure = d_particles[index].getVelocity()->y;
 
-				d_VertexBuffer[index_buffer + i].w = d_particles[index].getVelocity()->z;
-				break;
-			}
+					d_VertexBuffer[index_buffer + i].w = d_particles[index].getVelocity()->y;
+					break;
+				}
+				case 3: // Vz
+				{
+					p_VertexBuffer[index_buffer + i].measure = d_particles[index].getVelocity()->z;
+
+					d_VertexBuffer[index_buffer + i].w = d_particles[index].getVelocity()->z;
+					break;
+				}
+
 			}
 
 			// Do not check if it is out

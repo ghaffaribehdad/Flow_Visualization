@@ -52,7 +52,7 @@ struct FluctuationheightfieldOptions
 
 
 	char	fileName[100] = "FieldPadded";
-	char	filePath[100] = "E:\\Datasets\\KIT3\\Fields_fld\\binary_fluct_x_major\\";
+	char	filePath[100] = "Q:\\MinimalChannel\\binary_fluct_x_major_Padded_1_1000\\";
 	int		firstIdx = 200;
 	int		lastIdx = 800;
 	float	samplingRate_0 = 0.01f;

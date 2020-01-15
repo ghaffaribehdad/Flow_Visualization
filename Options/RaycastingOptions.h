@@ -1,5 +1,5 @@
 #pragma once
-#include "Enum.h"
+#include "ImGuiOptions.h"
 
 struct RaycastingOptions
 {

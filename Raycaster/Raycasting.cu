@@ -16,7 +16,11 @@ template __global__ void CudaIsoSurfacRenderer<struct IsosurfaceHelper::Velocity
 template __global__ void CudaIsoSurfacRenderer<struct IsosurfaceHelper::ShearStress>		(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
 template __global__ void CudaTerrainRenderer< struct IsosurfaceHelper::Position >			(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float samplingRate, float IsosurfaceTolerance, DispersionOptions dispersionOptions, int traceTime);
 template __global__ void CudaTerrainRenderer_extra< struct IsosurfaceHelper::Position >(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t heightField, cudaTextureObject_t extraField, int rays, float samplingRate, float IsosurfaceTolerance, DispersionOptions dispersionOptions, int traceTime);
+template __global__ void CudaTerrainRenderer_extra_double< struct IsosurfaceHelper::Position >(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t heightField_Primary, cudaTextureObject_t extraField_Primary, cudaTextureObject_t heightField_Secondary, cudaTextureObject_t extraField_Seconary, int rays, float samplingRate, float IsosurfaceTolerance, DispersionOptions dispersionOptions, int traceTime);
 template __global__ void CudaTerrainRenderer_extra_fluctuation< struct IsosurfaceHelper::Position >(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t heightField, cudaTextureObject_t extraField, int rays, float samplingRate, float IsosurfaceTolerance, FluctuationheightfieldOptions fluctuationOptions);
+template __global__ void CudaCrossSectionRenderer<struct IsosurfaceHelper::Velocity_XYZT>(cudaSurfaceObject_t raycastingSurface,cudaTextureObject_t field1,	int rays,	float samplingRate,	float IsosurfaceTolerance,	CrossSectionOptions crossSectionOptions);
+
+
 
 __host__ bool Raycasting::updateScene()
 {
@@ -624,12 +628,12 @@ __global__ void CudaTerrainRenderer_extra
 
 					switch (dispersionOptions.colorCode)
 					{
-						case dispersionColorCode::NONE:
+						case dispersionOptionsMode::dispersionColorCode::NONE:
 						{
 							break;
 						}
 
-						case dispersionColorCode::V_X_FLUCTUATION:
+						case dispersionOptionsMode::dispersionColorCode::V_X_FLUCTUATION:
 						{
 
 							float4 value = observable.ValueAtXYZ_float4(extraField, relativePos);
@@ -640,7 +644,7 @@ __global__ void CudaTerrainRenderer_extra
 							break;
 						}
 
-						case dispersionColorCode::V_Y:
+						case dispersionOptionsMode::dispersionColorCode::V_Y:
 						{
 
 							extractedVal = observable.ValueAtXYZ_float4(extraField, relativePos).z;
@@ -650,7 +654,7 @@ __global__ void CudaTerrainRenderer_extra
 							break;
 						}
 
-						case dispersionColorCode::V_Z:
+						case dispersionOptionsMode::dispersionColorCode::V_Z:
 						{
 
 							extractedVal = observable.ValueAtXYZ_float4(extraField, relativePos).w;
@@ -660,7 +664,7 @@ __global__ void CudaTerrainRenderer_extra
 							break;
 						}
 
-						case dispersionColorCode::DISTANCE:
+						case dispersionOptionsMode::dispersionColorCode::DISTANCE:
 						{
 							float4 Vec_0 = observable.ValueAtXYZ_float4(heightField, make_float3(relativePos.x, relativePos.y,0.0));
 							float4 Vec_1 = observable.ValueAtXYZ_float4(extraField, make_float3(relativePos.x, relativePos.y,0.0));
@@ -680,7 +684,7 @@ __global__ void CudaTerrainRenderer_extra
 							break;
 						}
 
-						case dispersionColorCode::DISTANCE_ZY:
+						case dispersionOptionsMode::dispersionColorCode::DISTANCE_ZY:
 						{
 							float4 Vec_0 = observable.ValueAtXYZ_float4(heightField, make_float3(relativePos.x, relativePos.y, 0.0));
 							float4 Vec_1 = observable.ValueAtXYZ_float4(extraField, make_float3(relativePos.x, relativePos.y, 0.0));
@@ -700,7 +704,7 @@ __global__ void CudaTerrainRenderer_extra
 							break;
 						}
 
-						case dispersionColorCode::DEV_Z:
+						case dispersionOptionsMode::dispersionColorCode::DEV_Z:
 						{
 							float4 Vec_1 = observable.ValueAtXYZ_float4(extraField, make_float3(relativePos.x, relativePos.y, 0.0));
 
@@ -729,7 +733,7 @@ __global__ void CudaTerrainRenderer_extra
 
 
 						}
-						case dispersionColorCode::QUADRANT_DEV:
+						case dispersionOptionsMode::dispersionColorCode::QUADRANT_DEV:
 						{
 							float4 Vec_0 = observable.ValueAtXYZ_float4(heightField, make_float3(relativePos.x, relativePos.y, 0.0));
 							float4 Vec_1 = observable.ValueAtXYZ_float4(extraField, make_float3(relativePos.x, relativePos.y, 0.0));
@@ -794,7 +798,7 @@ __global__ void CudaTerrainRenderer_extra
 
 
 
-						case dispersionColorCode::DEV_ZY:
+						case dispersionOptionsMode::dispersionColorCode::DEV_ZY:
 						{
 							float4 Vec_0 = observable.ValueAtXYZ_float4(heightField, make_float3(relativePos.x, relativePos.y, 0.0));
 							float4 Vec_1 = observable.ValueAtXYZ_float4(extraField, make_float3(relativePos.x, relativePos.y, 0.0));
@@ -1137,6 +1141,33 @@ bool Raycasting::initializeRasterizer()
 			return false;
 		}
 
+
+
+		//Create the blend state
+		D3D11_BLEND_DESC blendDesc;
+		ZeroMemory(&blendDesc, sizeof(blendDesc));
+
+		D3D11_RENDER_TARGET_BLEND_DESC rtbd;
+		ZeroMemory(&rtbd, sizeof(rtbd));
+
+		rtbd.BlendEnable = true;
+		rtbd.SrcBlend = D3D11_BLEND::D3D11_BLEND_SRC_ALPHA;
+		rtbd.DestBlend = D3D11_BLEND::D3D11_BLEND_INV_SRC_ALPHA;
+		rtbd.BlendOp = D3D11_BLEND_OP::D3D11_BLEND_OP_ADD;
+		rtbd.SrcBlendAlpha = D3D11_BLEND::D3D11_BLEND_ONE;
+		rtbd.DestBlendAlpha = D3D11_BLEND::D3D11_BLEND_ZERO;
+		rtbd.BlendOpAlpha = D3D11_BLEND_OP::D3D11_BLEND_OP_ADD;
+		rtbd.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE::D3D11_COLOR_WRITE_ENABLE_ALL;
+
+		blendDesc.RenderTarget[0] = rtbd;
+
+		hr = this->device->CreateBlendState(&blendDesc, this->blendState.GetAddressOf());
+		if (FAILED(hr))
+		{
+			ErrorLogger::Log(hr, "Failed to create blend state.");
+			return false;
+		}
+
 	}
 
 	return true;
@@ -1159,6 +1190,8 @@ void Raycasting::setShaders()
 	this->deviceContext->IASetVertexBuffers(0, 1, this->vertexBuffer.GetAddressOf(), this->vertexBuffer.StridePtr(), &offset); 
 	this->deviceContext->PSSetSamplers(0, 1, this->samplerState.GetAddressOf());
 	this->deviceContext->PSSetShaderResources(0, 1, this->shaderResourceView.GetAddressOf());
+	this->deviceContext->OMSetBlendState(this->blendState.Get(), NULL, 0xFFFFFFFF);
+
 }
 
 
@@ -1261,11 +1294,12 @@ __global__ void CudaTerrainRenderer_extra_fluctuation
 					height = (hightFieldVal.y * fluctuationOptions.height_scale) + fluctuationOptions.offset;
 				}
 
-				height = fluctuationOptions.heightLimit * saturate(height / fluctuationOptions.heightLimit);
+				//height = fluctuationOptions.heightLimit * saturate(height / fluctuationOptions.heightLimit);
 
 				if (position.y - height > 0 && position.y - height < fluctuationOptions.hegiht_tolerance)
 				{
-					float value = hightFieldVal.x;
+					//float value = hightFieldVal.x;
+					float value = hightFieldVal.y;
 				
 
 					
@@ -1297,25 +1331,22 @@ __global__ void CudaTerrainRenderer_extra_fluctuation
 					float3 rgb = { 0,0,0 };
 					float y_saturated = 0.0f;
 
-					if (height == fluctuationOptions.heightLimit)
+					if (value < 0)
 					{
-						if (value < 0)
-						{
-							float3 rgb_min_complement = make_float3(1, 1, 1) - rgb_min;
-							y_saturated = saturate(abs(value / fluctuationOptions.min_val));
-							rgb = rgb_min_complement * (1 - y_saturated) + rgb_min;
-						}
-						else
-						{
-							float3 rgb_max_complement = make_float3(1, 1, 1) - rgb_max;
-							y_saturated = saturate(value / fluctuationOptions.max_val);
-							rgb = rgb_max_complement * (1 - y_saturated) + rgb_max;
-						}
+						float3 rgb_min_complement = make_float3(1, 1, 1) - rgb_min;
+						y_saturated = saturate(abs(value / fluctuationOptions.min_val));
+						rgb = rgb_min_complement * (1 - y_saturated) + rgb_min;
+					}
+					else
+					{
+						float3 rgb_max_complement = make_float3(1, 1, 1) - rgb_max;
+						y_saturated = saturate(value / fluctuationOptions.max_val);
+						rgb = rgb_max_complement * (1 - y_saturated) + rgb_max;
 					}
 				
 
 
-					//rgb = rgb * diffuse;
+					rgb = rgb * diffuse;
 
 					// vector from eye to isosurface
 					float3 position_viewCoordinate = position - eyePos;
@@ -1345,4 +1376,300 @@ __global__ void CudaTerrainRenderer_extra_fluctuation
 	}
 
 
+}
+
+
+
+
+
+template <typename Observable>
+__global__ void CudaTerrainRenderer_extra_double
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t heightField,
+	cudaTextureObject_t extraField,
+	cudaTextureObject_t heightField_Secondary,
+	cudaTextureObject_t extraField_Seconary,
+	int rays,
+	float samplingRate,
+	float IsosurfaceTolerance,
+	DispersionOptions dispersionOptions,
+	int traceTime
+)
+{
+	Observable observable;
+
+	int index = blockIdx.x * blockDim.y * blockDim.x;
+	index += threadIdx.y * blockDim.x;
+	index += threadIdx.x;
+
+	if (index < rays)
+	{
+
+		// determine pixel position based on the index of the thread
+		int2 pixel;
+		pixel.y = index / d_boundingBox.m_width;
+		pixel.x = index - pixel.y * d_boundingBox.m_width;
+
+		// copy values from constant memory to local memory (which one is faster?)
+		float3 viewDir = d_boundingBox.m_viewDir;
+		float3 pixelPos = pixelPosition(d_boundingBox, pixel.x, pixel.y);
+		float2 NearFar = findIntersections(pixelPos, d_boundingBox);
+
+		float depth = 1;
+		bool hitTrans = false;
+		float depth_secondary = 0;
+
+		// if inside the bounding box
+		if (NearFar.y != -1)
+		{
+
+			float3 rayDir = normalize(pixelPos - d_boundingBox.m_eyePos);
+
+			// near and far plane
+			float n = 0.1f;
+			float f = 1000.0f;
+
+			// Add the offset to the eye position
+			float3 eyePos = d_boundingBox.m_eyePos + d_boundingBox.m_dimensions / 2.0;
+			float3 rgb_first = { 0.0f,1.0f,0.0f };
+			float3 rgb_second = { 1,0,0 };
+
+			for (float t = NearFar.x; t < NearFar.y; t = t + samplingRate)
+			{
+				// Position of the isosurface
+				float3 position = pixelPos + (rayDir * t);
+
+				// Adds an offset to position while the center of the grid is at gridDiamter/2
+				position += d_boundingBox.m_dimensions / 2.0;
+
+
+
+				//Relative position calculates the position of the point on the cuda texture
+				float3 relativePos =
+				{
+					position.x / d_boundingBox.m_dimensions.x,
+					position.z / d_boundingBox.m_dimensions.z,
+					static_cast<float> (dispersionOptions.timeStep) / static_cast<float> (traceTime)
+				};
+
+				// fetch texels from the GPU memory
+				float4 hightFieldVal = observable.ValueAtXYZ_float4(heightField, relativePos);
+
+
+
+
+				// check if we have a hit 
+				if (position.y - hightFieldVal.x > 0 && position.y - hightFieldVal.x < dispersionOptions.hegiht_tolerance)
+				{
+
+					position.y = hightFieldVal.x;
+
+					float3 gradient = { hightFieldVal.y,-1,hightFieldVal.z };
+
+
+					// shading (no ambient)
+					float diffuse = max(dot(normalize(gradient), viewDir), 0.0f);
+
+					
+					rgb_first = rgb_first * diffuse;
+
+					// If it has already seen the transparent one
+					if (hitTrans)
+					{
+						rgb_first = (dispersionOptions.transparencySecondary) * rgb_first + (1 - dispersionOptions.transparencySecondary) * rgb_second;
+						depth = depth_secondary;
+					}
+
+					// vector from eye to isosurface
+					float3 position_viewCoordinate = position - eyePos;
+
+					// calculates the z-value
+					float z_dist = abs(dot(viewDir, position_viewCoordinate));
+
+					// calculate non-linear depth between 0 to 1
+					depth = (f) / (f - n);
+					depth += (-1.0f / z_dist) * (f * n) / (f - n);
+
+					float4 rgba = { rgb_first.x , rgb_first.y, rgb_first.z, depth };
+
+					// write back color and depth into the texture (surface)
+					// stride size of 4 * floats for each texel
+					surf2Dwrite(rgba, raycastingSurface, sizeof(float4) * pixel.x, pixel.y);
+					break;
+				}
+
+
+				//############### Secondary #####################
+
+
+				hightFieldVal = observable.ValueAtXYZ_float4(heightField_Secondary, relativePos);
+
+				// check if we have a hit 
+				if (position.y - hightFieldVal.x > 0 && position.y - hightFieldVal.x < dispersionOptions.hegiht_tolerance && !hitTrans)
+				{
+					hitTrans = true;
+					position.y = hightFieldVal.x;
+
+					// vector from eye to isosurface
+					float3 position_viewCoordinate = position - eyePos;
+
+					// calculates the z-value
+					float z_dist = abs(dot(viewDir, position_viewCoordinate));
+
+					// calculate non-linear depth between 0 to 1
+					depth_secondary = (f) / (f - n);
+					depth_secondary += (-1.0f / z_dist) * (f * n) / (f - n);
+
+			
+					float3 gradient = { hightFieldVal.y,-1,hightFieldVal.z };
+
+
+					// shading (no ambient)
+					float diffuse = max(dot(normalize(gradient), viewDir), 0.0f);
+
+
+
+
+					rgb_second = rgb_second * diffuse;
+
+				}
+
+
+			}
+
+
+
+		}
+
+	}
+
+
+}
+
+
+
+template <typename Observable>
+__global__ void CudaCrossSectionRenderer
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field1,
+	int rays,
+	float samplingRate,
+	float IsosurfaceTolerance,
+	CrossSectionOptions crossSectionOptions
+)
+{
+	Observable observable;
+
+	int index = blockIdx.x * blockDim.y * blockDim.x;
+	index += threadIdx.y * blockDim.x;
+	index += threadIdx.x;
+
+	if (index < rays)
+	{
+
+		// determine pixel position based on the index of the thread
+		int2 pixel;
+		pixel.y = index / d_boundingBox.m_width;
+		pixel.x = index - pixel.y * d_boundingBox.m_width;
+
+		// copy values from constant memory to local memory (which one is faster?)
+		float3 viewDir = d_boundingBox.m_viewDir;
+		float3 pixelPos = pixelPosition(d_boundingBox, pixel.x, pixel.y);
+		float2 NearFar = findIntersections(pixelPos, d_boundingBox);
+
+
+		// if inside the bounding box
+		if (NearFar.y != -1)
+		{
+
+			float3 rayDir = normalize(pixelPos - d_boundingBox.m_eyePos);
+
+			// near and far plane
+			float n = 0.1f;
+			float f = 1000.0f;
+
+			// Add the offset to the eye position
+			float3 eyePos = d_boundingBox.m_eyePos + d_boundingBox.m_dimensions / 2.0;
+
+			for (float t = NearFar.x; t < NearFar.y; t = t + samplingRate)
+			{
+				// Position of the isosurface
+				float3 position = pixelPos + (rayDir * t);
+
+				// Adds an offset to position while the center of the grid is at gridDiamter/2
+				position += d_boundingBox.m_dimensions / 2.0;
+
+
+
+				//Relative position calculates the position of the point on the cuda texture
+				float3 relativePos = (position / d_boundingBox.m_dimensions);
+
+
+				float positionOfSlice = (float)crossSectionOptions.slice / (float)d_boundingBox.gridSize.y;
+
+
+				// check if we have a hit 
+				if ( relativePos.y - positionOfSlice > 0 && relativePos.y - positionOfSlice < 0.001)
+				{
+					float value = observable.ValueAtXYZ_float4(field1, relativePos).x;
+
+					float3 rgb_min =
+					{
+						crossSectionOptions.minColor[0],
+						crossSectionOptions.minColor[1],
+						crossSectionOptions.minColor[2],
+					};
+
+					float3 rgb_max =
+					{
+						crossSectionOptions.maxColor[0],
+						crossSectionOptions.maxColor[1],
+						crossSectionOptions.maxColor[2],
+					};
+
+					float3 rgb = { 0,0,0 };
+					float y_saturated = 0.0f;
+
+					if (value < 0)
+					{
+						float3 rgb_min_complement = make_float3(1, 1, 1) - rgb_min;
+						y_saturated = saturate(abs(value / crossSectionOptions.min_val));
+						rgb = rgb_min_complement * (1 - y_saturated) + rgb_min;
+					}
+					else
+					{
+						float3 rgb_max_complement = make_float3(1, 1, 1) - rgb_max;
+						y_saturated = saturate(value / crossSectionOptions.max_val);
+						rgb = rgb_max_complement * (1 - y_saturated) + rgb_max;
+					}
+					
+
+					// vector from eye to isosurface
+					float3 position_viewCoordinate = position - eyePos;
+
+					// calculates the z-value
+					float z_dist = abs(dot(viewDir, position_viewCoordinate));
+
+					// calculate non-linear depth between 0 to 1
+					float depth = (f) / (f - n);
+					depth += (-1.0f / z_dist) * (f * n) / (f - n);
+
+					float4 rgba = { rgb.x, rgb.y, rgb.z, depth };
+
+					// write back color and depth into the texture (surface)
+					// stride size of 4 * floats for each texel
+					surf2Dwrite(rgba, raycastingSurface, 4 * sizeof(float) * pixel.x, pixel.y);
+					break;
+				}
+
+
+			}
+
+
+
+		}
+
+	}
 }

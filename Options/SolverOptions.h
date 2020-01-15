@@ -1,25 +1,27 @@
 #pragma once
-#include "Enum.h"
+#include "ImGuiOptions.h"
 #include <d3d11.h>
 
 struct SolverOptions
 {
 public:
 	char fileName[100] ="FieldP";
-	char  filePath[100] ="D:\\copy\\ow\\Binary_z_Major\\Padded\\";
+	char  filePath[100] ="F:\\Dataset\\KIT3\\binary_fluc_z_major\\";
 
 
-	char filePath_out[100] = "D:\\git_projects\\LineOutput\\";
+	char filePath_out[100] = "D:\\copy\\bf\\Binary_z_Major\\Padded";
 	char fileName_out[100] = "Lineset";
 	int counter = 0;
 	int fileToSave = 1000;
 
-	int gridSize[3] = { 192,192,192 };
+	int gridSize[3] = { 64,503,2048 };
 	int seedGrid[3] = { 5,20,100 };
-	float gridDiameter[3] = { 7.854f,2.0f,3.1415f };
+	float gridDiameter[3] = { 1,2,5 };
+	//float gridDiameter[3] = { 7.854f,2.0f,3.1415f };
 
 
-	float seedBox[3] = { 7.854f,2.0f,3.1415f };
+	//float seedBox[3] = { 7.854f,2.0f,3.1415f };
+	float seedBox[3] = { 1,2,5 };
 	float seedBoxPos[3] = { 0.0f, 0.0f, 0.0f };
 
 	int precision = 32;
@@ -33,7 +35,7 @@ public:
 
 
 	int firstIdx = 1;
-	int lastIdx = 200;
+	int lastIdx = 20;
 	int currentIdx =1;
 
 	

@@ -72,7 +72,6 @@ bool VolumeTexture3D::initialize
 }
 void VolumeTexture3D::release()
 {
-
 	cudaFreeArray(this->cuArray_velocity);
 	cudaDestroyTextureObject(this->t_field);
 

@@ -1,11 +1,15 @@
 #include "RenderImGuiOptions.h"
 #include "..//Raycaster/Raycasting_Helper.h"
+
+
 void RenderImGuiOptions::drawSolverOptions()
 {
 	ImGui_ImplDX11_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
 
+
+	// Solver Options
 	ImGui::Begin("Solver Options");
 
 	ImGui::Text("Mode: ");
@@ -18,6 +22,7 @@ void RenderImGuiOptions::drawSolverOptions()
 		this->pathlineRendering = !this->streamlineRendering;
 		this->streamlineGenerating = !this->streamlineRendering;
 	}
+
 	ImGui::SameLine();
 	if (ImGui::Checkbox("Pathline", &this->pathlineRendering))
 	{
@@ -36,7 +41,7 @@ void RenderImGuiOptions::drawSolverOptions()
 	}
 
 
-	// Solver Options
+	
 	if (ImGui::InputText("File Path", solverOptions->filePath, sizeof(solverOptions->filePath)))
 	{
 	}
@@ -187,7 +192,7 @@ void RenderImGuiOptions::drawSolverOptions()
 
 
 
-	if (ImGui::Combo("Color Mode", &solverOptions->colorMode, ColorModeList, 4))
+	if (ImGui::Combo("Color Mode", &solverOptions->colorMode, ColorModeList, 7))
 	{
 		this->updateStreamlines = true;
 		this->updatePathlines = true;
@@ -246,7 +251,7 @@ void RenderImGuiOptions::drawSolverOptions()
 	if (ImGui::Button("Edge View", ImVec2(80, 25)))
 	{
 		this->camera->SetPosition(-10.7f, 4.0f, -5.37f);
-		this->camera->SetLookAtPos({ 0.75f,-0.35,0.55 });
+		this->camera->SetLookAtPos({ 0.75f,-0.35f,0.55f });
 
 		this->updateRaycasting = true;
 		this->updateDispersion = true;
@@ -349,6 +354,15 @@ void RenderImGuiOptions::drawLineRenderingOptions()
 	ImGui::Begin("Line Rendering Options");
 
 
+	if(ImGui::Checkbox("Show Seed Box", &renderingOptions->showSeedBox))
+	{ }
+
+	if (ImGui::Checkbox("Show Volume Box", &renderingOptions->showVolumeBox))
+	{
+	}
+	
+
+
 	if (ImGui::ColorEdit3("Background", (float*)&bgColor))
 	{
 		renderingOptions->bgColor[0] = bgColor[0];
@@ -367,11 +381,23 @@ void RenderImGuiOptions::drawLineRenderingOptions()
 
 	ImGui::Text("Color Coding:");
 
-	ImGui::ColorEdit4("Minimum", (float*)& renderingOptions->minColor);
-	if (ImGui::InputFloat("Min Value", (float*)& renderingOptions->minMeasure, 0.1f)) {}
+	if (ImGui::ColorEdit4("Minimum", (float*)&renderingOptions->minColor))
+	{
 
-	ImGui::ColorEdit4("Maximum", (float*)& renderingOptions->maxColor);
-	if (ImGui::InputFloat("Max Value", (float*)& renderingOptions->maxMeasure, 0.1f)) {}
+	}
+	if (ImGui::InputFloat("Min Value", (float*)& renderingOptions->minMeasure, 0.1f)) 
+	{
+
+	}
+
+	if (ImGui::ColorEdit4("Maximum", (float*)&renderingOptions->maxColor))
+	{
+
+	}
+	if (ImGui::InputFloat("Max Value", (float*)& renderingOptions->maxMeasure, 0.1f)) 
+	{
+
+	}
 
 
 
@@ -462,10 +488,31 @@ void RenderImGuiOptions::drawDispersionOptions()
 		}
 	}
 
+	if (ImGui::Combo("Rendering Mode", &dispersionOptions->renderingMode, HeightfieldRenderingMode, 2)) {}
 
-	if (ImGui::DragInt("timeStep", &dispersionOptions->timeStep,1,0,solverOptions->lastIdx - solverOptions->firstIdx))
+
+	if (dispersionOptions->renderingMode == dispersionOptionsMode::HeightfieldRenderingMode::DOUBLE_SURFACE)
+	{
+		ImGui::Separator();
+		ImGui::Text("Secondary File:");
+		if (ImGui::InputText("File Path Secondary", dispersionOptions->filePathSecondary, sizeof(dispersionOptions->filePathSecondary)))
+		{
+		}
+
+		if (ImGui::InputText("File Name Secondary", dispersionOptions->fileNameSecondary, sizeof(dispersionOptions->fileNameSecondary)))
+		{
+		}
+		ImGui::Separator();
+	}
+	
+	if (ImGui::InputInt("Save index", &dispersionOptions->file_counter, 1, 10)) {}
+
+
+	//if (ImGui::InputInt("timeStep", &dispersionOptions->timeStep,1,0,solverOptions->lastIdx - solverOptions->firstIdx))
+	if (ImGui::InputInt("timeStep", &dispersionOptions->timeStep,1,10))
 	{
 		this->updateDispersion = true;
+		this->dispersionOptions->saveScreenshot = true;
 	}
 
 
@@ -507,28 +554,37 @@ void RenderImGuiOptions::drawDispersionOptions()
 
 	}
 
-
-	ImGui::Text("Color Coding:");
-
-	if (ImGui::ColorEdit4("Minimum", (float*)& dispersionOptions->minColor))
+	if (dispersionOptions->renderingMode == dispersionOptionsMode::HeightfieldRenderingMode::SINGLE_SURFACE)
 	{
-		updateDispersion = true;
+
+		ImGui::Text("Color Coding:");
+
+		if (ImGui::ColorEdit4("Minimum", (float*)&dispersionOptions->minColor))
+		{
+			updateDispersion = true;
+		}
+		if (ImGui::InputFloat("Min Value", (float*)&dispersionOptions->min_val, 0.1f))
+		{
+			updateDispersion = true;
+		}
+
+		if (ImGui::ColorEdit4("Maximum", (float*)&dispersionOptions->maxColor))
+		{
+			updateDispersion = true;
+		}
+
+		if (ImGui::InputFloat("Max Value", (float*)&dispersionOptions->max_val, 0.1f))
+		{
+			updateDispersion = true;
+		}
 	}
-	if (ImGui::InputFloat("Min Value", (float*)& dispersionOptions->min_val, 0.1f))
+	else
 	{
-		updateDispersion = true;
+		if (ImGui::DragFloat("Transparency Secondary", &dispersionOptions->transparencySecondary, 0.001f, 0.0f, 1.0f))
+		{
+			this->updateDispersion = true;
+		}
 	}
-
-	if (ImGui::ColorEdit4("Maximum", (float*)& dispersionOptions->maxColor))
-	{	
-		updateDispersion = true;	
-	}
-
-	if (ImGui::InputFloat("Max Value", (float*)& dispersionOptions->max_val, 0.1f)) 
-	{
-		updateDispersion = true;
-	}
-
 
 	if (ImGui::InputInt2("Grid Size 2D", dispersionOptions->gridSize_2D, sizeof(dispersionOptions->gridSize_2D)))
 	{
@@ -567,6 +623,15 @@ void RenderImGuiOptions::drawFluctuationHeightfieldOptions()
 
 	if (ImGui::Combo("Field Mode", &fluctuationOptions->fieldMode, FieldMode, 3))
 	{
+
+		if (ImGui::InputText("File Path", fluctuationOptions->filePath, sizeof(fluctuationOptions->filePath)))
+		{
+		}
+
+		if (ImGui::InputText("File Name", fluctuationOptions->fileName, sizeof(fluctuationOptions->fileName)))
+		{
+		}
+
 
 	}
 
@@ -675,7 +740,7 @@ void RenderImGuiOptions::drawFluctuationHeightfieldOptions()
 	}
 
 
-	if (ImGui::DragFloat("Sampling Rate 0", &fluctuationOptions->samplingRate_0, 0.00001f, 0.0001f, 1.0f, "%.5f"))
+	if (ImGui::DragFloat("Sampling Rate 0", &fluctuationOptions->samplingRate_0, 0.00001f, 0.00001f, 1.0f, "%.5f"))
 	{
 		if (fluctuationOptions->samplingRate_0 < 0.0001f)
 		{
@@ -687,4 +752,73 @@ void RenderImGuiOptions::drawFluctuationHeightfieldOptions()
 
 	ImGui::End();
 
+}
+
+void RenderImGuiOptions::drawCrossSectionOptions()
+{
+	ImGui::Begin("Cross-Section");
+
+
+	// Show Cross Sections
+	if (ImGui::Checkbox("Render Cross Section", &this->showCrossSection))
+	{
+		this->updateCrossSection = true;
+	}
+	
+
+
+	if (ImGui::Combo("Cross Section Mode", &crossSectionOptions->crossSectionMode, CrossSectionMode, 3))
+	{
+
+	}
+
+	if (ImGui::InputInt("slice", &crossSectionOptions->slice,1,10)) 
+	{
+		this->updateCrossSection = true;
+
+
+		switch (crossSectionOptions->crossSectionMode)
+		{
+			case CrossSectionOptionsMode::CrossSectionMode::XY_SECTION:
+			{
+				break;
+			}
+			case CrossSectionOptionsMode::CrossSectionMode::XZ_SECTION:
+			{
+				break;
+			}
+			case CrossSectionOptionsMode::CrossSectionMode::YZ_SECTION:
+			{
+				break;
+			}
+		}
+	}
+
+
+	ImGui::Text("Color Coding:");
+
+	if (ImGui::ColorEdit4("Minimum", (float*)&crossSectionOptions->minColor))
+	{
+
+		this->updateCrossSection = true;
+
+	}
+	if (ImGui::InputFloat("Min Value", (float*)&crossSectionOptions->min_val, 0.1f))
+	{
+		this->updateCrossSection = true;
+
+	}
+
+	if (ImGui::ColorEdit4("Maximum", (float*)&crossSectionOptions->maxColor))
+	{
+		this->updateCrossSection = true;
+
+	}
+	if (ImGui::InputFloat("Max Value", (float*)&crossSectionOptions->max_val, 0.1f))
+	{
+		this->updateCrossSection = true;
+
+	}
+
+	ImGui::End();
 }

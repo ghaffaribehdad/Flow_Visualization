@@ -185,14 +185,19 @@
     <CudaCompile Include="Dispersion\DispersionTracer.cu">
       <FileType>Document</FileType>
     </CudaCompile>
+    <CudaCompile Include="CrossSection\CrossSection.cu">
+      <FileType>Document</FileType>
+    </CudaCompile>
     <ClCompile Include="Timer\Timer.cpp" />
     <ClCompile Include="Volume\BinaryWriter.cpp" />
     <ClCompile Include="Window\RenderWindow.cpp" />
     <ClCompile Include="Window\WindowContainer.cpp" />
+    <ClInclude Include="CrossSection\CrossSection.h" />
     <ClInclude Include="Cuda\CudaArray.h" />
     <ClInclude Include="DispersionHelper.h" />
     <ClInclude Include="Dispersion\DispersionTracer.h" />
     <ClInclude Include="Dispersion\fluctuationHeightfield.h" />
+    <ClInclude Include="Options\CrossSectionOptions.h" />
     <ClInclude Include="Options\DispresionOptions.h" />
     <ClInclude Include="Options\fluctuationheightfieldOptions.h" />
     <ClInclude Include="Options\RenderingOptions.h" />
@@ -252,7 +257,7 @@
     <ClInclude Include="Graphics\PathlineRenderer.h" />
     <ClInclude Include="Graphics\StreamlineRenderer.h" />
     <ClInclude Include="HelperFunctions\HelperFunctions.h" />
-    <ClInclude Include="Options\Enum.h" />
+    <ClInclude Include="Options\ImGuiOptions.h" />
     <ClInclude Include="Options\RaycastingOptions.h" />
     <ClInclude Include="Options\SolverOptions.h" />
     <ClInclude Include="Particle\Particle.h" />
@@ -337,6 +342,12 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
       <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</DisableOptimizations>
+    </FxCompile>
+    <FxCompile Include="Shaders\pixelshaderTextureSampler_Double.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
     </FxCompile>
     <FxCompile Include="Shaders\vertexshader.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>

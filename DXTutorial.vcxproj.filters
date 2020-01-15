@@ -105,6 +105,12 @@
     <Filter Include="Source Files\Heightfield">
       <UniqueIdentifier>{d74fde98-29be-4f40-84a1-e276cf4dde29}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\CrossSection">
+      <UniqueIdentifier>{d8132c8c-c1d9-4dab-9089-bf32d68dfaab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\CrossSection">
+      <UniqueIdentifier>{9ee9efb1-3adb-4dad-9d4c-a14ee7a2f0d2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -184,6 +190,9 @@
     </ClCompile>
     <ClCompile Include="Volume\BinaryWriter.cpp">
       <Filter>Source Files\VolumeTexture</Filter>
+    </ClCompile>
+    <ClCompile Include="CrossSection\CrossSection.cu">
+      <Filter>Source Files\CrossSection</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -313,9 +322,6 @@
     <ClInclude Include="ErrorLogger\StringConverter.h">
       <Filter>Header Files\ErrorLogger</Filter>
     </ClInclude>
-    <ClInclude Include="Options\Enum.h">
-      <Filter>Header Files\Options</Filter>
-    </ClInclude>
     <ClInclude Include="Options\RaycastingOptions.h">
       <Filter>Header Files\Options</Filter>
     </ClInclude>
@@ -364,6 +370,15 @@
     <ClInclude Include="Options\RenderingOptions.h">
       <Filter>Header Files\Options</Filter>
     </ClInclude>
+    <ClInclude Include="Options\ImGuiOptions.h">
+      <Filter>Header Files\Options</Filter>
+    </ClInclude>
+    <ClInclude Include="CrossSection\CrossSection.h">
+      <Filter>Header Files\CrossSection</Filter>
+    </ClInclude>
+    <ClInclude Include="Options\CrossSectionOptions.h">
+      <Filter>Header Files\Options</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\geometryshaderLineTube.hlsl">
@@ -385,6 +400,9 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\vertexshaderTexture.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\pixelshaderTextureSampler_Double.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

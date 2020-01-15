@@ -24,6 +24,8 @@
 #include "..//Dispersion/DispersionTracer.h"
 #include "..//Dispersion/fluctuationHeightfield.h"
 #include "..//Options/fluctuationheightfieldOptions.h"
+#include "../Options/CrossSectionOptions.h"
+#include "../CrossSection/CrossSection.h"
 
 
 typedef long long int llInt;
@@ -39,6 +41,7 @@ public:
 		this->renderImGuiOptions.updateRaycasting = true;
 		this->renderImGuiOptions.updateDispersion = true;
 		this->renderImGuiOptions.updatefluctuation = true;
+		this->renderImGuiOptions.updateCrossSection = true;
 	}
 
 
@@ -54,10 +57,12 @@ public:
 	// Add Camera object
 	Camera camera;
 
-	SolverOptions solverOptions;
-	RenderingOptions renderingOptions;
-	RaycastingOptions raycastingOptions;
-	DispersionOptions dispersionOptions;
+	// Instances of the option structures
+	SolverOptions			solverOptions;
+	RenderingOptions		renderingOptions;
+	RaycastingOptions		raycastingOptions;
+	DispersionOptions		dispersionOptions;
+	CrossSectionOptions		crossSectionOptions;
 	FluctuationheightfieldOptions fluctuationheightfieldOptions;
 
 	// Getter Functions
@@ -136,6 +141,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext>		deviceContext; //use to set resources for rendering
 	Microsoft::WRL::ComPtr<IDXGISwapChain>			swapchain; // use to swap out our frame
 	Microsoft::WRL::ComPtr<ID3D11RenderTargetView>	renderTargetView; // where we are going to render our buffer
+	Microsoft::WRL::ComPtr<ID3D11BlendState>		blendState;
 
 
 	// Shaders
@@ -174,12 +180,16 @@ private:
 	FluctuationHeightfield fluctuationHeightfield;
 
 
+	// Cross-Section Visualization objects
+	CrossSection crossSection;
 
 	// Solver options
 	bool streamline = true;
 	bool pathline = false;
 
-	void saveTexture(ID3D11Texture2D* texture);
+	void saveTexture(ID3D11Texture2D* texture, std::string fileName, std::string filePath);
+	void saveTexture(ID3D11Texture2D* texture, std::string fullName);
+	void saveTextureJPEG(ID3D11Texture2D* texture, std::string fullName);
 
 	Vertex* CudaVertex = nullptr;
 

@@ -40,6 +40,11 @@ __device__ float IsosurfaceHelper::Velocity_Magnitude::ValueAtXYZ(cudaTextureObj
 	return fabsf(sqrtf(dot(velocity, velocity)));
 }
 
+__device__ float4 IsosurfaceHelper::Velocity_XYZT::ValueAtXYZ_float4(cudaTextureObject_t tex, float3 position)
+{
+	return tex3D<float4>(tex, position.x, position.y, position.z);
+}
+
 __device__ float IsosurfaceHelper::Velocity_X::ValueAtXYZ(cudaTextureObject_t tex, float3 position)
 {
 	return tex3D<float4>(tex, position.x, position.y, position.z).x;
@@ -149,7 +154,26 @@ __device__ float2 IsosurfaceHelper::Position::GradientFluctuatuionAtXT(cudaSurfa
 }
 
 
+__device__ float2 IsosurfaceHelper::Position::GradientFluctuatuionAtXZ(cudaSurfaceObject_t surf, int3 gridPosition, int3 gridSize)
+{
+	float dH_dX = 0.0f;
+	float dH_dY = 0.0f;
 
+	if (gridPosition.x % (gridSize.x - 1) != 0 && gridPosition.z % (gridSize.z - 1) != 0)
+	{
+		dH_dX = this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x + 1, gridPosition.y, gridPosition.z)).y;
+		dH_dX -= this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x - 1, gridPosition.y, gridPosition.z)).y;
+
+
+		dH_dY = this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y, gridPosition.z + 1)).y;
+		dH_dY -= this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y, gridPosition.z - 1)).y;
+	}
+
+
+
+
+	return make_float2(dH_dX, dH_dY);
+}
 
 
 __device__  float IsosurfaceHelper::Position::ValueAtXY_Surface_float(cudaSurfaceObject_t tex, int2 gridPos)

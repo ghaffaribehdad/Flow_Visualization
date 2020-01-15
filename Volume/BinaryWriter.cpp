@@ -1,9 +1,13 @@
 
 #include "BinaryWriter.h"
 #include <assert.h>
-#include <filesystem>
+
+#define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
+
+#include <experimental/filesystem>
 
 // define fs namespace for convenience
+
 namespace fs = std::experimental::filesystem;
 
 

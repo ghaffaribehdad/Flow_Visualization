@@ -14,6 +14,8 @@ class HeightfieldGenerator : public Raycasting
 {
 public:
 
+
+
 	virtual bool initialize
 	(
 		cudaTextureAddressMode addressMode_X ,
@@ -38,16 +40,26 @@ public:
 
 	bool release() override;
 	void rendering() override;
+
 	virtual bool updateScene() override;
-	void trace3D();
-	void trace3D_path();
+	void trace3D();	 //Traces the streamlines
+
+
+	void trace3D_path_Single();
+	void trace3D_path_Double();
+
+
 	bool retrace();
-	void gradient3D();
+	void gradient3D_Single();
+	void gradient3D_Double();
 
 private:
 
 	VolumeTexture3D velocityField_0;
 	VolumeTexture3D velocityField_1;
+
+
+	virtual bool initializeShaders() override;
 
 	Particle* h_particle = nullptr;
 	Particle* d_particle = nullptr;
@@ -58,26 +70,48 @@ private:
 protected:
 
 
+	bool singleSurfaceInitialization();
+	bool doubleSurfaceInitialization();
+
+	bool InitializeHeightArray3D_Single(int x, int y ,int z);
+	virtual bool InitializeHeightArray3D_Single(int3 gridSize);
+
+	bool InitializeHeightArray3D_Double(int x, int y, int z);
+	virtual bool InitializeHeightArray3D_Double(int3 gridSize);
 
 
-	bool InitializeHeightArray3D(int x, int y ,int z);
-	virtual bool InitializeHeightArray3D(int3 gridSize);
-	virtual bool InitializeHeightSurface3D();
-	virtual bool InitializeHeightTexture3D();
+	virtual bool InitializeHeightSurface3D_Single();
+	virtual bool InitializeHeightSurface3D_Double();
+
+
+	virtual bool InitializeHeightTexture3D_Single();
+	virtual bool InitializeHeightTexture3D_Double();
+
+
 	bool LoadVelocityfield(const unsigned int & idx);
 
 	DispersionOptions* dispersionOptions;
 
+	// Primary Height Surface
+	CudaSurface s_HeightSurface_Primary;
+	CudaSurface s_HeightSurface_Primary_Ex;
 
-	CudaSurface heightSurface3D;
-	CudaSurface heightSurface3D_extra;
+	cudaTextureObject_t t_HeightSurface_Primary;
+	cudaTextureObject_t t_HeightSurface_Primary_Ex;
 
-	cudaTextureObject_t heightFieldTexture3D;
+	CudaArray_3D<float4> a_HeightSurface_Primary;
+	CudaArray_3D<float4> a_HeightSurface_Primary_Ex;		
 
-	cudaTextureObject_t heightFieldTexture3D_extra;
 
-	CudaArray_3D<float4> heightArray3D;
-	CudaArray_3D<float4> heightArray3D_extra;		
+	// Secondary Height Surface
+	CudaSurface s_HeightSurface_Secondary;
+	CudaSurface s_HeightSurface_Secondary_Ex;
+
+	cudaTextureObject_t t_HeightSurface_Secondary;
+	cudaTextureObject_t t_HeightSurface_Secondary_Ex;
+
+	CudaArray_3D<float4> a_HeightSurface_Secondary;
+	CudaArray_3D<float4> a_HeightSurface_Secondary_Ex;
 };
 
 

@@ -9,6 +9,15 @@ enum SeedingPattern
 
 
 
+
+
+static const char* const HeightfieldRenderingMode[] =
+{
+	"Single",
+	"Double"
+};
+
+
 enum IsoMeasure
 {
 	VelocityMagnitude = 0,
@@ -28,7 +37,7 @@ static const char* const IsoMeasureModes[] =
 	"Velocity Z",
 	"Shear Stress"
 };
-static const char* const ColorModeList[] = {"V", "Vx", "Vy", "Vz"};
+static const char* const ColorModeList[] = {"V", "Vx", "Vy", "Vz","i_Vx","i_Vy","i_Vz"};
 
 static const char* const ColorCode_DispersionList[] = 
 {
@@ -42,6 +51,15 @@ static const char* const ColorCode_DispersionList[] =
 	"Advection Dist. Proj.",
 	"Quadrant Dev"
 };
+
+
+static const char* const CrossSectionMode[] =
+{
+	"XY",
+	"XZ",
+	"YZ"
+};
+
 
 static const char* const ColorCode_fluctuationField[] =
 {

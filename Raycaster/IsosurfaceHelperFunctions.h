@@ -17,6 +17,13 @@ namespace IsosurfaceHelper
 
 	};
 
+	struct Velocity_XYZT : public Observable
+	{
+		// calculates the value of the field at position XYZ
+		__device__  float4 ValueAtXYZ_float4(cudaTextureObject_t tex, float3 position) override;
+
+
+	};
 
 	struct Velocity_Magnitude : public Observable
 	{
@@ -67,6 +74,7 @@ namespace IsosurfaceHelper
 		__device__ float2 GradientAtXY_Grid(cudaSurfaceObject_t surf, int2 gridPosition);
 		__device__ float2 GradientAtXYZ_Grid(cudaSurfaceObject_t surf, int3 gridPosition);
 		__device__ float2 GradientFluctuatuionAtXT(cudaSurfaceObject_t surf, int3 gridPosition, int3 gridSize);
+		__device__ float2 GradientFluctuatuionAtXZ(cudaSurfaceObject_t surf, int3 gridPosition, int3 gridSize);
 
 	};
 

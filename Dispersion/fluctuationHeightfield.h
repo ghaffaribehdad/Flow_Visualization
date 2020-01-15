@@ -27,7 +27,7 @@ public:
 	void traceFluctuationfield3D();
 	void gradientFluctuationfield();
 	virtual void rendering() override;
-	virtual bool InitializeHeightTexture3D() override;
+	virtual bool InitializeHeightTexture3D_Single() override;
 	__host__ bool initializeBoundingBox() override;
 
 
@@ -38,8 +38,8 @@ private:
 	CudaArray_2D<float> heightArray2D;
 	cudaTextureObject_t heightFieldTexture2D;
 
-	virtual bool InitializeHeightSurface3D() override;
-	virtual bool InitializeHeightArray3D(int3 gridSize) override;
+	virtual bool InitializeHeightSurface3D_Single() override;
+	virtual bool InitializeHeightArray3D_Single(int3 gridSize) override;
 
 
 };

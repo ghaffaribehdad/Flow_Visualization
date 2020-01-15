@@ -2,6 +2,7 @@
 #include <ScreenGrab.h>
 #include <dxgidebug.h>
 #include <dxgi1_3.h>
+#include <wincodec.h>
 
 
 bool Graphics::InitializeCamera()
@@ -69,7 +70,6 @@ void Graphics::RenderFrame()
 	this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), renderingOptions.bgColor);// Clear the target view
 	this->deviceContext->ClearDepthStencilView(this->depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);// Clear the depth stencil view
 	this->deviceContext->OMSetDepthStencilState(this->depthStencilState.Get(), 0);	// add depth  stencil state to rendering routin
-
 
 	/*
 
@@ -144,6 +144,25 @@ void Graphics::RenderFrame()
 		}
 	}
 
+	// Cross Section rendering
+	if (this->renderImGuiOptions.showCrossSection)
+	{
+		if (!this->crossSectionOptions.initialized)
+		{
+			crossSection.initialize(cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
+			this->crossSectionOptions.initialized = true;
+		}
+		this->crossSection.draw();
+
+		if (renderImGuiOptions.updateCrossSection)
+		{
+			this->crossSection.updateScene();
+
+			renderImGuiOptions.updateCrossSection = false;
+
+		}
+	}
+
 
 
 	// Heightfield Rendering
@@ -179,9 +198,8 @@ void Graphics::RenderFrame()
 		if (renderImGuiOptions.updateDispersion)
 		{
 			this->dispersionTracer.updateScene();
-
 			renderImGuiOptions.updateDispersion = false;
-
+			
 		}
 	}
 	else
@@ -252,8 +270,30 @@ void Graphics::RenderFrame()
 	##############################################################
 
 	*/
-	this->volumeBox.draw(camera,D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_LINELIST);
-	this->seedBox.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_LINELIST);
+	if (renderingOptions.showVolumeBox)
+	{
+		this->volumeBox.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_LINELIST);
+
+	}
+
+	if (renderingOptions.showSeedBox)
+	{
+		this->seedBox.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_LINELIST);
+
+	}
+
+
+	if (dispersionOptions.saveScreenshot)
+	{
+		std::string fullName = dispersionOptions.filePath + dispersionOptions.fileName + std::to_string(dispersionOptions.file_counter) + std::string(".jpg");
+		this->saveTextureJPEG(getBackBuffer(), fullName);
+		dispersionOptions.file_counter++;
+		dispersionOptions.saveScreenshot = false;
+	}
+	
+
+
+
 
 	if (this->renderImGuiOptions.showStreamlines)
 	{	
@@ -283,6 +323,9 @@ void Graphics::RenderFrame()
 	renderImGuiOptions.drawRaycastingOptions();
 	renderImGuiOptions.drawDispersionOptions();
 	renderImGuiOptions.drawFluctuationHeightfieldOptions();
+	renderImGuiOptions.drawCrossSectionOptions();
+
+	// Render ImGui 
 	renderImGuiOptions.render();
 
 
@@ -365,7 +408,7 @@ bool Graphics::InitializeDirectXResources()
 		ZeroMemory(&depthstencildesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
 		depthstencildesc.DepthEnable = true;
 		depthstencildesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK::D3D11_DEPTH_WRITE_MASK_ALL;
-		depthstencildesc.DepthFunc = D3D11_COMPARISON_FUNC::D3D11_COMPARISON_LESS_EQUAL;
+		depthstencildesc.DepthFunc = D3D11_COMPARISON_FUNC::D3D11_COMPARISON_LESS;
 
 		// Create depth stencil state
 		hr = this->device->CreateDepthStencilState(&depthstencildesc, this->depthStencilState.GetAddressOf());
@@ -391,6 +434,8 @@ bool Graphics::InitializeDirectXResources()
 
 	// Set the Viewport
 	this->deviceContext->RSSetViewports(1, &viewport);
+
+
 
 	return true;
 }
@@ -454,6 +499,19 @@ bool Graphics::InitializeResources()
 		this ->deviceContext.Get()
 	);
 
+	crossSection.setResources
+	(
+		&this->camera,
+		&this->windowWidth,
+		&this->windowHeight,
+		&this->solverOptions,
+		&this->raycastingOptions,
+		&this->renderingOptions,
+		this->device.Get(),
+		this->adapter,
+		this->deviceContext.Get(),
+		&this->crossSectionOptions
+	);
 
 
 
@@ -620,7 +678,8 @@ bool Graphics::InitializeImGui(HWND hwnd)
 			&solverOptions,
 			&raycastingOptions,
 			&dispersionOptions,
-			&fluctuationheightfieldOptions
+			&fluctuationheightfieldOptions,
+			&crossSectionOptions
 		);
 
 
@@ -720,11 +779,25 @@ const float3 Graphics::getViewDir()
 }
 
 
-void Graphics::saveTexture(ID3D11Texture2D* texture)
+void Graphics::saveTexture(ID3D11Texture2D* texture, std::string fileName, std::string filePath)
 {
-
-	std::string fileName = "test.dds";
-	std::wstring wfileName = std::wstring(fileName.begin(), fileName.end());
+	std::string fullName = filePath + fileName;
+	std::wstring wfileName = std::wstring(fullName.begin(), fullName.end());
 	const wchar_t* result = wfileName.c_str();
 	SaveDDSTextureToFile(this->deviceContext.Get(), texture ,result);
 }
+
+void Graphics::saveTexture(ID3D11Texture2D* texture, std::string fullName)
+{
+	std::wstring wfileName = std::wstring(fullName.begin(), fullName.end());
+	const wchar_t* result = wfileName.c_str();
+	SaveDDSTextureToFile(this->deviceContext.Get(), texture, result);
+}
+
+void Graphics::saveTextureJPEG(ID3D11Texture2D* texture, std::string fullName)
+{
+	std::wstring wfileName = std::wstring(fullName.begin(), fullName.end());
+	const wchar_t* result = wfileName.c_str();
+	SaveWICTextureToFile(this->deviceContext.Get(), texture,GUID_ContainerFormatJpeg, result);
+}
+

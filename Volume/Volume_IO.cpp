@@ -1,6 +1,8 @@
 #include "Volume_IO.h"
 #include "..//ErrorLogger/ErrorLogger.h"
 
+
+// Read a velocity volume
 bool volumeIO::Volume_IO::readVolume(unsigned int idx)
 {
 	// Generate absolute path of the file
@@ -11,7 +13,7 @@ bool volumeIO::Volume_IO::readVolume(unsigned int idx)
 	return Read();
 }
 
-
+// Read a single plane of a velocity volume
 bool volumeIO::Volume_IO::readVolumePlane(unsigned int idx, readPlaneMode planeMode, size_t plane, size_t offset,size_t bufferSize)
 {
 	// Generate absolute path of the file
