@@ -4,6 +4,8 @@
 #include "cuda_runtime.h"
 #include "..//Cuda/CudaHelperFunctions.h"
 #include "..//Options/DispresionOptions.h"
+#include "..//Cuda/helper_math.h"
+#include "..//Cuda/Cuda_helper_math_host.h"
 
 __constant__   BoundingBox d_boundingBox; // constant memory variable
 __constant__   float3 d_raycastingColor;
@@ -18,7 +20,6 @@ template __global__ void CudaTerrainRenderer< struct IsosurfaceHelper::Position 
 template __global__ void CudaTerrainRenderer_extra< struct IsosurfaceHelper::Position >(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t heightField, cudaTextureObject_t extraField, int rays, float samplingRate, float IsosurfaceTolerance, DispersionOptions dispersionOptions, int traceTime);
 template __global__ void CudaTerrainRenderer_extra_double< struct IsosurfaceHelper::Position >(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t heightField_Primary, cudaTextureObject_t extraField_Primary, cudaTextureObject_t heightField_Secondary, cudaTextureObject_t extraField_Seconary, int rays, float samplingRate, float IsosurfaceTolerance, DispersionOptions dispersionOptions, int traceTime);
 template __global__ void CudaTerrainRenderer_extra_fluctuation< struct IsosurfaceHelper::Position >(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t heightField, cudaTextureObject_t extraField, int rays, float samplingRate, float IsosurfaceTolerance, FluctuationheightfieldOptions fluctuationOptions);
-template __global__ void CudaCrossSectionRenderer<struct IsosurfaceHelper::Velocity_XYZT>(cudaSurfaceObject_t raycastingSurface,cudaTextureObject_t field1,	int rays,	float samplingRate,	float IsosurfaceTolerance,	CrossSectionOptions crossSectionOptions);
 
 
 
@@ -292,9 +293,8 @@ __host__ bool Raycasting::initializeIO()
 {
 	
 	this->primary_IO.readVolume(this->solverOptions->currentIdx);
-	std::vector<char>* p_vec_buffer = primary_IO.flushBuffer();
-	char* p_vec_buffer_temp = &(p_vec_buffer->at(0));
-	this->field = reinterpret_cast<float*>(p_vec_buffer_temp);
+
+	this->field = primary_IO.getField_float();
 	
 	return true;
 }
@@ -1190,7 +1190,7 @@ void Raycasting::setShaders()
 	this->deviceContext->IASetVertexBuffers(0, 1, this->vertexBuffer.GetAddressOf(), this->vertexBuffer.StridePtr(), &offset); 
 	this->deviceContext->PSSetSamplers(0, 1, this->samplerState.GetAddressOf());
 	this->deviceContext->PSSetShaderResources(0, 1, this->shaderResourceView.GetAddressOf());
-	this->deviceContext->OMSetBlendState(this->blendState.Get(), NULL, 0xFFFFFFFF);
+	//this->deviceContext->OMSetBlendState(this->blendState.Get(), NULL, 0xFFFFFFFF); 
 
 }
 
@@ -1549,18 +1549,167 @@ __global__ void CudaTerrainRenderer_extra_double
 
 
 
-template <typename Observable>
-__global__ void CudaCrossSectionRenderer
+
+
+template <>
+__global__ void CudaCrossSectionRenderer<CrossSectionOptionsMode::SpanMode::TIME>
 (
 	cudaSurfaceObject_t raycastingSurface,
 	cudaTextureObject_t field1,
+	cudaTextureObject_t t_gradient,
 	int rays,
 	float samplingRate,
 	float IsosurfaceTolerance,
+	SolverOptions solverOptions,
 	CrossSectionOptions crossSectionOptions
 )
 {
-	Observable observable;
+
+	int index = blockIdx.x * blockDim.y * blockDim.x;
+	index += threadIdx.y * blockDim.x;
+	index += threadIdx.x;
+
+	if (index < rays)
+	{
+
+		// 3D texture Size
+
+
+		// determine pixel position based on the index of the thread
+		int2 pixel;
+		pixel.y = index / d_boundingBox.m_width;
+		pixel.x = index - pixel.y * d_boundingBox.m_width;
+
+		// copy values from constant memory to local memory (which one is faster?)
+		float3 viewDir = d_boundingBox.m_viewDir;
+		float3 pixelPos = pixelPosition(d_boundingBox, pixel.x, pixel.y);
+		float2 NearFar = findIntersections(pixelPos, d_boundingBox);
+
+
+		// if inside the bounding box
+		if (NearFar.y != -1)
+		{
+
+			float3 rayDir = normalize(pixelPos - d_boundingBox.m_eyePos);
+
+			// near and far plane
+			float n = 0.1f;
+			float f = 1000.0f;
+
+			// Add the offset to the eye position
+			float3 eyePos = d_boundingBox.m_eyePos + d_boundingBox.m_dimensions / 2.0;
+
+			for (float t = NearFar.x; t < NearFar.y; t = t + samplingRate)
+			{
+				// Position of the isosurface
+				float3 position = pixelPos + (rayDir * t);
+
+				// Adds an offset to position while the center of the grid is at gridDiamter/2
+				position += d_boundingBox.m_dimensions / 2.0;
+
+
+				//Relative position calculates the position of the point on the cuda texture
+				float3 relativePos = (position / d_boundingBox.m_dimensions);
+
+
+				int dt = solverOptions.lastIdx + 1 - solverOptions.firstIdx;
+
+				float positionOfSlice = (float)crossSectionOptions.wallNormalPos /(float)solverOptions.gridSize[1];
+				float time = (float)crossSectionOptions.slice / (float)dt;
+
+
+				// check if we have a hit 
+				if (relativePos.y - positionOfSlice > 0 && relativePos.y - positionOfSlice < 0.001)
+				{
+					float value = tex3D<float4>(field1, relativePos.z,relativePos.x, time).x;
+		
+					float4 gradient = tex3D<float4>(t_gradient, relativePos.z, relativePos.x, time);
+
+					float gradient_magnitude = dot(gradient, gradient);
+					gradient_magnitude = gradient.x;
+
+					float3 rgb_min =
+					{
+						crossSectionOptions.minColor[0],
+						crossSectionOptions.minColor[1],
+						crossSectionOptions.minColor[2],
+					};
+
+					float3 rgb_max =
+					{
+						crossSectionOptions.maxColor[0],
+						crossSectionOptions.maxColor[1],
+						crossSectionOptions.maxColor[2],
+					};
+
+					float3 rgb = { 0,0,0 };
+					float y_saturated = 0.0f;
+
+					if (value < 0)
+					{
+						float3 rgb_min_complement = make_float3(1, 1, 1) - rgb_min;
+						y_saturated = saturate(abs(value / crossSectionOptions.min_val));
+						rgb = rgb_min_complement * (1 - y_saturated) + rgb_min;
+					}
+					else
+					{
+						float3 rgb_max_complement = make_float3(1, 1, 1) - rgb_max;
+						y_saturated = saturate(value / crossSectionOptions.max_val);
+						rgb = rgb_max_complement * (1 - y_saturated) + rgb_max;
+					}
+
+
+					// vector from eye to isosurface
+					float3 position_viewCoordinate = position - eyePos;
+
+					// calculates the z-value
+					float z_dist = abs(dot(viewDir, position_viewCoordinate));
+
+					// calculate non-linear depth between 0 to 1
+					float depth = (f) / (f - n);
+					depth += (-1.0f / z_dist) * (f * n) / (f - n);
+
+					float4 rgba = { rgb.x, rgb.y, rgb.z, depth };
+
+					// write back color and depth into the texture (surface)
+					// stride size of 4 * floats for each texel
+
+					if (crossSectionOptions.filterMinMax)
+					{
+						if (fabsf(gradient_magnitude) > crossSectionOptions.min_max_threshold)
+						{
+							rgba = { 0,0,0,depth };
+						}
+					}
+
+					surf2Dwrite(rgba, raycastingSurface, 4 * sizeof(float) * pixel.x, pixel.y);
+					break;
+				}
+
+
+			}
+
+
+
+		}
+
+	}
+}
+
+
+template <>
+__global__ void CudaCrossSectionRenderer<CrossSectionOptionsMode::SpanMode::WALL_NORMAL>
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field1,
+	cudaTextureObject_t gradient,
+	int rays,
+	float samplingRate,
+	float IsosurfaceTolerance,
+	SolverOptions solverOptions,
+	CrossSectionOptions crossSectionOptions
+)
+{
 
 	int index = blockIdx.x * blockDim.y * blockDim.x;
 	index += threadIdx.y * blockDim.x;
@@ -1598,71 +1747,71 @@ __global__ void CudaCrossSectionRenderer
 				// Position of the isosurface
 				float3 position = pixelPos + (rayDir * t);
 
-				// Adds an offset to position while the center of the grid is at gridDiamter/2
-				position += d_boundingBox.m_dimensions / 2.0;
+// Adds an offset to position while the center of the grid is at gridDiamter/2
+position += d_boundingBox.m_dimensions / 2.0;
 
 
 
-				//Relative position calculates the position of the point on the cuda texture
-				float3 relativePos = (position / d_boundingBox.m_dimensions);
+//Relative position calculates the position of the point on the cuda texture
+float3 relativePos = (position / d_boundingBox.m_dimensions);
 
 
-				float positionOfSlice = (float)crossSectionOptions.slice / (float)d_boundingBox.gridSize.y;
+float positionOfSlice = (float)crossSectionOptions.slice / (float)d_boundingBox.gridSize.y;
 
 
-				// check if we have a hit 
-				if ( relativePos.y - positionOfSlice > 0 && relativePos.y - positionOfSlice < 0.001)
-				{
-					float value = observable.ValueAtXYZ_float4(field1, relativePos).x;
+// check if we have a hit 
+if (relativePos.y - positionOfSlice > 0 && relativePos.y - positionOfSlice < 0.001)
+{
+	float value = tex3D<float4>(field1, relativePos.x, relativePos.y, relativePos.z).x;
 
-					float3 rgb_min =
-					{
-						crossSectionOptions.minColor[0],
-						crossSectionOptions.minColor[1],
-						crossSectionOptions.minColor[2],
-					};
+	float3 rgb_min =
+	{
+		crossSectionOptions.minColor[0],
+		crossSectionOptions.minColor[1],
+		crossSectionOptions.minColor[2],
+	};
 
-					float3 rgb_max =
-					{
-						crossSectionOptions.maxColor[0],
-						crossSectionOptions.maxColor[1],
-						crossSectionOptions.maxColor[2],
-					};
+	float3 rgb_max =
+	{
+		crossSectionOptions.maxColor[0],
+		crossSectionOptions.maxColor[1],
+		crossSectionOptions.maxColor[2],
+	};
 
-					float3 rgb = { 0,0,0 };
-					float y_saturated = 0.0f;
+	float3 rgb = { 0,0,0 };
+	float y_saturated = 0.0f;
 
-					if (value < 0)
-					{
-						float3 rgb_min_complement = make_float3(1, 1, 1) - rgb_min;
-						y_saturated = saturate(abs(value / crossSectionOptions.min_val));
-						rgb = rgb_min_complement * (1 - y_saturated) + rgb_min;
-					}
-					else
-					{
-						float3 rgb_max_complement = make_float3(1, 1, 1) - rgb_max;
-						y_saturated = saturate(value / crossSectionOptions.max_val);
-						rgb = rgb_max_complement * (1 - y_saturated) + rgb_max;
-					}
-					
+	if (value < 0)
+	{
+		float3 rgb_min_complement = make_float3(1, 1, 1) - rgb_min;
+		y_saturated = saturate(abs(value / crossSectionOptions.min_val));
+		rgb = rgb_min_complement * (1 - y_saturated) + rgb_min;
+	}
+	else
+	{
+		float3 rgb_max_complement = make_float3(1, 1, 1) - rgb_max;
+		y_saturated = saturate(value / crossSectionOptions.max_val);
+		rgb = rgb_max_complement * (1 - y_saturated) + rgb_max;
+	}
 
-					// vector from eye to isosurface
-					float3 position_viewCoordinate = position - eyePos;
 
-					// calculates the z-value
-					float z_dist = abs(dot(viewDir, position_viewCoordinate));
+	// vector from eye to isosurface
+	float3 position_viewCoordinate = position - eyePos;
 
-					// calculate non-linear depth between 0 to 1
-					float depth = (f) / (f - n);
-					depth += (-1.0f / z_dist) * (f * n) / (f - n);
+	// calculates the z-value
+	float z_dist = abs(dot(viewDir, position_viewCoordinate));
 
-					float4 rgba = { rgb.x, rgb.y, rgb.z, depth };
+	// calculate non-linear depth between 0 to 1
+	float depth = (f) / (f - n);
+	depth += (-1.0f / z_dist) * (f * n) / (f - n);
 
-					// write back color and depth into the texture (surface)
-					// stride size of 4 * floats for each texel
-					surf2Dwrite(rgba, raycastingSurface, 4 * sizeof(float) * pixel.x, pixel.y);
-					break;
-				}
+	float4 rgba = { rgb.x, rgb.y, rgb.z, depth };
+
+	// write back color and depth into the texture (surface)
+	// stride size of 4 * floats for each texel
+	surf2Dwrite(rgba, raycastingSurface, 4 * sizeof(float) * pixel.x, pixel.y);
+	break;
+}
 
 
 			}
@@ -1670,6 +1819,38 @@ __global__ void CudaCrossSectionRenderer
 
 
 		}
+
+	}
+}
+
+
+
+__global__ void CudaFilterExtremumX
+(
+	cudaSurfaceObject_t filtered,
+	cudaTextureObject_t unfiltered,
+	int2 dimension,
+	float threshold,
+	int z
+)
+{
+	int index = blockIdx.x * blockDim.y * blockDim.x;
+	index += threadIdx.y * blockDim.x;
+	index += threadIdx.x;
+
+	if (index < dimension.x * dimension.y)
+	{
+
+		// determine pixel position based on the index of the thread
+		int2 pixel = IndexToPixel(index, dimension);
+
+
+		float2 gradient = GradientXY_Tex3D_X(unfiltered, make_int3(pixel.x, pixel.y, z), dimension);
+		float4 gradient_float4 = make_float4(gradient.x, gradient.y, 0.0f, 0.0f);
+
+
+		surf3Dwrite(gradient_float4, filtered, 4 * sizeof(float) * pixel.x, pixel.y, z);
+
 
 	}
 }

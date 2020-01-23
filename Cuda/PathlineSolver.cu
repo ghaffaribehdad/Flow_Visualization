@@ -48,7 +48,7 @@ __host__ bool PathlineSolver::solve()
 			// Read current volume
 			this->volume_IO.readVolume(solverOptions->currentIdx);				
 			// Return a pointer to volume
-			this->h_VelocityField = this->volume_IO.flushBuffer_float();		
+			this->h_VelocityField = this->volume_IO.getField_float();		
 			// set the pointer to the volume texture
 			this->volumeTexture_0.setField(h_VelocityField);					
 			// initialize the volume texture
@@ -60,7 +60,7 @@ __host__ bool PathlineSolver::solve()
 
 			// same procedure for the second field
 			this->volume_IO.readVolume(solverOptions->currentIdx+1);
-			this->h_VelocityField = this->volume_IO.flushBuffer_float();
+			this->h_VelocityField = this->volume_IO.getField_float();
 			this->volumeTexture_1.setField(h_VelocityField);
 			this->volumeTexture_1.initialize();
 
@@ -71,7 +71,7 @@ __host__ bool PathlineSolver::solve()
 		else if (step %2 == 0) // => EVEN
 		{
 			this->volume_IO.readVolume(solverOptions->currentIdx + step +1);
-			this->h_VelocityField = this->volume_IO.flushBuffer_float();
+			this->h_VelocityField = this->volume_IO.getField_float();
 
 			this->volumeTexture_1.release();
 			this->volumeTexture_1.setField(h_VelocityField);
@@ -87,7 +87,7 @@ __host__ bool PathlineSolver::solve()
 		{
 
 			this->volume_IO.readVolume(solverOptions->currentIdx + step + 1);
-			this->h_VelocityField = this->volume_IO.flushBuffer_float();
+			this->h_VelocityField = this->volume_IO.getField_float();
 
 			this->volumeTexture_0.release();
 			this->volumeTexture_0.setField(h_VelocityField);

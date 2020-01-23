@@ -17,7 +17,8 @@
 
 #include "..//Cuda/Interoperability.h"
 #include "..//Cuda/CudaSurface.h"
-#include "..//Volume/Volume_IO.h"
+#include "..//Volume/Volume_IO_Z_Major.h"
+#include "..//Volume/Volume_IO_X_Major.h"
 
 #include "cuda_runtime.h"
 #include "..//Graphics/Shaders.h"
@@ -82,10 +83,10 @@ protected:
 	Interoperability interoperatibility;
 
 	// To handle first dataset
-	volumeIO::Volume_IO primary_IO;
+	Volume_IO_Z_Major primary_IO;
 
 	// To handle second dataset
-	volumeIO::Volume_IO secondary_IO;
+	Volume_IO_Z_Major secondary_IO;
 
 
 
@@ -154,16 +155,21 @@ __global__ void CudaIsoSurfacRenderer
 );
 
 
-template <typename Observable>
+
+
+template <typename CrossSectionOptionsMode::SpanMode>
 __global__ void CudaCrossSectionRenderer
 (
 	cudaSurfaceObject_t raycastingSurface,
 	cudaTextureObject_t field1,
+	cudaTextureObject_t gradient,
 	int rays,
 	float samplingRate,
 	float IsosurfaceTolerance,
+	SolverOptions solverOptions,
 	CrossSectionOptions crossSectionOptions
 );
+
 
 
 template <typename Observable>
@@ -221,3 +227,14 @@ __global__ void CudaTerrainRenderer_extra_fluctuation
 	float IsosurfaceTolerance,
 	FluctuationheightfieldOptions fluctuationOptions
 );
+
+
+__global__ void CudaFilterExtremumX
+(
+	cudaSurfaceObject_t filtered,
+	cudaTextureObject_t unfiltered,
+	int2 Size,
+	float threshold,
+	int z
+);
+

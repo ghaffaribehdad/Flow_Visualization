@@ -2,7 +2,6 @@
 
 #include "cuda_runtime_api.h"
 #include "BoundingBox.h"
-#include "..//Cuda/helper_math.h"
 #include <DirectXMath.h>
  
 

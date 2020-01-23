@@ -9,20 +9,43 @@ namespace CrossSectionOptionsMode
 		YZ_SECTION
 	};
 
+	enum class SpanMode
+	{
+		WALL_NORMAL = 0,
+		TIME,
+		VOL_3D
+	};
+
+	enum class VelocityComponent
+	{
+		V_X = 0,
+		V_Y,
+		V_Z
+	};
+
 }
 
 struct CrossSectionOptions
 {
 	bool initialized = false;
-	bool updateCrossSection = false;
+	bool updateTime = false;
 	int slice = 0;
+
+	bool saveScreenshot = false;
+	bool filterMinMax = false;
+
+	float min_max_threshold = 0.01f;
+
+	int wallNormalPos = 50;
+
 	float samplingRate = 0.001f;
 
-	int crossSectionMode = static_cast<int>(CrossSectionOptionsMode::CrossSectionMode::XY_SECTION);
+	CrossSectionOptionsMode::CrossSectionMode crossSectionMode = CrossSectionOptionsMode::CrossSectionMode::XY_SECTION;
+	CrossSectionOptionsMode::SpanMode mode = CrossSectionOptionsMode::SpanMode::TIME;
 
-	float max_val = 1.0f;
-	float min_val = 0.0f;
-	float minColor[4] = { 0.0f,1.0f,0.0f,1.0f };
+	float max_val = 5.0f;
+	float min_val = 5.0f;
+	float minColor[4] = { 1.0f,0.0f,0.0f,1.0f };
 	float maxColor[4] = { 0.0f,0.0f,1.0f,1.0f };
 
 };

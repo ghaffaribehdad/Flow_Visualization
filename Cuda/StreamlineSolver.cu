@@ -20,7 +20,7 @@ __host__ bool StreamlineSolver::solve()
 	this->volume_IO.Initialize(this->solverOptions);
 	this->volume_IO.readVolume(this->solverOptions->currentIdx);
 
-	this->h_VelocityField = this->volume_IO.flushBuffer_float();
+	this->h_VelocityField = this->volume_IO.getField_float();
 	
 	// Copy data to the texture memory
 	this->volumeTexture.setField(h_VelocityField);
@@ -135,7 +135,7 @@ __host__ void StreamlineSolver::measureFieldGeneration()
 	this->volume_IO.Initialize(this->solverOptions);
 	this->volume_IO.readVolume(this->solverOptions->currentIdx);
 
-	this->h_VelocityField = this->volume_IO.flushBuffer_float();
+	this->h_VelocityField = this->volume_IO.getField_float();
 
 	// Copy data to the texture memory
 	this->volumeTexture.setField(h_VelocityField);

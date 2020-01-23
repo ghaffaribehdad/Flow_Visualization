@@ -21,6 +21,11 @@ public:
 		this->solverOptions = _solverOptions;
 	}
 
+	void setArray(cudaArray_t& _cuArray_velocity)
+	{
+		this->cuArray_velocity = _cuArray_velocity;
+	}
+
 
 	// Create a texture and populate it with h_field
 	// Address modes can be set for X,y,z
@@ -28,7 +33,27 @@ public:
 	(
 		cudaTextureAddressMode addressMode_x = cudaAddressModeWrap,
 		cudaTextureAddressMode addressMode_y = cudaAddressModeBorder,
+		cudaTextureAddressMode addressMode_z = cudaAddressModeWrap,
+		cudaTextureFilterMode _cudaTextureFilterMode = cudaFilterModeLinear
+
+	);
+
+	bool initialize
+	(
+		int3 dimension,
+		cudaTextureAddressMode addressMode_x = cudaAddressModeWrap,
+		cudaTextureAddressMode addressMode_y = cudaAddressModeBorder,
+		cudaTextureAddressMode addressMode_z = cudaAddressModeWrap,
+		cudaTextureFilterMode _cudaTextureFilterMode = cudaFilterModeLinear
+		);
+
+	bool initialize_array
+	(
+		int3 dimension,
+		cudaTextureAddressMode addressMode_x = cudaAddressModeWrap,
+		cudaTextureAddressMode addressMode_y = cudaAddressModeBorder,
 		cudaTextureAddressMode addressMode_z = cudaAddressModeWrap
+
 	);
 
 	void release();
@@ -66,6 +91,11 @@ public:
 		this->h_field = _h_field;
 	}
 
+	void setArray(cudaArray_t& _cuArray_velocity)
+	{
+		this->cuArray_velocity = _cuArray_velocity;
+	}
+
 	// Create a texture and populate it with h_field
 	// Address modes can be set for X,y,z
 	bool initialize
@@ -74,6 +104,15 @@ public:
 		size_t height,
 		cudaTextureAddressMode addressMode_x = cudaAddressModeWrap,
 		cudaTextureAddressMode addressMode_z = cudaAddressModeWrap
+	);
+
+	bool initialize_array
+	(
+		size_t width,
+		size_t height,
+		cudaTextureAddressMode addressMode_x = cudaAddressModeWrap,
+		cudaTextureAddressMode addressMode_z = cudaAddressModeWrap
+
 	);
 
 	void release();

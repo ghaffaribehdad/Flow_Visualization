@@ -1,7 +1,6 @@
 #pragma once
 #include "cuda_runtime.h"
 #include <string>
-#include "..//Cuda/helper_math.h"
 #include <DirectXMath.h>
 #define _XM_NO_INTRINSICS_
 

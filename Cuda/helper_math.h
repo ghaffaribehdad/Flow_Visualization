@@ -10,6 +10,7 @@
 #define Z_HAT {0.0f, 0.0f, 1.0f}
 
 
+
 //float3 operations
 
 inline __host__ __device__ bool outofTexture(float3 position)
@@ -300,22 +301,133 @@ inline __host__ __device__ bool operator>(const float3& a, const float3& b)
 }
 
 
-inline float3 XMFloat3ToFloat3(const DirectX::XMFLOAT3& src)
+
+inline __device__ __host__ int2 IndexToPixel(int& index, int2& dim)
 {
-	return make_float3(src.x, src.y, src.z);
+	int2 pixel;
+	pixel.y = index / dim.x;
+	pixel.x = index - pixel.y * dim.x;
+
+	return pixel;
 }
 
-inline float3 ArrayFloat3ToFloat3(float* src)
+
+ __device__ inline float4 ValueAtXY_Surface_float4(cudaSurfaceObject_t surf, int2  gridPos)
+{	
+	float4 data;
+
+	surf2Dread(&data, surf, gridPos.x * sizeof(float4), gridPos.y);
+
+	return data;
+};
+
+inline __device__ float4 ValueAtXYZ_Texture_float4(cudaTextureObject_t tex, int3 position)
 {
-	return make_float3(src[0], src[1], src[2]);
+	return  tex3D<float4>(tex, position.x, position.y, position.z);
 }
 
-inline int3 ArrayInt3ToInt3(int* src)
+
+
+inline __device__  float2 Gradient2DX_Surf(cudaSurfaceObject_t surf, int2 gridPosition, int2 gridSize)
 {
-	return make_int3(src[0], src[1], src[2]);
+	float dH_dX = 0.0f;
+	float dH_dY = 0.0f;
+
+
+	if (gridPosition.x != 0 && gridPosition.x != gridSize.x - 1)
+	{
+		dH_dX = ValueAtXY_Surface_float4(surf, make_int2(gridPosition.x + 1, gridPosition.y)).x;
+		dH_dX -= ValueAtXY_Surface_float4(surf, make_int2(gridPosition.x - 1, gridPosition.y)).x;
+	}
+	else if (gridPosition.x == 0)
+	{
+		dH_dX = ValueAtXY_Surface_float4(surf, make_int2(gridPosition.x + 1, gridPosition.y)).x;
+		dH_dX -= ValueAtXY_Surface_float4(surf, make_int2(gridPosition.x, gridPosition.y)).x;
+		dH_dX = 2 * dH_dX;
+		
+	}
+	else if (gridPosition.x == gridSize.x - 1)
+	{
+		dH_dX =		ValueAtXY_Surface_float4(surf, make_int2(gridPosition.x, gridPosition.y)).x;
+		dH_dX -=	ValueAtXY_Surface_float4(surf, make_int2(gridPosition.x - 1, gridPosition.y)).x;
+		dH_dX = 2 * dH_dX;
+	}
+
+
+
+	// Y direction
+	if (gridPosition.y != 0 && gridPosition.y != gridSize.y - 1)
+	{
+		dH_dY = ValueAtXY_Surface_float4(surf, make_int2(gridPosition.x, gridPosition.y + 1)).x;
+		dH_dY -= ValueAtXY_Surface_float4(surf, make_int2(gridPosition.x, gridPosition.y - 1)).x;
+	}
+	else if (gridPosition.y == 0)
+	{
+		dH_dY = ValueAtXY_Surface_float4(surf, make_int2(gridPosition.x, gridPosition.y + 1)).x;
+		dH_dY -= ValueAtXY_Surface_float4(surf, make_int2(gridPosition.x,  gridPosition.y)).x;
+		dH_dY = 2 * dH_dY;
+		
+	}
+	else if (gridPosition.y == gridSize.y - 1)
+	{
+		dH_dY = ValueAtXY_Surface_float4(surf, make_int2(gridPosition.x,  gridPosition.y)).x;
+		dH_dY -= ValueAtXY_Surface_float4(surf, make_int2(gridPosition.x,  gridPosition.y - 1)).x;
+		dH_dY = 2 * dH_dY;
+	}
+
+
+	return make_float2(dH_dX, dH_dY);
 }
 
-inline int3 ArrayInt2ToInt3(int* src)
+
+
+inline __device__  float2 GradientXY_Tex3D_X(cudaSurfaceObject_t tex, int3 gridPosition, int2 gridSize)
 {
-	return make_int3(src[0], src[1], 0);
+	float dH_dX = 0.0f;
+	float dH_dY = 0.0f;
+
+
+	if (gridPosition.x != 0 && gridPosition.x != gridSize.x - 1)
+	{
+		dH_dX = ValueAtXYZ_Texture_float4(tex, make_int3(gridPosition.x + 1, gridPosition.y, gridPosition.z)).x;
+		dH_dX -= ValueAtXYZ_Texture_float4(tex, make_int3(gridPosition.x - 1, gridPosition.y, gridPosition.z)).x;
+	}
+	else if (gridPosition.x == 0)
+	{
+		dH_dX = ValueAtXYZ_Texture_float4(tex, make_int3(gridPosition.x + 1, gridPosition.y, gridPosition.z)).x;
+		dH_dX -= ValueAtXYZ_Texture_float4(tex, make_int3(gridPosition.x, gridPosition.y, gridPosition.z)).x;
+		dH_dX = 2 * dH_dX;
+
+	}
+	else if (gridPosition.x == gridSize.x - 1)
+	{
+		dH_dX = ValueAtXYZ_Texture_float4(tex, make_int3(gridPosition.x, gridPosition.y, gridPosition.z)).x;
+		dH_dX -= ValueAtXYZ_Texture_float4(tex, make_int3(gridPosition.x - 1, gridPosition.y, gridPosition.z)).x;
+		dH_dX = 2 * dH_dX;
+	}
+
+
+
+	// Y direction
+	if (gridPosition.y != 0 && gridPosition.y != gridSize.y - 1)
+	{
+		dH_dY = ValueAtXYZ_Texture_float4(tex, make_int3(gridPosition.x, gridPosition.y + 1, gridPosition.z)).x;
+		dH_dY -= ValueAtXYZ_Texture_float4(tex, make_int3(gridPosition.x, gridPosition.y - 1, gridPosition.z)).x;
+	}
+	else if (gridPosition.y == 0)
+	{
+		dH_dY = ValueAtXYZ_Texture_float4(tex, make_int3(gridPosition.x, gridPosition.y + 1, gridPosition.z)).x;
+		dH_dY -= ValueAtXYZ_Texture_float4(tex, make_int3(gridPosition.x, gridPosition.y, gridPosition.z)).x;
+		dH_dY = 2 * dH_dY;
+
+	}
+	else if (gridPosition.y == gridSize.y - 1)
+	{
+		dH_dY = ValueAtXYZ_Texture_float4(tex, make_int3(gridPosition.x, gridPosition.y, gridPosition.z)).x;
+		dH_dY -= ValueAtXYZ_Texture_float4(tex, make_int3(gridPosition.x, gridPosition.y - 1, gridPosition.z)).x;
+		dH_dY = 2 * dH_dY;
+	}
+
+
+	return make_float2(dH_dX, dH_dY);
 }

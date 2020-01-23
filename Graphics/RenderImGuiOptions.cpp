@@ -1,5 +1,6 @@
 #include "RenderImGuiOptions.h"
 #include "..//Raycaster/Raycasting_Helper.h"
+#include "..//Cuda/Cuda_helper_math_host.h"
 
 
 void RenderImGuiOptions::drawSolverOptions()
@@ -152,6 +153,8 @@ void RenderImGuiOptions::drawSolverOptions()
 
 		this->updateStreamlines = true;
 		this->updatePathlines = true;
+		this->crossSectionOptions->updateTime = true;
+		this->updateCrossSection = true;
 	}
 
 	ImGui::PopItemWidth();
@@ -764,10 +767,14 @@ void RenderImGuiOptions::drawCrossSectionOptions()
 	{
 		this->updateCrossSection = true;
 	}
-	
+
+	if (ImGui::Checkbox("Filter Extremum", &this->crossSectionOptions->filterMinMax))
+	{
+		this->updateCrossSection = true;
+	}
 
 
-	if (ImGui::Combo("Cross Section Mode", &crossSectionOptions->crossSectionMode, CrossSectionMode, 3))
+	if (ImGui::Combo("Cross Section Mode",reinterpret_cast<int*>(&crossSectionOptions->mode), spanMode, 3))
 	{
 
 	}
@@ -819,6 +826,30 @@ void RenderImGuiOptions::drawCrossSectionOptions()
 		this->updateCrossSection = true;
 
 	}
+
+
+	if (ImGui::DragFloat("Sampling Rate", &crossSectionOptions->samplingRate, 0.00001f, 0.0001f, 1.0f, "%.5f"))
+	{
+		if (crossSectionOptions->samplingRate < 0.0001f)
+		{
+			crossSectionOptions->samplingRate = 0.0001f;
+		}
+		this->updateCrossSection = true;
+
+	}
+
+	if (ImGui::DragFloat("min/max threshold", &crossSectionOptions->min_max_threshold,0.0001, 0.0001f, 10.0f, "%.5f"))
+	{
+		this->updateCrossSection = true;
+	}
+
+
+	if (ImGui::Button("Save Screenshot", ImVec2(80, 25)))
+	{
+		this->crossSectionOptions->saveScreenshot = true;
+
+	}
+
 
 	ImGui::End();
 }

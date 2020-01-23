@@ -12,7 +12,7 @@ enum RenderMode
 struct RenderingOptions
 {
 	float tubeRadius = 0.01f;
-	float minColor[4] = { 1.0f,0.0f,0.0f,1.0f };
+	float minColor[4] = { 1.0f,0.0f,0.0f,1.0f};
 	float maxColor[4] = { 0.0f,1.0f,0.0f,1.0f};
 	RenderMode renderMode = RenderMode::TUBES;
 

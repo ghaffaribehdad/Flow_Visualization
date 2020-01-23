@@ -193,6 +193,7 @@ private:
 
 	Vertex* CudaVertex = nullptr;
 
+	public:
 
 	RenderImGuiOptions renderImGuiOptions;
 

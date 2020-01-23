@@ -19,7 +19,7 @@ namespace volumeIO
 
 	class Volume_IO
 	{
-	private:
+	protected:
 	
 		std::string m_fileName = "";
 		std::string m_filePath = "";
@@ -27,22 +27,35 @@ namespace volumeIO
 		std::vector<unsigned int> index;
 		std::vector<char> buffer;
 		float * field = nullptr;
-		SolverOptions * m_solverOptions;
+
+
+		bool initialized = false;
+
 	public:
 	
-		void Initialize(SolverOptions * _solverOption);
-		void Initialize(FluctuationheightfieldOptions * _fluctuationOptions);
+
+		// Setter and getter functions
+		virtual void Initialize(SolverOptions * _solverOption);
+		virtual void Initialize(FluctuationheightfieldOptions * _fluctuationOptions);
+		void Initialize(std::string _fileName , std::string _filePath);
+
 		void setFileName(std::string _fileName);
 		void setFilePath(std::string _filePath);
 
 		bool isEmpty();
+
+
 		bool readVolume(unsigned int idx);
-		bool readVolumePlane(unsigned int idx, readPlaneMode planeMode, size_t plane, size_t offset ,size_t buffer_size);
+		virtual bool readVolumePlane(unsigned int idx, readPlaneMode planeMode, size_t plane, size_t offset, size_t buffer_size) = 0;
+		virtual bool readSliceXY(unsigned int idx, size_t x, size_t y) = 0;
 
-		std::vector<char>* flushBuffer();
-		float* flushBuffer_float();
+	
+		std::vector<char>* getField_char();
+		float* getField_float();
 
+		// Clear the vector
 		void release();
+
 	protected:
 
 		bool Read();

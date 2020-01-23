@@ -188,12 +188,14 @@
     <CudaCompile Include="CrossSection\CrossSection.cu">
       <FileType>Document</FileType>
     </CudaCompile>
+    <ClCompile Include="Cuda\CudaHelperFunctions.cpp" />
     <ClCompile Include="Timer\Timer.cpp" />
     <ClCompile Include="Volume\BinaryWriter.cpp" />
     <ClCompile Include="Window\RenderWindow.cpp" />
     <ClCompile Include="Window\WindowContainer.cpp" />
     <ClInclude Include="CrossSection\CrossSection.h" />
     <ClInclude Include="Cuda\CudaArray.h" />
+    <ClInclude Include="Cuda\Cuda_helper_math_host.h" />
     <ClInclude Include="DispersionHelper.h" />
     <ClInclude Include="Dispersion\DispersionTracer.h" />
     <ClInclude Include="Dispersion\fluctuationHeightfield.h" />
@@ -201,8 +203,11 @@
     <ClInclude Include="Options\DispresionOptions.h" />
     <ClInclude Include="Options\fluctuationheightfieldOptions.h" />
     <ClInclude Include="Options\RenderingOptions.h" />
+    <ClInclude Include="ParticleTracing\ParticleTracing.h" />
     <ClInclude Include="Timer\Timer.h" />
     <ClInclude Include="Volume\BinaryWriter.h" />
+    <ClInclude Include="Volume\Volume_IO_X_Major.h" />
+    <ClInclude Include="Volume\Volume_IO_Z_Major.h" />
     <ClInclude Include="Window\RenderWindow.h" />
     <ClInclude Include="Window\WindowContainer.h" />
     <CudaCompile Include="Dispersion\fluctuationHeightfield.cu" />
@@ -240,7 +245,9 @@
     <ClCompile Include="Graphics\AdapterReader.cpp" />
     <ClCompile Include="Graphics\Shaders.cpp" />
     <ClCompile Include="Graphics\Camera.cpp" />
-    <ClCompile Include="Cuda\CudaSolver.cpp" />
+    <CudaCompile Include="Cuda\CudaSolver.cu">
+      <FileType>Document</FileType>
+    </CudaCompile>
     <CudaCompile Include="Raycaster\Raycasting.cu">
       <GenerateRelocatableDeviceCode Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</GenerateRelocatableDeviceCode>
       <GenerateRelocatableDeviceCode Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</GenerateRelocatableDeviceCode>

@@ -2,6 +2,11 @@
 #include "../ErrorLogger/ErrorLogger.h"
 #include "../Raycaster/Raycasting.h"
 #include "../Raycaster/IsosurfaceHelperFunctions.h"
+#include <vector>
+
+// Explicit specialization
+template <> void CrossSection::traceCrossSectionField< CrossSectionOptionsMode::SpanMode::TIME>();
+template <> void CrossSection::traceCrossSectionField< CrossSectionOptionsMode::SpanMode::WALL_NORMAL>();
 
 bool CrossSection::initialize
 (
@@ -10,10 +15,10 @@ bool CrossSection::initialize
 	cudaTextureAddressMode addressMode_Z
 )  
 {
-	if (!this->initializeRaycastingTexture())				// initilize texture (the texture we need to write to)
+	if (!this->initializeRaycastingTexture())		// initilize texture (the texture we need to write to)
 		return false;
 
-	if (!this->initializeBoundingBox())		// initialize the bounding box ( copy data to the constant memory of GPU about Bounding Box)
+	if (!this->initializeBoundingBox())				// initialize the bounding box ( copy data to the constant memory of GPU about Bounding Box)
 		return false;
 	
 	// set the number of rays = number of pixels
@@ -21,16 +26,26 @@ bool CrossSection::initialize
 
 	primary_IO.Initialize(this->solverOptions);
 
-	traceCrossSectionField();
+	if (this->crossSectionOptions->mode == CrossSectionOptionsMode::SpanMode::WALL_NORMAL)
+	{
+		traceCrossSectionField<CrossSectionOptionsMode::SpanMode::WALL_NORMAL>();
+
+	}
+	else
+	{
+		traceCrossSectionField<CrossSectionOptionsMode::SpanMode::TIME>();
+	}
 
 	return true;
 }
 
-void CrossSection::traceCrossSectionField()
-{
 
+
+void CrossSection::retraceCrossSectionField()
+{
+	this->t_volumeTexture.release();
 	this->primary_IO.readVolume(solverOptions->currentIdx);		// Read a velocity volume
-	t_volumeTexture.setField(primary_IO.flushBuffer_float());	// Pass a pointer to the Cuda volume texture
+	t_volumeTexture.setField(primary_IO.getField_float());	// Pass a pointer to the Cuda volume texture
 	t_volumeTexture.setSolverOptions(this->solverOptions);
 	t_volumeTexture.initialize();								// Initilize the Cuda texture
 
@@ -75,14 +90,180 @@ __host__ void CrossSection::rendering()
 	blocks = static_cast<unsigned int>((this->rays % (thread.x * thread.y) == 0 ? rays / (thread.x * thread.y) : rays / (thread.x * thread.y) + 1));
 
 
-	CudaCrossSectionRenderer<IsosurfaceHelper::Velocity_XYZT> << < blocks, thread >> >
-		(
-			this->raycastingSurface.getSurfaceObject(),
-			this->t_volumeTexture.getTexture(),
-			int(this->rays),
-			crossSectionOptions->samplingRate,
-			this->raycastingOptions->tolerance_0,
-			*crossSectionOptions
-			);
+	if (this->crossSectionOptions->mode == CrossSectionOptionsMode::SpanMode::WALL_NORMAL)
+	{
+		CudaCrossSectionRenderer<CrossSectionOptionsMode::SpanMode::WALL_NORMAL> << < blocks, thread >> >
+			(
+				this->raycastingSurface.getSurfaceObject(),
+				this->t_volumeTexture.getTexture(),
+				this->t_volumeGradient.getTexture(),
+				int(this->rays),
+				crossSectionOptions->samplingRate,
+				this->raycastingOptions->tolerance_0,
+				*solverOptions,
+				*crossSectionOptions
+				);
 
+	}
+	else if(this->crossSectionOptions->mode == CrossSectionOptionsMode::SpanMode::TIME)
+	{
+		if (crossSectionOptions->filterMinMax)
+		{
+			CudaCrossSectionRenderer<CrossSectionOptionsMode::SpanMode::TIME> << < blocks, thread >> >
+				(
+					this->raycastingSurface.getSurfaceObject(),
+					this->t_volumeTexture.getTexture(),
+					this->t_volumeGradient.getTexture(),
+					int(this->rays),
+					crossSectionOptions->samplingRate,
+					this->raycastingOptions->tolerance_0,
+					*solverOptions,
+					*crossSectionOptions
+					);
+		}
+		else
+		{
+			CudaCrossSectionRenderer<CrossSectionOptionsMode::SpanMode::TIME> << < blocks, thread >> >
+				(
+					this->raycastingSurface.getSurfaceObject(),
+					this->t_volumeTexture.getTexture(),
+					this->t_volumeGradient.getTexture(),
+					int(this->rays),
+					crossSectionOptions->samplingRate,
+					this->raycastingOptions->tolerance_0,
+					*solverOptions,
+					*crossSectionOptions
+				);
+		}
+
+	}
+
+	else if (this->crossSectionOptions->mode == CrossSectionOptionsMode::SpanMode::VOL_3D)
+	{
+		CudaIsoSurfacRenderer<IsosurfaceHelper::Velocity_X> << < blocks, thread >> >
+			(
+				this->raycastingSurface.getSurfaceObject(),
+				this->t_volumeTexture.getTexture(),
+				int(this->rays),
+				this->raycastingOptions->isoValue_0,
+				this->raycastingOptions->samplingRate_0,
+				this->raycastingOptions->tolerance_0
+				);
+	}
+
+
+}
+
+
+// Specialization for wall-normal span
+template <> void CrossSection::traceCrossSectionField< CrossSectionOptionsMode::SpanMode::WALL_NORMAL>()
+{
+
+	
+	this->primary_IO.readVolume(solverOptions->currentIdx);		// Read a velocity volume
+	t_volumeTexture.setField(primary_IO.getField_float());	// Pass a pointer to the Cuda volume texture
+	t_volumeTexture.setSolverOptions(this->solverOptions);
+	t_volumeTexture.initialize();								// Initilize the Cuda texture
+
+	primary_IO.release();
+
+
+}
+
+// Specialization for time span
+template <> void CrossSection::traceCrossSectionField< CrossSectionOptionsMode::SpanMode::TIME>()
+{
+
+	// First Read XY plane
+	int t0 = this->solverOptions->firstIdx;
+	int t1 = this->solverOptions->lastIdx;
+	int dt = t1 - t0 + 1;
+
+	m_dimension = { solverOptions->gridSize[2], solverOptions->gridSize[0], dt };
+
+	float* h_velocity = new float[dt * solverOptions->gridSize[0] * solverOptions->gridSize[2] * 4];
+	size_t pass = 0;
+	for (int t = t0; t <= t1; t++)
+	{
+		for (int x = 0; x < solverOptions->gridSize[0]; x++)
+		{
+
+			primary_IO.readSliceXY(t,x,crossSectionOptions->wallNormalPos);
+
+			for (int i = 0; i < solverOptions->gridSize[2] * 4; i++)
+			{
+				h_velocity[i + pass] = primary_IO.getField_float()[i];
+			}
+			pass += solverOptions->gridSize[2] * 4;
+			primary_IO.release();
+		}
+
+	}
+
+
+	t_volumeTexture.setSolverOptions(this->solverOptions);
+	t_volumeTexture.setField(h_velocity);
+
+
+	
+
+
+	if (crossSectionOptions->filterMinMax)
+	{
+		t_volumeTexture.initialize(m_dimension, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder,cudaFilterModePoint);
+		
+		initializedFilterSurface();
+		filterExtermum();
+		cudaArray_t pCudaArray = a_field.getArray();
+		t_volumeGradient.setArray(pCudaArray);
+		t_volumeGradient.initialize_array(m_dimension, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
+
+		cudaDestroyTextureObject(t_volumeTexture.getTexture());
+		t_volumeTexture.initialize(m_dimension, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
+
+		delete[] h_velocity;
+	}
+	else
+	{
+		t_volumeTexture.initialize(m_dimension, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
+		delete[] h_velocity;
+	}
+	
+}
+
+
+void CrossSection::filterExtermum()
+{
+	// Calculates the block and grid sizes
+	unsigned int blocks;
+	dim3 thread = { maxBlockDim,maxBlockDim,1 };
+	size_t points = (size_t)m_dimension.x * (size_t)m_dimension.y;
+	blocks = static_cast<unsigned int>((points % (thread.x * thread.y) == 0 ? points / (thread.x * thread.y) : points / (thread.x * thread.y) + 1));
+
+	int2 dimension = { m_dimension.x, m_dimension.y };
+	float threshold = 0.1f;
+	for (int t = 0; t < m_dimension.z; t++)
+	{
+		CudaFilterExtremumX <<< blocks, thread >> >
+			(
+				s_filteringSurface.getSurfaceObject(),
+				t_volumeTexture.getTexture(),
+				dimension,
+				threshold,
+				t
+			);
+	}
+	s_filteringSurface.destroySurface();
+
+}
+
+
+void CrossSection::initializedFilterSurface()
+{
+	this->a_field.setDimension(m_dimension.x, m_dimension.y, m_dimension.z);
+	this->a_field.initialize();
+
+	cudaArray_t pCudaArray = a_field.getArray();
+	this->s_filteringSurface.setInputArray(pCudaArray);
+	this->s_filteringSurface.initializeSurface();
 }

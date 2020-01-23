@@ -109,7 +109,7 @@ void Graphics::RenderFrame()
 				renderImGuiOptions.updateStreamlines = false;
 			}
 		}
-		else if(renderImGuiOptions.updateStreamlines)
+		else if (renderImGuiOptions.updateStreamlines)
 		{
 			this->streamlineRenderer.updateScene();
 			renderImGuiOptions.updateStreamlines = false;
@@ -125,7 +125,7 @@ void Graphics::RenderFrame()
 			renderImGuiOptions.updatePathlines = false;
 		}
 	}
-	
+
 	if (this->renderImGuiOptions.showRaycasting)
 	{
 		if (!this->raycastingOptions.initialized)
@@ -149,11 +149,16 @@ void Graphics::RenderFrame()
 	{
 		if (!this->crossSectionOptions.initialized)
 		{
-			crossSection.initialize(cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
+			crossSection.initialize(cudaAddressModeClamp, cudaAddressModeClamp, cudaAddressModeClamp);
 			this->crossSectionOptions.initialized = true;
 		}
 		this->crossSection.draw();
 
+		if (crossSectionOptions.updateTime)
+		{
+			crossSection.retraceCrossSectionField();
+			crossSectionOptions.updateTime = false;
+		}
 		if (renderImGuiOptions.updateCrossSection)
 		{
 			this->crossSection.updateScene();
@@ -199,7 +204,7 @@ void Graphics::RenderFrame()
 		{
 			this->dispersionTracer.updateScene();
 			renderImGuiOptions.updateDispersion = false;
-			
+
 		}
 	}
 	else
@@ -282,6 +287,17 @@ void Graphics::RenderFrame()
 
 	}
 
+	if (crossSectionOptions.saveScreenshot)
+	{
+		std::string fullName = dispersionOptions.filePath + dispersionOptions.fileName + std::to_string(dispersionOptions.file_counter) + std::string(".jpg");
+		this->saveTextureJPEG(getBackBuffer(), fullName);
+		dispersionOptions.file_counter++;
+		crossSectionOptions.slice++;
+		renderImGuiOptions.updateCrossSection = true;
+		if (!(dispersionOptions.file_counter < solverOptions.lastIdx - solverOptions.firstIdx))
+			crossSectionOptions.saveScreenshot = false;
+
+	}
 
 	if (dispersionOptions.saveScreenshot)
 	{
@@ -290,7 +306,8 @@ void Graphics::RenderFrame()
 		dispersionOptions.file_counter++;
 		dispersionOptions.saveScreenshot = false;
 	}
-	
+
+
 
 
 

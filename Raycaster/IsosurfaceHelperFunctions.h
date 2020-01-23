@@ -1,7 +1,5 @@
 #pragma once
 
-#include "..//Cuda/helper_math.h"
-
 
 namespace IsosurfaceHelper
 {

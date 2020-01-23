@@ -5,8 +5,8 @@
 struct SolverOptions
 {
 public:
-	char fileName[100] ="FieldP";
-	char  filePath[100] ="F:\\Dataset\\KIT3\\binary_fluc_z_major\\";
+	char fileName[100] ="FieldPadded";
+	char  filePath[100] ="I:\\binary_fluct_x_major_Padded_1_1000\\";
 
 
 	char filePath_out[100] = "D:\\copy\\bf\\Binary_z_Major\\Padded";
@@ -22,7 +22,7 @@ public:
 
 	//float seedBox[3] = { 7.854f,2.0f,3.1415f };
 	float seedBox[3] = { 1,2,5 };
-	float seedBoxPos[3] = { 0.0f, 0.0f, 0.0f };
+	float seedBoxPos[3] = { 0.0f, 0.0f, 0.0f }; 
 
 	int precision = 32;
 
@@ -34,8 +34,8 @@ public:
 	float line_thickness = 0.0f;
 
 
-	int firstIdx = 1;
-	int lastIdx = 20;
+	int firstIdx = 750;
+	int lastIdx = 950;
 	int currentIdx =1;
 
 	

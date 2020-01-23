@@ -1,11 +1,11 @@
 #pragma once
 #include "cuda_runtime.h"
-#include "helper_math.h"
 #include <math.h>
 #include "../Particle/Particle.h"
 #include "../Options/SolverOptions.h"
 #include "..//Graphics/Vertex.h"
 #include "..//Raycaster/IsosurfaceHelperFunctions.h"
+#include "..//Cuda/helper_math.h"
 
 
 

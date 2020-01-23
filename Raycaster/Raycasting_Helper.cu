@@ -1,7 +1,7 @@
 
 
 #include "Raycasting_Helper.h"
-
+#include "../Cuda/helper_math.h"
 
 typedef unsigned char uchar;
 

@@ -13,44 +13,15 @@ bool volumeIO::Volume_IO::readVolume(unsigned int idx)
 	return Read();
 }
 
-// Read a single plane of a velocity volume
-bool volumeIO::Volume_IO::readVolumePlane(unsigned int idx, readPlaneMode planeMode, size_t plane, size_t offset,size_t bufferSize)
-{
-	// Generate absolute path of the file
-
-	this->fullName = m_filePath + m_fileName + std::to_string(idx) + ".bin";
-	
-	std::streampos begin = 0;
-	size_t size = 0;
 
 
-	switch (static_cast<int>(planeMode))
-	{
-	case 0: // => YZ
-		begin = plane * offset;
-		return this->Read(begin, bufferSize);
-
-
-	case 1: // => ZX
-		ErrorLogger::Log("Not implemented yet");
-		break;
-
-	case 2: // => XY
-		ErrorLogger::Log("Not implemented yet");
-		break;
-	}
-	
-	return false;
-	
-}
-
-std::vector<char>* volumeIO::Volume_IO::flushBuffer()
+std::vector<char>* volumeIO::Volume_IO::getField_char()
 {
 	return &this->buffer;
 }
 
 
-float* volumeIO::Volume_IO::flushBuffer_float()
+float* volumeIO::Volume_IO::getField_float()
 {
 	return field;
 }
@@ -173,14 +144,26 @@ void volumeIO::Volume_IO::Initialize(SolverOptions* _solverOptions)
 {
 	m_fileName = _solverOptions->fileName;
 	m_filePath = _solverOptions->filePath;
-	m_solverOptions = _solverOptions;
+
+	this->initialized = true;
 }
 
 void volumeIO::Volume_IO::Initialize(FluctuationheightfieldOptions* _fluctuationOptions)
 {
 	m_fileName = _fluctuationOptions->fileName;
 	m_filePath = _fluctuationOptions->filePath;
+
+	this->initialized = true;
 }
+
+void volumeIO::Volume_IO::Initialize(std::string _fileName, std::string _filePath)
+{
+	m_fileName = _fileName;
+	m_filePath = _filePath;
+
+	this->initialized = true;
+}
+
 
 bool volumeIO::Volume_IO::isEmpty()
 {

@@ -454,7 +454,7 @@ void HeightfieldGenerator::trace3D_path_Double()
 		{
 			// Load i 'dx field in volume_IO into field
 			secondary_IO.readVolume(i + solverOptions->currentIdx);
-			this->field = secondary_IO.flushBuffer_float();
+			this->field = secondary_IO.getField_float();
 
 
 			// Copy and initialize velocityfield texture
@@ -464,7 +464,7 @@ void HeightfieldGenerator::trace3D_path_Double()
 
 			// Same procedure for the second texture
 			secondary_IO.readVolume(i + solverOptions->currentIdx+1);
-			this->field = secondary_IO.flushBuffer_float();
+			this->field = secondary_IO.getField_float();
 
 
 			this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, velocityField_1);
@@ -478,7 +478,7 @@ void HeightfieldGenerator::trace3D_path_Double()
 			{
 
 				secondary_IO.readVolume(i + solverOptions->currentIdx);
-				this->field = secondary_IO.flushBuffer_float();
+				this->field = secondary_IO.getField_float();
 
 
 				this->velocityField_1.release();
@@ -492,7 +492,7 @@ void HeightfieldGenerator::trace3D_path_Double()
 			{
 
 				secondary_IO.readVolume(i + solverOptions->currentIdx);
-				this->field = secondary_IO.flushBuffer_float();
+				this->field = secondary_IO.getField_float();
 
 				this->velocityField_0.release();
 				this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, velocityField_0);
@@ -783,7 +783,7 @@ bool HeightfieldGenerator::LoadVelocityfield(const unsigned int& idx)
 	if (!primary_IO.readVolume(idx))
 		return false;
 
-	this->field = primary_IO.flushBuffer_float();
+	this->field = primary_IO.getField_float();
 
 	return true;
 }

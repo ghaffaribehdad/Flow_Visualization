@@ -60,6 +60,13 @@ static const char* const CrossSectionMode[] =
 	"YZ"
 };
 
+static const char* const spanMode[] =
+{
+	"Wall-Normal",
+	"Time",
+	"3D Vol"
+};
+
 
 static const char* const ColorCode_fluctuationField[] =
 {

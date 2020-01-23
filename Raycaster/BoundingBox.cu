@@ -1,7 +1,7 @@
 #include "BoundingBox.h"
 #include <iostream>
 #include <fstream>
-
+#include "../Cuda/helper_math.h"
 
 __device__ __host__ void BoundingBox::constructEyeCoordinates(const float3& eyePos, const float3& viewDir, const float3& upVec)
 {

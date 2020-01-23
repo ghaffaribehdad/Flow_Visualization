@@ -103,6 +103,8 @@ void Engine::Update()
 	{
 		OutputDebugStringA("It is resized!\n");
 		this->gfx.Resize(this->render_window.GetHWND());
+		this->gfx.renderImGuiOptions.updateStreamlines = true;
+
 		this->resize = false;
 	}
 }

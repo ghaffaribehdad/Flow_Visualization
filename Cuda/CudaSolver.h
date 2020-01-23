@@ -6,7 +6,7 @@
 #include "../Particle/Particle.h"
 #include "../Options/SolverOptions.h"
 #include "../Graphics/Vertex.h"
-#include "../Volume/Volume_IO.h"
+#include "../Volume/Volume_IO_Z_Major.h"
 
 
 
@@ -45,7 +45,7 @@ protected:
 	IDXGIAdapter* adapter = NULL;
 	ID3D11Device* device = NULL;
 
-	volumeIO::Volume_IO volume_IO;
+	Volume_IO_Z_Major volume_IO;
 
 	// The probe particles
 	Particle* d_Particles = nullptr;

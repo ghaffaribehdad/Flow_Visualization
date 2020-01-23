@@ -4,17 +4,26 @@
 #include "../Cuda/CudaArray.h"
 #include "../Options/CrossSectionOptions.h"
 #include "../VolumeTexture/VolumeTexture.h"
+#include "../Cuda/cudaSurface.h"
 
 class CrossSection : public Raycasting
 {
 
 private:
 
-	cudaTextureObject_t		t_crossSection;
+	CudaSurface				s_filteringSurface;
+	CudaArray_3D<float4>	a_field;
+
+	int3 m_dimension = { 0,0,0 };
 
 	//Options
 	CrossSectionOptions* crossSectionOptions;
 	VolumeTexture3D t_volumeTexture;
+	VolumeTexture3D t_volumeGradient;
+
+
+	void filterExtermum();
+	void initializedFilterSurface();
 
 public:
 
@@ -41,7 +50,10 @@ public:
 
 	virtual void rendering() override;
 
-	void traceCrossSectionField();
+
+	template <typename CrossSectionOptionsMode::SpanMode> void traceCrossSectionField();
+
+	void retraceCrossSectionField();
 
 	
 };

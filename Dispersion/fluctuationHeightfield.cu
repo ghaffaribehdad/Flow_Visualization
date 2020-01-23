@@ -2,6 +2,7 @@
 #include "DispersionHelper.h"
 #include "..//Cuda/helper_math.h"
 #include "..//ErrorLogger/ErrorLogger.h"
+#include "..//Cuda/Cuda_helper_math_host.h"
 
 extern __constant__  BoundingBox d_boundingBox;
 extern __constant__ float3 d_raycastingColor;
@@ -73,7 +74,7 @@ void  FluctuationHeightfield::traceFluctuationfield3D()
 	for (int t = 0; t < m_gridSize3D.z; t++)
 	{
 		this->primary_IO.readVolumePlane(t + fluctuationOptions->firstIdx, volumeIO::readPlaneMode::YZ, fluctuationOptions->spanwisePos, offset, buffer_size);
-		float* p_temp = primary_IO.flushBuffer_float();
+		float* p_temp = primary_IO.getField_float();
 
 		size_t counter_t = 0;
 
