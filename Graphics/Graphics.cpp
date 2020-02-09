@@ -144,6 +144,9 @@ void Graphics::RenderFrame()
 		}
 	}
 
+
+
+
 	// Cross Section rendering
 	if (this->renderImGuiOptions.showCrossSection)
 	{
@@ -180,19 +183,7 @@ void Graphics::RenderFrame()
 		}
 		if (!this->dispersionOptions.initialized)
 		{
-			dispersionTracer.setResources
-			(
-				&this->camera,
-				&this->windowWidth,
-				&this->windowHeight,
-				&this->solverOptions,
-				&this->raycastingOptions,
-				&this->renderingOptions,
-				this->device.Get(),
-				this->adapter,
-				this->deviceContext.Get(),
-				&this->dispersionOptions
-			);
+
 
 			dispersionTracer.initialize(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
 			this->dispersionOptions.initialized = true;
@@ -217,6 +208,35 @@ void Graphics::RenderFrame()
 	}
 
 
+	// Turbulent Mixing
+	
+	if (this->renderImGuiOptions.showTurbulentMixing)
+	{
+		if (!this->turbulentMixingOptions.initialized)
+		{
+
+
+			this->turbulentMixingOptions.initialized  = this->turbulentMixing.initalize();
+		}
+
+		this->turbulentMixing.draw();
+
+	}
+
+	if (this->renderImGuiOptions.updateTurbulentMixing)
+	{
+		this->turbulentMixing.updateScene();
+
+		renderImGuiOptions.updateTurbulentMixing = false;
+	}
+
+	if (this->renderImGuiOptions.releaseTurbulentMixing)
+	{
+		this->turbulentMixing.release();
+		this->renderImGuiOptions.releaseTurbulentMixing = false;
+	}
+
+
 
 	// Fluctuation Heightfield Rendering
 	if (this->renderImGuiOptions.showFluctuationHeightfield)
@@ -228,19 +248,7 @@ void Graphics::RenderFrame()
 		//}
 		if (!this->fluctuationheightfieldOptions.initialized)
 		{
-			fluctuationHeightfield.setResources
-			(
-				&this->camera,
-				&this->windowWidth,
-				&this->windowHeight,
-				&this->solverOptions,
-				&this->raycastingOptions,
-				&this->renderingOptions,
-				this->device.Get(),
-				this->adapter,
-				this->deviceContext.Get(),
-				&this->dispersionOptions
-			);
+
 			fluctuationHeightfield.fluctuationOptions = &this->fluctuationheightfieldOptions;
 			fluctuationHeightfield.initialize(cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
 			this->fluctuationheightfieldOptions.initialized = true;
@@ -334,16 +342,8 @@ void Graphics::RenderFrame()
 	##############################################################
 	*/
 
-	renderImGuiOptions.drawSolverOptions();
-	renderImGuiOptions.drawLineRenderingOptions();
-	renderImGuiOptions.drawLog();
-	renderImGuiOptions.drawRaycastingOptions();
-	renderImGuiOptions.drawDispersionOptions();
-	renderImGuiOptions.drawFluctuationHeightfieldOptions();
-	renderImGuiOptions.drawCrossSectionOptions();
-
-	// Render ImGui 
-	renderImGuiOptions.render();
+	renderImGuiOptions.drawOptionWindows();		// Draw Options
+	renderImGuiOptions.render();				// Render ImGui 
 
 
 
@@ -530,7 +530,48 @@ bool Graphics::InitializeResources()
 		&this->crossSectionOptions
 	);
 
+	turbulentMixing.setResources
+	(
+		&this->camera,
+		&this->windowWidth,
+		&this->windowHeight,
+		&this->solverOptions,
+		&this->raycastingOptions,
+		&this->renderingOptions,
+		this->device.Get(),
+		this->adapter,
+		this->deviceContext.Get(),
+		&this->turbulentMixingOptions
+	);
 
+
+	fluctuationHeightfield.setResources
+	(
+		&this->camera,
+		&this->windowWidth,
+		&this->windowHeight,
+		&this->solverOptions,
+		&this->raycastingOptions,
+		&this->renderingOptions,
+		this->device.Get(),
+		this->adapter,
+		this->deviceContext.Get(),
+		&this->dispersionOptions
+	);
+
+	dispersionTracer.setResources
+	(
+		&this->camera,
+		&this->windowWidth,
+		&this->windowHeight,
+		&this->solverOptions,
+		&this->raycastingOptions,
+		&this->renderingOptions,
+		this->device.Get(),
+		this->adapter,
+		this->deviceContext.Get(),
+		&this->dispersionOptions
+	);
 
 	
 	if (!streamlineRenderer.initializeBuffers())
@@ -696,7 +737,8 @@ bool Graphics::InitializeImGui(HWND hwnd)
 			&raycastingOptions,
 			&dispersionOptions,
 			&fluctuationheightfieldOptions,
-			&crossSectionOptions
+			&crossSectionOptions,
+			&turbulentMixingOptions
 		);
 
 

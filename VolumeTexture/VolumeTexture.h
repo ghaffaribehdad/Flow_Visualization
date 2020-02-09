@@ -115,6 +115,21 @@ public:
 
 	);
 
+
+	bool initialize
+	(
+		size_t width,
+		size_t height,
+		cudaTextureAddressMode addressMode_x = cudaAddressModeWrap,
+		cudaTextureAddressMode addressMode_y = cudaAddressModeBorder,
+		cudaTextureFilterMode _cudaTextureFilterMode = cudaFilterModeLinear
+	);
+
+	void setSolverOptions(SolverOptions* _solverOptions)
+	{
+		this->solverOptions = _solverOptions;
+	}
+
 	void release();
 
 	cudaTextureObject_t getTexture()

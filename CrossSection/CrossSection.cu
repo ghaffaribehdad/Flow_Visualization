@@ -140,7 +140,7 @@ __host__ void CrossSection::rendering()
 
 	else if (this->crossSectionOptions->mode == CrossSectionOptionsMode::SpanMode::VOL_3D)
 	{
-		CudaIsoSurfacRenderer<IsosurfaceHelper::Velocity_X> << < blocks, thread >> >
+		CudaIsoSurfacRendererSpaceTime<IsosurfaceHelper::Velocity_X> << < blocks, thread >> >
 			(
 				this->raycastingSurface.getSurfaceObject(),
 				this->t_volumeTexture.getTexture(),

@@ -16,16 +16,17 @@
 #include <d3d11.h>
 #include "..\\Raycaster\Raycasting.h"
 
-#include "..//Options/RenderingOptions.h"
 #include "StreamlineRenderer.h"
 #include "BoxRenderer.h"
 #include "RenderImGuiOptions.h"
 #include "PathlineRenderer.h"
-#include "..//Dispersion/DispersionTracer.h"
-#include "..//Dispersion/fluctuationHeightfield.h"
-#include "..//Options/fluctuationheightfieldOptions.h"
-#include "../Options/CrossSectionOptions.h"
+#include "../Dispersion/DispersionTracer.h"
+#include "../Dispersion/fluctuationHeightfield.h"
+
 #include "../CrossSection/CrossSection.h"
+
+#include "../TurbulentMixing/TurbulentMixing.h"
+
 
 
 typedef long long int llInt;
@@ -42,6 +43,7 @@ public:
 		this->renderImGuiOptions.updateDispersion = true;
 		this->renderImGuiOptions.updatefluctuation = true;
 		this->renderImGuiOptions.updateCrossSection = true;
+		this->renderImGuiOptions.updateTurbulentMixing = true;
 	}
 
 
@@ -58,12 +60,13 @@ public:
 	Camera camera;
 
 	// Instances of the option structures
-	SolverOptions			solverOptions;
-	RenderingOptions		renderingOptions;
-	RaycastingOptions		raycastingOptions;
-	DispersionOptions		dispersionOptions;
-	CrossSectionOptions		crossSectionOptions;
-	FluctuationheightfieldOptions fluctuationheightfieldOptions;
+	SolverOptions					solverOptions;
+	RenderingOptions				renderingOptions;
+	RaycastingOptions				raycastingOptions;
+	DispersionOptions				dispersionOptions;
+	CrossSectionOptions				crossSectionOptions;
+	FluctuationheightfieldOptions	fluctuationheightfieldOptions;
+	TurbulentMixingOptions			turbulentMixingOptions;
 
 	// Getter Functions
 	IDXGIAdapter* GetAdapter();
@@ -175,9 +178,10 @@ private:
 	BoxRenderer seedBox;
 
 	// Raycasting (This object would write into a texture and pass it to the graphics then we need to use sampler state to show it on the backbuffer)
-	Raycasting raycasting;
-	HeightfieldGenerator dispersionTracer;
-	FluctuationHeightfield fluctuationHeightfield;
+	Raycasting				raycasting;
+	HeightfieldGenerator	dispersionTracer;
+	FluctuationHeightfield	fluctuationHeightfield;
+	TurbulentMixing			turbulentMixing;
 
 
 	// Cross-Section Visualization objects

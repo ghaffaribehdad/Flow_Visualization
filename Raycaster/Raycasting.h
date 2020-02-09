@@ -154,6 +154,18 @@ __global__ void CudaIsoSurfacRenderer
 	float IsosurfaceTolerance
 );
 
+template <typename Observable>
+__global__ void CudaIsoSurfacRendererSpaceTime
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field1,
+	int rays,
+	float isoValue,
+	float samplingRate,
+	float IsosurfaceTolerance
+);
+
+
 
 
 

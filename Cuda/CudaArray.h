@@ -30,6 +30,11 @@ public:
 		return cuArray;
 	}
 
+	cudaArray_t& getArrayRef()
+	{
+		return cuArray;
+	}
+
 	void release()
 	{
 		gpuErrchk(cudaFreeArray(this->cuArray));
@@ -70,8 +75,8 @@ public:
 		this->channelFormatDesc = cudaCreateChannelDesc<T>();
 
 		// Allocate 3D Array
-		cudaMalloc3DArray(&this->cuArray, &channelFormatDesc, extent);
-
+		gpuErrchk(cudaMalloc3DArray(&this->cuArray, &channelFormatDesc, extent))
+		
 		// set initialization status to true
 		this->initialized = true;
 
@@ -91,7 +96,10 @@ public:
 			cpyParams.extent = extent;
 
 			// Copy velocities to 3D Array
-			gpuErrchk(cudaMemcpy3D(&cpyParams));
+			gpuErrchk(cudaMemcpy3D(&cpyParams))
+			{
+				return false;
+			}
 			
 			return true;
 		}
@@ -110,6 +118,11 @@ public:
 	}
 
 	cudaArray_t getArray()
+	{
+		return this->cuArray;
+	}
+
+	cudaArray_t & getArrayRef()
 	{
 		return cuArray;
 	}

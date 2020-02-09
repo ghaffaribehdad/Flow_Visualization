@@ -217,17 +217,11 @@ __host__ bool HeightfieldGenerator::InitializeHeightArray3D_Double(int3 gridSize
 __host__ bool HeightfieldGenerator::InitializeHeightSurface3D_Single()
 {
 	// Assign the hightArray to the hightSurface and initialize the surface
-	cudaArray_t pCudaArray = NULL;
-	cudaArray_t pCudaArray_extra = NULL;
-
-	pCudaArray = a_HeightSurface_Primary.getArray();
-	pCudaArray_extra = a_HeightSurface_Primary_Ex.getArray();
-
-	this->s_HeightSurface_Primary.setInputArray(pCudaArray);
+	this->s_HeightSurface_Primary.setInputArray(a_HeightSurface_Primary.getArrayRef());
 	if (!this->s_HeightSurface_Primary.initializeSurface())
 		return false;
 
-	this->s_HeightSurface_Primary_Ex.setInputArray(pCudaArray_extra);
+	this->s_HeightSurface_Primary_Ex.setInputArray(a_HeightSurface_Primary_Ex.getArrayRef());
 	if (!this->s_HeightSurface_Primary_Ex.initializeSurface())
 		return false;
 
@@ -238,15 +232,8 @@ __host__ bool HeightfieldGenerator::InitializeHeightSurface3D_Single()
 __host__ bool HeightfieldGenerator::InitializeHeightSurface3D_Double()
 {
 	// Assign the hightArray to the hightSurface and initialize the surface
-	cudaArray_t pCudaArray = NULL;
-	cudaArray_t pCudaArray_extra = NULL;
-
-	pCudaArray = a_HeightSurface_Primary.getArray();
-	pCudaArray_extra = a_HeightSurface_Primary_Ex.getArray();
-
-
-	this->s_HeightSurface_Primary.setInputArray(pCudaArray);
-	this->s_HeightSurface_Primary_Ex.setInputArray(pCudaArray_extra);
+	this->s_HeightSurface_Primary.setInputArray(a_HeightSurface_Primary.getArrayRef());
+	this->s_HeightSurface_Primary_Ex.setInputArray(a_HeightSurface_Primary_Ex.getArrayRef());
 
 	
 	if (!this->s_HeightSurface_Primary.initializeSurface())
@@ -258,11 +245,10 @@ __host__ bool HeightfieldGenerator::InitializeHeightSurface3D_Double()
 
 	//##########	Secondary #################
 
-	pCudaArray = a_HeightSurface_Secondary.getArray();
-	pCudaArray_extra = a_HeightSurface_Secondary_Ex.getArray();
 
-	this->s_HeightSurface_Secondary.setInputArray(pCudaArray);
-	this->s_HeightSurface_Secondary_Ex.setInputArray(pCudaArray_extra);
+	this->s_HeightSurface_Secondary.setInputArray(a_HeightSurface_Secondary.getArrayRef());
+	this->s_HeightSurface_Secondary_Ex.setInputArray(a_HeightSurface_Secondary_Ex.getArrayRef());
+
 
 
 	if (!this->s_HeightSurface_Secondary.initializeSurface())

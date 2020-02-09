@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../Particle/Particle.h"
-#include "cuda_runtime.h"
+
 #include "..//Cuda/CudaHelperFunctions.h"
 #include "..//Options/DispresionOptions.h"
 #include "..//Options/SolverOptions.h"

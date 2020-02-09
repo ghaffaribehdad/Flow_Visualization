@@ -59,7 +59,7 @@ struct DispersionOptions
 	float maxColor_secondary[4] = { 1.0f,0.0f,0.0f,1.0f };
 
 	// Advection Options
-	int timeStep = 1;
+	int timestep = 1;
 	float dt = 0.001f;
 	int sampling_step = 10;
 

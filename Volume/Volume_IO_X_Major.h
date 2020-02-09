@@ -3,7 +3,7 @@
 #include "Volume_IO.h"
 #include "../ErrorLogger/ErrorLogger.h"
 
-class Volume_IO_X_Major : public volumeIO::Volume_IO
+class Volume_IO_X_Major : public VolumeIO::Volume_IO
 {
 
 private:
@@ -19,7 +19,17 @@ public:
 		return false;
 	}
 
-	virtual bool readVolumePlane(unsigned int idx, volumeIO::readPlaneMode planeMode, size_t plane, size_t offset, size_t buffer_size)
+
+	virtual void Initialize(SolverOptions* _solverOptions) override
+	{
+		m_solverOptions = _solverOptions;
+
+		m_fileName = _solverOptions->fileName;
+		m_filePath = _solverOptions->filePath;
+		this->initialized = true;
+	}
+
+	virtual bool readVolumePlane(unsigned int idx, VolumeIO::readPlaneMode planeMode, size_t plane, size_t offset, size_t buffer_size)
 	{
 		// Generate absolute path of the file
 

@@ -18,6 +18,11 @@ public:
 		return this->surfaceObject;
 	}
 
+	cudaSurfaceObject_t& getSurfaceObjectRef()
+	{
+		return this->surfaceObject;
+	}
+
 	void setInputArray(cudaArray_t & _cuInputArray)
 	{
 		this->cuInputArray = _cuInputArray;

@@ -12,6 +12,7 @@ __constant__   float3 d_raycastingColor;
 
 // Explicit instantiation
 template __global__ void CudaIsoSurfacRenderer<struct IsosurfaceHelper::Velocity_Magnitude>	(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
+template __global__ void CudaIsoSurfacRendererSpaceTime<struct IsosurfaceHelper::Velocity_X>	(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
 template __global__ void CudaIsoSurfacRenderer<struct IsosurfaceHelper::Velocity_X>			(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
 template __global__ void CudaIsoSurfacRenderer<struct IsosurfaceHelper::Velocity_Y>			(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
 template __global__ void CudaIsoSurfacRenderer<struct IsosurfaceHelper::Velocity_Z>			(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
@@ -469,7 +470,7 @@ __global__ void CudaTerrainRenderer
 				{ 
 					position.x / d_boundingBox.m_dimensions.x,
 					position.z / d_boundingBox.m_dimensions.z,
-					static_cast<float> (dispersionOptions.timeStep) / static_cast<float> (traceTime)
+					static_cast<float> (dispersionOptions.timestep) / static_cast<float> (traceTime)
 				};
 				
 				// fetch texels from the GPU memory
@@ -586,7 +587,7 @@ __global__ void CudaTerrainRenderer_extra
 				{
 					position.x / d_boundingBox.m_dimensions.x,
 					position.z / d_boundingBox.m_dimensions.z,
-					static_cast<float> (dispersionOptions.timeStep) / static_cast<float> (traceTime)
+					static_cast<float> (dispersionOptions.timestep) / static_cast<float> (traceTime)
 				};
 
 				// fetch texels from the GPU memory
@@ -1450,7 +1451,7 @@ __global__ void CudaTerrainRenderer_extra_double
 				{
 					position.x / d_boundingBox.m_dimensions.x,
 					position.z / d_boundingBox.m_dimensions.z,
-					static_cast<float> (dispersionOptions.timeStep) / static_cast<float> (traceTime)
+					static_cast<float> (dispersionOptions.timestep) / static_cast<float> (traceTime)
 				};
 
 				// fetch texels from the GPU memory
@@ -1747,16 +1748,16 @@ __global__ void CudaCrossSectionRenderer<CrossSectionOptionsMode::SpanMode::WALL
 				// Position of the isosurface
 				float3 position = pixelPos + (rayDir * t);
 
-// Adds an offset to position while the center of the grid is at gridDiamter/2
-position += d_boundingBox.m_dimensions / 2.0;
+				// Adds an offset to position while the center of the grid is at gridDiamter/2
+				position += d_boundingBox.m_dimensions / 2.0;
 
 
 
-//Relative position calculates the position of the point on the cuda texture
-float3 relativePos = (position / d_boundingBox.m_dimensions);
+				//Relative position calculates the position of the point on the cuda texture
+				float3 relativePos = (position / d_boundingBox.m_dimensions);
 
 
-float positionOfSlice = (float)crossSectionOptions.slice / (float)d_boundingBox.gridSize.y;
+				float positionOfSlice = (float)crossSectionOptions.slice / (float)d_boundingBox.gridSize.y;
 
 
 // check if we have a hit 
@@ -1837,7 +1838,7 @@ __global__ void CudaFilterExtremumX
 	int index = blockIdx.x * blockDim.y * blockDim.x;
 	index += threadIdx.y * blockDim.x;
 	index += threadIdx.x;
-
+	
 	if (index < dimension.x * dimension.y)
 	{
 
@@ -1848,9 +1849,111 @@ __global__ void CudaFilterExtremumX
 		float2 gradient = GradientXY_Tex3D_X(unfiltered, make_int3(pixel.x, pixel.y, z), dimension);
 		float4 gradient_float4 = make_float4(gradient.x, gradient.y, 0.0f, 0.0f);
 
-
 		surf3Dwrite(gradient_float4, filtered, 4 * sizeof(float) * pixel.x, pixel.y, z);
 
 
 	}
+}
+
+
+
+template <typename Observable>
+__global__ void CudaIsoSurfacRendererSpaceTime
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field1,
+	int rays, float isoValue,
+	float samplingRate,
+	float IsosurfaceTolerance
+)
+{
+
+	Observable observable;
+
+	int index = blockIdx.x * blockDim.y * blockDim.x;
+	index += threadIdx.y * blockDim.x;
+	index += threadIdx.x;
+
+	if (index < rays)
+	{
+
+		// determine pixel position based on the index of the thread
+		int2 pixel;
+		pixel.y = index / d_boundingBox.m_width;
+		pixel.x = index - pixel.y * d_boundingBox.m_width;
+
+		// copy values from constant memory to local memory (which one is faster?)
+		float3 viewDir = d_boundingBox.m_viewDir;
+		float3 pixelPos = pixelPosition(d_boundingBox, pixel.x, pixel.y);
+		float2 NearFar = findIntersections(pixelPos, d_boundingBox);
+
+
+		// if inside the bounding box
+		if (NearFar.y != -1)
+		{
+
+			float3 rayDir = normalize(pixelPos - d_boundingBox.m_eyePos);
+
+			// near and far plane
+			float n = 0.1f;
+			float f = 1000.0f;
+
+			// Add the offset to the eye position
+			float3 eyePos = d_boundingBox.m_eyePos + d_boundingBox.m_dimensions / 2.0;
+
+			for (float t = NearFar.x; t < NearFar.y; t = t + samplingRate)
+			{
+				// Position of the isosurface
+				float3 position = pixelPos + (rayDir * t);
+
+				// Adds an offset to position while the center of the grid is at gridDiamter/2
+				position += d_boundingBox.m_dimensions / 2.0;
+
+
+
+				//Relative position calculates the position of the point on the cuda texture
+				float3 relativePos = (position / d_boundingBox.m_dimensions);
+
+
+				// check if we have a hit 
+				if (observable.ValueAtXYZ(field1, relativePos) - isoValue > 0)
+				{
+
+					position = binarySearch<Observable>(observable, field1, position, d_boundingBox.m_dimensions, rayDir * t, isoValue, IsosurfaceTolerance, 50);
+					relativePos = (position / d_boundingBox.m_dimensions);
+
+					// calculates gradient
+					float3 gradient = observable.GradientAtGrid(field1, relativePos, d_boundingBox.gridSize);
+
+					// shading (no ambient)
+					float diffuse = max(dot(normalize(gradient), viewDir), 0.0f);
+					float3 rgb = d_raycastingColor * diffuse;
+
+
+					// vector from eye to isosurface
+					float3 position_viewCoordinate = position - eyePos;
+
+					// calculates the z-value
+					float z_dist = abs(dot(viewDir, position_viewCoordinate));
+
+					// calculate non-linear depth between 0 to 1
+					float depth = (f) / (f - n);
+					depth += (-1.0f / z_dist) * (f * n) / (f - n);
+
+					float4 rgba = { rgb.x, rgb.y, rgb.z, depth };
+
+					// write back color and depth into the texture (surface)
+					// stride size of 4 * floats for each texel
+					surf2Dwrite(rgba, raycastingSurface, 4 * sizeof(float) * pixel.x, pixel.y);
+					break;
+				}
+
+
+			}
+
+		}
+
+	}
+
+
 }

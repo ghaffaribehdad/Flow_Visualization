@@ -9,6 +9,7 @@
 #define Y_HAT {0.0f,1.0f,0.0f}
 #define Z_HAT {0.0f, 0.0f, 1.0f}
 
+#define CUDA_INDEX (blockIdx.x* blockDim.y* blockDim.x + threadIdx.y * blockDim.x + threadIdx.x)
 
 
 //float3 operations
@@ -431,3 +432,5 @@ inline __device__  float2 GradientXY_Tex3D_X(cudaSurfaceObject_t tex, int3 gridP
 
 	return make_float2(dH_dX, dH_dY);
 }
+
+

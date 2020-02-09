@@ -13,6 +13,7 @@
 #include "../Options/fluctuationheightfieldOptions.h"
 #include "../Options/RenderingOptions.h"
 #include "../Options/CrossSectionOptions.h"
+#include "../Options/TurbulentMixingOptions.h"
 
 #include "Camera.h"
 #include "../Timer/Timer.h"
@@ -37,6 +38,7 @@ private:
 	DispersionOptions*				dispersionOptions;
 	CrossSectionOptions*			crossSectionOptions;
 	FluctuationheightfieldOptions*	fluctuationOptions;
+	TurbulentMixingOptions*			turbulentMixingOptions;
 
 	// background color
 	float bgColor[3] = { 0,0,0 };
@@ -52,7 +54,8 @@ public:
 		RaycastingOptions * _raycastingOptions,
 		DispersionOptions * _dispersionOptions,
 		FluctuationheightfieldOptions * _fluctuationheightfieldOptions,
-		CrossSectionOptions * _crossSectionOptions
+		CrossSectionOptions * _crossSectionOptions,
+		TurbulentMixingOptions* _turbulentMixingOptions
 	)
 	{
 		this->camera	= _camera;
@@ -64,6 +67,7 @@ public:
 		this->dispersionOptions		= _dispersionOptions;
 		this->fluctuationOptions	= _fluctuationheightfieldOptions;
 		this->crossSectionOptions	= _crossSectionOptions;
+		this->turbulentMixingOptions = _turbulentMixingOptions;
 	}
 
 	bool updateRaycasting		= false;
@@ -75,25 +79,39 @@ public:
 	bool updateDispersion		= true;
 	bool updatefluctuation		= false;
 	bool updateCrossSection		= false;
+	bool updateTurbulentMixing	= false;
 
+	
+	
 	bool showStreamlines		= false;
 	bool showPathlines			= false;
 	bool showRaycasting			= false;
 	bool showCrossSection		= false;
 	bool showDispersion			= false;
+	bool showTurbulentMixing	= false;
 	bool showFluctuationHeightfield = false;
+
+	bool releaseTurbulentMixing = false;
+
 
 	bool streamlineRendering	= true;
 	bool pathlineRendering		= false;
 	bool streamlineGenerating	= false;
 
-	void drawSolverOptions();					// draw the solver option window
-	void drawLog();								// draw Log window
-	void drawLineRenderingOptions();			// draw options of stream/pathline rendering
-	void drawRaycastingOptions();				// draw options of isosurface rendering (raycasting)
-	void drawDispersionOptions();				// draw options of dispersion calculation
-	void drawFluctuationHeightfieldOptions();	// draw options of heightfield of fluctuation 
-	void drawCrossSectionOptions();
+
+
+	void drawOptionWindows()
+	{
+		this->drawSolverOptions();	
+		this->drawLog();								
+		this->drawLineRenderingOptions();			
+		this->drawRaycastingOptions();				
+		this->drawDispersionOptions();				
+		this->drawFluctuationHeightfieldOptions();	
+		this->drawCrossSectionOptions();			
+		this->drawTurbulentMixingOptions();
+	}
+
 
 	void render();								// render Dear ImGui
 
@@ -104,9 +122,17 @@ public:
 	float upDir[3] = { 0,0,0 };
 
 
+private:
 
 
-
+	void drawSolverOptions();					// draw the solver option window
+	void drawLog();								// draw Log window
+	void drawLineRenderingOptions();			// draw options of stream/pathline rendering
+	void drawRaycastingOptions();				// draw options of isosurface rendering (raycasting)
+	void drawDispersionOptions();				// draw options of dispersion calculation
+	void drawFluctuationHeightfieldOptions();	// draw options of heightfield of fluctuation 
+	void drawCrossSectionOptions();				// draw options of CrossSection rendering
+	void drawTurbulentMixingOptions();
 
 
 };

@@ -7,7 +7,7 @@
 #include "../Options/SolverOptions.h"
 #include "..//Options/fluctuationheightfieldOptions.h"
 
-namespace volumeIO
+namespace VolumeIO
 {
 	enum readPlaneMode
 	{

@@ -4,7 +4,7 @@
 #include "../ErrorLogger/ErrorLogger.h"
 
 
-class Volume_IO_Z_Major : public volumeIO::Volume_IO
+class Volume_IO_Z_Major : public VolumeIO::Volume_IO
 {
 
 
@@ -25,7 +25,7 @@ public:
 		this->initialized = true;
 	}
 
-	virtual void Initialize(FluctuationheightfieldOptions* _fluctuationOptions)
+	virtual void Initialize(FluctuationheightfieldOptions* _fluctuationOptions) override
 	{
 		m_fileName = _fluctuationOptions->fileName;
 		m_filePath = _fluctuationOptions->filePath;
@@ -50,7 +50,7 @@ public:
 		}
 	}
 
-	virtual bool readVolumePlane(unsigned int idx, volumeIO::readPlaneMode planeMode, size_t plane, size_t offset, size_t buffer_size)
+	virtual bool readVolumePlane(unsigned int idx, VolumeIO::readPlaneMode planeMode, size_t plane, size_t offset, size_t buffer_size)
 	{
 		// Generate absolute path of the file
 

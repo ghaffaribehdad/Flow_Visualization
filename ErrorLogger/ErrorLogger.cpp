@@ -24,7 +24,7 @@ void ErrorLogger::Log(HRESULT hr, std::wstring message)
 	MessageBoxW(NULL, error_message.c_str(), L"Error", MB_ICONERROR);
 }
 
-void ErrorLogger::Log(cudaError_t code, const char * file, int line, bool abort)
+bool ErrorLogger::Log(cudaError_t code, const char* file, int line, bool abort)
 {
 	if (code != cudaSuccess)
 	{
@@ -35,6 +35,12 @@ void ErrorLogger::Log(cudaError_t code, const char * file, int line, bool abort)
 		error_message += ", ";
 		error_message += std::to_string(line);
 		MessageBoxW(NULL, StringConverter::StringToWide(error_message).c_str(), L"Error", MB_ICONERROR);
+
+		return false;
+	}
+	else
+	{
+		return true;
 	}
 }
 

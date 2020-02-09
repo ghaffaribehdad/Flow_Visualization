@@ -20,7 +20,6 @@ namespace IsosurfaceHelper
 		// calculates the value of the field at position XYZ
 		__device__  float4 ValueAtXYZ_float4(cudaTextureObject_t tex, float3 position) override;
 
-
 	};
 
 	struct Velocity_Magnitude : public Observable

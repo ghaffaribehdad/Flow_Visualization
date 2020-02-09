@@ -121,12 +121,7 @@ __host__ void StreamlineSolver::measureFieldGeneration()
 
 	// initialize the CUDA surface 
 
-	cudaArray_t pCudaArray = NULL;
-
-	pCudaArray = this->a_Measure.getArray();
-
-
-	this->s_Measure.setInputArray(pCudaArray);
+	this->s_Measure.setInputArray(this->a_Measure.getArrayRef());
 	this->s_Measure.initializeSurface();
 
 

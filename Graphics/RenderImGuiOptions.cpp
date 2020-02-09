@@ -512,7 +512,7 @@ void RenderImGuiOptions::drawDispersionOptions()
 
 
 	//if (ImGui::InputInt("timeStep", &dispersionOptions->timeStep,1,0,solverOptions->lastIdx - solverOptions->firstIdx))
-	if (ImGui::InputInt("timeStep", &dispersionOptions->timeStep,1,10))
+	if (ImGui::InputInt("timeStep", &dispersionOptions->timestep,1,10))
 	{
 		this->updateDispersion = true;
 		this->dispersionOptions->saveScreenshot = true;
@@ -757,6 +757,11 @@ void RenderImGuiOptions::drawFluctuationHeightfieldOptions()
 
 }
 
+
+
+
+
+
 void RenderImGuiOptions::drawCrossSectionOptions()
 {
 	ImGui::Begin("Cross-Section");
@@ -838,7 +843,7 @@ void RenderImGuiOptions::drawCrossSectionOptions()
 
 	}
 
-	if (ImGui::DragFloat("min/max threshold", &crossSectionOptions->min_max_threshold,0.0001, 0.0001f, 10.0f, "%.5f"))
+	if (ImGui::DragFloat("min/max threshold", &crossSectionOptions->min_max_threshold,0.0001f, 0.0001f, 10.0f, "%.5f"))
 	{
 		this->updateCrossSection = true;
 	}
@@ -852,4 +857,35 @@ void RenderImGuiOptions::drawCrossSectionOptions()
 
 
 	ImGui::End();
+}
+
+
+
+
+
+void RenderImGuiOptions::drawTurbulentMixingOptions()
+{
+
+	ImGui::Begin("Turbulent Mixing");
+
+
+	// Show Cross Sections
+	if (ImGui::Checkbox("Show Mixing", &this->showTurbulentMixing))
+	{
+		if (this->turbulentMixingOptions->initialized)
+		{
+			this->releaseTurbulentMixing = true;
+		}
+	}
+
+
+
+
+
+
+
+
+
+	ImGui::End();
+
 }

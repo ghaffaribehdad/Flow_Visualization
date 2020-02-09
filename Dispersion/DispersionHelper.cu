@@ -1,6 +1,5 @@
 #include "DispersionHelper.h"
 #include "..//Cuda/helper_math.h"
-#include "cuda_runtime.h"
 #include "..//Cuda/CudaHelperFunctions.h"
 
 //Explicit Instantiation
@@ -77,7 +76,7 @@ __global__ void traceDispersion
 {
 	// Extract dispersion options
 	float dt = dispersionOptions.dt;
-	int timeStep = dispersionOptions.timeStep;
+	int timeStep = dispersionOptions.timestep;
 	int nParticles = dispersionOptions.gridSize_2D[0] * dispersionOptions.gridSize_2D[1];
 
 

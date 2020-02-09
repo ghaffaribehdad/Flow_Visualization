@@ -114,6 +114,12 @@
     <Filter Include="Header Files\ParticleTracing">
       <UniqueIdentifier>{aef9d3bb-64ed-48d1-97e2-db887a5a275b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\TurbulentMixing">
+      <UniqueIdentifier>{5ad3fc73-97f9-48a3-ba2d-4af95f4cd297}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\TurbulentMixing">
+      <UniqueIdentifier>{b7356c5d-126f-48e6-80ac-de2980a94f23}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -397,6 +403,15 @@
     <ClInclude Include="Cuda\Cuda_helper_math_host.h">
       <Filter>Header Files\Cuda</Filter>
     </ClInclude>
+    <ClInclude Include="TurbulentMixing\TurbulentMixing.h">
+      <Filter>Header Files\TurbulentMixing</Filter>
+    </ClInclude>
+    <ClInclude Include="TurbulentMixing\TurbulentMixingHelper.h">
+      <Filter>Header Files\TurbulentMixing</Filter>
+    </ClInclude>
+    <ClInclude Include="Options\TurbulentMixingOptions.h">
+      <Filter>Header Files\Options</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\geometryshaderLineTube.hlsl">
@@ -463,6 +478,12 @@
     </CudaCompile>
     <CudaCompile Include="Dispersion\fluctuationHeightfield.cu">
       <Filter>Source Files\Heightfield</Filter>
+    </CudaCompile>
+    <CudaCompile Include="TurbulentMixing\TurbulentMixing.cu">
+      <Filter>Source Files\TurbulentMixing</Filter>
+    </CudaCompile>
+    <CudaCompile Include="TurbulentMixing\TurbulentMixingHelper.cu">
+      <Filter>Source Files\TurbulentMixing</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

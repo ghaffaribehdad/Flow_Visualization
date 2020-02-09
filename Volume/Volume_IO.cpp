@@ -3,7 +3,7 @@
 
 
 // Read a velocity volume
-bool volumeIO::Volume_IO::readVolume(unsigned int idx)
+bool VolumeIO::Volume_IO::readVolume(unsigned int idx)
 {
 	// Generate absolute path of the file
 	
@@ -15,18 +15,18 @@ bool volumeIO::Volume_IO::readVolume(unsigned int idx)
 
 
 
-std::vector<char>* volumeIO::Volume_IO::getField_char()
+std::vector<char>* VolumeIO::Volume_IO::getField_char()
 {
 	return &this->buffer;
 }
 
 
-float* volumeIO::Volume_IO::getField_float()
+float* VolumeIO::Volume_IO::getField_float()
 {
 	return field;
 }
 
-void volumeIO::Volume_IO::release()
+void VolumeIO::Volume_IO::release()
 {
 
 	this->buffer.clear();
@@ -34,7 +34,7 @@ void volumeIO::Volume_IO::release()
 
 }
 
-bool volumeIO::Volume_IO::Read(std::streampos _begin, size_t size)
+bool VolumeIO::Volume_IO::Read(std::streampos _begin, size_t size)
 {
 
 
@@ -81,7 +81,7 @@ bool volumeIO::Volume_IO::Read(std::streampos _begin, size_t size)
 }
 
 
-bool volumeIO::Volume_IO::Read()
+bool VolumeIO::Volume_IO::Read()
 {
 	// define the istream
 	std::ifstream myFile;
@@ -130,17 +130,17 @@ bool volumeIO::Volume_IO::Read()
 	return true;
 }
 
-void volumeIO::Volume_IO::setFileName(std::string _fileName)
+void VolumeIO::Volume_IO::setFileName(std::string _fileName)
 {
 	this->m_fileName = _fileName;
 }
-void volumeIO::Volume_IO::setFilePath(std::string _filePath)
+void VolumeIO::Volume_IO::setFilePath(std::string _filePath)
 {
 	this->m_filePath = _filePath;
 }
 
 
-void volumeIO::Volume_IO::Initialize(SolverOptions* _solverOptions)
+void VolumeIO::Volume_IO::Initialize(SolverOptions* _solverOptions)
 {
 	m_fileName = _solverOptions->fileName;
 	m_filePath = _solverOptions->filePath;
@@ -148,7 +148,7 @@ void volumeIO::Volume_IO::Initialize(SolverOptions* _solverOptions)
 	this->initialized = true;
 }
 
-void volumeIO::Volume_IO::Initialize(FluctuationheightfieldOptions* _fluctuationOptions)
+void VolumeIO::Volume_IO::Initialize(FluctuationheightfieldOptions* _fluctuationOptions)
 {
 	m_fileName = _fluctuationOptions->fileName;
 	m_filePath = _fluctuationOptions->filePath;
@@ -156,7 +156,7 @@ void volumeIO::Volume_IO::Initialize(FluctuationheightfieldOptions* _fluctuation
 	this->initialized = true;
 }
 
-void volumeIO::Volume_IO::Initialize(std::string _fileName, std::string _filePath)
+void VolumeIO::Volume_IO::Initialize(std::string _fileName, std::string _filePath)
 {
 	m_fileName = _fileName;
 	m_filePath = _filePath;
@@ -165,7 +165,7 @@ void volumeIO::Volume_IO::Initialize(std::string _fileName, std::string _filePat
 }
 
 
-bool volumeIO::Volume_IO::isEmpty()
+bool VolumeIO::Volume_IO::isEmpty()
 {
 	if (field == nullptr)
 		return true;

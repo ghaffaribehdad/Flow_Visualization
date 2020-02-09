@@ -203,8 +203,11 @@
     <ClInclude Include="Options\DispresionOptions.h" />
     <ClInclude Include="Options\fluctuationheightfieldOptions.h" />
     <ClInclude Include="Options\RenderingOptions.h" />
+    <ClInclude Include="Options\TurbulentMixingOptions.h" />
     <ClInclude Include="ParticleTracing\ParticleTracing.h" />
     <ClInclude Include="Timer\Timer.h" />
+    <ClInclude Include="TurbulentMixing\TurbulentMixing.h" />
+    <ClInclude Include="TurbulentMixing\TurbulentMixingHelper.h" />
     <ClInclude Include="Volume\BinaryWriter.h" />
     <ClInclude Include="Volume\Volume_IO_X_Major.h" />
     <ClInclude Include="Volume\Volume_IO_Z_Major.h" />
@@ -291,6 +294,8 @@
     <ClInclude Include="Cuda\PathlineSolver.h" />
     <ClInclude Include="Cuda\CudaHelperFunctions.h" />
     <CudaCompile Include="Cuda\cudaSurface.cu" />
+    <CudaCompile Include="TurbulentMixing\TurbulentMixing.cu" />
+    <CudaCompile Include="TurbulentMixing\TurbulentMixingHelper.cu" />
     <CudaCompile Include="VolumeTexture\VolumeTexture.cu" />
     <ClInclude Include="Graphics\RenderImGuiOptions.h" />
     <ClInclude Include="Graphics\Graphics.h" />

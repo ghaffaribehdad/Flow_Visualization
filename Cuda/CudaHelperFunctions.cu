@@ -1,5 +1,7 @@
 #include "CudaHelperFunctions.h"
 #include <random>
+#include "helper_math.h"
+
 
 __device__ void RK4Path
 (
@@ -217,19 +219,19 @@ __host__ void seedParticleRandom(Particle * particle, const SolverOptions * solv
 	{
 		particle[i].m_position.x = solverOptions->gridDiameter[0] / 2.0f -
 			solverOptions->seedBox[0] / 2.0f + solverOptions->seedBoxPos[0] +
-			distribution(generator) * solverOptions->seedBox[0];
+			(float)distribution(generator) * solverOptions->seedBox[0];
 
 		distribution.reset();
 
 		particle[i].m_position.y = solverOptions->gridDiameter[1] / 2.0f -
 			solverOptions->seedBox[1] / 2.0f + solverOptions->seedBoxPos[1] +
-			distribution(generator) * solverOptions->seedBox[1];
+			(float)distribution(generator) * solverOptions->seedBox[1];
 
 		distribution.reset();
 
 		particle[i].m_position.z = solverOptions->gridDiameter[2] / 2.0f -
 			solverOptions->seedBox[2] / 2.0f + solverOptions->seedBoxPos[2] +
-			distribution(generator) * solverOptions->seedBox[2];
+			(float)distribution(generator) * solverOptions->seedBox[2];
 		distribution.reset();
 
 	}
@@ -1014,3 +1016,4 @@ __global__ void Vorticity
 	}
 	
 }
+
