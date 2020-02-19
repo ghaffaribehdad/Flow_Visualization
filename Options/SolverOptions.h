@@ -5,8 +5,8 @@
 struct SolverOptions
 {
 public:
-	char fileName[100] ="FieldPadded";
-	char  filePath[100] ="I:\\binary_fluct_x_major_Padded_1_1000\\";
+	char fileName[100] ="FieldP";
+	char  filePath[100] ="G:\\Reference\\Padded\\";
 
 
 	char filePath_out[100] = "D:\\copy\\bf\\Binary_z_Major\\Padded";
@@ -14,14 +14,14 @@ public:
 	int counter = 0;
 	int fileToSave = 1000;
 
-	int gridSize[3] = { 64,503,2048 };
+	int gridSize[3] = { 192,192,192 };
 	int seedGrid[3] = { 5,20,100 };
-	float gridDiameter[3] = { 1,2,5 };
-	//float gridDiameter[3] = { 7.854f,2.0f,3.1415f };
+	//float gridDiameter[3] = { 1,2,5 };
+	float gridDiameter[3] = { 7.854f,2.0f,3.1415f };	//KIT2
 
 
-	//float seedBox[3] = { 7.854f,2.0f,3.1415f };
-	float seedBox[3] = { 1,2,5 };
+	float seedBox[3] = { 7.854f,2.0f,3.1415f };			//KIT2
+	//float seedBox[3] = { 1,2,5 };
 	float seedBoxPos[3] = { 0.0f, 0.0f, 0.0f }; 
 
 	int precision = 32;
@@ -34,8 +34,8 @@ public:
 	float line_thickness = 0.0f;
 
 
-	int firstIdx = 750;
-	int lastIdx = 950;
+	int firstIdx = 1;
+	int lastIdx = 500;
 	int currentIdx =1;
 
 	

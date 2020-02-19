@@ -197,14 +197,11 @@
     <ClCompile Include="Volume\BinaryWriter.cpp">
       <Filter>Source Files\VolumeTexture</Filter>
     </ClCompile>
-    <ClCompile Include="CrossSection\CrossSection.cu">
-      <Filter>Source Files\CrossSection</Filter>
-    </ClCompile>
     <ClCompile Include="Cuda\CudaHelperFunctions.cpp">
       <Filter>Source Files\Cuda</Filter>
     </ClCompile>
-    <ClCompile Include="Cuda\CudaSolver.cu">
-      <Filter>Source Files\Cuda</Filter>
+    <ClCompile Include="Particle\ParticleHelperFunctions.cpp">
+      <Filter>Source Files\Particle</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -412,6 +409,15 @@
     <ClInclude Include="Options\TurbulentMixingOptions.h">
       <Filter>Header Files\Options</Filter>
     </ClInclude>
+    <ClInclude Include="Particle\ParticleHelperFunctions.h">
+      <Filter>Header Files\Particle</Filter>
+    </ClInclude>
+    <ClInclude Include="Dispersion\HightfieldFTLE.h">
+      <Filter>Header Files\Heightfield</Filter>
+    </ClInclude>
+    <ClInclude Include="Dispersion\ftleHelperFunctions.h">
+      <Filter>Header Files\Heightfield</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\geometryshaderLineTube.hlsl">
@@ -484,6 +490,14 @@
     </CudaCompile>
     <CudaCompile Include="TurbulentMixing\TurbulentMixingHelper.cu">
       <Filter>Source Files\TurbulentMixing</Filter>
+    </CudaCompile>
+    <CudaCompile Include="CrossSection\CrossSection.cu" />
+    <CudaCompile Include="Cuda\CudaSolver.cu" />
+    <CudaCompile Include="Dispersion\HeightfieldFTLE.cu">
+      <Filter>Source Files\Heightfield</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Dispersion\ftleHelperFunctions.cu">
+      <Filter>Source Files\Heightfield</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

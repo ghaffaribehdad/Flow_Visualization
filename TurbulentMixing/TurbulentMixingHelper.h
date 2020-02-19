@@ -19,4 +19,6 @@ __device__ inline float linearCreation(float h, float y, float beta)
 }
 
 
-__global__ void createTKE(cudaSurfaceObject_t s_mixing, cudaTextureObject_t v_field, SolverOptions solverOptions, TurbulentMixingOptions tubulentMixingOptions);
+__global__ void createTKE(cudaSurfaceObject_t s_mixing, cudaTextureObject_t v_field, SolverOptions solverOptions, TurbulentMixingOptions turbulentMixingOptions);
+__global__ void dissipateTKE(cudaSurfaceObject_t s_mixing, cudaTextureObject_t v_field, SolverOptions solverOptions, TurbulentMixingOptions turbulentMixingOptions);
+__global__ void advectTKE(cudaSurfaceObject_t s_mixing, cudaTextureObject_t v_field_0, cudaTextureObject_t v_field_1, SolverOptions solverOptions, TurbulentMixingOptions turbulentMixingOptions);

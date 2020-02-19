@@ -1,6 +1,7 @@
 #include "CudaSolver.h"
 #include "..//Cuda/CudaHelperFunctions.h"
 #include "..//ErrorLogger/ErrorLogger.h"
+#include "../Particle/ParticleHelperFunctions.h"
 
 CUDASolver::CUDASolver()
 {

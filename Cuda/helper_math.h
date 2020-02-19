@@ -8,9 +8,28 @@
 #define X_HAT {1.0f,0.0f,0.0f}
 #define Y_HAT {0.0f,1.0f,0.0f}
 #define Z_HAT {0.0f, 0.0f, 1.0f}
+#define CUDA_PI_F 3.141592654f
+
 
 #define CUDA_INDEX (blockIdx.x* blockDim.y* blockDim.x + threadIdx.y * blockDim.x + threadIdx.x)
 
+#define BLOCK_THREAD(kernelCall) static_cast<unsigned int>((kernelCall % (thread.x* thread.y) == 0 ? kernelCall / (thread.x * thread.y) : kernelCall / (thread.x * thread.y) + 1))
+
+// convert array to built-in cuda structures
+inline __host__ __device__ float3 ARRAYTOFLOAT3(const float* a_float)
+{
+	return make_float3(a_float[0], a_float[1], a_float[2]);
+}
+
+inline __host__ __device__ int3 ARRAYTOINT3(const int* a_int)
+{
+	return make_int3(a_int[0], a_int[1], a_int[2]);
+}
+
+inline __host__ __device__ int2 ARRAYTOINT2(const int* a_int)
+{
+	return make_int2(a_int[0], a_int[1]);
+}
 
 //float3 operations
 
@@ -60,6 +79,8 @@ inline __host__ __device__ bool operator==(int3 a, int3 b)
 
 	return true;
 }
+
+
 
 inline __host__ __device__ float3 operator*(float3 a, int3 b)
 {
@@ -133,6 +154,10 @@ inline __host__ __device__ int3 floorMult(float3 a, int3 b)
 	);
 }
 
+inline __host__ __device__ float2 operator+(float2 a, float2 b)
+{
+	return make_float2(a.x + b.x, a.y + b.y);
+}
 
 inline __host__ __device__ float2 operator*(float2 a, float b)
 {
@@ -433,4 +458,130 @@ inline __device__  float2 GradientXY_Tex3D_X(cudaSurfaceObject_t tex, int3 gridP
 	return make_float2(dH_dX, dH_dY);
 }
 
+enum RK4STEP
+{
+	EVEN = 0,
+	ODD
+};
 
+
+struct fMat3X3
+{
+	float3 r1;
+	float3 r2;
+	float3 r3;
+
+	__host__ __device__ fMat3X3
+	(
+		const float3& _r1,
+		const float3& _r2,
+		const float3& _r3
+	) :r1(_r1),r2(_r2),r3(_r3) {}
+
+	__host__ __device__ fMat3X3
+	(
+		const float& _r1x,
+		const float& _r1y,
+		const float& _r1z,
+		const float& _r2x,
+		const float& _r2y,
+		const float& _r2z,
+		const float& _r3x,
+		const float& _r3y,
+		const float& _r3z
+	) : r1{ _r1x,_r1y,_r1z }, r2{ _r2x,_r2y,_r2z }, r3{ _r3x,_r3y,_r3z } {}
+
+	__host__ __device__ const float3 c1()
+	{
+		return make_float3(r1.x, r2.x, r3.x);
+	}
+
+	__host__ __device__ float3 c2()
+	{
+		return make_float3(r1.y, r2.y, r3.y);
+	}
+
+	__host__ __device__ float3 c3()
+	{
+		return make_float3(r1.z, r2.z, r3.z);
+	}
+
+};
+
+
+__device__ __host__ inline fMat3X3 transpose(fMat3X3& a)
+{ 
+	return fMat3X3
+	(
+		make_float3(a.r1.x, a.r2.x, a.r3.x),
+		make_float3(a.r1.y, a.r2.y, a.r3.y),
+		make_float3(a.r1.z, a.r2.z, a.r3.z)
+	);
+}
+
+__device__ __host__ inline fMat3X3 mult(fMat3X3& a, fMat3X3& b)
+{
+	return fMat3X3
+	(
+		dot(a.r1, b.c1()), dot(a.r1, b.c2()), dot(a.r1, b.c3()),
+		dot(a.r2, b.c1()), dot(a.r2, b.c2()), dot(a.r2, b.c3()),
+		dot(a.r3, b.c1()), dot(a.r3, b.c2()), dot(a.r3, b.c3())
+	);
+}
+
+
+
+// Min to Max
+__device__ __host__ inline void sort3Items(float3& v)
+{
+	float t;
+	if (v.y < v.x)
+	{
+		t = v.x;
+		if (v.z < v.y) { v.x = v.z; v.z = t; }
+		else
+		{
+			if (v.z < t) { v.x = v.y; v.y = v.z; v.z = t; }
+			else { v.x = v.y; v.y = t; }
+		}
+	}
+	else
+	{
+		if (v.z < v.y)
+		{
+			t = v.z;
+			v.z = v.y;
+
+			if (t < v.x) { v.y = v.x; v.x = t; }
+			else { v.y = t; }
+		}
+	}
+}
+
+
+/***********************************************************************************************
+* Eigensolver by Hasan et al.
+* additional sorting of the eigenvalues (no positive definite tensor)
+***********************************************************************************************/
+
+__device__ __host__ inline void eigensolveHasan(const fMat3X3& J, float3& sortedEigenvalues)
+{
+	const float3 vOne = make_float3(1, 1, 1);
+	float3 vDiag = make_float3(J.r1.x, J.r2.y, J.r3.z);  // xx , yy , zz
+	float3 vOffDiag = make_float3(J.r1.y, J.r1.z, J.r2.z);  // xy , xz , yz
+	float3 offSq = vOffDiag * vOffDiag;
+	float I1 = dot(vDiag, vOne);
+	float I2 = dot(make_float3(vDiag.x, vDiag.x, vDiag.y), make_float3(vDiag.y, vDiag.z, vDiag.z)) - dot(offSq, vOne);
+	float I3 = vDiag.x * vDiag.y * vDiag.z + 2.0f * vOffDiag.x * vOffDiag.y * vOffDiag.z - dot(make_float3(vDiag.z, vDiag.y, vDiag.x), offSq);
+	float I1_3 = I1 / 3.0f;
+	float I1_3Sq = I1_3 * I1_3;
+	float v = I1_3Sq - I2 / 3.0f;
+	float vInv = 1.0f / v;
+	float s = I1_3Sq * I1_3 - I1 * I2 / 6.0f + I3 / 2.0f;
+	float phi = acosf(s * vInv * sqrt(vInv)) / 3.0f;
+	float vSqrt2 = 2.0f * sqrt(v);
+
+	sortedEigenvalues = make_float3(I1_3 + vSqrt2 * cosf(phi), I1_3 - vSqrt2 * cosf((CUDA_PI_F / 3.0f) + phi), I1_3 - vSqrt2 * cosf((CUDA_PI_F / 3.0f) - phi));
+	sort3Items(sortedEigenvalues);
+
+}

@@ -45,18 +45,20 @@ public:
 	void trace3D();	 //Traces the streamlines
 
 
-	void trace3D_path_Single();
-	void trace3D_path_Double();
 
 
 	bool retrace();
 	void gradient3D_Single();
 	void gradient3D_Double();
 
-private:
+protected:
 
 	VolumeTexture3D velocityField_0;
 	VolumeTexture3D velocityField_1;
+
+
+	virtual void trace3D_path_Single();
+	void trace3D_path_Double();
 
 
 	virtual bool initializeShaders() override;
@@ -64,12 +66,11 @@ private:
 	Particle* h_particle = nullptr;
 	Particle* d_particle = nullptr;
 
+
 	unsigned int n_particles;
 
-	bool InitializeParticles();
-protected:
 
-
+	virtual bool InitializeParticles();
 	bool singleSurfaceInitialization();
 	bool doubleSurfaceInitialization();
 

@@ -1,6 +1,6 @@
 #include "TurbulentMixing.h"
 #include "TurbulentMixingHelper.h"
-
+#include "../Cuda/helper_math.h"
 
 bool TurbulentMixing::initalize()
 {
@@ -70,24 +70,24 @@ bool TurbulentMixing::initalize()
 	volumeIO.release();
 
 
-	// Read the second one
-	if (!volumeIO.readVolumePlane(this->solverOptions->firstIdx + 1 , VolumeIO::readPlaneMode::YZ, turbulentMixingOptions->streamwisePlane, offset, buffer_size))
-		return false;
+	//// Read the second one
+	//if (!volumeIO.readVolumePlane(this->solverOptions->firstIdx + 1 , VolumeIO::readPlaneMode::YZ, turbulentMixingOptions->streamwisePlane, offset, buffer_size))
+	//	return false;
 
-	this->v_field_t1.setSolverOptions(this->solverOptions);
-	this->v_field_t1.setSolverOptions(this->solverOptions);
+	//this->v_field_t1.setSolverOptions(this->solverOptions);
+	//this->v_field_t1.setSolverOptions(this->solverOptions);
 
-	this->v_field_t1.setField(volumeIO.getField_float());
-	this->v_field_t1.initialize
-	(
-		solverOptions->gridSize[1],
-		solverOptions->gridSize[2],
-		cudaAddressModeClamp,
-		cudaAddressModeClamp,
-		cudaFilterModePoint
-	);
+	//this->v_field_t1.setField(volumeIO.getField_float());
+	//this->v_field_t1.initialize
+	//(
+	//	solverOptions->gridSize[1],
+	//	solverOptions->gridSize[2],
+	//	cudaAddressModeClamp,
+	//	cudaAddressModeClamp,
+	//	cudaFilterModePoint
+	//);
 
-	volumeIO.release();
+	//volumeIO.release();
 
 #pragma endregion
 
@@ -129,7 +129,7 @@ bool TurbulentMixing::release()
 	this->s_mixing.destroySurface();
 	this->a_mixing.release();
 	this->v_field_t0.release();
-	this->v_field_t1.release();
+	//this->v_field_t1.release();
 
 	return true;
 }
@@ -139,14 +139,12 @@ void TurbulentMixing::create()
 {
 	unsigned int blocks;
 	dim3 thread = { maxBlockDim,maxBlockDim,1 };
-	size_t meshSize = this->solverOptions->gridSize[1] * this->solverOptions->gridSize[2];
-
-	blocks = static_cast<unsigned int>((rays % (thread.x * thread.y) == 0 ?
-		rays / (thread.x * thread.y) : rays / (thread.x * thread.y) + 1));
+	size_t meshSize = (size_t)this->solverOptions->gridSize[1] * (size_t)this->solverOptions->gridSize[2];
+	blocks = BLOCK_THREAD(meshSize);
 
 	createTKE << < blocks, thread >> >
 		(
-			this->raycastingSurface.getSurfaceObject(),
+			s_mixing.getSurfaceObject(),
 			v_field_t0.getTexture(),
 			*solverOptions,
 			*turbulentMixingOptions
@@ -155,20 +153,46 @@ void TurbulentMixing::create()
 
 void TurbulentMixing::advect()
 {
+	unsigned int blocks;
+	dim3 thread = { maxBlockDim,maxBlockDim,1 };
+
+	size_t meshSize = this->solverOptions->gridSize[1] * this->solverOptions->gridSize[2];
+	blocks = BLOCK_THREAD(meshSize);
+
+	//advectTKE << < blocks, thread >> >
+	//	(
+	//		s_mixing.getSurfaceObject(),
+	//		v_field_t0.getTexture(),
+	//		*solverOptions,
+	//		*turbulentMixingOptions
+	//		);
 
 }
 
 void TurbulentMixing::dissipate()
 {
+	unsigned int blocks;
+	dim3 thread = { maxBlockDim,maxBlockDim,1 };
 
+	size_t meshSize = this->solverOptions->gridSize[1] * this->solverOptions->gridSize[2];
+	blocks = BLOCK_THREAD(meshSize);
+
+
+	dissipateTKE << < blocks, thread >> >
+		(
+			s_mixing.getSurfaceObject(),
+			v_field_t0.getTexture(),
+			*solverOptions,
+			*turbulentMixingOptions
+			);
 }
 
 void TurbulentMixing::update(int timestep)
 {
 	for (int t = 0; t < timestep; t++)
 	{
-		create();
 		dissipate();
+		create();
 		advect();
 	}
 

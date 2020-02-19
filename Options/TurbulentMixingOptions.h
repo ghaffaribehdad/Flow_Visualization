@@ -1,4 +1,5 @@
 #pragma once
+#include <cuda_runtime.h>
 
 struct TurbulentMixingOptions
 {
@@ -14,6 +15,7 @@ struct TurbulentMixingOptions
 	float minColor[4] = { 1.0f,0.0f,0.0f,1.0f };
 	float maxColor[4] = { 0.0f,0.0f,1.0f,1.0f };
 
+	float2 gridDiameter = { 1.0f,5.0f };
 
 	bool initialized = false;
 };

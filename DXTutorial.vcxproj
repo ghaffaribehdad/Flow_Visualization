@@ -111,6 +111,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>D:\git_projects\Flow_Visualization\Eigen;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -189,6 +190,11 @@
       <FileType>Document</FileType>
     </CudaCompile>
     <ClCompile Include="Cuda\CudaHelperFunctions.cpp" />
+    <CudaCompile Include="Dispersion\ftleHelperFunctions.cu" />
+    <CudaCompile Include="Dispersion\HeightfieldFTLE.cu">
+      <FileType>Document</FileType>
+    </CudaCompile>
+    <ClCompile Include="Particle\ParticleHelperFunctions.cpp" />
     <ClCompile Include="Timer\Timer.cpp" />
     <ClCompile Include="Volume\BinaryWriter.cpp" />
     <ClCompile Include="Window\RenderWindow.cpp" />
@@ -199,12 +205,15 @@
     <ClInclude Include="DispersionHelper.h" />
     <ClInclude Include="Dispersion\DispersionTracer.h" />
     <ClInclude Include="Dispersion\fluctuationHeightfield.h" />
+    <ClInclude Include="Dispersion\ftleHelperFunctions.h" />
+    <ClInclude Include="Dispersion\HightfieldFTLE.h" />
     <ClInclude Include="Options\CrossSectionOptions.h" />
     <ClInclude Include="Options\DispresionOptions.h" />
     <ClInclude Include="Options\fluctuationheightfieldOptions.h" />
     <ClInclude Include="Options\RenderingOptions.h" />
     <ClInclude Include="Options\TurbulentMixingOptions.h" />
     <ClInclude Include="ParticleTracing\ParticleTracing.h" />
+    <ClInclude Include="Particle\ParticleHelperFunctions.h" />
     <ClInclude Include="Timer\Timer.h" />
     <ClInclude Include="TurbulentMixing\TurbulentMixing.h" />
     <ClInclude Include="TurbulentMixing\TurbulentMixingHelper.h" />

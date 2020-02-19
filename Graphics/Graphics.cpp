@@ -210,31 +210,31 @@ void Graphics::RenderFrame()
 
 	// Turbulent Mixing
 	
-	if (this->renderImGuiOptions.showTurbulentMixing)
-	{
-		if (!this->turbulentMixingOptions.initialized)
-		{
+	//if (this->renderImGuiOptions.showTurbulentMixing)
+	//{
+	//	if (!this->turbulentMixingOptions.initialized)
+	//	{
 
 
-			this->turbulentMixingOptions.initialized  = this->turbulentMixing.initalize();
-		}
+	//		this->turbulentMixingOptions.initialized  = this->turbulentMixing.initalize();
+	//	}
 
-		this->turbulentMixing.draw();
+	//	this->turbulentMixing.draw();
 
-	}
+	//}
 
-	if (this->renderImGuiOptions.updateTurbulentMixing)
-	{
-		this->turbulentMixing.updateScene();
+	//if (this->renderImGuiOptions.updateTurbulentMixing)
+	//{
+	//	this->turbulentMixing.updateScene();
 
-		renderImGuiOptions.updateTurbulentMixing = false;
-	}
+	//	renderImGuiOptions.updateTurbulentMixing = false;
+	//}
 
-	if (this->renderImGuiOptions.releaseTurbulentMixing)
-	{
-		this->turbulentMixing.release();
-		this->renderImGuiOptions.releaseTurbulentMixing = false;
-	}
+	//if (this->renderImGuiOptions.releaseTurbulentMixing)
+	//{
+	//	this->turbulentMixing.release();
+	//	this->renderImGuiOptions.releaseTurbulentMixing = false;
+	//}
 
 
 

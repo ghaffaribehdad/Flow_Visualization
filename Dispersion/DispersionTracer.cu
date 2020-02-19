@@ -105,9 +105,15 @@ void HeightfieldGenerator::setResources(Camera* _camera,
 __host__ bool HeightfieldGenerator::InitializeParticles()
 {
 	this->n_particles = dispersionOptions->gridSize_2D[0] * dispersionOptions->gridSize_2D[1];
-	this->h_particle = new Particle[dispersionOptions->gridSize_2D[0] * dispersionOptions->gridSize_2D[1]];
-	//seedParticle_ZY_Plane(h_particle, solverOptions->gridDiameter, dispersionOptions->gridSize_2D, dispersionOptions->seedWallNormalDist);
-	seedParticle_tiltedPlane(h_particle, solverOptions->gridDiameter, dispersionOptions->gridSize_2D, dispersionOptions->seedWallNormalDist, dispersionOptions->tilt_deg);
+	this->h_particle = new Particle[n_particles];
+	seedParticle_tiltedPlane
+	(
+		h_particle,
+		ARRAYTOFLOAT3(solverOptions->gridDiameter),
+		ARRAYTOINT2(dispersionOptions->gridSize_2D),
+		dispersionOptions->seedWallNormalDist,
+		dispersionOptions->tilt_deg
+	);
 
 	size_t Particles_byte = sizeof(Particle) * n_particles;
 
@@ -276,8 +282,7 @@ void HeightfieldGenerator::trace3D_path_Single()
 	// Calculates the block and grid sizes
 	unsigned int blocks;
 	dim3 thread = { maxBlockDim,maxBlockDim,1 };
-	blocks = static_cast<unsigned int>((this->n_particles % (thread.x * thread.y) == 0 ?
-		n_particles / (thread.x * thread.y) : n_particles / (thread.x * thread.y) + 1));
+	blocks = BLOCK_THREAD(n_particles);
 
 	RK4STEP RK4Step = RK4STEP::ODD;
 	
@@ -355,8 +360,7 @@ void HeightfieldGenerator::trace3D_path_Double()
 	// Calculates the block and grid sizes
 	unsigned int blocks;
 	dim3 thread = { maxBlockDim,maxBlockDim,1 };
-	blocks = static_cast<unsigned int>((this->n_particles % (thread.x * thread.y) == 0 ?
-		n_particles / (thread.x * thread.y) : n_particles / (thread.x * thread.y) + 1));
+	blocks = BLOCK_THREAD(n_particles);
 
 	RK4STEP RK4Step = RK4STEP::ODD;
 

@@ -1,21 +1,13 @@
 #pragma once
 
 #include "../Particle/Particle.h"
-
+#include "../Particle/ParticleHelperFunctions.h"
 #include "..//Cuda/CudaHelperFunctions.h"
 #include "..//Options/DispresionOptions.h"
 #include "..//Options/SolverOptions.h"
 #include "..//Options/fluctuationheightfieldOptions.h"
 
-void seedParticle_ZY_Plane(Particle* particle, float* gridDiameter, const int* gridSize, const float& y_slice);
-void seedParticle_tiltedPlane(Particle* particle, float* gridDiameter, const int* gridSize, const float& y_slice, const float & tilt);
 
-
-enum RK4STEP
-{
-	EVEN = 0,
-	ODD
-};
 
 __global__ void traceDispersion
 (
@@ -59,6 +51,8 @@ __global__ void traceDispersion3D_path
 	RK4STEP RK4step,
 	int timeStep
 );
+
+
 
 //__global__ void trace_fluctuation3D
 //(

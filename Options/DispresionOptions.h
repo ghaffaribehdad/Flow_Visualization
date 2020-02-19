@@ -42,6 +42,9 @@ struct DispersionOptions
 	// Terrain Rendering Options
 	float hegiht_tolerance = 0.01f;
 
+	// Distance of the neighboring particle in FTLE calculation
+	float ftleDistance = 0.001f;
+
 	// Binary Search Options
 	float binarySearchTolerance = 0.1f;
 	int binarySearchMaxIteration = 50;

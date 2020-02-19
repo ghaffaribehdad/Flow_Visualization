@@ -8,22 +8,39 @@
 #include "helper_math.h"
 
 
+
 // Switch the velocity texture for even and odd case
-__device__ void	RK4Path	
+__device__ void	RK4Path
 (
 	cudaTextureObject_t t_VelocityField_0,
 	cudaTextureObject_t t_VelocityField_1,
-	Particle* particle,	
-	float3 gridDiameter,	
+	Particle* particle,
+	float3 gridDiameter,
 	float dt,
 	bool periodicity
 );
 
-__device__ void RK4Stream(cudaTextureObject_t t_VelocityField_0, Particle* particle, float3 gridDiameter, float dt);
 
-__host__ void seedParticleGridPoints(Particle* particle, const SolverOptions* solverOptions);
+__device__ void	Euler_2D
+(
+	const int2& initialGridPosition,
+	float2& finalGridPosition,
+	const int2& gridSize,
+	const float2& gridDiameter,
+	const float& dt,
+	cudaTextureObject_t t_VelocityField_0
+);
 
-__host__ void  seedParticleRandom(Particle* particle, const SolverOptions* solverOptions);
+
+
+__device__ void RK4Stream
+(
+	cudaTextureObject_t t_VelocityField_0,
+	Particle* particle,
+	float3 gridDiameter,
+	float dt
+);
+
 
 __global__ void TracingPath
 (

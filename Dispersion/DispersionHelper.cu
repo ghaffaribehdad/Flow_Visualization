@@ -23,46 +23,6 @@ template __global__ void fluctuationfieldGradient3D<struct IsosurfaceHelper::Pos
 );
 
 
-// Seed particles in each ZY-Plane grid points
-// takes arrayes of three floats for gridDiameter and 2 integer gridSize
-
-void seedParticle_ZY_Plane(Particle* particle, float* gridDiameter, const int* gridSize, const float & y_slice)
-{
-	// Size of the mesh in X, Y and Z direction
-	float meshSize_x = (float)gridDiameter[0] / ( gridSize[0]-1);
-	float meshSize_z = (float)gridDiameter[2] / ( gridSize[1]-1);
-
-
-		for (int x = 0; x < gridSize[0]; x++)
-		{
-			for (int z = 0; z < gridSize[1]; z++)
-			{
-				
-				particle[x * gridSize[0] + z].m_position = { meshSize_x * x,y_slice,meshSize_z * z };
-
-			}
-		}
-
-}
-
-void seedParticle_tiltedPlane(Particle* particle, float* gridDiameter, const int* gridSize, const float& y_slice, const float & tilt)
-{
-	// Size of the mesh in X, Y and Z direction
-	float meshSize_x = (float)gridDiameter[0] / (gridSize[0] - 1);
-	float meshSize_z = (float)gridDiameter[2] / (gridSize[1] - 1);
-	float height_step = gridDiameter[1] * sinf(tilt * 3.1415f / 180.0f)/ gridSize[0];
-
-	for (int x = 0; x < gridSize[0]; x++)
-	{
-		for (int z = 0; z < gridSize[1]; z++)
-		{
-
-			particle[x * gridSize[0] + z].m_position = { meshSize_x * x,y_slice + z * height_step,meshSize_z * z };
-
-		}
-	}
-
-}
 
 
 __global__ void traceDispersion
@@ -182,7 +142,6 @@ __global__ void  traceDispersion3D_path
 
 	}
 }
-
 
 
 __global__ void  traceDispersion3D_extra

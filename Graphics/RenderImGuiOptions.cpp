@@ -515,7 +515,7 @@ void RenderImGuiOptions::drawDispersionOptions()
 	if (ImGui::InputInt("timeStep", &dispersionOptions->timestep,1,10))
 	{
 		this->updateDispersion = true;
-		this->dispersionOptions->saveScreenshot = true;
+		//this->dispersionOptions->saveScreenshot = true;
 	}
 
 

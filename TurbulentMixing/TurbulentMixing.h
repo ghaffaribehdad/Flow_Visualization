@@ -16,7 +16,7 @@ private:
 	CudaSurface				s_mixing; // Bind to "a_mixing" array
 
 	VolumeTexture2D			v_field_t0; // Volumetric velocity field at t0
-	VolumeTexture2D			v_field_t1; // Volumetric velocity field at t1
+	//VolumeTexture2D			v_field_t1; // Volumetric velocity field at t1
 
 	Volume_IO_X_Major		volumeIO; // To read the volumetric data from file
 
