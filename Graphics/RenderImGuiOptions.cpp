@@ -249,6 +249,7 @@ void RenderImGuiOptions::drawSolverOptions()
 		this->updateRaycasting = true;
 		this->updateDispersion = true;
 		this->updatefluctuation = true;
+		this->updateFTLE = true;
 	}
 
 	if (ImGui::Button("Edge View", ImVec2(80, 25)))
@@ -259,6 +260,8 @@ void RenderImGuiOptions::drawSolverOptions()
 		this->updateRaycasting = true;
 		this->updateDispersion = true;
 		this->updatefluctuation = true;
+		this->updateFTLE = true;
+
 	}
 
 
@@ -437,6 +440,8 @@ void RenderImGuiOptions::drawRaycastingOptions()
 		}
 		this->updateRaycasting	= true;
 		this->updateDispersion	= true;
+		this->updateFTLE = true;
+
 
 	}
 
@@ -449,6 +454,8 @@ void RenderImGuiOptions::drawRaycastingOptions()
 	{
 		this->updateRaycasting = true;
 		this->updateDispersion = true;
+		this->updateFTLE = true;
+
 	}
 
 
@@ -491,6 +498,17 @@ void RenderImGuiOptions::drawDispersionOptions()
 		}
 	}
 
+
+	if (solverOptions->lastIdx - solverOptions->firstIdx > 0)
+	{
+		if (ImGui::Checkbox("Enable FTLE rendering", &this->showFTLE))
+		{
+			this->renderingOptions->isRaycasting = this->showFTLE;
+			this->updateFTLE = true;
+			this->dispersionOptions->released = false;
+		}
+	}
+
 	if (ImGui::Combo("Rendering Mode", &dispersionOptions->renderingMode, HeightfieldRenderingMode, 2)) {}
 
 
@@ -511,10 +529,11 @@ void RenderImGuiOptions::drawDispersionOptions()
 	if (ImGui::InputInt("Save index", &dispersionOptions->file_counter, 1, 10)) {}
 
 
-	//if (ImGui::InputInt("timeStep", &dispersionOptions->timeStep,1,0,solverOptions->lastIdx - solverOptions->firstIdx))
 	if (ImGui::InputInt("timeStep", &dispersionOptions->timestep,1,10))
 	{
 		this->updateDispersion = true;
+		this->updateFTLE = true;
+
 		//this->dispersionOptions->saveScreenshot = true;
 	}
 
@@ -524,6 +543,8 @@ void RenderImGuiOptions::drawDispersionOptions()
 	if (ImGui::DragFloat("dt dispersion", &dispersionOptions->dt, 0.0001f,0.001f,1.0f,"%5f"))
 	{
 		this->updateDispersion = true;
+		this->updateFTLE = true;
+
 		this->dispersionOptions->retrace = true;
 
 	}
@@ -547,15 +568,22 @@ void RenderImGuiOptions::drawDispersionOptions()
 	if (ImGui::DragFloat("Height Tolerance", &dispersionOptions->hegiht_tolerance,0.0001f,0.0001f,1,"%8f"))
 	{
 		this->updateDispersion = true;
+		this->updateFTLE = true;
+
 	}
 
 
-
-	if (ImGui::Combo("Color Coding", &dispersionOptions->colorCode, ColorCode_DispersionList, 9))
+	if (!this->showFTLE)
 	{
-		this->updateDispersion = true;
+		if (ImGui::Combo("Color Coding", &dispersionOptions->colorCode, ColorCode_DispersionList, 9))
+		{
+			this->updateDispersion = true;
 
+		}
 	}
+	
+
+	
 
 	if (dispersionOptions->renderingMode == dispersionOptionsMode::HeightfieldRenderingMode::SINGLE_SURFACE)
 	{
@@ -565,20 +593,28 @@ void RenderImGuiOptions::drawDispersionOptions()
 		if (ImGui::ColorEdit4("Minimum", (float*)&dispersionOptions->minColor))
 		{
 			updateDispersion = true;
+			this->updateFTLE = true;
+
 		}
 		if (ImGui::InputFloat("Min Value", (float*)&dispersionOptions->min_val, 0.1f))
 		{
 			updateDispersion = true;
+			this->updateFTLE = true;
+
 		}
 
 		if (ImGui::ColorEdit4("Maximum", (float*)&dispersionOptions->maxColor))
 		{
 			updateDispersion = true;
+			this->updateFTLE = true;
+
 		}
 
 		if (ImGui::InputFloat("Max Value", (float*)&dispersionOptions->max_val, 0.1f))
 		{
 			updateDispersion = true;
+			this->updateFTLE = true;
+
 		}
 	}
 	else
@@ -604,7 +640,7 @@ void RenderImGuiOptions::drawDispersionOptions()
 		this->updateDispersion = true;
 
 	}
-
+	
 	ImGui::End();
 
 }

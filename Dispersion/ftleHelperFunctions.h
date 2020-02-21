@@ -1,9 +1,10 @@
 #pragma once
 #include <cuda_runtime.h>
 #include "../Particle/Particle.h"
-#include "../Cuda/helper_math.h"
 #include "../Options/DispresionOptions.h"
 #include "../Options/SolverOptions.h"
+
+extern enum RK4STEP;
 
 
 #define FTLE_NEIGHBOR 7 //Number of neighboring particle (6) + the center particle (1)
@@ -21,4 +22,4 @@ __global__ void  traceDispersion3D_path_FTLE
 	int timestep
 );
 
-__device__ float FTLE3D(Particle* particles, const float& distance, float T);
+__device__ float FTLE3D(Particle* particles, float distance, float T);

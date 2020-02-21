@@ -27,6 +27,33 @@ private:
 
 public:
 
+	virtual void show(RenderImGuiOptions* renderImGuiOptions) override
+	{
+		if (renderImGuiOptions->showCrossSection)
+		{
+			if (!this->crossSectionOptions->initialized)
+			{
+				this->initialize(cudaAddressModeClamp, cudaAddressModeClamp, cudaAddressModeClamp);
+				this->crossSectionOptions->initialized = true;
+			}
+			this->draw();
+
+			if (crossSectionOptions->updateTime)
+			{
+				this->retraceCrossSectionField();
+				crossSectionOptions->updateTime = false;
+			}
+			if (renderImGuiOptions->updateCrossSection)
+			{
+				this->updateScene();
+
+				renderImGuiOptions->updateCrossSection = false;
+
+			}
+		}
+	}
+
+
 	virtual bool initialize
 	(
 		cudaTextureAddressMode addressMode_X,

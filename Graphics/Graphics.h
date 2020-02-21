@@ -26,6 +26,7 @@
 #include "../CrossSection/CrossSection.h"
 
 #include "../TurbulentMixing/TurbulentMixing.h"
+#include "../Dispersion/HightfieldFTLE.h"
 
 
 
@@ -44,6 +45,7 @@ public:
 		this->renderImGuiOptions.updatefluctuation = true;
 		this->renderImGuiOptions.updateCrossSection = true;
 		this->renderImGuiOptions.updateTurbulentMixing = true;
+		this->renderImGuiOptions.updateFTLE = true;
 	}
 
 
@@ -182,6 +184,8 @@ private:
 	HeightfieldGenerator	dispersionTracer;
 	FluctuationHeightfield	fluctuationHeightfield;
 	TurbulentMixing			turbulentMixing;
+	HeightfieldFTLE			heightfieldFTLE;
+
 
 
 	// Cross-Section Visualization objects

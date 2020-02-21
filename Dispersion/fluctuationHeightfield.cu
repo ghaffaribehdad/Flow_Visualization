@@ -17,8 +17,8 @@ bool FluctuationHeightfield::initialize
 	this->m_gridSize3D =
 	{
 		(size_t)solverOptions->gridSize[2],
-		(size_t)fluctuationOptions->wallNormalgridSize,
-		(size_t)1 + (size_t)fluctuationOptions->lastIdx - (size_t)fluctuationOptions->firstIdx
+		(size_t)fluctuationheightfieldOptions->wallNormalgridSize,
+		(size_t)1 + (size_t)fluctuationheightfieldOptions->lastIdx - (size_t)fluctuationheightfieldOptions->firstIdx
 
 	};
 
@@ -34,7 +34,7 @@ bool FluctuationHeightfield::initialize
 	this->rays = (*this->width) * (*this->height);				// Set number of rays based on the number of pixels
 
 	// initialize volume Input Output
-	primary_IO.Initialize(this->fluctuationOptions);
+	primary_IO.Initialize(this->fluctuationheightfieldOptions);
 
 
 	// Initialize Height Field as an empty CUDA array 3D
@@ -65,7 +65,7 @@ void  FluctuationHeightfield::traceFluctuationfield3D()
 	float* h_velocityField = new float[m_gridSize3D.x * m_gridSize3D.y * m_gridSize3D.z * (size_t)4];
 
 	size_t offset = solverOptions->gridSize[2] * solverOptions->gridSize[1] * sizeof(float4);
-	size_t buffer_size = solverOptions->gridSize[2] * (size_t)fluctuationOptions->wallNormalgridSize * sizeof(float4);
+	size_t buffer_size = solverOptions->gridSize[2] * (size_t)fluctuationheightfieldOptions->wallNormalgridSize * sizeof(float4);
 	
 
 
@@ -73,7 +73,7 @@ void  FluctuationHeightfield::traceFluctuationfield3D()
 
 	for (int t = 0; t < m_gridSize3D.z; t++)
 	{
-		this->primary_IO.readVolumePlane(t + fluctuationOptions->firstIdx, VolumeIO::readPlaneMode::YZ, fluctuationOptions->spanwisePos, offset, buffer_size);
+		this->primary_IO.readVolumePlane(t + fluctuationheightfieldOptions->firstIdx, VolumeIO::readPlaneMode::YZ, fluctuationheightfieldOptions->spanwisePos, offset, buffer_size);
 		float* p_temp = primary_IO.getField_float();
 
 		size_t counter_t = 0;
@@ -125,7 +125,7 @@ void FluctuationHeightfield::gradientFluctuationfield()
 		(
 			s_HeightSurface_Primary.getSurfaceObject(),
 			*this->solverOptions,
-			*this->fluctuationOptions
+			*this->fluctuationheightfieldOptions
 		);
 }
 
@@ -152,9 +152,9 @@ __host__ void FluctuationHeightfield::rendering()
 			this->t_HeightSurface_Primary,
 			this->t_HeightSurface_Primary_Ex,
 			int(this->rays),
-			this->fluctuationOptions->samplingRate_0,
+			this->fluctuationheightfieldOptions->samplingRate_0,
 			this->raycastingOptions->tolerance_0,
-			*fluctuationOptions
+			*fluctuationheightfieldOptions
 			);
 
 }

@@ -9,7 +9,7 @@ public:
 	char  filePath[100] ="G:\\Reference\\Padded\\";
 
 
-	char filePath_out[100] = "D:\\copy\\bf\\Binary_z_Major\\Padded";
+	char filePath_out[100] = "D:\\copy\\bf\\Binary_z_Major\\Padded\\";
 	char fileName_out[100] = "Lineset";
 	int counter = 0;
 	int fileToSave = 1000;
@@ -35,7 +35,7 @@ public:
 
 
 	int firstIdx = 1;
-	int lastIdx = 500;
+	int lastIdx = 200;
 	int currentIdx =1;
 
 	

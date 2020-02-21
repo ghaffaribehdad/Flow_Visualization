@@ -77,6 +77,7 @@ public:
 	bool updateStreamlines		= false;
 	bool updatePathlines		= false;
 	bool updateDispersion		= true;
+	bool updateFTLE				= true;
 	bool updatefluctuation		= false;
 	bool updateCrossSection		= false;
 	bool updateTurbulentMixing	= false;
@@ -88,6 +89,7 @@ public:
 	bool showRaycasting			= false;
 	bool showCrossSection		= false;
 	bool showDispersion			= false;
+	bool showFTLE				= false;
 	bool showTurbulentMixing	= false;
 	bool showFluctuationHeightfield = false;
 

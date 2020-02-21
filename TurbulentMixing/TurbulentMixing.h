@@ -39,6 +39,35 @@ public:
 
 	virtual void rendering() override;
 
+	virtual void show(RenderImGuiOptions* renderImGuiOptions) override
+	{
+		//if (this->renderImGuiOptions.showTurbulentMixing)
+	//{
+	//	if (!this->turbulentMixingOptions.initialized)
+	//	{
+
+
+	//		this->turbulentMixingOptions.initialized  = this->turbulentMixing.initalize();
+	//	}
+
+	//	this->turbulentMixing.draw();
+
+	//}
+
+	//if (this->renderImGuiOptions.updateTurbulentMixing)
+	//{
+	//	this->turbulentMixing.updateScene();
+
+	//	renderImGuiOptions.updateTurbulentMixing = false;
+	//}
+
+	//if (this->renderImGuiOptions.releaseTurbulentMixing)
+	//{
+	//	this->turbulentMixing.release();
+	//	this->renderImGuiOptions.releaseTurbulentMixing = false;
+	//}
+	}
+
 
 	void setResources
 	(

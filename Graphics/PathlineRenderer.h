@@ -14,6 +14,19 @@ private:
 
 public:
 
+	virtual void show(RenderImGuiOptions* renderImGuiOptions) override
+	{
+		if (renderImGuiOptions->showPathlines)
+		{
+			if (renderImGuiOptions->updatePathlines)
+			{
+				this->updateScene();
+				renderImGuiOptions->updatePathlines = false;
+			}
+		}
+	}
+
+
 	bool updateScene()
 	{
 

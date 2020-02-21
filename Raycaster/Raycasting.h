@@ -27,6 +27,7 @@
 #include "..//Options/DispresionOptions.h"
 #include "..//Options/fluctuationheightfieldOptions.h"
 #include "../Options/CrossSectionOptions.h"
+#include "../Graphics/RenderImGuiOptions.h"
 
 
 
@@ -138,6 +139,27 @@ public:
 
 	);
 
+	virtual __host__ void show(RenderImGuiOptions* renderImGuiOptions)
+	{
+		if (renderImGuiOptions->showRaycasting)
+		{
+			if (!this->raycastingOptions->initialized)
+			{
+				this->initialize(cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
+				this->raycastingOptions->initialized = true;
+			}
+			this->draw();
+
+			if (renderImGuiOptions->updateRaycasting)
+			{
+				this->updateScene();
+
+				renderImGuiOptions->updateRaycasting = false;
+
+			}
+		}
+	}
+
 
 
 };
@@ -199,6 +221,19 @@ __global__ void CudaTerrainRenderer
 
 template <typename Observable>
 __global__ void CudaTerrainRenderer_extra
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t heightField,
+	cudaTextureObject_t extraField,
+	int rays,
+	float samplingRate,
+	float IsosurfaceTolerance,
+	DispersionOptions dispersionOptions,
+	int traceTime
+);
+
+
+__global__ void CudaTerrainRenderer_extra_FTLE
 (
 	cudaSurfaceObject_t raycastingSurface,
 	cudaTextureObject_t heightField,

@@ -45,7 +45,38 @@ public:
 	void trace3D();	 //Traces the streamlines
 
 
+	virtual void show(RenderImGuiOptions* renderImGuiOptions) override
+	{
+		if (renderImGuiOptions->showDispersion)
+		{
+			if (this->dispersionOptions->retrace)
+			{
+				this->retrace();
+				this->dispersionOptions->retrace = false;
+			}
+			if (!this->dispersionOptions->initialized)
+			{
+				this->initialize(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
+				this->dispersionOptions->initialized = true;
+			}
+			this->draw();
 
+			if (renderImGuiOptions->updateDispersion)
+			{
+				this->updateScene();
+				renderImGuiOptions->updateDispersion = false;
+
+			}
+		}
+		else
+		{
+			if (dispersionOptions->released)
+			{
+				this->release();
+				dispersionOptions->released = false;
+			}
+		}
+	}
 
 	bool retrace();
 	void gradient3D_Single();

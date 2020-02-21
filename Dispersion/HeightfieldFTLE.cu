@@ -6,8 +6,8 @@
 
 __host__ bool HeightfieldFTLE::InitializeParticles()
 {
-	this->n_particles = dispersionOptions->gridSize_2D[0] * dispersionOptions->gridSize_2D[1] * FTLE_NEIGHBOR;
-	this->h_particle = new Particle[n_particles];
+	this->n_particles = dispersionOptions->gridSize_2D[0] * dispersionOptions->gridSize_2D[1];
+	this->h_particle = new Particle[n_particles * FTLE_NEIGHBOR] ;
 	seedParticle_ZY_Plane_FTLE
 	(
 		h_particle,
@@ -18,7 +18,7 @@ __host__ bool HeightfieldFTLE::InitializeParticles()
 		dispersionOptions->ftleDistance
 	);
 
-	size_t Particles_byte = sizeof(Particle) * n_particles;
+	size_t Particles_byte = sizeof(Particle) * n_particles * FTLE_NEIGHBOR;
 
 	gpuErrchk(cudaMalloc((void**)&this->d_particle, Particles_byte));
 	gpuErrchk(cudaMemcpy(this->d_particle, this->h_particle, Particles_byte, cudaMemcpyHostToDevice));
@@ -37,7 +37,7 @@ void HeightfieldFTLE::trace3D_path_Single()
 	dim3 thread = { maxBlockDim,maxBlockDim,1 };
 	blocks = BLOCK_THREAD(n_particles);
 
-	RK4STEP RK4Step = RK4STEP::ODD;
+	RK4STEP RK4Step = RK4STEP::EVEN;
 
 	for (int i = 0; i < solverOptions->lastIdx - solverOptions->firstIdx; i++)
 	{
@@ -67,7 +67,7 @@ void HeightfieldFTLE::trace3D_path_Single()
 				this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, velocityField_1);
 				primary_IO.release();
 
-				RK4Step = RK4STEP::ODD;
+				RK4Step = RK4STEP::EVEN;
 			}
 			// Odd integration steps
 			else
@@ -77,16 +77,13 @@ void HeightfieldFTLE::trace3D_path_Single()
 				this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, velocityField_0);
 				primary_IO.release();
 
-				RK4Step = RK4STEP::EVEN;
+				RK4Step = RK4STEP::ODD;
 
 			}
 
 		}
 
-		// initialize proper velocityfield
-
-		// trace
-		traceDispersion3D_path << < blocks, thread >> >
+		traceDispersion3D_path_FTLE << < blocks, thread >> >
 			(
 				d_particle,
 				s_HeightSurface_Primary.getSurfaceObject(),
@@ -99,6 +96,40 @@ void HeightfieldFTLE::trace3D_path_Single()
 				i
 				);
 	}
+
 	// Calculates the gradients and store it in the cuda surface
 	cudaFree(d_particle);
+}
+
+
+void HeightfieldFTLE::rendering()
+{
+	this->deviceContext->PSSetSamplers(0, 1, this->samplerState.GetAddressOf());
+	//this->deviceContext->OMSetBlendState(this->blendState.Get(), NULL, 0xFFFFFFFF);
+
+	this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), renderingOptions->bgColor);// Clear the target view
+
+	// Calculates the block and grid sizes
+	unsigned int blocks;
+	dim3 thread = { maxBlockDim,maxBlockDim,1 };
+	blocks = static_cast<unsigned int>((this->rays % (thread.x * thread.y) == 0 ? rays / (thread.x * thread.y) : rays / (thread.x * thread.y) + 1));
+
+
+
+	// Depending on the Rendering mode choose the terrain Rendering function
+	if (dispersionOptions->renderingMode == dispersionOptionsMode::HeightfieldRenderingMode::SINGLE_SURFACE)
+	{
+		CudaTerrainRenderer_extra_FTLE << < blocks, thread >> >
+			(
+				this->raycastingSurface.getSurfaceObject(),
+				this->t_HeightSurface_Primary,
+				this->t_HeightSurface_Primary_Ex,
+				int(this->rays),
+				this->raycastingOptions->samplingRate_0,
+				this->raycastingOptions->tolerance_0,
+				*dispersionOptions,
+				solverOptions->lastIdx - solverOptions->firstIdx
+				);
+	}
+
 }

@@ -5,45 +5,26 @@
 #include <cuda_runtime.h>
 #include "..//Raycaster/Raycasting_Helper.h"
 #include "..//Options/DispresionOptions.h"
+#include "DispersionHelper.h"
 
 //explicit instantiation
 
-
-
 bool HeightfieldGenerator::retrace()
 {
-	//this->heightArray3D.release();
-	//this->heightArray3D_extra.release();
+	this->a_HeightSurface_Primary.release();
+	this->a_HeightSurface_Primary_Ex.release();
 
-	//cudaDestroyTextureObject(this->heightFieldTexture3D);
-	//cudaDestroyTextureObject(this->heightFieldTexture3D_extra);
+	cudaDestroyTextureObject(this->t_HeightSurface_Primary);
+	cudaDestroyTextureObject(this->t_HeightSurface_Primary_Ex);
 
-	//if (!this->InitializeParticles())
-	//	return false;
+	cudaFree(d_particle);
 
-	//// Initialize Height Field as an empty cuda array 3D
-	//if (!this->InitializeHeightArray3D())
-	//	return false;
+	if (!this->InitializeParticles())
+		return false;
 
-	//// Bind the array of heights to the cuda surface
-	//if (!this->InitializeHeightSurface3D())
-	//	return false;
-
-
-	//// Trace particle and store their heights on the Height Surface
-	//this->trace3D();
-
-
-	//// Store gradient and height on the surface
-	//this->gradient3D();
-
-	////Destroy height + gradient surface and height calculations (both surface and array)
-	//this->heightSurface3D.destroySurface();
-	//this->heightSurface3D_extra.destroySurface();
-
-	//// Initialize a texture and bind it to height + gradient array
-	//if (!this->InitializeHeightTexture3D())
-	//	return false;
+	// Initialize Height Field as an empty cuda array 3D
+	if (!this->singleSurfaceInitialization())
+		return false;
 
 	return true;
 }
@@ -811,6 +792,7 @@ bool HeightfieldGenerator::singleSurfaceInitialization()
 
 
 	this->s_HeightSurface_Primary.destroySurface();
+	this->s_HeightSurface_Primary_Ex.destroySurface();
 
 	if (!this->InitializeHeightTexture3D_Single())
 		return false;

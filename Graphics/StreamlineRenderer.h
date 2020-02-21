@@ -14,6 +14,31 @@ private:
 
 public:
 
+	virtual void show(RenderImGuiOptions* renderImGuiOptions) override
+	{
+		if (renderImGuiOptions->showStreamlines)
+		{
+			if (renderImGuiOptions->updateStreamlines && renderImGuiOptions->streamlineGenerating)
+			{
+				this->updateScene(true);
+				if (solverOptions->counter < solverOptions->fileToSave)
+				{
+					solverOptions->counter++;
+				}
+				else
+				{
+					renderImGuiOptions->updateStreamlines = false;
+				}
+			}
+			else if (renderImGuiOptions->updateStreamlines)
+			{
+				this->updateScene();
+				renderImGuiOptions->updateStreamlines = false;
+
+			}
+		}
+	}
+
 	bool updateScene(bool WriteToFile = false)
 	{
 		HRESULT hr = this->vertexBuffer.Initialize(this->device, NULL, solverOptions->lineLength * solverOptions->lines_count);

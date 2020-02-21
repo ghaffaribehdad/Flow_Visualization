@@ -16,9 +16,6 @@ bool Graphics::InitializeCamera()
 
 
 
-
-
-
 #pragma region Main_Initialization
 bool Graphics::Initialize(HWND hwnd, int width, int height)
 {
@@ -66,7 +63,7 @@ void Graphics::RenderFrame()
 
 
 
-	// For the raycasting we need a workaround!
+	// Clear Render Target
 	this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), renderingOptions.bgColor);// Clear the target view
 	this->deviceContext->ClearDepthStencilView(this->depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);// Clear the depth stencil view
 	this->deviceContext->OMSetDepthStencilState(this->depthStencilState.Get(), 0);	// add depth  stencil state to rendering routin
@@ -75,204 +72,20 @@ void Graphics::RenderFrame()
 
 	##############################################################
 	##															##
-	##						Update Scene						##
+	##						Show Scene							##
 	##															##
 	##############################################################
 
 	*/
-	if (renderImGuiOptions.updateVolumeBox)
-	{
-		float center[3] = { 0,0,0 };
-		this->volumeBox.updateScene(this->solverOptions.gridDiameter, center);
-		renderImGuiOptions.updateVolumeBox = false;
-	}
-
-	if (renderImGuiOptions.updateSeedBox)
-	{
-		float center[3] = { 0,0,0 };
-		this->seedBox.updateScene(this->solverOptions.seedBox, this->solverOptions.seedBoxPos);
-		renderImGuiOptions.updateSeedBox = false;
-
-	}
-
-	if (this->renderImGuiOptions.showStreamlines)
-	{
-		if (renderImGuiOptions.updateStreamlines && renderImGuiOptions.streamlineGenerating)
-		{
-			this->streamlineRenderer.updateScene(true);
-			if (solverOptions.counter < solverOptions.fileToSave)
-			{
-				solverOptions.counter++;
-			}
-			else
-			{
-				renderImGuiOptions.updateStreamlines = false;
-			}
-		}
-		else if (renderImGuiOptions.updateStreamlines)
-		{
-			this->streamlineRenderer.updateScene();
-			renderImGuiOptions.updateStreamlines = false;
-
-		}
-	}
-
-	if (this->renderImGuiOptions.showPathlines)
-	{
-		if (renderImGuiOptions.updatePathlines)
-		{
-			this->pathlineRenderer.updateScene();
-			renderImGuiOptions.updatePathlines = false;
-		}
-	}
-
-	if (this->renderImGuiOptions.showRaycasting)
-	{
-		if (!this->raycastingOptions.initialized)
-		{
-			raycasting.initialize(cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
-			this->raycastingOptions.initialized = true;
-		}
-		this->raycasting.draw();
-
-		if (renderImGuiOptions.updateRaycasting)
-		{
-			this->raycasting.updateScene();
-
-			renderImGuiOptions.updateRaycasting = false;
-
-		}
-	}
-
-
-
-
-	// Cross Section rendering
-	if (this->renderImGuiOptions.showCrossSection)
-	{
-		if (!this->crossSectionOptions.initialized)
-		{
-			crossSection.initialize(cudaAddressModeClamp, cudaAddressModeClamp, cudaAddressModeClamp);
-			this->crossSectionOptions.initialized = true;
-		}
-		this->crossSection.draw();
-
-		if (crossSectionOptions.updateTime)
-		{
-			crossSection.retraceCrossSectionField();
-			crossSectionOptions.updateTime = false;
-		}
-		if (renderImGuiOptions.updateCrossSection)
-		{
-			this->crossSection.updateScene();
-
-			renderImGuiOptions.updateCrossSection = false;
-
-		}
-	}
-
-
-
-	// Heightfield Rendering
-	if (this->renderImGuiOptions.showDispersion)
-	{
-		if (this->dispersionOptions.retrace)
-		{
-			this->dispersionTracer.retrace();
-			this->dispersionOptions.retrace = false;
-		}
-		if (!this->dispersionOptions.initialized)
-		{
-
-
-			dispersionTracer.initialize(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
-			this->dispersionOptions.initialized = true;
-		}
-		// Override draw
-		this->dispersionTracer.draw();
-
-		if (renderImGuiOptions.updateDispersion)
-		{
-			this->dispersionTracer.updateScene();
-			renderImGuiOptions.updateDispersion = false;
-
-		}
-	}
-	else
-	{
-		if (dispersionOptions.released)
-		{
-			this->dispersionTracer.release();
-			dispersionOptions.released = false;
-		}
-	}
-
-
-	// Turbulent Mixing
-	
-	//if (this->renderImGuiOptions.showTurbulentMixing)
-	//{
-	//	if (!this->turbulentMixingOptions.initialized)
-	//	{
-
-
-	//		this->turbulentMixingOptions.initialized  = this->turbulentMixing.initalize();
-	//	}
-
-	//	this->turbulentMixing.draw();
-
-	//}
-
-	//if (this->renderImGuiOptions.updateTurbulentMixing)
-	//{
-	//	this->turbulentMixing.updateScene();
-
-	//	renderImGuiOptions.updateTurbulentMixing = false;
-	//}
-
-	//if (this->renderImGuiOptions.releaseTurbulentMixing)
-	//{
-	//	this->turbulentMixing.release();
-	//	this->renderImGuiOptions.releaseTurbulentMixing = false;
-	//}
-
-
-
-	// Fluctuation Heightfield Rendering
-	if (this->renderImGuiOptions.showFluctuationHeightfield)
-	{
-		//if (this->dispersionOptions.retrace)
-		//{
-		//	this->fluctuationHeightfield.retrace();
-		//	this->fluctuationheightfieldOptions .retrace = false;
-		//}
-		if (!this->fluctuationheightfieldOptions.initialized)
-		{
-
-			fluctuationHeightfield.fluctuationOptions = &this->fluctuationheightfieldOptions;
-			fluctuationHeightfield.initialize(cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
-			this->fluctuationheightfieldOptions.initialized = true;
-		}
-		// Overrided draw
-		this->fluctuationHeightfield.draw();
-
-		if (renderImGuiOptions.updatefluctuation)
-		{
-			this->fluctuationHeightfield.updateScene();
-
-			renderImGuiOptions.updatefluctuation = false;
-
-		}
-	}
-	else
-	{
-		if (fluctuationheightfieldOptions.released)
-		{
-			this->fluctuationHeightfield.release();
-			fluctuationheightfieldOptions.released = false;
-		}
-	}
-
+	volumeBox				.show(&renderImGuiOptions);		// Show Volume Box
+	seedBox.				show(&renderImGuiOptions);		// Show Seed Box
+	streamlineRenderer		.show(&renderImGuiOptions);		// Streamline rendering
+	pathlineRenderer		.show(&renderImGuiOptions);		// Pathline rendering
+	raycasting				.show(&renderImGuiOptions);		// Raycasting 
+	dispersionTracer		.show(&renderImGuiOptions); 	// Heightfield Rendering
+	crossSection			.show(&renderImGuiOptions);		// Cross Section rendering
+	heightfieldFTLE			.show(&renderImGuiOptions);		// Heightfield Rendering FTLE
+	fluctuationHeightfield	.show(&renderImGuiOptions);		// Fluctuation Heightfield
 
 	/*
 
@@ -286,7 +99,6 @@ void Graphics::RenderFrame()
 	if (renderingOptions.showVolumeBox)
 	{
 		this->volumeBox.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_LINELIST);
-
 	}
 
 	if (renderingOptions.showSeedBox)
@@ -295,6 +107,16 @@ void Graphics::RenderFrame()
 
 	}
 
+	//#############################################################
+	/*
+
+	##############################################################
+	##															##
+	##						Take Screenshots					##
+	##															##
+	##############################################################
+
+	*/
 	if (crossSectionOptions.saveScreenshot)
 	{
 		std::string fullName = dispersionOptions.filePath + dispersionOptions.fileName + std::to_string(dispersionOptions.file_counter) + std::string(".jpg");
@@ -315,7 +137,7 @@ void Graphics::RenderFrame()
 		dispersionOptions.saveScreenshot = false;
 	}
 
-
+	//#############################################################
 
 
 
@@ -345,7 +167,7 @@ void Graphics::RenderFrame()
 	renderImGuiOptions.drawOptionWindows();		// Draw Options
 	renderImGuiOptions.render();				// Render ImGui 
 
-
+	//#############################################################
 
 
 	// Present the backbuffer
@@ -358,10 +180,6 @@ bool Graphics::InitializeDirectXResources()
 
 	HRESULT hr;
 
-
-
-
-
 	//create and bind the backbuffer
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> backbuffer;
 	hr = this->swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(backbuffer.GetAddressOf()));
@@ -370,8 +188,6 @@ bool Graphics::InitializeDirectXResources()
 		ErrorLogger::Log(hr, "Failed to Get Back buffer");
 	}
 
-
-	
 	// Create Render targe view
 	hr = this->device->CreateRenderTargetView(backbuffer.Get(), NULL, this->renderTargetView.GetAddressOf());
 	if (FAILED(hr))
@@ -556,7 +372,8 @@ bool Graphics::InitializeResources()
 		this->device.Get(),
 		this->adapter,
 		this->deviceContext.Get(),
-		&this->dispersionOptions
+		&this->dispersionOptions,
+		&this->fluctuationheightfieldOptions
 	);
 
 	dispersionTracer.setResources
@@ -573,6 +390,19 @@ bool Graphics::InitializeResources()
 		&this->dispersionOptions
 	);
 
+	heightfieldFTLE.setResources
+	(
+		&this->camera,
+		&this->windowWidth,
+		&this->windowHeight,
+		&this->solverOptions,
+		&this->raycastingOptions,
+		&this->renderingOptions,
+		this->device.Get(),
+		this->adapter,
+		this->deviceContext.Get(),
+		&this->dispersionOptions
+	);
 	
 	if (!streamlineRenderer.initializeBuffers())
 		return false;
@@ -625,10 +455,6 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 	scd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
 	HRESULT hr;
-
-
-
-
 	D3D_FEATURE_LEVEL feature;
 
 	// Create Device and swapchain
@@ -636,19 +462,12 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 		adapters[0].pAdapter,	//IDXGI adapter (noramlly the first adapter is the hardware and the second one is the software accelarator)
 		D3D_DRIVER_TYPE_UNKNOWN,
 		NULL,						// For software driver type
-
-
-
-
 #ifdef _DEBUG //Debug Mode
 		D3D11_CREATE_DEVICE_DEBUG,
 
 #else //Release mode
 		NULL,
 #endif // _DEBUG or Release mode
-
-
-
 		NULL,						// Feature levels array
 		0,						// Number of feature levels in array
 		D3D11_SDK_VERSION,		// SDK version
@@ -658,9 +477,6 @@ bool Graphics::InitializeDirectX(HWND hwnd)
 		&feature,					// supported feature level
 		this->deviceContext.GetAddressOf() // Pointer to the address of device context
 	);
-
-
-
 
 	if (FAILED(hr))
 	{

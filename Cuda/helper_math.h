@@ -5,6 +5,8 @@
 #include <ctgmath>
 #include <DirectXMath.h>
 
+
+
 #define X_HAT {1.0f,0.0f,0.0f}
 #define Y_HAT {0.0f,1.0f,0.0f}
 #define Z_HAT {0.0f, 0.0f, 1.0f}
@@ -15,18 +17,25 @@
 
 #define BLOCK_THREAD(kernelCall) static_cast<unsigned int>((kernelCall % (thread.x* thread.y) == 0 ? kernelCall / (thread.x * thread.y) : kernelCall / (thread.x * thread.y) + 1))
 
+
+enum RK4STEP
+{
+	EVEN = 0,
+	ODD
+};
+
 // convert array to built-in cuda structures
-inline __host__ __device__ float3 ARRAYTOFLOAT3(const float* a_float)
+ inline __host__ __device__ float3 ARRAYTOFLOAT3(float* a_float)
 {
 	return make_float3(a_float[0], a_float[1], a_float[2]);
 }
 
-inline __host__ __device__ int3 ARRAYTOINT3(const int* a_int)
+inline __host__ __device__ int3 ARRAYTOINT3(int* a_int)
 {
 	return make_int3(a_int[0], a_int[1], a_int[2]);
 }
 
-inline __host__ __device__ int2 ARRAYTOINT2(const int* a_int)
+inline __host__ __device__ int2 ARRAYTOINT2(int* a_int)
 {
 	return make_int2(a_int[0], a_int[1]);
 }
@@ -352,6 +361,12 @@ inline __device__ float4 ValueAtXYZ_Texture_float4(cudaTextureObject_t tex, int3
 	return  tex3D<float4>(tex, position.x, position.y, position.z);
 }
 
+inline __device__ float4 ValueAtXYZ_Texture_float4(cudaTextureObject_t tex, float3 position)
+{
+	return  tex3D<float4>(tex, position.x, position.y, position.z);
+}
+
+
 
 
 inline __device__  float2 Gradient2DX_Surf(cudaSurfaceObject_t surf, int2 gridPosition, int2 gridSize)
@@ -457,12 +472,6 @@ inline __device__  float2 GradientXY_Tex3D_X(cudaSurfaceObject_t tex, int3 gridP
 
 	return make_float2(dH_dX, dH_dY);
 }
-
-enum RK4STEP
-{
-	EVEN = 0,
-	ODD
-};
 
 
 struct fMat3X3
