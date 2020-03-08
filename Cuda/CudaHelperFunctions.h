@@ -6,6 +6,7 @@
 #include "..//Graphics/Vertex.h"
 #include "..//Raycaster/IsosurfaceHelperFunctions.h"
 #include "helper_math.h"
+#include "cuda_runtime.h"
 
 
 
@@ -156,3 +157,71 @@ __device__ float3 binarySearch
 	return position;
 
 };
+
+
+
+__device__ float3 binarySearch_X
+(
+	cudaTextureObject_t field,
+	float3& _position,
+	float3& gridDiameter,
+	float3& _samplingStep,
+	float& value,
+	float& tolerance,
+	int maxIteration
+);
+
+
+inline __device__ __host__ int2 index2pixel(const int& index, const int& width)
+{
+	int2 pixel = { 0,0 };
+	pixel.y = index / width;
+	pixel.x = index - pixel.y * width;
+
+	return pixel;
+};
+
+
+
+inline __device__ __host__ float depthfinder(const float3& position, const float3& eyePos, const float3& viwDir, const float& f, const float& n)
+{
+
+	// calculates the z-value
+	float z_dist = abs(dot(viwDir, position - eyePos));
+
+	// calculate non-linear depth between 0 to 1
+	float depth = (f) / (f - n);
+	depth += (-1.0f / z_dist) * (f * n) / (f - n);
+
+	return depth;
+};
+
+__device__ inline float getTemperature(float* temp, float pos, int size, int offset)
+{
+	pos = pos - offset;
+
+	if (ceil(pos) < size && pos > 0)
+	{
+		if ((int)pos == pos)
+		{
+			return temp[(int)pos];
+		}
+		else
+		{
+			return (pos - floor(pos)) * temp[(int)ceil(pos)] + (ceil(pos) - pos) * temp[(int)floor(pos)];
+
+		}
+
+	}
+	else if (pos < 0)
+	{
+		//return temp[0];
+		return 0.0f; // Border Address Mode
+		
+	}
+	else
+	{
+		//return temp[size - 1];
+		return 0.0f; // Border Address Mode
+	}
+}

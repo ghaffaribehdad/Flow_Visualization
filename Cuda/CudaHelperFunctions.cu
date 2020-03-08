@@ -981,3 +981,57 @@ __device__ void	RK4Path
 
 
 }
+
+
+
+__device__ float3 binarySearch_X
+(
+	cudaTextureObject_t field,
+	float3& _position,
+	float3& gridDiameter,
+	float3& _samplingStep,
+	float& value,
+	float& tolerance,
+	int maxIteration
+)
+{
+	float3 position = _position;
+	float3 relative_position = position / gridDiameter;
+	float3 samplingStep = _samplingStep * 0.5f;
+	bool side = 0; // 1 -> right , 0 -> left
+	int counter = 0;
+
+	while (fabsf(ValueAtXYZ_Texture_float4(field, relative_position).x - value) > tolerance&& counter < maxIteration)
+	{
+
+		if (ValueAtXYZ_Texture_float4(field, relative_position).x - value > 0)
+		{
+			if (side)
+			{
+				samplingStep = 0.5 * samplingStep;
+			}
+			position = position - samplingStep;
+			relative_position = position / gridDiameter;
+			side = 0;
+
+		}
+		else
+		{
+
+			if (!side)
+			{
+				samplingStep = 0.5 * samplingStep;
+			}
+
+			position = position + samplingStep;
+			relative_position = position / gridDiameter;
+			side = 1;
+
+		}
+		counter++;
+
+	}
+
+	return position;
+
+};

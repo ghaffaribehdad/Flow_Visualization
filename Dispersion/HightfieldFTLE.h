@@ -45,11 +45,14 @@ public:
 			}
 		}
 	}
+
 	
 private:
 
 	virtual bool InitializeParticles() override;
 	virtual void trace3D_path_Single() override;
 	virtual void rendering() override;
-
+	virtual bool singleSurfaceInitialization() override;
+	void gradient3D_Single_ftle();
+	virtual bool initializeBoundingBox() override;
 };

@@ -21,11 +21,12 @@ static const char* const HeightfieldRenderingMode[] =
 enum IsoMeasure
 {
 	VelocityMagnitude = 0,
-	Velocity_x,
-	Velocity_y,
+	Velocity_X,
+	Velocity_Y,
 	Velocity_Z,
 	ShearStress,
-	Position_Y
+	TURBULENT_DIFFUSIVITY,
+	COUNT
 };
 
 
@@ -35,7 +36,8 @@ static const char* const IsoMeasureModes[] =
 	"Velocity X",
 	"Velocity Y",
 	"Velocity Z",
-	"Shear Stress"
+	"Shear Stress",
+	"Turbulent Diffusivity"
 };
 static const char* const ColorModeList[] = {"V", "Vx", "Vy", "Vz","i_Vx","i_Vy","i_Vz"};
 

@@ -78,7 +78,7 @@ void Graphics::RenderFrame()
 
 	*/
 	volumeBox				.show(&renderImGuiOptions);		// Show Volume Box
-	seedBox.				show(&renderImGuiOptions);		// Show Seed Box
+	seedBox					.show(&renderImGuiOptions);		// Show Seed Box
 	streamlineRenderer		.show(&renderImGuiOptions);		// Streamline rendering
 	pathlineRenderer		.show(&renderImGuiOptions);		// Pathline rendering
 	raycasting				.show(&renderImGuiOptions);		// Raycasting 
@@ -514,8 +514,8 @@ bool Graphics::InitializeShaders()
 }
 
 
-
 // ############################# Initialize the Scene #########################
+
 bool Graphics::InitializeScene()
 {
 
@@ -528,7 +528,6 @@ bool Graphics::InitializeScene()
 	
 	return true;
 }
-
 
 bool Graphics::InitializeImGui(HWND hwnd)
 {
@@ -566,7 +565,6 @@ bool Graphics::InitializeImGui(HWND hwnd)
 	}
 
 }
-
 
 void Graphics::Resize(HWND hwnd)
 {
@@ -612,8 +610,6 @@ void Graphics::Resize(HWND hwnd)
 
 
 }
-#pragma endregion Scene_Initialization
-
 
 IDXGIAdapter* Graphics::GetAdapter()
 {
@@ -637,6 +633,7 @@ const float3 Graphics::getUpVector()
 
 	return up;
 }
+
 const float3 Graphics::getEyePosition()
 {
 	XMFLOAT3 eyePosition = this->camera.GetPositionFloat3();
@@ -644,6 +641,7 @@ const float3 Graphics::getEyePosition()
 
 	return eye;
 }
+
 const float3 Graphics::getViewDir()
 {
 
@@ -652,7 +650,6 @@ const float3 Graphics::getViewDir()
 
 	return view;
 }
-
 
 void Graphics::saveTexture(ID3D11Texture2D* texture, std::string fileName, std::string filePath)
 {

@@ -55,10 +55,10 @@ namespace VolumeIO
 
 		// Clear the vector
 		void release();
+		bool Read();
 
 	protected:
 
-		bool Read();
 		bool Read(std::streampos begin, size_t size);
 
 	};

@@ -204,9 +204,9 @@ __host__ bool FluctuationHeightfield::InitializeHeightTexture3D_Single()
 	// Texture Description
 	texDesc.normalizedCoords = true;
 	texDesc.filterMode = cudaFilterModeLinear;
-	texDesc.addressMode[0] = cudaTextureAddressMode::cudaAddressModeBorder;
-	texDesc.addressMode[1] = cudaTextureAddressMode::cudaAddressModeBorder;
-	texDesc.addressMode[2] = cudaTextureAddressMode::cudaAddressModeBorder;
+	texDesc.addressMode[0] = cudaTextureAddressMode::cudaAddressModeClamp;
+	texDesc.addressMode[1] = cudaTextureAddressMode::cudaAddressModeClamp;
+	texDesc.addressMode[2] = cudaTextureAddressMode::cudaAddressModeClamp;
 	texDesc.readMode = cudaReadModeElementType;
 
 	// Create the texture and bind it to the array

@@ -1,8 +1,8 @@
 
 #include "IsosurfaceHelperFunctions.h"
-#include "cuda_runtime.h"
 #include "..//Cuda/helper_math.h"
 #include "BoundingBox.h"
+#include "..//Cuda/CudaHelperFunctions.h"
 
 
 
@@ -19,18 +19,33 @@ __device__ float3 IsosurfaceHelper::Observable::GradientAtXYZ(cudaTextureObject_
 __device__  float3 IsosurfaceHelper::Observable::GradientAtGrid(cudaTextureObject_t tex, float3 position, int3 gridSize)
 {
 	float3 h = { 1.0f, 1.0f ,1.0f };
-	h = h/gridSize;
-	float dV_dX = this->ValueAtXYZ(tex, make_float3(position.x + h.x / 2.0f, position.y, position.z));
-	float dV_dY = this->ValueAtXYZ(tex, make_float3(position.x, position.y + h.y / 2.0f, position.z));
-	float dV_dZ = this->ValueAtXYZ(tex, make_float3(position.x, position.y, position.z + h.z / 2.0f));
+	h =  h/gridSize;
+	float dV_dX = this->ValueAtXYZ(tex, make_float3(position.x + h.x , position.y, position.z));
+	float dV_dY = this->ValueAtXYZ(tex, make_float3(position.x, position.y + h.y , position.z));
+	float dV_dZ = this->ValueAtXYZ(tex, make_float3(position.x, position.y, position.z + h.z));
 
-	dV_dX -= this->ValueAtXYZ(tex, make_float3(position.x - h.x / 2.0f, position.y, position.z));
-	dV_dY -= this->ValueAtXYZ(tex, make_float3(position.x, position.y - h.y / 2.0f, position.z));
-	dV_dZ -= this->ValueAtXYZ(tex, make_float3(position.x, position.y, position.z - h.z / 2.0f));
+	dV_dX -= this->ValueAtXYZ(tex, make_float3(position.x - h.x , position.y, position.z));
+	dV_dY -= this->ValueAtXYZ(tex, make_float3(position.x, position.y - h.y, position.z));
+	dV_dZ -= this->ValueAtXYZ(tex, make_float3(position.x, position.y, position.z - h.z ));
+
+	return { dV_dX / (2.0f * h.x) ,dV_dY / (2.0f * h.y), dV_dZ / (2.0f * h.z) };
+}
+
+
+__device__  float3 GradientAtGrid_X(cudaTextureObject_t tex, float3 position, int3 gridSize)
+{
+	float3 h = { 1.0f, 1.0f ,1.0f };
+	h = h / gridSize;
+	float dV_dX = ValueAtXYZ_float4(tex, make_float3(position.x + h.x / 2.0f, position.y, position.z)).x;
+	float dV_dY = ValueAtXYZ_float4(tex, make_float3(position.x, position.y + h.y / 2.0f, position.z)).x;
+	float dV_dZ = ValueAtXYZ_float4(tex, make_float3(position.x, position.y, position.z + h.z / 2.0f)).x;
+
+	dV_dX -= ValueAtXYZ_float4(tex, make_float3(position.x - h.x / 2.0f, position.y, position.z)).x;
+	dV_dY -= ValueAtXYZ_float4(tex, make_float3(position.x, position.y - h.y / 2.0f, position.z)).x;
+	dV_dZ -= ValueAtXYZ_float4(tex, make_float3(position.x, position.y, position.z - h.z / 2.0f)).x;
 
 	return { dV_dX / h.x ,dV_dY / h.y, dV_dZ / h.z };
 }
-
 
 
 __device__ float IsosurfaceHelper::Velocity_Magnitude::ValueAtXYZ(cudaTextureObject_t tex, float3 position)
@@ -91,7 +106,13 @@ __device__  float2 IsosurfaceHelper::Position::GradientAtXY_Grid(cudaSurfaceObje
 	return make_float2(-dH_dX, -dH_dY);
 }
 
+__device__  float4 ValueAtXYZ_Surface_float4(cudaSurfaceObject_t surf, int3 gridPos)
+{
+	float4 data;
+	surf3Dread(&data, surf, gridPos.x * sizeof(float4), gridPos.y, gridPos.z);
 
+	return data;
+}
 
 __device__  float2 IsosurfaceHelper::Position::GradientAtXYZ_Grid(cudaSurfaceObject_t surf, int3 gridPosition)
 {
@@ -104,6 +125,68 @@ __device__  float2 IsosurfaceHelper::Position::GradientAtXYZ_Grid(cudaSurfaceObj
 	
 
 	return make_float2(dH_dX, dH_dY);
+}
+
+
+__device__  float3 GradientAtXYZ_X_Surface(cudaSurfaceObject_t surf, int3 gridPosition)
+{
+	float dH_dX = ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x + 1, gridPosition.y, gridPosition.z)).x;
+	float dH_dY = ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y + 1, gridPosition.z)).x;
+	float dH_dZ = ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y , gridPosition.z +1)).x;
+
+	dH_dX -= ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x - 1, gridPosition.y, gridPosition.z)).x;
+	dH_dY -= ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y - 1, gridPosition.z)).x;
+	dH_dZ -= ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y , gridPosition.z-1)).x;
+
+
+
+	return make_float3(dH_dX, dH_dY, dH_dZ);
+}
+
+__device__  float3 GradientAtXYZ_Y_Surface(cudaSurfaceObject_t surf, int3 gridPosition)
+{
+	float dH_dX = ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x + 1, gridPosition.y, gridPosition.z)).y;
+	float dH_dY = ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y + 1, gridPosition.z)).y;
+	float dH_dZ = ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y, gridPosition.z + 1)).y;
+
+	dH_dX -= ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x - 1, gridPosition.y, gridPosition.z)).y;
+	dH_dY -= ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y - 1, gridPosition.z)).y;
+	dH_dZ -= ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y, gridPosition.z - 1)).y;
+
+
+
+	return make_float3(dH_dX, dH_dY, dH_dZ);
+}
+
+__device__  float3 GradientAtXYZ_Z_Surface(cudaSurfaceObject_t surf, int3 gridPosition)
+{
+	float dH_dX = ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x + 1, gridPosition.y, gridPosition.z)).z;
+	float dH_dY = ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y + 1, gridPosition.z)).z;
+	float dH_dZ = ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y, gridPosition.z + 1)).z;
+
+	dH_dX -= ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x - 1, gridPosition.y, gridPosition.z)).z;
+	dH_dY -= ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y - 1, gridPosition.z)).z;
+	dH_dZ -= ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y, gridPosition.z - 1)).z;
+
+
+
+	return make_float3(dH_dX, dH_dY, dH_dZ);
+}
+
+
+__device__  float3 GradientAtXYZ_W_Surface(cudaSurfaceObject_t surf, int3 gridPosition)
+{
+	float dH_dX = ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x + 1, gridPosition.y, gridPosition.z)).w;
+	float dH_dY = ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y + 1, gridPosition.z)).w;
+	float dH_dZ = ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y, gridPosition.z + 1)).w;
+
+	dH_dX -= ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x - 1, gridPosition.y, gridPosition.z)).w;
+	dH_dY -= ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y - 1, gridPosition.z)).w;
+	dH_dZ -= ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y, gridPosition.z - 1)).w;
+
+
+
+	return make_float3(dH_dX, dH_dY, dH_dZ);
 }
 
 __device__ float2 IsosurfaceHelper::Position::GradientFluctuatuionAtXT(cudaSurfaceObject_t surf, int3 gridPosition, int3 gridSize)
@@ -202,7 +285,103 @@ __device__  float4 IsosurfaceHelper::Position::ValueAtXY_Surface_float4(cudaSurf
 
 
 
+
+
+
+
+__device__  float4 ValueAtXYZ_float4(cudaTextureObject_t tex, float3 position)
+{
+	return tex3D<float4>(tex, position.x, position.y, position.z);
+}
+
+
+
+
 __device__  float4 IsosurfaceHelper::Observable::ValueAtXYZ_float4(cudaTextureObject_t tex, float3 position)
 {
 	return tex3D<float4>(tex, position.x, position.y, position.z);
+}
+
+
+// TODO
+__device__  float4 IsosurfaceHelper::Observable::ValueAtXYZ_float4
+(
+	cudaSurfaceObject_t surf,
+	int3 position,
+	IsosurfaceHelper::cudaSurfaceAddressMode addressMode ,
+	bool interpolation
+)
+{
+
+	float4 data;
+
+	switch (addressMode)
+	{
+		case IsosurfaceHelper::cudaSurfaceAddressMode::cudaAddressModeBorder:
+		{
+			surf3Dread(&data, surf, position.x * sizeof(float4), position.y, position.z);
+
+			break;
+		}
+		case IsosurfaceHelper::cudaSurfaceAddressMode::cudaAddressModeClamp:
+		{
+			break;
+		}
+		case IsosurfaceHelper::cudaSurfaceAddressMode::cudaAddressModeMirror:
+		{
+			break;
+		}
+		case IsosurfaceHelper::cudaSurfaceAddressMode::cudaAddressModeWrap:
+		{
+
+			break;
+		}
+	}
+	return { -1.0f,-1.0f,-1.0f,-1.0f };
+};
+
+
+
+
+__device__ float IsosurfaceHelper::TurbulentDiffusivity::ValueAtXYZ(cudaTextureObject_t tex, float3 position)
+{
+	return tex3D<float4>(tex, position.x, position.y, position.z).w;
+}
+
+__device__ float IsosurfaceHelper::TurbulentDiffusivity::ValueAtXYZ_avgtemp(cudaTextureObject_t tex, float3 position, int3 gridSize, cudaTextureObject_t avg_temp)
+{
+	float index_avg_temp = position.z * ((float)gridSize.z -1.0f);
+
+	float temperature = ValueAtXYZ(tex, position);
+	float averageTemp = tex1D<float>(avg_temp, position.z);
+
+	float h = 1.0f/ (float)gridSize.z;
+
+
+	float3 grad = GradientAtGrid(tex, position, gridSize);
+	grad.z += (tex1D<float>(avg_temp, position.z + h) - tex1D<float>(avg_temp, position.z - h))/ (2.0f * h);
+	float pr = 0.001f;
+	float ra = 1000000.0f;
+
+	float epsilion_theta = (dot(grad, grad) * dot(grad,grad)) / sqrtf(pr * ra);
+	float theta_sqrd = (temperature - averageTemp) * (temperature - averageTemp);
+
+	return  theta_sqrd / epsilion_theta;
+}
+
+
+
+__device__  float3 IsosurfaceHelper::TurbulentDiffusivity::GradientAtGrid_AvgTemp(cudaTextureObject_t tex, float3 position, int3 gridSize, cudaTextureObject_t avg_temp)
+{
+	float3 h = { 1.0f, 1.0f ,1.0f };
+	h = 2 * h / gridSize;
+	float dV_dX = this->ValueAtXYZ_avgtemp(tex, make_float3(position.x + h.x / 2.0f, position.y, position.z),gridSize,avg_temp);
+	float dV_dY = this->ValueAtXYZ_avgtemp(tex, make_float3(position.x, position.y + h.y / 2.0f, position.z), gridSize, avg_temp);
+	float dV_dZ = this->ValueAtXYZ_avgtemp(tex, make_float3(position.x, position.y, position.z + h.z / 2.0f), gridSize, avg_temp);
+
+	dV_dX -= this->ValueAtXYZ_avgtemp(tex, make_float3(position.x - h.x / 2.0f, position.y, position.z), gridSize, avg_temp);
+	dV_dY -= this->ValueAtXYZ_avgtemp(tex, make_float3(position.x, position.y - h.y / 2.0f, position.z), gridSize, avg_temp);
+	dV_dZ -= this->ValueAtXYZ_avgtemp(tex, make_float3(position.x, position.y, position.z - h.z / 2.0f), gridSize, avg_temp);
+
+	return { dV_dX / h.x ,dV_dY / h.y, dV_dZ / h.z };
 }

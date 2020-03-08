@@ -38,11 +38,13 @@ class Raycasting
 
 private:
 	VolumeTexture3D volumeTexture;
+	VolumeTexture1D t_average_temp;
 
 protected:
 
 
-
+	float* averageTemp = nullptr;
+	float* d_averageTemp = nullptr;
 	float FOV_deg	= 30.0f;
 	float distImagePlane = 0.1f;
 	unsigned int maxBlockDim = 16;
@@ -176,6 +178,21 @@ __global__ void CudaIsoSurfacRenderer
 	float IsosurfaceTolerance
 );
 
+
+__global__ void CudaIsoSurfacRenderer_TurbulentDiffusivity
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field1,
+	cudaTextureObject_t t_avg_temp,
+	int rays,
+	float isoValue,
+	float samplingRate,
+	float IsosurfaceTolerance,
+	float * avg_temp
+);
+
+
+
 template <typename Observable>
 __global__ void CudaIsoSurfacRendererSpaceTime
 (
@@ -234,6 +251,18 @@ __global__ void CudaTerrainRenderer_extra
 
 
 __global__ void CudaTerrainRenderer_extra_FTLE
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t heightField,
+	cudaTextureObject_t extraField,
+	int rays,
+	float samplingRate,
+	float IsosurfaceTolerance,
+	DispersionOptions dispersionOptions,
+	int traceTime
+);
+
+__global__ void CudaRaycasting_FTLE
 (
 	cudaSurfaceObject_t raycastingSurface,
 	cudaTextureObject_t heightField,

@@ -362,3 +362,50 @@ bool VolumeTexture2D::initialize
 	return true;
 
 }
+
+
+
+
+
+
+bool VolumeTexture1D::initialize
+(
+	size_t width,
+	cudaTextureAddressMode addressMode_x
+)
+{
+
+	// Allocate 2D Array
+	cudaChannelFormatDesc channelFormatDesc = cudaCreateChannelDesc<float>();
+	gpuErrchk(cudaMallocArray(&cuArray_velocity, &channelFormatDesc, width));
+
+
+	gpuErrchk(cudaMemcpy2DToArray(this->cuArray_velocity, 0, 0, h_field, width * sizeof(float), width * sizeof(float), 0, cudaMemcpyHostToDevice));
+
+	// Set Texture Description
+	cudaTextureDesc texDesc;
+	cudaResourceDesc resDesc;
+	cudaResourceViewDesc resViewDesc;
+
+	memset(&resDesc, 0, sizeof(resDesc));
+	memset(&texDesc, 0, sizeof(texDesc));
+	memset(&resViewDesc, 0, sizeof(resViewDesc));
+
+
+
+	resDesc.resType = cudaResourceTypeArray;
+	resDesc.res.array.array = this->cuArray_velocity;
+
+	// Texture Description
+
+	texDesc.filterMode = cudaFilterModeLinear;
+	texDesc.normalizedCoords = true;
+	texDesc.addressMode[0] = addressMode_x;
+	texDesc.readMode = cudaReadModeElementType;
+
+	// Create the texture and bind it to the array
+	gpuErrchk(cudaCreateTextureObject(&this->t_field, &resDesc, &texDesc, NULL));
+
+	return true;
+
+}

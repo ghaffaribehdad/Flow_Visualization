@@ -274,13 +274,13 @@ void HeightfieldGenerator::trace3D_path_Single()
 			// Load i 'dx field in volume_IO into field
 			this->LoadVelocityfield(i + solverOptions->currentIdx);
 			// Copy and initialize velocityfield texture
-			this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, velocityField_0);
+			this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, t_velocityField_0);
 			// Release the velocityfield from host (volume_IO)
 			primary_IO.release();
 
 			// Same procedure for the second texture
 			this->LoadVelocityfield(i+ solverOptions->currentIdx + 1);
-			this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, velocityField_1);
+			this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, t_velocityField_1);
 			primary_IO.release();
 
 		}
@@ -291,8 +291,8 @@ void HeightfieldGenerator::trace3D_path_Single()
 			{
 				
 				this->LoadVelocityfield(i + solverOptions->currentIdx);
-				this->velocityField_1.release();
-				this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, velocityField_1);
+				this->t_velocityField_1.release();
+				this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, t_velocityField_1);
 				primary_IO.release();
 
 				RK4Step = RK4STEP::ODD;
@@ -301,8 +301,8 @@ void HeightfieldGenerator::trace3D_path_Single()
 			else
 			{
 				this->LoadVelocityfield(i + solverOptions->currentIdx);
-				this->velocityField_0.release();
-				this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, velocityField_0);
+				this->t_velocityField_0.release();
+				this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, t_velocityField_0);
 				primary_IO.release();
 
 				RK4Step = RK4STEP::EVEN;
@@ -319,8 +319,8 @@ void HeightfieldGenerator::trace3D_path_Single()
 				d_particle,
 				s_HeightSurface_Primary.getSurfaceObject(),
 				s_HeightSurface_Primary_Ex.getSurfaceObject(),
-				this->velocityField_0.getTexture(),
-				this->velocityField_1.getTexture(),
+				this->t_velocityField_0.getTexture(),
+				this->t_velocityField_1.getTexture(),
 				*solverOptions,
 				*dispersionOptions,
 				RK4Step,
@@ -352,13 +352,13 @@ void HeightfieldGenerator::trace3D_path_Double()
 			// Load i 'dx field in volume_IO into field
 			this->LoadVelocityfield(i + solverOptions->currentIdx);
 			// Copy and initialize velocityfield texture
-			this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, velocityField_0);
+			this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, t_velocityField_0);
 			// Release the velocityfield from host (volume_IO)
 			primary_IO.release();
 
 			// Same procedure for the second texture
 			this->LoadVelocityfield(i + solverOptions->currentIdx + 1);
-			this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, velocityField_1);
+			this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, t_velocityField_1);
 			primary_IO.release();
 
 		}
@@ -369,8 +369,8 @@ void HeightfieldGenerator::trace3D_path_Double()
 			{
 
 				this->LoadVelocityfield(i + solverOptions->currentIdx);
-				this->velocityField_1.release();
-				this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, velocityField_1);
+				this->t_velocityField_1.release();
+				this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, t_velocityField_1);
 				primary_IO.release();
 
 				RK4Step = RK4STEP::ODD;
@@ -379,8 +379,8 @@ void HeightfieldGenerator::trace3D_path_Double()
 			else
 			{
 				this->LoadVelocityfield(i + solverOptions->currentIdx);
-				this->velocityField_0.release();
-				this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, velocityField_0);
+				this->t_velocityField_0.release();
+				this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, t_velocityField_0);
 				primary_IO.release();
 
 				RK4Step = RK4STEP::EVEN;
@@ -397,8 +397,8 @@ void HeightfieldGenerator::trace3D_path_Double()
 				d_particle,
 				s_HeightSurface_Primary.getSurfaceObject(),
 				s_HeightSurface_Primary_Ex.getSurfaceObject(),
-				this->velocityField_0.getTexture(),
-				this->velocityField_1.getTexture(),
+				this->t_velocityField_0.getTexture(),
+				this->t_velocityField_1.getTexture(),
 				*solverOptions,
 				*dispersionOptions,
 				RK4Step,
@@ -429,7 +429,7 @@ void HeightfieldGenerator::trace3D_path_Double()
 
 
 			// Copy and initialize velocityfield texture
-			this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, velocityField_0);
+			this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, t_velocityField_0);
 			// Release the velocityfield from host (volume_IO)
 			secondary_IO.release();
 
@@ -438,7 +438,7 @@ void HeightfieldGenerator::trace3D_path_Double()
 			this->field = secondary_IO.getField_float();
 
 
-			this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, velocityField_1);
+			this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, t_velocityField_1);
 			secondary_IO.release();
 
 		}
@@ -452,8 +452,8 @@ void HeightfieldGenerator::trace3D_path_Double()
 				this->field = secondary_IO.getField_float();
 
 
-				this->velocityField_1.release();
-				this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, velocityField_1);
+				this->t_velocityField_1.release();
+				this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, t_velocityField_1);
 				secondary_IO.release();
 
 				RK4Step = RK4STEP::ODD;
@@ -465,8 +465,8 @@ void HeightfieldGenerator::trace3D_path_Double()
 				secondary_IO.readVolume(i + solverOptions->currentIdx);
 				this->field = secondary_IO.getField_float();
 
-				this->velocityField_0.release();
-				this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, velocityField_0);
+				this->t_velocityField_0.release();
+				this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, t_velocityField_0);
 				secondary_IO.release();
 
 				RK4Step = RK4STEP::EVEN;
@@ -483,8 +483,8 @@ void HeightfieldGenerator::trace3D_path_Double()
 				d_particle,
 				s_HeightSurface_Secondary.getSurfaceObject(),
 				s_HeightSurface_Secondary_Ex.getSurfaceObject(),
-				this->velocityField_0.getTexture(),
-				this->velocityField_1.getTexture(),
+				this->t_velocityField_0.getTexture(),
+				this->t_velocityField_1.getTexture(),
 				*solverOptions,
 				*dispersionOptions,
 				RK4Step,
@@ -515,7 +515,7 @@ void HeightfieldGenerator::trace3D()
 			d_particle,
 			s_HeightSurface_Primary.getSurfaceObject(),
 			s_HeightSurface_Primary_Ex.getSurfaceObject(),
-			this->velocityField_0.getTexture(),
+			this->t_velocityField_0.getTexture(),
 			*solverOptions,
 			*dispersionOptions
 		);
@@ -626,9 +626,9 @@ bool HeightfieldGenerator::InitializeHeightTexture3D_Single()
 	// Texture Description
 	texDesc.normalizedCoords = true;
 	texDesc.filterMode = cudaFilterModeLinear;
-	texDesc.addressMode[0] = cudaTextureAddressMode::cudaAddressModeClamp;
-	texDesc.addressMode[1] = cudaTextureAddressMode::cudaAddressModeClamp;
-	texDesc.addressMode[2] = cudaTextureAddressMode::cudaAddressModeClamp;
+	texDesc.addressMode[0] = cudaTextureAddressMode::cudaAddressModeBorder;
+	texDesc.addressMode[1] = cudaTextureAddressMode::cudaAddressModeBorder;
+	texDesc.addressMode[2] = cudaTextureAddressMode::cudaAddressModeBorder;
 	texDesc.readMode = cudaReadModeElementType;
 
 	// Create the texture and bind it to the array

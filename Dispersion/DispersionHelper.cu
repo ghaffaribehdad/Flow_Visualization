@@ -375,6 +375,70 @@ __global__ void heightFieldGradient3D
 
 
 
+__global__ void heightFieldGradient3DFTLE
+(
+	cudaSurfaceObject_t heightFieldSurface3D,
+	DispersionOptions dispersionOptions,
+	SolverOptions solverOptions
+)
+{
+
+	int index = blockIdx.x * blockDim.y * blockDim.x;
+	index += threadIdx.y * blockDim.x;
+	index += threadIdx.x;
+
+	int gridPoints = dispersionOptions.gridSize_2D[0] * dispersionOptions.gridSize_2D[1];
+
+	if (index < gridPoints)
+	{
+
+
+		for (int time = 1; time < solverOptions.lastIdx - solverOptions.firstIdx-1; time++)
+		{
+			int index_y = index / dispersionOptions.gridSize_2D[1];
+			int index_x = index - (index_y * dispersionOptions.gridSize_2D[1]);
+
+			float3 gradient = { 0.0f,0.0f, 0.0f};
+
+			// check the boundaries
+			if (index_x % (dispersionOptions.gridSize_2D[0] - 1) == 0.0f || index_y % (dispersionOptions.gridSize_2D[1] - 1) == 0.0f)
+			{
+				// do nothing
+
+			}
+			else
+			{
+				gradient = GradientAtXYZ_X_Surface(heightFieldSurface3D, make_int3(index_x, index_y, time));
+				gradient = gradient /
+					make_float3
+					(
+						solverOptions.gridDiameter[0] / (dispersionOptions.gridSize_2D[0] - 1),
+						solverOptions.gridDiameter[1] / (dispersionOptions.gridSize_2D[1] - 1),
+						solverOptions.gridDiameter[2] /	(solverOptions.lastIdx - solverOptions.firstIdx - 1)
+					);
+
+
+				gradient = normalize(gradient);
+			}
+
+
+
+
+			float4 texel = { 0,0,0,0 };
+			texel.x = ValueAtXYZ_Surface_float4(heightFieldSurface3D, make_int3(index_x, index_y, time)).x;
+			texel.y = gradient.x;
+			texel.z = gradient.y;
+			texel.w = gradient.z;
+
+			surf3Dwrite(texel, heightFieldSurface3D, sizeof(float4) * index_x, index_y, time);
+
+		}
+
+
+	}
+}
+
+
 
 template <typename Observable>
 __global__ void fluctuationfieldGradient3D

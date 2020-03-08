@@ -36,15 +36,15 @@ __global__ void  traceDispersion3D_path_FTLE
 
 		switch (RK4step)
 		{
-		case RK4STEP::ODD:
+		case RK4STEP::EVEN:
 			for (int i = 0; i < FTLE_NEIGHBOR; i++)
 			{
 				RK4Path(velocityField_0, velocityField_1, &particle[index * FTLE_NEIGHBOR + i], gridDiameter, dispersionOptions.dt, true);
 			}
 			break;
 
-		case RK4STEP::EVEN:
-			for (int i = 0; i < 7; i++)
+		case RK4STEP::ODD:
+			for (int i = 0; i < FTLE_NEIGHBOR; i++)
 			{
 				RK4Path(velocityField_1, velocityField_0, &particle[index * FTLE_NEIGHBOR + i], gridDiameter, dispersionOptions.dt, true);
 			}
@@ -57,8 +57,8 @@ __global__ void  traceDispersion3D_path_FTLE
 		float3 position = particle[index * FTLE_NEIGHBOR].m_position;
 		float3 velocity = particle[index * FTLE_NEIGHBOR].m_velocity;
 
-		float4 heightTexel = { position.y,0.0,0.0,ftle };
-		float4 extraTexel = { 1.0f, 0.0f ,0.0f, 0.0f};
+		float4 heightTexel = { position.y,0.0,0.0,0.0 };
+		float4 extraTexel = { ftle, 0.0f ,0.0f, 0.0f};
 
 		
 		// copy it in the surface3D
@@ -75,17 +75,17 @@ __device__ float FTLE3D(Particle* particles, float distance, float T)
 	fMat3X3 d_Flowmap(0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f);
 	
 	// Calculate the Jacobian of the Flow Map
-	d_Flowmap.r1.x = (particles[1].m_position.x - particles[2].m_position.x) / distance;
-	d_Flowmap.r1.y = (particles[3].m_position.x - particles[4].m_position.x) / distance;
-	d_Flowmap.r1.z = (particles[5].m_position.x - particles[6].m_position.x) / distance;
+	d_Flowmap.r1.x = 0.5f * (particles[1].m_position.x - particles[2].m_position.x) / distance;
+	d_Flowmap.r1.y = 0.5f * (particles[3].m_position.x - particles[4].m_position.x) / distance;
+	d_Flowmap.r1.z = 0.5f * (particles[5].m_position.x - particles[6].m_position.x) / distance;
 
-	d_Flowmap.r2.x = (particles[1].m_position.y - particles[2].m_position.y) / distance;
-	d_Flowmap.r2.y = (particles[3].m_position.y - particles[4].m_position.y) / distance;
-	d_Flowmap.r2.z = (particles[5].m_position.y - particles[6].m_position.y) / distance;
+	d_Flowmap.r2.x = 0.5f * (particles[1].m_position.y - particles[2].m_position.y) / distance;
+	d_Flowmap.r2.y = 0.5f * (particles[3].m_position.y - particles[4].m_position.y) / distance;
+	d_Flowmap.r2.z = 0.5f * (particles[5].m_position.y - particles[6].m_position.y) / distance;
 
-	d_Flowmap.r3.x = (particles[1].m_position.z - particles[2].m_position.z) / distance;
-	d_Flowmap.r3.y = (particles[3].m_position.z - particles[4].m_position.z) / distance;
-	d_Flowmap.r3.z = (particles[5].m_position.z - particles[6].m_position.z) / distance;
+	d_Flowmap.r3.x = 0.5f * (particles[1].m_position.z - particles[2].m_position.z) / distance;
+	d_Flowmap.r3.y = 0.5f * (particles[3].m_position.z - particles[4].m_position.z) / distance;
+	d_Flowmap.r3.z = 0.5f * (particles[5].m_position.z - particles[6].m_position.z) / distance;
 
 	// Find the Delta Tensor
 	fMat3X3 td_Flowmap = transpose(d_Flowmap);
@@ -98,5 +98,6 @@ __device__ float FTLE3D(Particle* particles, float distance, float T)
 	float lambda_max = eigen.z;
 
 
-	return (1.0f/T) * logf(sqrtf(lambda_max));
+	//return (1.0f/T) * logf(sqrtf(lambda_max)); // Time dependent
+	return logf(sqrtf(lambda_max));
 }

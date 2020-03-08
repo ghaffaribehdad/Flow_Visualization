@@ -4,7 +4,7 @@
 #include "../Options/DispresionOptions.h"
 #include "../Options/SolverOptions.h"
 
-extern enum RK4STEP;
+enum RK4STEP;
 
 
 #define FTLE_NEIGHBOR 7 //Number of neighboring particle (6) + the center particle (1)

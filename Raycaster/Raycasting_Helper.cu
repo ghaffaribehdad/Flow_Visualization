@@ -19,8 +19,8 @@ __device__ float2 findIntersections(const float3 pixelPos, const BoundingBox bou
 	float tNear = -10000000;
 	float tFar = +10000000;
 
-	float3 _D = normalize(pixelPos - boundingBox.m_eyePos);
-	float D[3] = { _D.x,_D.y,_D.z };
+	float3 dir = normalize(pixelPos - boundingBox.m_eyePos);
+	float D[3] = { dir.x,dir.y,dir.z };
 
 	// iterates over x,y,z planes
 	for (int i = 0; i < 3; i++)
@@ -120,4 +120,4 @@ __device__ uchar4 rgbaFloatToUChar(float4 rgba)
 	rgba.z = __saturatef(rgba.z);
 	rgba.w = __saturatef(rgba.w);
 	return make_uchar4(uchar(rgba.x * 255.0f), uchar(rgba.y * 255.0f), uchar(rgba.z * 255.0f), uchar(rgba.w * 255.0f));
-}
+}    

@@ -197,9 +197,6 @@
     <ClCompile Include="Volume\BinaryWriter.cpp">
       <Filter>Source Files\VolumeTexture</Filter>
     </ClCompile>
-    <ClCompile Include="Cuda\CudaHelperFunctions.cpp">
-      <Filter>Source Files\Cuda</Filter>
-    </ClCompile>
     <ClCompile Include="Particle\ParticleHelperFunctions.cpp">
       <Filter>Source Files\Particle</Filter>
     </ClCompile>

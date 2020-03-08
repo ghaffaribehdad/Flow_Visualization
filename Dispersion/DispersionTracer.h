@@ -79,13 +79,13 @@ public:
 	}
 
 	bool retrace();
-	void gradient3D_Single();
+	virtual void gradient3D_Single();
 	void gradient3D_Double();
 
 protected:
 
-	VolumeTexture3D velocityField_0;
-	VolumeTexture3D velocityField_1;
+	VolumeTexture3D t_velocityField_0;
+	VolumeTexture3D t_velocityField_1;
 
 
 	virtual void trace3D_path_Single();
@@ -102,7 +102,7 @@ protected:
 
 
 	virtual bool InitializeParticles();
-	bool singleSurfaceInitialization();
+	virtual bool singleSurfaceInitialization();
 	bool doubleSurfaceInitialization();
 
 	bool InitializeHeightArray3D_Single(int x, int y ,int z);

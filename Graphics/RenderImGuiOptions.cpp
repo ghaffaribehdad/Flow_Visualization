@@ -426,7 +426,7 @@ void RenderImGuiOptions::drawRaycastingOptions()
 		this->updateRaycasting = true;
 	}
 
-	if (ImGui::Combo("Isosurface Measure 0", &raycastingOptions->isoMeasure_0, IsoMeasureModes, 5))
+	if (ImGui::Combo("Isosurface Measure 0", &raycastingOptions->isoMeasure_0, IsoMeasureModes,(int)IsoMeasure::COUNT))
 	{
 		this->updateRaycasting = true;
 	}
@@ -546,6 +546,14 @@ void RenderImGuiOptions::drawDispersionOptions()
 		this->updateFTLE = true;
 
 		this->dispersionOptions->retrace = true;
+
+	}
+
+
+	if (ImGui::DragFloat("ftle Isosurface", &dispersionOptions->ftleIsoValue, 0.0001f, 0.0f, 100.0f, "%5f"))
+	{
+		this->updateDispersion = true;
+		this->updateFTLE = true;
 
 	}
 

@@ -189,7 +189,6 @@
     <CudaCompile Include="CrossSection\CrossSection.cu">
       <FileType>Document</FileType>
     </CudaCompile>
-    <ClCompile Include="Cuda\CudaHelperFunctions.cpp" />
     <CudaCompile Include="Dispersion\ftleHelperFunctions.cu" />
     <CudaCompile Include="Dispersion\HeightfieldFTLE.cu">
       <FileType>Document</FileType>

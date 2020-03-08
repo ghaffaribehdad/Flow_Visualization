@@ -88,6 +88,16 @@ __global__ void heightFieldGradient3D
 );
 
 
+
+__global__ void heightFieldGradient3DFTLE
+(
+
+	cudaSurfaceObject_t heightFieldSurface3D,
+	DispersionOptions dispersionOptions,
+	SolverOptions	solverOptions
+);
+
+
 template <typename Observable>
 __global__ void fluctuationfieldGradient3D
 (

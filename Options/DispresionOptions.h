@@ -29,9 +29,9 @@ namespace dispersionOptionsMode
 struct DispersionOptions
 {
 	// Seeding Options
-	float seedWallNormalDist = 0.01f;
-	int gridSize_2D[2] = { 256,256 }; //TODO:: Add dynamic seed size
-	float tilt_deg = 10.0f;
+	float seedWallNormalDist = 0.1f;
+	int gridSize_2D[2] = { 192,192 }; //TODO:: Add dynamic seed size
+	float tilt_deg = 0.0f;
 
 
 	char	fileNameSecondary[100] = "FieldP";
@@ -80,6 +80,11 @@ struct DispersionOptions
 	int file_counter = 0;
 
 	bool saveScreenshot = false;
+	bool ftleIsosurface = true;
+
+	float ftleIsoValue = 0.0f;
+
+	float isoValueTolerance = 0.01f;
 
 };
 
