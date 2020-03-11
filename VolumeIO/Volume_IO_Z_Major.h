@@ -72,7 +72,6 @@ public:
 
 		case 2: // => XY
 
-
 			begin = plane * offset;
 			return this->Read(begin, buffer_size);
 

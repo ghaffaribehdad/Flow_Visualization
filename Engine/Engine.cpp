@@ -62,7 +62,7 @@ void Engine::Update()
 
 	if (keyboard.KeyIsPressed('W'))
 	{
-		this->gfx.camera.AdjustPosition(this->gfx.camera.GetForwardVector() * 1.5f*cameraSpeed * dt);
+		this->gfx.camera.AdjustPosition(this->gfx.camera.GetViewXMVector() * 1.5f*cameraSpeed * dt);
 		this->gfx.viewChanged();
 	}
 
@@ -85,18 +85,18 @@ void Engine::Update()
 		this->gfx.viewChanged();
 
 	}
-	if (keyboard.KeyIsPressed(VK_SPACE))
-	{
-		this->gfx.camera.AdjustPosition(0.0f, cameraSpeed * dt, 0.0f);
-		this->gfx.viewChanged();
+	//if (keyboard.KeyIsPressed(VK_SPACE))
+	//{
+	//	this->gfx.camera.AdjustPosition(gfx.camera.GetUpXMVector()*  cameraSpeed * dt);
+	//	this->gfx.viewChanged();
 
-	}
-	if (keyboard.KeyIsPressed('Z'))
-	{
-		this->gfx.camera.AdjustPosition(0.0f, -cameraSpeed * dt, 0.0f);
-		this->gfx.viewChanged();
+	//}
+	//if (keyboard.KeyIsPressed('Z'))
+	//{
+	//	this->gfx.camera.AdjustPosition(gfx.camera.GetUpXMVector() * -cameraSpeed * dt);
+	//	this->gfx.viewChanged();
 
-	}
+	//}
 
 	// Resize the window
 	if (this->resize)

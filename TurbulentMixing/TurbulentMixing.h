@@ -3,7 +3,7 @@
 #include "..//Cuda/cudaSurface.h"
 #include "..//Cuda/CudaArray.h"
 #include "..//VolumeTexture/VolumeTexture.h"
-#include "..//Volume/Volume_IO_X_Major.h"
+#include "..//VolumeIO/Volume_IO_X_Major.h"
 #include "../Options/SolverOptions.h"
 #include "../Options/TurbulentMixingOptions.h"
 

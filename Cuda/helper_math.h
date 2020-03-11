@@ -594,3 +594,9 @@ __device__ __host__ inline void eigensolveHasan(const fMat3X3& J, float3& sorted
 	sort3Items(sortedEigenvalues);
 
 }
+
+
+__device__ __host__ inline float3 world2Tex(const float3& position, const float3& dimension, const int3& size)
+{
+	return (position / dimension) * size;
+}

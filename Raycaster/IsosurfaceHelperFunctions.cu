@@ -20,13 +20,13 @@ __device__  float3 IsosurfaceHelper::Observable::GradientAtGrid(cudaTextureObjec
 {
 	float3 h = { 1.0f, 1.0f ,1.0f };
 	h =  h/gridSize;
-	float dV_dX = this->ValueAtXYZ(tex, make_float3(position.x + h.x , position.y, position.z));
-	float dV_dY = this->ValueAtXYZ(tex, make_float3(position.x, position.y + h.y , position.z));
-	float dV_dZ = this->ValueAtXYZ(tex, make_float3(position.x, position.y, position.z + h.z));
+	float dV_dX = this->ValueAtXYZ(tex, make_float3(position.x + 1 , position.y, position.z));
+	float dV_dY = this->ValueAtXYZ(tex, make_float3(position.x, position.y + 1 , position.z));
+	float dV_dZ = this->ValueAtXYZ(tex, make_float3(position.x, position.y, position.z + 1));
 
-	dV_dX -= this->ValueAtXYZ(tex, make_float3(position.x - h.x , position.y, position.z));
-	dV_dY -= this->ValueAtXYZ(tex, make_float3(position.x, position.y - h.y, position.z));
-	dV_dZ -= this->ValueAtXYZ(tex, make_float3(position.x, position.y, position.z - h.z ));
+	dV_dX -= this->ValueAtXYZ(tex, make_float3(position.x - 1 , position.y, position.z));
+	dV_dY -= this->ValueAtXYZ(tex, make_float3(position.x, position.y - 1, position.z));
+	dV_dZ -= this->ValueAtXYZ(tex, make_float3(position.x, position.y, position.z - 1 ));
 
 	return { dV_dX / (2.0f * h.x) ,dV_dY / (2.0f * h.y), dV_dZ / (2.0f * h.z) };
 }
@@ -36,13 +36,13 @@ __device__  float3 GradientAtGrid_X(cudaTextureObject_t tex, float3 position, in
 {
 	float3 h = { 1.0f, 1.0f ,1.0f };
 	h = h / gridSize;
-	float dV_dX = ValueAtXYZ_float4(tex, make_float3(position.x + h.x / 2.0f, position.y, position.z)).x;
-	float dV_dY = ValueAtXYZ_float4(tex, make_float3(position.x, position.y + h.y / 2.0f, position.z)).x;
-	float dV_dZ = ValueAtXYZ_float4(tex, make_float3(position.x, position.y, position.z + h.z / 2.0f)).x;
+	float dV_dX = ValueAtXYZ_float4(tex, make_float3(position.x + 1, position.y, position.z)).x;
+	float dV_dY = ValueAtXYZ_float4(tex, make_float3(position.x, position.y + 1, position.z)).x;
+	float dV_dZ = ValueAtXYZ_float4(tex, make_float3(position.x, position.y, position.z + 1)).x;
 
-	dV_dX -= ValueAtXYZ_float4(tex, make_float3(position.x - h.x / 2.0f, position.y, position.z)).x;
-	dV_dY -= ValueAtXYZ_float4(tex, make_float3(position.x, position.y - h.y / 2.0f, position.z)).x;
-	dV_dZ -= ValueAtXYZ_float4(tex, make_float3(position.x, position.y, position.z - h.z / 2.0f)).x;
+	dV_dX -= ValueAtXYZ_float4(tex, make_float3(position.x - 1, position.y, position.z)).x;
+	dV_dY -= ValueAtXYZ_float4(tex, make_float3(position.x, position.y - 1, position.z)).x;
+	dV_dZ -= ValueAtXYZ_float4(tex, make_float3(position.x, position.y, position.z - 1)).x;
 
 	return { dV_dX / h.x ,dV_dY / h.y, dV_dZ / h.z };
 }
@@ -350,7 +350,6 @@ __device__ float IsosurfaceHelper::TurbulentDiffusivity::ValueAtXYZ(cudaTextureO
 
 __device__ float IsosurfaceHelper::TurbulentDiffusivity::ValueAtXYZ_avgtemp(cudaTextureObject_t tex, float3 position, int3 gridSize, cudaTextureObject_t avg_temp)
 {
-	float index_avg_temp = position.z * ((float)gridSize.z -1.0f);
 
 	float temperature = ValueAtXYZ(tex, position);
 	float averageTemp = tex1D<float>(avg_temp, position.z);
@@ -361,9 +360,9 @@ __device__ float IsosurfaceHelper::TurbulentDiffusivity::ValueAtXYZ_avgtemp(cuda
 	float3 grad = GradientAtGrid(tex, position, gridSize);
 	grad.z += (tex1D<float>(avg_temp, position.z + h) - tex1D<float>(avg_temp, position.z - h))/ (2.0f * h);
 	float pr = 0.001f;
-	float ra = 1000000.0f;
+	float ra = 100000.0f;
 
-	float epsilion_theta = (dot(grad, grad) * dot(grad,grad)) / sqrtf(pr * ra);
+	float epsilion_theta = dot(grad, grad) / sqrtf(pr * ra);
 	float theta_sqrd = (temperature - averageTemp) * (temperature - averageTemp);
 
 	return  theta_sqrd / epsilion_theta;
@@ -385,3 +384,60 @@ __device__  float3 IsosurfaceHelper::TurbulentDiffusivity::GradientAtGrid_AvgTem
 
 	return { dV_dX / h.x ,dV_dY / h.y, dV_dZ / h.z };
 }
+
+
+__device__ float3 IsosurfaceHelper::TurbulentDiffusivity::binarySearch_avgtemp
+(
+	cudaTextureObject_t field,
+	cudaTextureObject_t average_temp,
+	int3& _gridSize,
+	float3& _position,
+	float3& gridDiameter,
+	float3& _samplingStep,
+	float& value,
+	float& tolerance,
+	int maxIteration
+)
+{
+	float3 position = _position;
+	float3 relative_position = position / gridDiameter;
+	float3 samplingStep = _samplingStep * 0.5f;
+	bool side = 0; // 1 -> right , 0 -> left
+	int counter = 0;
+
+
+
+	while (fabsf(ValueAtXYZ_avgtemp(field, relative_position, _gridSize, average_temp) - value) > tolerance&& counter < maxIteration)
+	{
+
+		if (ValueAtXYZ_avgtemp(field, relative_position, _gridSize, average_temp) - value > 0)
+		{
+			if (side)
+			{
+				samplingStep = 0.5 * samplingStep;
+			}
+			position = position - samplingStep;
+			relative_position = position / gridDiameter;
+			side = 0;
+
+		}
+		else
+		{
+
+			if (!side)
+			{
+				samplingStep = 0.5 * samplingStep;
+			}
+
+			position = position + samplingStep;
+			relative_position = position / gridDiameter;
+			side = 1;
+
+		}
+		counter++;
+
+	}
+
+	return position;
+
+};

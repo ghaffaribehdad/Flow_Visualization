@@ -16,10 +16,6 @@ public:
 		this->h_field = _h_field;
 	}
 
-	void setSolverOptions(SolverOptions* _solverOptions)
-	{
-		this->solverOptions = _solverOptions;
-	}
 
 	void setArray(cudaArray_t& _cuArray_velocity)
 	{
@@ -27,32 +23,25 @@ public:
 	}
 
 
-	// Create a texture and populate it with h_field
-	// Address modes can be set for X,y,z
-	bool initialize
-	(
-		cudaTextureAddressMode addressMode_x = cudaAddressModeWrap,
-		cudaTextureAddressMode addressMode_y = cudaAddressModeBorder,
-		cudaTextureAddressMode addressMode_z = cudaAddressModeWrap,
-		cudaTextureFilterMode _cudaTextureFilterMode = cudaFilterModeLinear
-
-	);
 
 	bool initialize
 	(
-		int3 dimension,
+		const int3 & dimension,
+		bool normalizedCoords = false,
 		cudaTextureAddressMode addressMode_x = cudaAddressModeWrap,
 		cudaTextureAddressMode addressMode_y = cudaAddressModeBorder,
 		cudaTextureAddressMode addressMode_z = cudaAddressModeWrap,
 		cudaTextureFilterMode _cudaTextureFilterMode = cudaFilterModeLinear
 		);
 
+	// If the cuda array has been set directly 
 	bool initialize_array
 	(
-		int3 dimension,
+		bool normalizedCoords = false,
 		cudaTextureAddressMode addressMode_x = cudaAddressModeWrap,
 		cudaTextureAddressMode addressMode_y = cudaAddressModeBorder,
-		cudaTextureAddressMode addressMode_z = cudaAddressModeWrap
+		cudaTextureAddressMode addressMode_z = cudaAddressModeWrap,
+		cudaTextureFilterMode _cudaTextureFilterMode = cudaFilterModeLinear
 
 	);
 
@@ -66,13 +55,9 @@ public:
 
 private:
 
-	SolverOptions * solverOptions = nullptr;
-
 	cudaTextureObject_t t_field;
 	cudaArray_t cuArray_velocity;
-
 	float* h_field = nullptr;
-
 	float3 gridDiameter;
 
 
@@ -96,39 +81,24 @@ public:
 		this->cuArray_velocity = _cuArray_velocity;
 	}
 
-	// Create a texture and populate it with h_field
-	// Address modes can be set for X,y,z
 	bool initialize
 	(
-		size_t width,
-		size_t height,
+		const int2 & gridSize,
+		bool normalizedCoords = false,
 		cudaTextureAddressMode addressMode_x = cudaAddressModeWrap,
-		cudaTextureAddressMode addressMode_z = cudaAddressModeWrap
-	);
-
-	bool initialize_array
-	(
-		size_t width,
-		size_t height,
-		cudaTextureAddressMode addressMode_x = cudaAddressModeWrap,
-		cudaTextureAddressMode addressMode_z = cudaAddressModeWrap
-
-	);
-
-
-	bool initialize
-	(
-		size_t width,
-		size_t height,
-		cudaTextureAddressMode addressMode_x = cudaAddressModeWrap,
-		cudaTextureAddressMode addressMode_y = cudaAddressModeBorder,
+		cudaTextureAddressMode addressMode_z = cudaAddressModeWrap,
 		cudaTextureFilterMode _cudaTextureFilterMode = cudaFilterModeLinear
 	);
 
-	void setSolverOptions(SolverOptions* _solverOptions)
-	{
-		this->solverOptions = _solverOptions;
-	}
+	// If the cuda array has been set directly 
+	bool initialize_array
+	(
+		bool normalizedCoords = false,
+		cudaTextureAddressMode addressMode_x = cudaAddressModeWrap,
+		cudaTextureAddressMode addressMode_z = cudaAddressModeWrap,
+		cudaTextureFilterMode _cudaTextureFilterMode = cudaFilterModeLinear
+	);
+
 
 	void release();
 
@@ -140,7 +110,6 @@ public:
 
 private:
 
-	SolverOptions* solverOptions = nullptr;
 
 	cudaTextureObject_t t_field;
 	cudaArray_t cuArray_velocity;
@@ -172,26 +141,23 @@ public:
 		this->cuArray_velocity = _cuArray_velocity;
 	}
 
-	// Create a texture and populate it with h_field
-	// Address modes can be set for X,y,z
+
 	bool initialize
 	(
 		size_t width,
-		cudaTextureAddressMode addressMode_z = cudaAddressModeWrap
+		bool normalizedCoords				= false,
+		cudaTextureAddressMode addressMode_z = cudaAddressModeBorder,
+		cudaTextureFilterMode _cudaTextureFilterMode = cudaFilterModeLinear
 	);
 
 	bool initialize_array
 	(
-		size_t width,
-		cudaTextureAddressMode addressMode_z = cudaAddressModeWrap
-
+		bool normalizedCoords = false,
+		cudaTextureAddressMode addressMode_z = cudaAddressModeBorder,
+		cudaTextureFilterMode _cudaTextureFilterMode = cudaFilterModeLinear
 	);
 
 
-	void setSolverOptions(SolverOptions* _solverOptions)
-	{
-		this->solverOptions = _solverOptions;
-	}
 
 	void release();
 
@@ -203,7 +169,7 @@ public:
 
 private:
 
-	SolverOptions* solverOptions = nullptr;
+
 
 	cudaTextureObject_t t_field;
 	cudaArray_t cuArray_velocity;

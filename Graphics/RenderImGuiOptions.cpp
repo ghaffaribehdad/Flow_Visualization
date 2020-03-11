@@ -265,6 +265,43 @@ void RenderImGuiOptions::drawSolverOptions()
 	}
 
 
+	if (ImGui::Button("Top", ImVec2(80, 25)))
+	{
+		this->camera->SetPosition(0, 0, +10);
+		this->camera->SetLookAtPos({ 0, 0, 0 });
+
+		this->updateRaycasting = true;
+		this->updateDispersion = true;
+		this->updatefluctuation = true;
+		this->updateFTLE = true;
+
+	}
+
+
+	if (ImGui::Button("Bottom", ImVec2(80, 25)))
+	{
+		this->camera->SetPosition(0, 0, -10);
+		this->camera->SetLookAtPos({ 0, 0, 0 });
+
+		this->updateRaycasting = true;
+		this->updateDispersion = true;
+		this->updatefluctuation = true;
+		this->updateFTLE = true;
+
+	}
+
+	if (ImGui::Button("Side", ImVec2(80, 25)))
+	{
+		this->camera->SetPosition(5, 5, 10);
+		this->camera->SetLookAtPos({ 0, 0, 0 });
+
+		this->updateRaycasting = true;
+		this->updateDispersion = true;
+		this->updatefluctuation = true;
+		this->updateFTLE = true;
+
+	}
+
 
 
 

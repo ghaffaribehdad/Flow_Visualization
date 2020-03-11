@@ -54,16 +54,13 @@ bool TurbulentMixing::initalize()
 		return false;
 
 
-	this->v_field_t0.setSolverOptions(this->solverOptions);
-
 	this->v_field_t0.setField(volumeIO.getField_float());
 	this->v_field_t0.initialize
 	(
-		solverOptions->gridSize[1],
-		solverOptions->gridSize[2],
+		make_int2(solverOptions->gridSize[0], solverOptions->gridSize[1]),
+		false,
 		cudaAddressModeClamp,
-		cudaAddressModeClamp,
-		cudaFilterModePoint
+		cudaAddressModeClamp
 	);
 
 
@@ -109,11 +106,10 @@ bool TurbulentMixing::updateVolume(VolumeTexture2D& v_field, int& idx)
 	v_field.setField(volumeIO.getField_float());
 	v_field.initialize
 	(
-		solverOptions->gridSize[1],
-		solverOptions->gridSize[2],
+		make_int2(solverOptions->gridSize[1],solverOptions->gridSize[2]),
+		false,
 		cudaAddressModeClamp,
-		cudaAddressModeClamp,
-		cudaFilterModePoint
+		cudaAddressModeClamp
 	);
 
 	volumeIO.release();

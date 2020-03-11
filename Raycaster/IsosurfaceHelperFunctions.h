@@ -93,6 +93,17 @@ namespace IsosurfaceHelper
 		__device__ float ValueAtXYZ(cudaTextureObject_t tex, float3 position) override;
 		__device__ float ValueAtXYZ_avgtemp(cudaTextureObject_t tex, float3 position, int3 gridSize, cudaTextureObject_t avg_temp);
 		__device__ float3 GradientAtGrid_AvgTemp(cudaTextureObject_t tex, float3 position, int3 gridSize, cudaTextureObject_t avg_temp);
+		__device__ float3 binarySearch_avgtemp(
+			cudaTextureObject_t field,
+			cudaTextureObject_t average_temp,
+			int3& _gridSize,
+			float3& _position,
+			float3& gridDiameter,
+			float3& _samplingStep,
+			float& value,
+			float& tolerance,
+			int maxIteration
+		);
 	};
 
 	struct Position : public Observable

@@ -18,7 +18,7 @@ public:
 	int seedGrid[3] = { 2,2,1 };
 	//float gridDiameter[3] = { 1,2,5 };
 	//float gridDiameter[3] = { 7.854f,2.0f,3.1415f };	//KIT2
-	float gridDiameter[3] = { 2.0f,2.0f,1.0f };	//Schumacher
+	float gridDiameter[3] = { 2.0f,2.0f,0.5f };	//Schumacher
 
 
 	float seedBox[3] = { 2.0f,2.0f,2.0f };			//KIT2

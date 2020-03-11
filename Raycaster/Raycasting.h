@@ -17,8 +17,8 @@
 
 #include "..//Cuda/Interoperability.h"
 #include "..//Cuda/CudaSurface.h"
-#include "..//Volume/Volume_IO_Z_Major.h"
-#include "..//Volume/Volume_IO_X_Major.h"
+#include "..//VolumeIO/Volume_IO_Z_Major.h"
+#include "..//VolumeIO/Volume_IO_X_Major.h"
 
 #include "cuda_runtime.h"
 #include "..//Graphics/Shaders.h"

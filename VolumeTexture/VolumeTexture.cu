@@ -7,84 +7,11 @@
 
 
 
-bool VolumeTexture3D::initialize
-(
-	cudaTextureAddressMode addressMode_x ,
-	cudaTextureAddressMode addressMode_y ,
-	cudaTextureAddressMode addressMode_z,
-	cudaTextureFilterMode _cudaTextureFilterMode
-)
-{
-	if (this->solverOptions == nullptr)
-	{
-		return false;
-	}
-
-	cudaExtent extent = make_cudaExtent(this->solverOptions->gridSize[0], this->solverOptions->gridSize[1], this->solverOptions->gridSize[2]);
-
-	// Allocate 3D Array
-	cudaChannelFormatDesc channelFormatDesc = cudaCreateChannelDesc<float4>();
-	cudaMalloc3DArray(&this->cuArray_velocity , &channelFormatDesc, extent);
-
-
-
-	// set copy parameters to copy from velocity field to array
-	cudaMemcpy3DParms cpyParams = { 0 };
-
-	cpyParams.srcPtr = make_cudaPitchedPtr((void*)this->h_field,extent.width * sizeof(float4),extent.width, extent.height);
-	cpyParams.dstArray = this->cuArray_velocity;
-	cpyParams.kind = cudaMemcpyHostToDevice;
-	cpyParams.extent = extent;
-	
-	// Copy velocities to 3D Array
-	gpuErrchk(cudaMemcpy3D(&cpyParams));
-	// might need sync before release the host memory
-
-
-	// Set Texture Description
-	cudaTextureDesc texDesc;
-	cudaResourceDesc resDesc;
-	cudaResourceViewDesc resViewDesc;
-
-	memset(&resDesc, 0, sizeof(resDesc));
-	memset(&texDesc, 0, sizeof(texDesc));
-	memset(&resViewDesc, 0, sizeof(resViewDesc));
-
-
-
-	resDesc.resType = cudaResourceTypeArray;
-	resDesc.res.array.array = this->cuArray_velocity;
-
-	// Texture Description
-	
-	texDesc.filterMode = _cudaTextureFilterMode;
-	if (_cudaTextureFilterMode == cudaFilterModeLinear)
-	{
-		texDesc.normalizedCoords = true;
-	}
-	else
-	{
-		texDesc.normalizedCoords = false;
-	}
-
-	texDesc.addressMode[0] = addressMode_x;
-	texDesc.addressMode[1] = addressMode_y;
-	texDesc.addressMode[2] = addressMode_z;
-	texDesc.readMode = cudaReadModeElementType;
-
-
-
-	// Create the texture and bind it to the array
-	gpuErrchk(cudaCreateTextureObject(&this->t_field, &resDesc, &texDesc, NULL));
-
-	return true;
-
-}
-
 
 bool VolumeTexture3D::initialize
 (
-	int3 dimension,
+	const int3 & dimension,
+	bool normalizedCoords,
 	cudaTextureAddressMode addressMode_x,
 	cudaTextureAddressMode addressMode_y,
 	cudaTextureAddressMode addressMode_z,
@@ -129,14 +56,8 @@ bool VolumeTexture3D::initialize
 
 	// Texture Description
 	texDesc.filterMode = _cudaTextureFilterMode;
-	if (_cudaTextureFilterMode == cudaFilterModeLinear)
-	{
-		texDesc.normalizedCoords = true;
-	}
-	else
-	{
-		texDesc.normalizedCoords = false;
-	}
+	texDesc.normalizedCoords = normalizedCoords;
+
 	texDesc.addressMode[0] = addressMode_x;
 	texDesc.addressMode[1] = addressMode_y;
 	texDesc.addressMode[2] = addressMode_z;
@@ -154,10 +75,11 @@ bool VolumeTexture3D::initialize
 
 bool VolumeTexture3D::initialize_array
 (
-	int3 dimension,
+	bool normalizedCoords,
 	cudaTextureAddressMode addressMode_x,
 	cudaTextureAddressMode addressMode_y,
-	cudaTextureAddressMode addressMode_z
+	cudaTextureAddressMode addressMode_z,
+	cudaTextureFilterMode _cudaTextureFilterMode
 )
 {
 
@@ -176,8 +98,8 @@ bool VolumeTexture3D::initialize_array
 	resDesc.res.array.array = this->cuArray_velocity;
 
 	// Texture Description
-	texDesc.normalizedCoords = true;
-	texDesc.filterMode = cudaFilterModeLinear;
+	texDesc.normalizedCoords = normalizedCoords;
+	texDesc.filterMode = _cudaTextureFilterMode;
 	texDesc.addressMode[0] = addressMode_x;
 	texDesc.addressMode[1] = addressMode_y;
 	texDesc.addressMode[2] = addressMode_z;
@@ -206,20 +128,21 @@ void VolumeTexture3D::release()
 
 bool VolumeTexture2D::initialize
 (
-	size_t width,
-	size_t height,
+	const int2 & gridSize,
+	bool normalizedCoords,
 	cudaTextureAddressMode addressMode_x,
-	cudaTextureAddressMode addressMode_y
+	cudaTextureAddressMode addressMode_y,
+	cudaTextureFilterMode _cudaTextureFilterMode
 )
 {
 
 
 	// Allocate 2D Array
 	cudaChannelFormatDesc channelFormatDesc = cudaCreateChannelDesc<float4>();
-	gpuErrchk(cudaMallocArray(&cuArray_velocity, &channelFormatDesc, width, height));
+	gpuErrchk(cudaMallocArray(&cuArray_velocity, &channelFormatDesc, gridSize.x, gridSize.y));
 
 
-	gpuErrchk(cudaMemcpy2DToArray(this->cuArray_velocity,0,0,h_field, width * sizeof(float4),width*sizeof(float4),height,cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy2DToArray(this->cuArray_velocity,0,0,h_field, gridSize.x * sizeof(float4), gridSize.x *sizeof(float4), gridSize.y,cudaMemcpyHostToDevice));
 
 
 
@@ -236,7 +159,7 @@ bool VolumeTexture2D::initialize
 	resDesc.res.array.array = this->cuArray_velocity;
 
 	// Texture Description
-	texDesc.normalizedCoords = true;
+	texDesc.normalizedCoords = normalizedCoords;
 	texDesc.filterMode = cudaFilterModeLinear;
 	texDesc.addressMode[0] = addressMode_x;
 	texDesc.addressMode[1] = addressMode_y;
@@ -254,10 +177,11 @@ bool VolumeTexture2D::initialize
 
 bool VolumeTexture2D::initialize_array
 (
-	size_t width,
-	size_t height,
+	bool normalizedCoords,
 	cudaTextureAddressMode addressMode_x,
-	cudaTextureAddressMode addressMode_y
+	cudaTextureAddressMode addressMode_y,
+	cudaTextureFilterMode _cudaTextureFilterMode
+
 )
 {
 
@@ -275,8 +199,8 @@ bool VolumeTexture2D::initialize_array
 	resDesc.res.array.array = this->cuArray_velocity;
 
 	// Texture Description
-	texDesc.normalizedCoords = true;
-	texDesc.filterMode = cudaFilterModeLinear;
+	texDesc.normalizedCoords = normalizedCoords;
+	texDesc.filterMode = _cudaTextureFilterMode;
 	texDesc.addressMode[0] = addressMode_x;
 	texDesc.addressMode[1] = addressMode_y;
 	texDesc.readMode = cudaReadModeElementType;
@@ -302,76 +226,15 @@ void VolumeTexture2D::release()
 
 
 
-bool VolumeTexture2D::initialize
-(
-	size_t width,
-	size_t height,
-	cudaTextureAddressMode addressMode_x,
-	cudaTextureAddressMode addressMode_y,
-	cudaTextureFilterMode _cudaTextureFilterMode
-)
-{
-	if (this->solverOptions == nullptr)
-	{
-		return false;
-	}
-
-
-	// Allocate 2D Array
-	cudaChannelFormatDesc channelFormatDesc = cudaCreateChannelDesc<float4>();
-	gpuErrchk(cudaMallocArray(&cuArray_velocity, &channelFormatDesc, width, height));
-
-
-	gpuErrchk(cudaMemcpy2DToArray(this->cuArray_velocity, 0, 0, h_field, width * sizeof(float4), width * sizeof(float4), height, cudaMemcpyHostToDevice));
-
-	// Set Texture Description
-	cudaTextureDesc texDesc;
-	cudaResourceDesc resDesc;
-	cudaResourceViewDesc resViewDesc;
-
-	memset(&resDesc, 0, sizeof(resDesc));
-	memset(&texDesc, 0, sizeof(texDesc));
-	memset(&resViewDesc, 0, sizeof(resViewDesc));
-
-
-
-	resDesc.resType = cudaResourceTypeArray;
-	resDesc.res.array.array = this->cuArray_velocity;
-
-	// Texture Description
-
-	texDesc.filterMode = _cudaTextureFilterMode;
-	if (_cudaTextureFilterMode == cudaFilterModeLinear)
-	{
-		texDesc.normalizedCoords = true;
-	}
-	else
-	{
-		texDesc.normalizedCoords = false;
-	}
-
-	texDesc.addressMode[0] = addressMode_x;
-	texDesc.addressMode[1] = addressMode_y;
-	texDesc.readMode = cudaReadModeElementType;
-
-
-
-	// Create the texture and bind it to the array
-	gpuErrchk(cudaCreateTextureObject(&this->t_field, &resDesc, &texDesc, NULL));
-
-	return true;
-
-}
-
-
-
-
 
 
 bool VolumeTexture1D::initialize
 (
 	size_t width,
-	cudaTextureAddressMode addressMode_x
+	bool normalizedCoords,
+	cudaTextureAddressMode addressMode_x,
+	cudaTextureFilterMode _cudaTextureFilterMode
+
 )
 {
 
@@ -398,8 +261,8 @@ bool VolumeTexture1D::initialize
 
 	// Texture Description
 
-	texDesc.filterMode = cudaFilterModeLinear;
-	texDesc.normalizedCoords = true;
+	texDesc.filterMode = _cudaTextureFilterMode;
+	texDesc.normalizedCoords = normalizedCoords;
 	texDesc.addressMode[0] = addressMode_x;
 	texDesc.readMode = cudaReadModeElementType;
 
@@ -407,5 +270,54 @@ bool VolumeTexture1D::initialize
 	gpuErrchk(cudaCreateTextureObject(&this->t_field, &resDesc, &texDesc, NULL));
 
 	return true;
+
+}
+
+
+bool VolumeTexture1D::initialize_array
+(
+
+	bool normalizedCoords,
+	cudaTextureAddressMode addressMode_x,
+	cudaTextureFilterMode _cudaTextureFilterMode
+
+)
+{
+
+	// Set Texture Description
+	cudaTextureDesc texDesc;
+	cudaResourceDesc resDesc;
+	cudaResourceViewDesc resViewDesc;
+
+	memset(&resDesc, 0, sizeof(resDesc));
+	memset(&texDesc, 0, sizeof(texDesc));
+	memset(&resViewDesc, 0, sizeof(resViewDesc));
+
+
+
+	resDesc.resType = cudaResourceTypeArray;
+	resDesc.res.array.array = this->cuArray_velocity;
+
+	// Texture Description
+
+	texDesc.filterMode = _cudaTextureFilterMode;
+	texDesc.normalizedCoords = normalizedCoords;
+	texDesc.addressMode[0] = addressMode_x;
+	texDesc.readMode = cudaReadModeElementType;
+
+	// Create the texture and bind it to the array
+	gpuErrchk(cudaCreateTextureObject(&this->t_field, &resDesc, &texDesc, NULL));
+
+	return true;
+
+}
+
+
+
+void VolumeTexture1D::release()
+{
+
+	cudaFreeArray(this->cuArray_velocity);
+	cudaDestroyTextureObject(this->t_field);
 
 }

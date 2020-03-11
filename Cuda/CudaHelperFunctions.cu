@@ -6,11 +6,16 @@
 
 
 
-__device__ void RK4Stream(cudaTextureObject_t t_VelocityField_0, Particle* particle, float3 gridDiameter, float dt)
+__device__ void RK4Stream(
+	cudaTextureObject_t t_VelocityField_0,
+	Particle* particle,
+	const float3& gridDiameter,
+	const int3& gridSize,
+	float dt)
 {
 	//####################### K1 ######################
 	float3 k1 = { 0,0,0 };
-	float3 relativePos = particle->m_position / gridDiameter; 
+	float3 relativePos = world2Tex(particle->m_position, gridDiameter,gridSize);
 	float4 velocity4D = tex3D<float4>(t_VelocityField_0, relativePos.x, relativePos.y, relativePos.z);
 
 	float3 velocity = { velocity4D.x,velocity4D.y,velocity4D.z };
@@ -21,7 +26,7 @@ __device__ void RK4Stream(cudaTextureObject_t t_VelocityField_0, Particle* parti
 	//####################### K2 ######################
 	float3 k2 = { 0,0,0 };
 
-	relativePos =    (particle->m_position + k1) / gridDiameter;
+	relativePos =   world2Tex(particle->m_position + k1, gridDiameter,gridSize);
 	 
 	velocity4D = tex3D<float4>(t_VelocityField_0, relativePos.x, relativePos.y, relativePos.z);
 	velocity = { velocity4D.x,velocity4D.y,velocity4D.z };
@@ -40,7 +45,7 @@ __device__ void RK4Stream(cudaTextureObject_t t_VelocityField_0, Particle* parti
 	//####################### K3 ######################
 	float3 k3 = { 0,0,0 };
 
-	relativePos = (particle->m_position + k2) / gridDiameter;
+	relativePos = world2Tex(particle->m_position + k2, gridDiameter, gridSize);
 
 	velocity4D = tex3D<float4>(t_VelocityField_0, relativePos.x, relativePos.y, relativePos.z);
 	velocity = { velocity4D.x,velocity4D.y,velocity4D.z };
@@ -60,7 +65,7 @@ __device__ void RK4Stream(cudaTextureObject_t t_VelocityField_0, Particle* parti
 
 	float3 k4 = { 0,0,0 };
 
-	relativePos = (particle->m_position + k3) / gridDiameter;
+	relativePos = world2Tex(particle->m_position + k3, gridDiameter, gridSize);
 
 	velocity4D = tex3D<float4>(t_VelocityField_0, relativePos.x, relativePos.y, relativePos.z);
 	velocity = { velocity4D.x,velocity4D.y,velocity4D.z };
@@ -300,7 +305,7 @@ __global__ void TracingStream
 			}
 
 			// Do not check if it is out
-			RK4Stream(t_VelocityField, &d_particles[index], gridDiameter, dt);
+			RK4Stream(t_VelocityField, &d_particles[index], gridDiameter, ARRAYTOINT3(solverOptions.gridSize), dt);
 
 			// Update position based on the projection
 			switch (solverOptions.projection)
@@ -481,7 +486,7 @@ __global__ void TracingStream
 			}
 
 			// Do not check if it is out
-			RK4Stream(t_VelocityField, &d_particles[index], gridDiameter, dt);
+			RK4Stream(t_VelocityField, &d_particles[index], gridDiameter, ARRAYTOINT3(solverOptions.gridSize), dt);
 
 			// Update position based on the projection
 			switch (solverOptions.projection)
@@ -534,18 +539,11 @@ __global__ void TracingStream
 		int lineLength = solverOptions.lineLength;
 		int index_buffer = index * lineLength;
 		float dt = solverOptions.dt;
-		float3 gridDiameter =
-		{
-			solverOptions.gridDiameter[0],
-			solverOptions.gridDiameter[1],
-			solverOptions.gridDiameter[2]
-		};
+		float3 gridDiameter = ARRAYTOFLOAT3(solverOptions.gridDiameter);
 
 		float3 temp_position = *d_particles[index].getPosition();
 
 		d_particles[index].updateVelocity(gridDiameter, t_VelocityField);
-
-
 
 		float3 upDir = make_float3(0.0f, 0.0f, 1.0f);
 
@@ -662,7 +660,7 @@ __global__ void TracingStream
 			}
 
 			// Do not check if it is out
-			RK4Stream(t_VelocityField, &d_particles[index], gridDiameter, dt);
+			RK4Stream(t_VelocityField, &d_particles[index], ARRAYTOFLOAT3(solverOptions.gridDiameter), ARRAYTOINT3(solverOptions.gridSize), dt);
 
 			// Update position based on the projection
 			switch (solverOptions.projection)

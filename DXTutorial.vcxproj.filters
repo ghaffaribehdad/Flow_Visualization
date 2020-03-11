@@ -42,9 +42,6 @@
     <Filter Include="Source Files\Cuda">
       <UniqueIdentifier>{ddc67f02-09b3-403e-b543-8511092689fb}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\BinaryStream">
-      <UniqueIdentifier>{3f9cfdaf-4e81-4f90-8b02-9ab4c5bef6fa}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Shaders">
       <UniqueIdentifier>{f6ab76af-48b7-4a38-94f6-338d1309efa3}</UniqueIdentifier>
     </Filter>
@@ -120,6 +117,9 @@
     <Filter Include="Source Files\TurbulentMixing">
       <UniqueIdentifier>{b7356c5d-126f-48e6-80ac-de2980a94f23}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\VolumeIO">
+      <UniqueIdentifier>{5ed3d2df-c2eb-43ca-b046-755688e3c729}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -191,14 +191,14 @@
     <ClCompile Include="Timer\Timer.cpp">
       <Filter>Source Files\Timer</Filter>
     </ClCompile>
-    <ClCompile Include="Volume\Volume_IO.cpp">
-      <Filter>Source Files\VolumeTexture</Filter>
-    </ClCompile>
-    <ClCompile Include="Volume\BinaryWriter.cpp">
-      <Filter>Source Files\VolumeTexture</Filter>
-    </ClCompile>
     <ClCompile Include="Particle\ParticleHelperFunctions.cpp">
       <Filter>Source Files\Particle</Filter>
+    </ClCompile>
+    <ClCompile Include="VolumeIO\BinaryWriter.cpp">
+      <Filter>Source Files\VolumeIO</Filter>
+    </ClCompile>
+    <ClCompile Include="VolumeIO\Volume_IO.cpp">
+      <Filter>Source Files\VolumeIO</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -379,18 +379,6 @@
     <ClInclude Include="Options\CrossSectionOptions.h">
       <Filter>Header Files\Options</Filter>
     </ClInclude>
-    <ClInclude Include="Volume\Volume_IO.h">
-      <Filter>Header Files\VolumeIO</Filter>
-    </ClInclude>
-    <ClInclude Include="Volume\BinaryWriter.h">
-      <Filter>Header Files\VolumeIO</Filter>
-    </ClInclude>
-    <ClInclude Include="Volume\Volume_IO_Z_Major.h">
-      <Filter>Header Files\VolumeIO</Filter>
-    </ClInclude>
-    <ClInclude Include="Volume\Volume_IO_X_Major.h">
-      <Filter>Header Files\VolumeIO</Filter>
-    </ClInclude>
     <ClInclude Include="ParticleTracing\ParticleTracing.h">
       <Filter>Header Files\ParticleTracing</Filter>
     </ClInclude>
@@ -414,6 +402,18 @@
     </ClInclude>
     <ClInclude Include="Dispersion\ftleHelperFunctions.h">
       <Filter>Header Files\Heightfield</Filter>
+    </ClInclude>
+    <ClInclude Include="VolumeIO\BinaryWriter.h">
+      <Filter>Header Files\VolumeIO</Filter>
+    </ClInclude>
+    <ClInclude Include="VolumeIO\Volume_IO.h">
+      <Filter>Header Files\VolumeIO</Filter>
+    </ClInclude>
+    <ClInclude Include="VolumeIO\Volume_IO_X_Major.h">
+      <Filter>Header Files\VolumeIO</Filter>
+    </ClInclude>
+    <ClInclude Include="VolumeIO\Volume_IO_Z_Major.h">
+      <Filter>Header Files\VolumeIO</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

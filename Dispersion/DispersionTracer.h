@@ -3,7 +3,7 @@
 #include "..//Options/SolverOptions.h"
 #include "..//Options/DispresionOptions.h"
 #include "..//Particle/Particle.h"
-#include "..//Volume/Volume_IO.h"
+#include "..//VolumeIO/Volume_IO.h"
 #include "..//VolumeTexture/VolumeTexture.h"
 #include "..//Cuda/cudaSurface.h"
 #include "..//Cuda/CudaArray.h"

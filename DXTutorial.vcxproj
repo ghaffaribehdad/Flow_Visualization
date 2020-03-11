@@ -195,7 +195,8 @@
     </CudaCompile>
     <ClCompile Include="Particle\ParticleHelperFunctions.cpp" />
     <ClCompile Include="Timer\Timer.cpp" />
-    <ClCompile Include="Volume\BinaryWriter.cpp" />
+    <ClCompile Include="VolumeIO\BinaryWriter.cpp" />
+    <ClCompile Include="VolumeIO\Volume_IO.cpp" />
     <ClCompile Include="Window\RenderWindow.cpp" />
     <ClCompile Include="Window\WindowContainer.cpp" />
     <ClInclude Include="CrossSection\CrossSection.h" />
@@ -216,9 +217,10 @@
     <ClInclude Include="Timer\Timer.h" />
     <ClInclude Include="TurbulentMixing\TurbulentMixing.h" />
     <ClInclude Include="TurbulentMixing\TurbulentMixingHelper.h" />
-    <ClInclude Include="Volume\BinaryWriter.h" />
-    <ClInclude Include="Volume\Volume_IO_X_Major.h" />
-    <ClInclude Include="Volume\Volume_IO_Z_Major.h" />
+    <ClInclude Include="VolumeIO\BinaryWriter.h" />
+    <ClInclude Include="VolumeIO\Volume_IO.h" />
+    <ClInclude Include="VolumeIO\Volume_IO_X_Major.h" />
+    <ClInclude Include="VolumeIO\Volume_IO_Z_Major.h" />
     <ClInclude Include="Window\RenderWindow.h" />
     <ClInclude Include="Window\WindowContainer.h" />
     <CudaCompile Include="Dispersion\fluctuationHeightfield.cu" />
@@ -282,7 +284,6 @@
     <ClInclude Include="Raycaster\IsosurfaceHelperFunctions.h" />
     <ClInclude Include="Raycaster\Raycasting.h" />
     <ClInclude Include="Raycaster\Raycasting_Helper.h" />
-    <ClCompile Include="Volume\Volume_IO.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Raycaster\BoundingBox.h" />
@@ -327,7 +328,6 @@
     <ClInclude Include="Keyboard\KeyboardEvent.h" />
     <ClInclude Include="Graphics\Shaders.h" />
     <ClInclude Include="Graphics\VertexBuffer.h" />
-    <ClInclude Include="Volume\Volume_IO.h" />
     <CudaCompile Include="Cuda\StreamlineSolver.cu" />
     <CudaCompile Include="Cuda\PathlineSolver.cu" />
   </ItemGroup>

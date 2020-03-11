@@ -52,7 +52,9 @@ public:
 	const XMVECTOR & GetLeftVector();
 
 	const XMFLOAT3& GetUpVector();
+	const XMVECTOR& GetUpXMVector();
 	const XMFLOAT3& GetViewVector();
+	const XMVECTOR& GetViewXMVector();
 	
 	
 private:

@@ -106,10 +106,8 @@ __host__ bool Raycasting::initialize
 		primary_IO.setFileName("AverageTemp.bin");
 		primary_IO.Read();
 		this->averageTemp = primary_IO.getField_float();
-		//gpuErrchk(cudaMalloc((void**)&d_averageTemp, sizeof(float) * 80));
-		//gpuErrchk(cudaMemcpy(this->d_averageTemp, this->averageTemp, sizeof(float) * 80, cudaMemcpyHostToDevice));
 		this->t_average_temp.setField(averageTemp);
-		this->t_average_temp.initialize(solverOptions->gridSize[2],cudaAddressModeBorder);
+		this->t_average_temp.initialize(solverOptions->gridSize[2],false,cudaAddressModeBorder);
 	}
 
 
@@ -286,10 +284,12 @@ __host__ bool Raycasting::initializeVolumeTexuture
 	cudaTextureAddressMode addressMode_Z
 	)
 {
-	this->volumeTexture.setSolverOptions(this->solverOptions);
+
 	this->volumeTexture.setField(this->field);
 	this->volumeTexture.initialize
 	(
+		ARRAYTOINT3(solverOptions->gridSize),
+		false,
 		addressMode_X,
 		addressMode_Y,
 		addressMode_Z
@@ -307,10 +307,12 @@ __host__  bool Raycasting::initializeVolumeTexuture
 	VolumeTexture3D & _volumeTexture
 )
 {
-	_volumeTexture.setSolverOptions(this->solverOptions);
+
 	_volumeTexture.setField(this->field);
 	_volumeTexture.initialize
 	(
+		ARRAYTOINT3(solverOptions->gridSize),
+		false,
 		addressMode_X,
 		addressMode_Y,
 		addressMode_Z
@@ -377,13 +379,23 @@ __global__ void CudaIsoSurfacRenderer_TurbulentDiffusivity
 				IsosurfaceHelper::TurbulentDiffusivity turbulentDiff;
 
 				float value = turbulentDiff.ValueAtXYZ_avgtemp(field1, relativePos, d_boundingBox.gridSize, t_avg_temp);
-				
+				float3 dir = rayDir * t ;
 
 				// check if we have a hit 
 				if (value > isoValue)
 				{
 
-					//position = binarySearch<turbulentDiff>(turbulentDiff, field1, position, d_boundingBox.m_dimensions, rayDir * t, isoValue, IsosurfaceTolerance, 50);
+					position = turbulentDiff.binarySearch_avgtemp(
+							field1,
+							t_avg_temp,
+							d_boundingBox.gridSize,
+							position,
+							d_boundingBox.m_dimensions,
+							dir,
+							isoValue,
+							IsosurfaceTolerance, 
+							50
+						);
 					relativePos = (position / d_boundingBox.m_dimensions);
 
 					// calculates gradient
@@ -464,15 +476,15 @@ __global__ void CudaIsoSurfacRenderer
 				position += d_boundingBox.m_dimensions / 2.0;
 
 				//Relative position calculates the position of the point on the CUDA texture
-				float3 relativePos = (position / d_boundingBox.m_dimensions);
+				float3 relativePos = world2Tex(position,d_boundingBox.m_dimensions, d_boundingBox.gridSize);
 
 
 				// check if we have a hit 
 				if (observable.ValueAtXYZ(field1, relativePos) > isoValue )
 				{
 
-					position = binarySearch<Observable>(observable, field1, position, d_boundingBox.m_dimensions, rayDir * t, isoValue, IsosurfaceTolerance, 50);
-					relativePos = (position / d_boundingBox.m_dimensions);
+					position = binarySearch<Observable>(observable, field1, position, d_boundingBox.m_dimensions, d_boundingBox.gridSize, rayDir * t, isoValue, IsosurfaceTolerance, 50);
+					relativePos = world2Tex(position, d_boundingBox.m_dimensions, d_boundingBox.gridSize);
 
 					// calculates gradient
 					float3 gradient = observable.GradientAtGrid(field1, relativePos, d_boundingBox.gridSize);
@@ -801,7 +813,6 @@ __global__ void CudaRaycasting_FTLE
 				{
 
 					dispersionOptions.isoValueTolerance = dispersionOptions.isoValueTolerance;
-					//relativePos = binarySearch_X(extraField, relativePos, d_boundingBox.m_dimensions, rayDir * t, dispersionOptions.ftleIsoValue, dispersionOptions.isoValueTolerance, 50);
 					float3 gradient = GradientAtGrid_X(extraField, relativePos, make_int3(dispersionOptions.gridSize_2D[0],dispersionOptions.gridSize_2D[1],traceTime));
 					float diffuse = max(dot(normalize(gradient), viewDir), 0.0f);
 
@@ -2235,7 +2246,7 @@ __global__ void CudaIsoSurfacRendererSpaceTime
 				if (observable.ValueAtXYZ(field1, relativePos) - isoValue > 0)
 				{
 
-					position = binarySearch<Observable>(observable, field1, position, d_boundingBox.m_dimensions, rayDir * t, isoValue, IsosurfaceTolerance, 50);
+					position = binarySearch<Observable>(observable, field1, position, d_boundingBox.m_dimensions , d_boundingBox.gridSize, rayDir * t, isoValue, IsosurfaceTolerance, 50);
 					relativePos = (position / d_boundingBox.m_dimensions);
 
 					// calculates gradient

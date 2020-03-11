@@ -21,5 +21,5 @@ public:
 
 
 
-	float color_0[3] = { 0.5f,0.5f,0.5f};
+	float color_0[3] = { 0.8f,0.8f,0.8f};
 };

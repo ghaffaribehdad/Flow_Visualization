@@ -2,7 +2,7 @@
 #include "helper_math.h"
 #include "..//Cuda/CudaHelperFunctions.h"
 #include "texture_fetch_functions.h"
-#include "..//Volume/BinaryWriter.h"
+#include "..//VolumeIO/BinaryWriter.h"
 
 
 
@@ -24,8 +24,7 @@ __host__ bool StreamlineSolver::solve()
 	
 	// Copy data to the texture memory
 	this->volumeTexture.setField(h_VelocityField);
-	this->volumeTexture.setSolverOptions(this->solverOptions);
-	this->volumeTexture.initialize();
+	this->volumeTexture.initialize(ARRAYTOINT3(solverOptions->gridSize));
 
 
 	// Release it from Host
@@ -134,8 +133,7 @@ __host__ void StreamlineSolver::measureFieldGeneration()
 
 	// Copy data to the texture memory
 	this->volumeTexture.setField(h_VelocityField);
-	this->volumeTexture.setSolverOptions(this->solverOptions);
-	this->volumeTexture.initialize();
+	this->volumeTexture.initialize(ARRAYTOINT3(solverOptions->gridSize));
 
 	
 	// Release it from Host

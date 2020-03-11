@@ -2,6 +2,7 @@
 #include "../ErrorLogger/ErrorLogger.h"
 #include "../Raycaster/Raycasting.h"
 #include "../Raycaster/IsosurfaceHelperFunctions.h"
+#include "../Cuda/helper_math.h"
 #include <vector>
 
 // Explicit specialization
@@ -46,8 +47,7 @@ void CrossSection::retraceCrossSectionField()
 	this->t_volumeTexture.release();
 	this->primary_IO.readVolume(solverOptions->currentIdx);		// Read a velocity volume
 	t_volumeTexture.setField(primary_IO.getField_float());	// Pass a pointer to the Cuda volume texture
-	t_volumeTexture.setSolverOptions(this->solverOptions);
-	t_volumeTexture.initialize();								// Initilize the Cuda texture
+	t_volumeTexture.initialize(ARRAYTOINT3(solverOptions->gridSize), false, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);					// Initilize the Cuda texture
 
 	primary_IO.release();										// Release velocity volume from host memory
 }
@@ -162,8 +162,8 @@ template <> void CrossSection::traceCrossSectionField< CrossSectionOptionsMode::
 	
 	this->primary_IO.readVolume(solverOptions->currentIdx);		// Read a velocity volume
 	t_volumeTexture.setField(primary_IO.getField_float());	// Pass a pointer to the Cuda volume texture
-	t_volumeTexture.setSolverOptions(this->solverOptions);
-	t_volumeTexture.initialize();								// Initilize the Cuda texture
+	
+	t_volumeTexture.initialize(ARRAYTOINT3(solverOptions->gridSize), false, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);								// Initilize the Cuda texture
 
 	primary_IO.release();
 
@@ -201,7 +201,6 @@ template <> void CrossSection::traceCrossSectionField< CrossSectionOptionsMode::
 	}
 
 
-	t_volumeTexture.setSolverOptions(this->solverOptions);
 	t_volumeTexture.setField(h_velocity);
 
 
@@ -210,22 +209,22 @@ template <> void CrossSection::traceCrossSectionField< CrossSectionOptionsMode::
 
 	if (crossSectionOptions->filterMinMax)
 	{
-		t_volumeTexture.initialize(m_dimension, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder,cudaFilterModePoint);
+		t_volumeTexture.initialize(m_dimension,false,cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder,cudaFilterModePoint);
 		
 		initializedFilterSurface();
 		filterExtermum();
 		cudaArray_t pCudaArray = a_field.getArray();
 		t_volumeGradient.setArray(pCudaArray);
-		t_volumeGradient.initialize_array(m_dimension, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
+		t_volumeGradient.initialize_array(false, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
 
 		cudaDestroyTextureObject(t_volumeTexture.getTexture());
-		t_volumeTexture.initialize(m_dimension, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
+		t_volumeTexture.initialize(m_dimension,false, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
 
 		delete[] h_velocity;
 	}
 	else
 	{
-		t_volumeTexture.initialize(m_dimension, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
+		t_volumeTexture.initialize(m_dimension, false, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
 		delete[] h_velocity;
 	}
 	

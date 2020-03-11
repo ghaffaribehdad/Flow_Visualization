@@ -6,7 +6,7 @@
 #include "../Particle/Particle.h"
 #include "../Options/SolverOptions.h"
 #include "../Graphics/Vertex.h"
-#include "../Volume/Volume_IO_Z_Major.h"
+#include "../VolumeIO/Volume_IO_Z_Major.h"
 
 
 

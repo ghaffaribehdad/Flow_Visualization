@@ -46,12 +46,6 @@ __global__ void traceDispersion
 	 
 	if (index < nParticles)
 	{
-		float3 gridDiameter =
-		{
-			solverOptions.gridDiameter[0],
-			solverOptions.gridDiameter[1],
-			solverOptions.gridDiameter[2],
-		};
 
 		// find the index of the particle
 		int index_y = index / dispersionOptions.gridSize_2D[1];
@@ -63,7 +57,7 @@ __global__ void traceDispersion
 		for (int i = 0; i < timeStep; i++)
 		{
 
-			RK4Stream(velocityField, &particle[index], gridDiameter, dt);
+			RK4Stream(velocityField, &particle[index], ARRAYTOFLOAT3(solverOptions.gridDiameter), ARRAYTOINT3(solverOptions.gridSize), dt);
 		}
 		
 
@@ -166,13 +160,7 @@ __global__ void  traceDispersion3D_extra
 
 	if (index < nParticles)
 	{
-		float3 gridDiameter =
-		{
-			solverOptions.gridDiameter[0],
-			solverOptions.gridDiameter[1],
-			solverOptions.gridDiameter[2],
-		};
-
+	
 		// find the index of the particle
 		int index_y = index / dispersionOptions.gridSize_2D[1];
 		int index_x = index - (index_y * dispersionOptions.gridSize_2D[1]);
@@ -184,7 +172,7 @@ __global__ void  traceDispersion3D_extra
 			for(int i = 0 ; i < dispersionOptions.sampling_step; i++)
 			{ 
 				// Advect the particle
-				RK4Stream(velocityField, &particle[index], gridDiameter, dt);
+				RK4Stream(velocityField, &particle[index], ARRAYTOFLOAT3(solverOptions.gridDiameter), ARRAYTOINT3(solverOptions.gridSize), dt);
 			}
 			// extract the height
 			float3 position = particle[index].m_position;
@@ -225,12 +213,6 @@ __global__ void  traceDispersion3D
 
 	if (index < nParticles)
 	{
-		float3 gridDiameter =
-		{
-			solverOptions.gridDiameter[0],
-			solverOptions.gridDiameter[1],
-			solverOptions.gridDiameter[2],
-		};
 
 		// find the index of the particle
 		int index_y = index / dispersionOptions.gridSize_2D[1];
@@ -242,7 +224,7 @@ __global__ void  traceDispersion3D
 		{
 
 			// Advect the particle
-			RK4Stream(velocityField, &particle[index], gridDiameter, dt);
+			RK4Stream(velocityField, &particle[index], ARRAYTOFLOAT3(solverOptions.gridDiameter),ARRAYTOINT3(solverOptions.gridSize), dt);
 		
 			// extract the height
 			float4 height = { particle[index].m_position.y,0.0,0.0,0.0 };

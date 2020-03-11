@@ -38,7 +38,8 @@ __device__ void RK4Stream
 (
 	cudaTextureObject_t t_VelocityField_0,
 	Particle* particle,
-	float3 gridDiameter,
+	const float3& gridDiameter,
+	const int3& gridSize,
 	float dt
 );
 
@@ -104,6 +105,9 @@ __device__ float3 binarySearch
 
 
 
+
+
+
 template <typename Observable>
 __device__ float3 binarySearch
 (
@@ -111,6 +115,7 @@ __device__ float3 binarySearch
 	cudaTextureObject_t field,
 	float3& _position,
 	float3& gridDiameter,
+	int3& gridSize,
 	float3& _samplingStep,
 	float& value,
 	float& tolerance,
@@ -118,7 +123,7 @@ __device__ float3 binarySearch
 )
 {
 	float3 position = _position;
-	float3 relative_position = position / gridDiameter;
+	float3 relative_position = world2Tex(position, gridDiameter, gridSize);
 	float3 samplingStep = _samplingStep * 0.5f;
 	bool side = 0; // 1 -> right , 0 -> left
 	int counter = 0;
@@ -133,7 +138,7 @@ __device__ float3 binarySearch
 				samplingStep = 0.5 * samplingStep;
 			}
 			position = position - samplingStep;
-			relative_position = position / gridDiameter;
+			relative_position = world2Tex(position, gridDiameter, gridSize);
 			side = 0;
 
 		}
@@ -146,7 +151,7 @@ __device__ float3 binarySearch
 			}
 
 			position = position + samplingStep;
-			relative_position = position / gridDiameter;
+			relative_position = world2Tex(position, gridDiameter, gridSize);
 			side = 1;
 
 		}
@@ -225,3 +230,8 @@ __device__ inline float getTemperature(float* temp, float pos, int size, int off
 		return 0.0f; // Border Address Mode
 	}
 }
+
+
+
+
+
