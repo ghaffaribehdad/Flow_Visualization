@@ -95,9 +95,9 @@ inline __host__ __device__ float3 operator*(float3 a, int3 b)
 {
 	return make_float3
 	(
-		a.x * b.x,
-		a.y * b.y,
-		a.z * b.z
+		a.x * (float)b.x,
+		a.y * (float)b.y,
+		a.z * (float)b.z
 	);
 }
 

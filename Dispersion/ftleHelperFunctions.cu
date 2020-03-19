@@ -23,7 +23,8 @@ __global__ void  traceDispersion3D_path_FTLE
 
 	if (index < nParticles)
 	{
-		float3 gridDiameter = make_float3(solverOptions.gridDiameter[0], solverOptions.gridDiameter[1], solverOptions.gridDiameter[2]);
+		float3 gridDiameter = ARRAYTOFLOAT3(solverOptions.gridDiameter);
+		int3 gridSize = ARRAYTOINT3(solverOptions.gridSize);
 
 
 
@@ -39,14 +40,14 @@ __global__ void  traceDispersion3D_path_FTLE
 		case RK4STEP::EVEN:
 			for (int i = 0; i < FTLE_NEIGHBOR; i++)
 			{
-				RK4Path(velocityField_0, velocityField_1, &particle[index * FTLE_NEIGHBOR + i], gridDiameter, dispersionOptions.dt, true);
+				RK4Path(velocityField_0, velocityField_1, &particle[index * FTLE_NEIGHBOR + i], gridDiameter, gridSize, dispersionOptions.dt, true);
 			}
 			break;
 
 		case RK4STEP::ODD:
 			for (int i = 0; i < FTLE_NEIGHBOR; i++)
 			{
-				RK4Path(velocityField_1, velocityField_0, &particle[index * FTLE_NEIGHBOR + i], gridDiameter, dispersionOptions.dt, true);
+				RK4Path(velocityField_1, velocityField_0, &particle[index * FTLE_NEIGHBOR + i], gridDiameter, gridSize, dispersionOptions.dt, true);
 			}
 			break;
 		}

@@ -17,6 +17,7 @@ __device__ void	RK4Path
 	cudaTextureObject_t t_VelocityField_1,
 	Particle* particle,
 	float3 gridDiameter,
+	int3 gridSize,
 	float dt,
 	bool periodicity
 );

@@ -13,7 +13,7 @@ public:
 
 	__device__ void checkPosition(const float3& gridDiameter);
 	__device__ void updatePosition(const float dt);
-	__device__ void updateVelocity(const float3& gridDiameter, cudaTextureObject_t t_VelocityField);
+	__device__ void updateVelocity(const float3& gridDiameter, const int3& gridSize, cudaTextureObject_t t_VelocityField);
 	__device__ __host__ float3 findRelative(const float3& gridDiameter);
 
 	__device__ __host__ Particle()

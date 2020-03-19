@@ -74,7 +74,7 @@ __device__ void RK4Stream(
 
 	particle->m_position = particle->m_position + (1.0 / 6.0) * (k1 + 2.0 * k2 + 2 * k3 + k4);
 
-	particle->updateVelocity(gridDiameter, t_VelocityField_0);
+	particle->updateVelocity(gridDiameter, gridSize, t_VelocityField_0);
 	
 }
 
@@ -94,22 +94,18 @@ __global__ void TracingPath(Particle* d_particles, cudaTextureObject_t t_Velocit
 			// line_index indicates the line segment index
 			int line_index = index * solverOptions.lineLength;
 
-			float3 gridDiameter = 
-			{
-				solverOptions.gridDiameter[0],
-				solverOptions.gridDiameter[1],
-				solverOptions.gridDiameter[2]
-			};
+			float3 gridDiameter = ARRAYTOFLOAT3(solverOptions.gridDiameter);
+			int3 gridSize = ARRAYTOINT3(solverOptions.gridSize);
 
 
 			if (odd)
 			{
-				RK4Path(t_VelocityField_1, t_VelocityField_0, &d_particles[index], gridDiameter, solverOptions.dt,false);
+				RK4Path(t_VelocityField_1, t_VelocityField_0, &d_particles[index], gridDiameter, gridSize, solverOptions.dt,false);
 			}
 			else //Even
 			{
 
-				RK4Path(t_VelocityField_0, t_VelocityField_1, &d_particles[index], gridDiameter, solverOptions.dt,false);
+				RK4Path(t_VelocityField_0, t_VelocityField_1, &d_particles[index], gridDiameter, gridSize, solverOptions.dt,false);
 			}
 
 			// use the up vector as normal
@@ -187,33 +183,30 @@ __global__ void TracingStream
 
 	if (index < solverOptions.lines_count)
 	{
-		int lineLength = solverOptions.lineLength;
-		int index_buffer = index * lineLength;
+		int index_buffer = index * solverOptions.lineLength;
 		float dt = solverOptions.dt;
-		float3 gridDiameter =
-		{
-			solverOptions.gridDiameter[0],
-			solverOptions.gridDiameter[1],
-			solverOptions.gridDiameter[2]
-		};
+
+
+		float3 gridDiameter = ARRAYTOFLOAT3(solverOptions.gridDiameter);
+		int3 gridsize = ARRAYTOINT3(solverOptions.gridSize);
 
 		float3 temp_position = *d_particles[index].getPosition();
 
-		d_particles[index].updateVelocity(gridDiameter, t_VelocityField);
+		d_particles[index].updateVelocity(gridDiameter, gridsize, t_VelocityField);
 
 		float3 initialVelocity = d_particles[index].m_velocity;
 
-		float3 upDir = make_float3(0.0f, 0.0f, 1.0f);
 
+		// Up direction is needed for Shading
+		float3 upDir = make_float3(0.0f, 0.0f, 1.0f);
 		if (abs(dot(upDir, normalize(d_particles[index].m_velocity))) > 0.1f)
 			upDir = make_float3(1.0f, 0.0f, 0.0f);
-
 		else if (abs(dot(upDir, normalize(d_particles[index].m_velocity)))> 0.1f)
 			upDir = make_float3(0.0f, 1.0f, 0.0f);
 
+		
 
-
-		for (int i = 0; i < lineLength; i++)
+		for (int i = 0; i < solverOptions.lineLength; i++)
 		{
 			if (solverOptions.periodic)
 			{
@@ -243,12 +236,7 @@ __global__ void TracingStream
 				}
 			}
 
-
-
-			float3* velocity = d_particles[index].getVelocity();
-			float3 tangent = normalize(*velocity);
-
-
+			float3 tangent = normalize(d_particles[index].m_velocity);
 
 			p_VertexBuffer[index_buffer + i].normal.x = upDir.x;
 			p_VertexBuffer[index_buffer + i].normal.y = upDir.y;
@@ -263,12 +251,13 @@ __global__ void TracingStream
 			p_VertexBuffer[index_buffer + i].LineID = index;
 
 
+
 			switch (solverOptions.colorMode)
 			{
 				case 0: // Velocity
 				{
 
-					p_VertexBuffer[index_buffer + i].measure = VecMagnitude(*velocity);
+					p_VertexBuffer[index_buffer + i].measure = dot(d_particles[index].m_velocity, d_particles[index].m_velocity);
 					break;
 
 				}
@@ -332,9 +321,6 @@ __global__ void TracingStream
 				}
 			}
 
-
-
-
 		}//end of for loop
 	}
 }
@@ -356,16 +342,12 @@ __global__ void TracingStream
 		int lineLength = solverOptions.lineLength;
 		int index_buffer = index * lineLength;
 		float dt = solverOptions.dt;
-		float3 gridDiameter =
-		{
-			solverOptions.gridDiameter[0],
-			solverOptions.gridDiameter[1],
-			solverOptions.gridDiameter[2]
-		};
+		float3 gridDiameter = ARRAYTOFLOAT3(solverOptions.gridDiameter);
+		int3 gridSize = ARRAYTOINT3(solverOptions.gridSize);
 
 		float3 temp_position = *d_particles[index].getPosition();
 
-		d_particles[index].updateVelocity(gridDiameter, t_VelocityField);
+		d_particles[index].updateVelocity(gridDiameter, gridSize, t_VelocityField);
 
 
 
@@ -540,10 +522,10 @@ __global__ void TracingStream
 		int index_buffer = index * lineLength;
 		float dt = solverOptions.dt;
 		float3 gridDiameter = ARRAYTOFLOAT3(solverOptions.gridDiameter);
-
+		int3 gridSize = ARRAYTOINT3(solverOptions.gridSize);
 		float3 temp_position = *d_particles[index].getPosition();
 
-		d_particles[index].updateVelocity(gridDiameter, t_VelocityField);
+		d_particles[index].updateVelocity(gridDiameter, gridSize, t_VelocityField);
 
 		float3 upDir = make_float3(0.0f, 0.0f, 1.0f);
 
@@ -898,6 +880,7 @@ __device__ void	RK4Path
 	cudaTextureObject_t t_VelocityField_1,
 	Particle* particle,
 	float3 gridDiameter,
+	int3 gridSize,
 	float dt,
 	bool periodicity
 )
@@ -962,14 +945,14 @@ __device__ void	RK4Path
 	if (periodicity)
 	{
 		particle->m_position = particle->m_position + (1.0 / 6.0) * (k1 + 2.0 * k2 + 2 * k3 + k4);
-		particle->updateVelocity(gridDiameter, t_VelocityField_1);
+		particle->updateVelocity(gridDiameter, gridSize,t_VelocityField_1);
 	}
 	else
 	{
 		if (particle->m_position < gridDiameter && particle->m_position > make_float3(0.0f, 0.0f, 0.0f))
 		{
 			particle->m_position = particle->m_position + (1.0 / 6.0) * (k1 + 2.0 * k2 + 2 * k3 + k4);
-			particle->updateVelocity(gridDiameter, t_VelocityField_1);
+			particle->updateVelocity(gridDiameter, gridSize, t_VelocityField_1);
 		}
 		else
 		{

@@ -92,12 +92,10 @@ __global__ void  traceDispersion3D_path
 
 	if (index < nParticles)
 	{
-		float3 gridDiameter =
-		{
-			solverOptions.gridDiameter[0],
-			solverOptions.gridDiameter[1],
-			solverOptions.gridDiameter[2],
-		};
+
+		float3 gridDiameter = ARRAYTOFLOAT3(solverOptions.gridDiameter);
+		int3 gridSize = ARRAYTOINT3(solverOptions.gridSize);
+
 
 		// find the index of the particle
 		int index_y = index / dispersionOptions.gridSize_2D[1];
@@ -110,13 +108,13 @@ __global__ void  traceDispersion3D_path
 		{
 		case 0: // => EVEN
 
-			RK4Path(velocityField_0, velocityField_1, &particle[index], gridDiameter, dispersionOptions.dt,true);
+			RK4Path(velocityField_0, velocityField_1, &particle[index], gridDiameter, gridSize, dispersionOptions.dt,true);
 
 			break;
 
 		case 1: // => ODD
 
-			RK4Path(velocityField_1, velocityField_0, &particle[index], gridDiameter, dispersionOptions.dt,true);
+			RK4Path(velocityField_1, velocityField_0, &particle[index], gridDiameter, gridSize, dispersionOptions.dt,true);
 
 			break;
 		}

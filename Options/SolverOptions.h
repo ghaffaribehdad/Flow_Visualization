@@ -5,8 +5,8 @@
 struct SolverOptions
 {
 public:
-	char fileName[100] ="MipmapbinaryFloatFieldL3";
-	char  filePath[100] ="F:\\LargeRayleigh-Benard\\MipMap_L3\\";
+	char fileName[100] ="FieldP";
+	char  filePath[100] ="C:\\Users\\sbgha\\Desktop\\z_major\\";
 
 
 	char filePath_out[100] = "D:\\copy\\bf\\Binary_z_Major\\Padded\\";
@@ -14,14 +14,14 @@ public:
 	int counter = 0;
 	int fileToSave = 1000;
 
-	int gridSize[3] = { 1200,1200,80 };
+	int gridSize[3] = { 192,192,192 };
 	int seedGrid[3] = { 2,2,1 };
 	//float gridDiameter[3] = { 1,2,5 };
-	//float gridDiameter[3] = { 7.854f,2.0f,3.1415f };	//KIT2
-	float gridDiameter[3] = { 2.0f,2.0f,0.5f };	//Schumacher
+	float gridDiameter[3] = { 7.854f,2.0f,3.1415f };	//KIT2
+	//float gridDiameter[3] = { 2.0f,2.0f,0.5f };	//Schumacher
 
 
-	float seedBox[3] = { 2.0f,2.0f,2.0f };			//KIT2
+	float seedBox[3] = { 7.854f,2.0f,3.1415f };			//KIT2
 	//float seedBox[3] = { 1,2,5 };
 	float seedBoxPos[3] = { 0.0f, 0.0f, 0.0f }; 
 
@@ -36,7 +36,7 @@ public:
 
 
 	int firstIdx = 1;
-	int lastIdx = 1;
+	int lastIdx = 8;
 	int currentIdx =1;
 
 	
