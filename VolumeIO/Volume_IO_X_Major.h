@@ -10,14 +10,10 @@ private:
 
 	SolverOptions* m_solverOptions;
 
+
 public:
 
-	virtual bool readSliceXY(unsigned int idx, size_t x, size_t y) override
-	{
 
-
-		return false;
-	}
 
 
 	virtual void Initialize(SolverOptions* _solverOptions) override
@@ -26,36 +22,73 @@ public:
 
 		m_fileName = _solverOptions->fileName;
 		m_filePath = _solverOptions->filePath;
-		this->initialized = true;
 	}
 
-	virtual bool readVolumePlane(unsigned int idx, VolumeIO::readPlaneMode planeMode, size_t plane, size_t offset, size_t buffer_size)
+	virtual bool readVolumePlane(unsigned int idx, VolumeIO::readPlaneMode planeMode, size_t plane)
 	{
 		// Generate absolute path of the file
 
 		this->fullName = m_filePath + m_fileName + std::to_string(idx) + ".bin";
 
-		std::streampos begin = 0;
-		//size_t size = 0;
 
-
-		switch (static_cast<int>(planeMode))
+		switch (planeMode)
 		{
-		case 0: // => YZ
-			begin = plane * offset;
-			return this->Read(begin, buffer_size);
+		case VolumeIO::readPlaneMode::YZ:
+		{
 
+			size_t planeSize_byte =
+				(size_t)m_solverOptions->gridSize[1] *
+				(size_t)m_solverOptions->gridSize[2] *
+				m_solverOptions->channels *
+				sizeof(float);
 
-		case 1: // => ZX
-			ErrorLogger::Log("Not implemented yet");
-			break;
+			size_t offset = plane * planeSize_byte;
 
-		case 2: // => XY
-			ErrorLogger::Log("Not implemented yet");
+			return this->Read(offset, planeSize_byte);
 			break;
 		}
+		case VolumeIO::readPlaneMode::ZX:
+		{
 
+			size_t interval_x = sizeof(float) * m_solverOptions->channels * m_solverOptions->gridSize[0];
+			size_t interval_z = interval_x * m_solverOptions->gridSize[1];
+			size_t offset = interval_x * plane;
+
+			for (int z = 0; z < m_solverOptions->gridSize[2]; z++)
+			{
+				for (int x = 0; x < m_solverOptions->gridSize[0]; x++)
+				{
+					this->Read(offset, sizeof(float) * m_solverOptions->channels);
+					offset += interval_x;
+
+				}
+
+				offset += interval_z;
+			}
+			break;
+		}
+		case VolumeIO::readPlaneMode::XY:
+		{
+			size_t interval_y = sizeof(float) * m_solverOptions->channels * m_solverOptions->gridSize[1];
+			size_t interval_z = interval_y * m_solverOptions->gridSize[0];
+			size_t offset = interval_y * plane;
+
+			for (int z = 0; z < m_solverOptions->gridSize[2]; z++)
+			{
+				for (int y = 0; y < m_solverOptions->gridSize[1]; y++)
+				{
+					this->Read(offset, sizeof(float) * m_solverOptions->channels);
+					offset += interval_y;
+
+				}
+
+				offset += interval_z;
+			}
+			break;
+		}
+		}
 		return false;
+
 	}
 };
 

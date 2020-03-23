@@ -98,7 +98,19 @@ void CUDASolver::InitializeParticles(SeedingPattern seedingPattern)
 			seedParticleGridPoints(this->h_Particles, solverOptions);
 			break;
 		}
-		
+
+		case SeedingPattern::SEED_TILTED_PLANE:
+		{
+			float3 gridDiamter = ARRAYTOFLOAT3(solverOptions->gridDiameter);
+			seedParticle_tiltedPlane
+			(
+				this->h_Particles,
+				gridDiamter,
+				make_int2(solverOptions->gridSize_2D[0], solverOptions->gridSize_2D[1]),
+				solverOptions->seedWallNormalDist,
+				solverOptions->tilt_deg
+			);
+		}
 		case SeedingPattern::SEED_FILE:
 		{
 			break;

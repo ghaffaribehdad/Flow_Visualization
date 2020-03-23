@@ -6,20 +6,26 @@ struct SolverOptions
 {
 public:
 	char fileName[100] ="FieldP";
-	char  filePath[100] ="C:\\Users\\sbgha\\Desktop\\z_major\\";
+	char  filePath[100] ="D:\\copy\\ref\\Binary_z_Major\\Padded\\";
 
+
+	float seedWallNormalDist = 0.1f;
+	float tilt_deg = 15.0f;
 
 	char filePath_out[100] = "D:\\copy\\bf\\Binary_z_Major\\Padded\\";
 	char fileName_out[100] = "Lineset";
 	int counter = 0;
 	int fileToSave = 1000;
 
+	int channels = 4;
 	int gridSize[3] = { 192,192,192 };
 	int seedGrid[3] = { 2,2,1 };
+	int gridSize_2D[2] = { 50,50 };
+
 	//float gridDiameter[3] = { 1,2,5 };
 	float gridDiameter[3] = { 7.854f,2.0f,3.1415f };	//KIT2
 	//float gridDiameter[3] = { 2.0f,2.0f,0.5f };	//Schumacher
-
+	
 
 	float seedBox[3] = { 7.854f,2.0f,3.1415f };			//KIT2
 	//float seedBox[3] = { 1,2,5 };
@@ -36,12 +42,12 @@ public:
 
 
 	int firstIdx = 1;
-	int lastIdx = 8;
+	int lastIdx = 100;
 	int currentIdx =1;
 
 	
 	int colorMode = 0;
-	int seedingPattern = 0;
+	SeedingPattern seedingPattern = SeedingPattern::SEED_RANDOM;
 
 	bool interOperation = false;
 
@@ -55,6 +61,8 @@ public:
 
 	int projection = Projection::NO_PROJECTION;
 	bool periodic = false;
+
+
 
 
 };

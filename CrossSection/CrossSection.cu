@@ -188,7 +188,7 @@ template <> void CrossSection::traceCrossSectionField< CrossSectionOptionsMode::
 		for (int x = 0; x < solverOptions->gridSize[0]; x++)
 		{
 
-			primary_IO.readSliceXY(t,x,crossSectionOptions->wallNormalPos);
+			//primary_IO.readSliceXY(t,x,crossSectionOptions->wallNormalPos);
 
 			for (int i = 0; i < solverOptions->gridSize[2] * 4; i++)
 			{

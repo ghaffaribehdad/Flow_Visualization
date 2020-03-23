@@ -24,13 +24,13 @@ __host__ bool PathlineSolver::solve()
 	this->volume_IO.Initialize(this->solverOptions);
 
 	// Initialize Particles and upload it to GPU
-	this->InitializeParticles(SeedingPattern::SEED_RANDOM);
+	this->InitializeParticles(solverOptions->seedingPattern);
 
 	int blockDim = 256;
 	int thread = (this->solverOptions->lines_count / blockDim) + 1;
 	
 	solverOptions->lineLength = timeSteps;
-	bool odd = true;
+	bool odd = false;
 
 	// set solverOptions once
 
@@ -50,7 +50,7 @@ __host__ bool PathlineSolver::solve()
 			// set the pointer to the volume texture
 			this->volumeTexture_0.setField(h_VelocityField);					
 			// initialize the volume texture
-			this->volumeTexture_0.initialize(ARRAYTOINT3(solverOptions->gridSize),false,cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);	
+			this->volumeTexture_0.initialize(ARRAYTOINT3(solverOptions->gridSize),false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
 			// release host memory
 			volume_IO.release();
 			
@@ -60,7 +60,7 @@ __host__ bool PathlineSolver::solve()
 			this->volume_IO.readVolume(solverOptions->currentIdx+1);
 			this->h_VelocityField = this->volume_IO.getField_float();
 			this->volumeTexture_1.setField(h_VelocityField);
-			this->volumeTexture_1.initialize(ARRAYTOINT3(solverOptions->gridSize), false, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
+			this->volumeTexture_1.initialize(ARRAYTOINT3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
 
 			volume_IO.release();
 
@@ -73,12 +73,12 @@ __host__ bool PathlineSolver::solve()
 
 			this->volumeTexture_1.release();
 			this->volumeTexture_1.setField(h_VelocityField);
-			this->volumeTexture_1.initialize(ARRAYTOINT3(solverOptions->gridSize), false, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
+			this->volumeTexture_1.initialize(ARRAYTOINT3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
 
 			volume_IO.release();
 
-			odd = true;
 			
+			odd = false;
 		}
 
 		else if (step % 2 != 0) // => ODD
@@ -89,11 +89,11 @@ __host__ bool PathlineSolver::solve()
 
 			this->volumeTexture_0.release();
 			this->volumeTexture_0.setField(h_VelocityField);
-			this->volumeTexture_0.initialize(ARRAYTOINT3(solverOptions->gridSize), false, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
+			this->volumeTexture_0.initialize(ARRAYTOINT3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
 
 			volume_IO.release();
 
-			odd = false;
+			odd = true;
 	
 		}
 

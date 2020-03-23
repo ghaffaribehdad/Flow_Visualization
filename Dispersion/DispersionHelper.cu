@@ -106,13 +106,13 @@ __global__ void  traceDispersion3D_path
 
 		switch (RK4step)
 		{
-		case 0: // => EVEN
+		case EVEN: // => EVEN
 
 			RK4Path(velocityField_0, velocityField_1, &particle[index], gridDiameter, gridSize, dispersionOptions.dt,true);
 
 			break;
 
-		case 1: // => ODD
+		case ODD: // => ODD
 
 			RK4Path(velocityField_1, velocityField_0, &particle[index], gridDiameter, gridSize, dispersionOptions.dt,true);
 

@@ -5,7 +5,7 @@
 #include <fstream>
 
 #include "../Options/SolverOptions.h"
-#include "..//Options/fluctuationheightfieldOptions.h"
+
 
 namespace VolumeIO
 {
@@ -20,24 +20,26 @@ namespace VolumeIO
 	class Volume_IO
 	{
 	protected:
-	
+
 		std::string m_fileName = "";
 		std::string m_filePath = "";
 		std::string fullName = "";
 		std::vector<unsigned int> index;
 		std::vector<char> buffer;
-		float * field = nullptr;
+		float* field = nullptr;
+		float* planeBuffer = nullptr;
 
+		SolverOptions* m_solverOptions = nullptr;
 
-		bool initialized = false;
+		bool Read(std::streampos begin, size_t size);
 
 	public:
-	
+
 
 		// Setter and getter functions
-		virtual void Initialize(SolverOptions * _solverOption);
-		virtual void Initialize(FluctuationheightfieldOptions * _fluctuationOptions);
-		void Initialize(std::string _fileName , std::string _filePath);
+
+		virtual void Initialize(SolverOptions* _solverOption);
+		void Initialize(std::string _fileName, std::string _filePath);
 
 		void setFileName(std::string _fileName);
 		void setFilePath(std::string _filePath);
@@ -45,21 +47,26 @@ namespace VolumeIO
 		bool isEmpty();
 
 
-		bool readVolume(unsigned int idx);
-		virtual bool readVolumePlane(unsigned int idx, readPlaneMode planeMode, size_t plane, size_t offset, size_t buffer_size) = 0;
-		virtual bool readSliceXY(unsigned int idx, size_t x, size_t y) = 0;
+		bool readVolume(unsigned int idx);	// Generic: Read binary file with a certain index
+		bool readVolume();					// Read binary file without index
 
-	
+		// Read a single plane of a volumetric file in binary
+		virtual bool readVolumePlane(unsigned int idx, readPlaneMode planeMode, size_t plane) = 0;
+
+		// Return a pointer to char vector
 		std::vector<char>* getField_char();
+
+		// Return a pointer to array of floats
 		float* getField_float();
 
+		// Return a pointer to a single plane of volumetric data
+		float* getPlane_float()
+		{
+			return planeBuffer;
+		}
 		// Clear the vector
 		void release();
 		bool Read();
-
-	protected:
-
-		bool Read(std::streampos begin, size_t size);
 
 	};
 

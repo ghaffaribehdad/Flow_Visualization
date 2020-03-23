@@ -8,74 +8,103 @@ class Volume_IO_Z_Major : public VolumeIO::Volume_IO
 {
 
 
-private:
-
-	SolverOptions* m_solverOptions = nullptr;
-
-
 public:
 
 
-	virtual void Initialize(SolverOptions* _solverOptions) override
+
+	virtual bool readVolumePlane(unsigned int idx, VolumeIO::readPlaneMode planeMode, size_t plane)
 	{
-		m_solverOptions = _solverOptions;
-
-		m_fileName = _solverOptions->fileName;
-		m_filePath = _solverOptions->filePath;
-		this->initialized = true;
-	}
-
-	virtual void Initialize(FluctuationheightfieldOptions* _fluctuationOptions) override
-	{
-		m_fileName = _fluctuationOptions->fileName;
-		m_filePath = _fluctuationOptions->filePath;
-
-		this->initialized = true;
-	}
-
-	virtual bool readSliceXY(unsigned int idx, size_t x, size_t y) override
-	{
-
+		// Solver Options is essential
 		if (this->m_solverOptions == nullptr)
-				return false;
-		else
-		{
-			this->fullName = m_filePath + m_fileName + std::to_string(idx) + ".bin";
-			std::streampos begin = 0;
-			begin += x * m_solverOptions->gridSize[2] * (size_t) m_solverOptions->gridSize[1] * sizeof(float4);
-			begin += y * m_solverOptions->gridSize[2] * sizeof(float4);
+			return false;
 
-			size_t buffer_size = m_solverOptions->gridSize[2] * sizeof(float4);
-			return this->Read(begin, buffer_size);
-		}
-	}
-
-	virtual bool readVolumePlane(unsigned int idx, VolumeIO::readPlaneMode planeMode, size_t plane, size_t offset, size_t buffer_size)
-	{
 		// Generate absolute path of the file
-
 		this->fullName = m_filePath + m_fileName + std::to_string(idx) + ".bin";
 
-		std::streampos begin = 0;
-
-
-		switch (static_cast<int>(planeMode))
+		switch (planeMode)
 		{
-		case 0: // => YZ
-			ErrorLogger::Log("Not implemented yet");
+		case VolumeIO::readPlaneMode::YZ:
+		{
+			planeBuffer = new float[(size_t)m_solverOptions->gridSize[1] * (size_t)m_solverOptions->gridSize[2] * m_solverOptions->channels];
+
+			size_t interval_x = sizeof(float) * m_solverOptions->channels;
+			size_t interval_y = interval_x * m_solverOptions->gridSize[0];
+			size_t interval_z = interval_y * m_solverOptions->gridSize[1];
 
 
-		case 1: // => ZX
-			ErrorLogger::Log("Not implemented yet");
+			size_t offset = interval_y * plane;
 
+			size_t index = 0;
+
+			for (int z = 0; z < m_solverOptions->gridSize[2]; z++)
+			{
+				for (int y = 0; y < m_solverOptions->gridSize[1]; y++)
+				{
+					this->Read(offset, sizeof(float) * m_solverOptions->channels);
+					offset += interval_y;
+
+					planeBuffer[index] = field[0];
+					planeBuffer[index + (size_t)1] = field[1];
+					planeBuffer[index + (size_t)2] = field[2];
+					planeBuffer[index + (size_t)3] = field[3];
+
+					index += m_solverOptions->channels;
+
+				}
+
+				offset += interval_z;
+			}
 			break;
 
-		case 2: // => XY
+		}
+		case VolumeIO::readPlaneMode::ZX:
+		{
 
-			begin = plane * offset;
-			return this->Read(begin, buffer_size);
+			planeBuffer = new float[(size_t)m_solverOptions->gridSize[0] * (size_t)m_solverOptions->gridSize[2] * m_solverOptions->channels];
 
+			size_t interval_x = sizeof(float) * m_solverOptions->channels;
+			size_t interval_y = interval_x * m_solverOptions->gridSize[0];
+			size_t interval_z = interval_y * m_solverOptions->gridSize[1];
+			size_t offset = interval_y * plane;
+
+			size_t index = 0;
+			for (int z = 0; z < m_solverOptions->gridSize[2]; z++)
+			{
+				std::printf(std::string("Successfully Read Plane: " + std::to_string(z) + "/" + std::to_string(m_solverOptions->gridSize[2]) + std::string("\n")).c_str());
+
+				for (int x = 0; x < m_solverOptions->gridSize[0]; x++)
+				{
+					this->Read(offset, sizeof(float) * m_solverOptions->channels);
+					offset += interval_x;
+
+					planeBuffer[index + (size_t)0] = field[0];
+					planeBuffer[index + (size_t)1] = field[1];
+					planeBuffer[index + (size_t)2] = field[2];
+					planeBuffer[index + (size_t)3] = field[3];
+
+					index += m_solverOptions->channels;
+				}
+
+				offset += interval_z;
+			}
 			break;
+		}
+
+		case VolumeIO::readPlaneMode::XY:
+		{
+			size_t planeSize_byte =
+				(size_t)m_solverOptions->gridSize[0] *
+				(size_t)m_solverOptions->gridSize[1] *
+				m_solverOptions->channels *
+				sizeof(float);
+
+			size_t offset = plane * planeSize_byte;
+
+			this->Read(offset, planeSize_byte);
+			planeBuffer = field;
+			break;
+		}
+
 		}
 
 		return false;

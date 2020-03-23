@@ -34,7 +34,7 @@ bool FluctuationHeightfield::initialize
 	this->rays = (*this->width) * (*this->height);				// Set number of rays based on the number of pixels
 
 	// initialize volume Input Output
-	primary_IO.Initialize(this->fluctuationheightfieldOptions);
+	//primary_IO.Initialize(this->fluctuationheightfieldOptions);
 
 
 	// Initialize Height Field as an empty CUDA array 3D
@@ -64,16 +64,11 @@ void  FluctuationHeightfield::traceFluctuationfield3D()
 {
 	float* h_velocityField = new float[m_gridSize3D.x * m_gridSize3D.y * m_gridSize3D.z * (size_t)4];
 
-	size_t offset = solverOptions->gridSize[2] * solverOptions->gridSize[1] * sizeof(float4);
-	size_t buffer_size = solverOptions->gridSize[2] * (size_t)fluctuationheightfieldOptions->wallNormalgridSize * sizeof(float4);
-	
-
-
 	size_t counter = 0;
 
 	for (int t = 0; t < m_gridSize3D.z; t++)
 	{
-		this->primary_IO.readVolumePlane(t + fluctuationheightfieldOptions->firstIdx, VolumeIO::readPlaneMode::YZ, fluctuationheightfieldOptions->spanwisePos, offset, buffer_size);
+		this->primary_IO.readVolumePlane(t + fluctuationheightfieldOptions->firstIdx, VolumeIO::readPlaneMode::YZ, fluctuationheightfieldOptions->spanwisePos);
 		float* p_temp = primary_IO.getField_float();
 
 		size_t counter_t = 0;

@@ -912,8 +912,8 @@ __global__ void CudaTerrainRenderer_extra
 				//Relative position calculates the position of the point on the cuda texture
 				float3 relativePos =
 				{
-					position.x / d_boundingBox.m_dimensions.x,
 					position.z / d_boundingBox.m_dimensions.z,
+					position.x / d_boundingBox.m_dimensions.x,
 					static_cast<float> (dispersionOptions.timestep) / static_cast<float> (traceTime)
 				};
 

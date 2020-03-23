@@ -4,6 +4,7 @@ enum SeedingPattern
 {
 	SEED_RANDOM = 0,
 	SEED_GRIDPOINTS,
+	SEED_TILTED_PLANE,
 	SEED_FILE,
 };
 
@@ -81,7 +82,8 @@ static const char* const ColorCode_fluctuationField[] =
 static const char* const SeedPatternList[] = 
 {
 	"Random",
-	"Grid Points"
+	"Grid Points",
+	"Tilted Plane"
 };
 
 static const char* const ProjectionList[] = 

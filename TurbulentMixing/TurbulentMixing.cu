@@ -45,12 +45,11 @@ bool TurbulentMixing::initalize()
 
 	// Read  a plane (ZY) of the first timestep and store it in v_field_t0
 
-	size_t offset = (size_t)solverOptions->gridSize[1] * (size_t)solverOptions->gridSize[2] * sizeof(float4);
-	size_t buffer_size = offset;
+
 
 	volumeIO.Initialize(this->solverOptions);
 
-	if (!volumeIO.readVolumePlane(this->solverOptions->firstIdx, VolumeIO::readPlaneMode::YZ, turbulentMixingOptions->streamwisePlane, offset, buffer_size))
+	if (!volumeIO.readVolumePlane(this->solverOptions->firstIdx, VolumeIO::readPlaneMode::YZ, turbulentMixingOptions->streamwisePlane))
 		return false;
 
 
@@ -96,10 +95,8 @@ bool TurbulentMixing::updateVolume(VolumeTexture2D& v_field, int& idx)
 {
 	v_field.release();
 
-	size_t offset = (size_t)solverOptions->gridSize[1] * (size_t)solverOptions->gridSize[2] * sizeof(float4);
-	size_t buffer_size = offset;
 
-	if (!volumeIO.readVolumePlane(idx, VolumeIO::readPlaneMode::YZ, turbulentMixingOptions->streamwisePlane, offset, buffer_size))
+	if (!volumeIO.readVolumePlane(idx, VolumeIO::readPlaneMode::YZ, turbulentMixingOptions->streamwisePlane))
 		return false;
 
 
@@ -149,7 +146,7 @@ void TurbulentMixing::create()
 
 void TurbulentMixing::advect()
 {
-	unsigned int blocks;
+	unsigned int blocks = 0;
 	dim3 thread = { maxBlockDim,maxBlockDim,1 };
 
 	size_t meshSize = this->solverOptions->gridSize[1] * this->solverOptions->gridSize[2];

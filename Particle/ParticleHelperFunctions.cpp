@@ -15,7 +15,7 @@ void seedParticle_tiltedPlane(Particle* particle, const float3& gridDiameter, co
 		for (int z = 0; z < gridSize.y; z++)
 		{
 
-			particle[x * gridSize.y + z].m_position = { meshSize_x * x,y_slice + z * height_step,meshSize_z * z };
+			particle[x * gridSize.y + z].m_position = { meshSize_x * x,y_slice + x * height_step,meshSize_z * z };
 
 		}
 	}

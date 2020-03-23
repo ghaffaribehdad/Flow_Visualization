@@ -265,7 +265,7 @@ void HeightfieldGenerator::trace3D_path_Single()
 	dim3 thread = { maxBlockDim,maxBlockDim,1 };
 	blocks = BLOCK_THREAD(n_particles);
 
-	RK4STEP RK4Step = RK4STEP::ODD;
+	RK4STEP RK4Step = RK4STEP::EVEN;
 	
 	for (int i = 0; i < solverOptions->lastIdx - solverOptions->firstIdx ; i++)
 	{
@@ -295,7 +295,7 @@ void HeightfieldGenerator::trace3D_path_Single()
 				this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, t_velocityField_1);
 				primary_IO.release();
 
-				RK4Step = RK4STEP::ODD;
+				RK4Step = RK4STEP::EVEN;
 			}
 			// Odd integration steps
 			else
@@ -305,7 +305,7 @@ void HeightfieldGenerator::trace3D_path_Single()
 				this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, t_velocityField_0);
 				primary_IO.release();
 
-				RK4Step = RK4STEP::EVEN;
+				RK4Step = RK4STEP::ODD;
 
 			}
 
@@ -626,9 +626,9 @@ bool HeightfieldGenerator::InitializeHeightTexture3D_Single()
 	// Texture Description
 	texDesc.normalizedCoords = true;
 	texDesc.filterMode = cudaFilterModeLinear;
-	texDesc.addressMode[0] = cudaTextureAddressMode::cudaAddressModeBorder;
-	texDesc.addressMode[1] = cudaTextureAddressMode::cudaAddressModeBorder;
-	texDesc.addressMode[2] = cudaTextureAddressMode::cudaAddressModeBorder;
+	texDesc.addressMode[0] = cudaTextureAddressMode::cudaAddressModeClamp;
+	texDesc.addressMode[1] = cudaTextureAddressMode::cudaAddressModeClamp;
+	texDesc.addressMode[2] = cudaTextureAddressMode::cudaAddressModeClamp;
 	texDesc.readMode = cudaReadModeElementType;
 
 	// Create the texture and bind it to the array

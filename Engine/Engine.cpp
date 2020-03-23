@@ -69,7 +69,7 @@ void Engine::Update()
 
 	if (keyboard.KeyIsPressed('S'))
 	{
-		this->gfx.camera.AdjustPosition(this->gfx.camera.GetBackwardVector() * 1.5f * cameraSpeed * dt);
+		this->gfx.camera.AdjustPosition(this->gfx.camera.GetViewXMVector() * -1.5f * cameraSpeed * dt);
 		this->gfx.viewChanged();
 
 	}

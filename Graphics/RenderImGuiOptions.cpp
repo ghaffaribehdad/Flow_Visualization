@@ -78,7 +78,7 @@ void RenderImGuiOptions::drawSolverOptions()
 		this->updatePathlines = true;
 	}
 
-	if (ImGui::Combo("Seeding Pattern", &solverOptions->seedingPattern, SeedPatternList, 2))
+	if (ImGui::Combo("Seeding Pattern", (int*)&solverOptions->seedingPattern, SeedPatternList, 3))
 	{
 		this->updateStreamlines = true;
 		this->updatePathlines = true;
@@ -95,6 +95,32 @@ void RenderImGuiOptions::drawSolverOptions()
 			this->updatePathlines = true;
 		}
 		solverOptions->lines_count = solverOptions->seedGrid[0] * solverOptions->seedGrid[1] * solverOptions->seedGrid[2];
+	}
+
+	if (solverOptions->seedingPattern == (int)SeedingPattern::SEED_TILTED_PLANE)
+	{
+		if (ImGui::DragInt2("Seed Grid", solverOptions->gridSize_2D, 1, 1, 1024))
+		{
+			this->updateStreamlines = true;
+			this->updatePathlines = true;
+		}
+
+		if (ImGui::DragFloat("Wall-normal Distance", &solverOptions->seedWallNormalDist, 0.001f, 0.0, solverOptions->gridDiameter[1], "%4f"))
+		{
+			this->updateStreamlines = true;
+			this->updatePathlines = true;
+
+		}
+
+		if (ImGui::DragFloat("Tilt Deg", &solverOptions->tilt_deg, 0.1f, 0.0, 45.0f))
+		{
+			this->updateStreamlines = true;
+			this->updatePathlines = true;
+
+		}
+
+
+		solverOptions->lines_count = solverOptions->gridSize_2D[0] * solverOptions->gridSize_2D[1];
 	}
 
 
@@ -252,6 +278,8 @@ void RenderImGuiOptions::drawSolverOptions()
 		this->updateFTLE = true;
 	}
 
+	ImGui::SameLine();
+
 	if (ImGui::Button("Edge View", ImVec2(80, 25)))
 	{
 		this->camera->SetPosition(-10.7f, 4.0f, -5.37f);
@@ -263,7 +291,7 @@ void RenderImGuiOptions::drawSolverOptions()
 		this->updateFTLE = true;
 
 	}
-
+	ImGui::SameLine();
 
 	if (ImGui::Button("Top", ImVec2(80, 25)))
 	{
@@ -289,7 +317,7 @@ void RenderImGuiOptions::drawSolverOptions()
 		this->updateFTLE = true;
 
 	}
-
+	ImGui::SameLine();
 	if (ImGui::Button("Side", ImVec2(80, 25)))
 	{
 		this->camera->SetPosition(5, 5, 10);
@@ -302,6 +330,18 @@ void RenderImGuiOptions::drawSolverOptions()
 
 	}
 
+	ImGui::SameLine();
+	if (ImGui::Button("b2f", ImVec2(80, 25)))
+	{
+		this->camera->SetPosition(-10.7, 4.6, -0.0001);
+		this->camera->SetLookAtPos({ -0.9, -0.33, 0 });
+
+		this->updateRaycasting = true;
+		this->updateDispersion = true;
+		this->updatefluctuation = true;
+		this->updateFTLE = true;
+
+	}
 
 
 

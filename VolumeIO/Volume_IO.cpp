@@ -145,23 +145,15 @@ void VolumeIO::Volume_IO::Initialize(SolverOptions* _solverOptions)
 	m_fileName = _solverOptions->fileName;
 	m_filePath = _solverOptions->filePath;
 
-	this->initialized = true;
+
 }
 
-void VolumeIO::Volume_IO::Initialize(FluctuationheightfieldOptions* _fluctuationOptions)
-{
-	m_fileName = _fluctuationOptions->fileName;
-	m_filePath = _fluctuationOptions->filePath;
-
-	this->initialized = true;
-}
 
 void VolumeIO::Volume_IO::Initialize(std::string _fileName, std::string _filePath)
 {
 	m_fileName = _fileName;
 	m_filePath = _filePath;
 
-	this->initialized = true;
 }
 
 
