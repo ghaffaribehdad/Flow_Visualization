@@ -274,24 +274,8 @@ __device__ float FetchTextureSurface::ShearStress::ValueAtXYZ_Tex(cudaTextureObj
 }
 
 
-__device__ float4 FetchTextureSurface::Position::ValueAtXY(cudaTextureObject_t tex, float2 position)
-{
-	return   tex2D<float4>(tex, position.x, position.y);
-}
 
 
-
-
-__device__  float2 FetchTextureSurface::Position::GradientAtXY_Grid(cudaSurfaceObject_t surf, int2 gridPosition)
-{
-	float dH_dX = this->ValueAtXY_Surface_float(surf, make_int2(gridPosition.x + 1, gridPosition.y));
-	float dH_dY = this->ValueAtXY_Surface_float(surf, make_int2(gridPosition.x, gridPosition.y + 1));
-
-	dH_dX -= this->ValueAtXY_Surface_float(surf, make_int2(gridPosition.x -1, gridPosition.y));
-	dH_dY -= this->ValueAtXY_Surface_float(surf, make_int2(gridPosition.x, gridPosition.y -1));
-
-	return make_float2(-dH_dX, -dH_dY);
-}
 
 __device__  float4 ValueAtXYZ_Surface_float4(cudaSurfaceObject_t surf, int3 gridPos)
 {
@@ -301,18 +285,7 @@ __device__  float4 ValueAtXYZ_Surface_float4(cudaSurfaceObject_t surf, int3 grid
 	return data;
 }
 
-__device__  float2 FetchTextureSurface::Position::GradientAtXYZ_Grid(cudaSurfaceObject_t surf, int3 gridPosition)
-{
-	float dH_dX = this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x + 1, gridPosition.y, gridPosition.z)).x;
-	float dH_dY = this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y + 1 , gridPosition.z)).x;
 
-	dH_dX -= this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x - 1, gridPosition.y , gridPosition.z)).x;
-	dH_dY -= this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y - 1, gridPosition.z)).x;
-
-	
-
-	return make_float2(dH_dX, dH_dY);
-}
 
 
 __device__  float3 GradientAtXYZ_X_Surface(cudaSurfaceObject_t surf, int3 gridPosition)
@@ -375,105 +348,6 @@ __device__  float3 GradientAtXYZ_W_Surface(cudaSurfaceObject_t surf, int3 gridPo
 
 	return make_float3(dH_dX, dH_dY, dH_dZ);
 }
-
-__device__ float2 FetchTextureSurface::Position::GradientFluctuatuionAtXT(cudaSurfaceObject_t surf, int3 gridPosition, int3 gridSize)
-{
-	float dH_dX = 0.0f;
-	float dH_dY = 0.0f;
-
-	if(gridPosition.x != 0 && gridPosition.x != gridSize.x -1)
-	{ 
-		dH_dX = this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x + 1, gridPosition.y, gridPosition.z)).y;
-		dH_dX -= this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x - 1, gridPosition.y, gridPosition.z)).y;
-	}
-	else if (gridPosition.x == 0)
-	{
-		dH_dX = this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x + 1, gridPosition.y, gridPosition.z)).y;
-		dH_dX -= this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y, gridPosition.z)).y;
-		dH_dX = 2 * dH_dX;
-	}
-	else if (gridPosition.x == gridSize.x - 1)
-	{
-		dH_dX = this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y, gridPosition.z)).y;
-		dH_dX -= this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x-1, gridPosition.y, gridPosition.z)).y;
-		dH_dX = 2 * dH_dX;
-	}
-
-	// Y direction
-	if (gridPosition.z != 0 && gridPosition.z != gridSize.z - 1)
-	{
-		dH_dY = this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y, gridPosition.z + 1)).y;
-		dH_dY -= this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y, gridPosition.z - 1)).y;
-	}
-	else if (gridPosition.z == 0)
-	{
-		dH_dY = this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x , gridPosition.y, gridPosition.z+1)).y;
-		dH_dY -= this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y, gridPosition.z)).y;
-		dH_dY = 2 * dH_dY;
-	}
-	else if (gridPosition.z == gridSize.z - 1)
-	{
-		dH_dY = this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y, gridPosition.z)).y;
-		dH_dY -= this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x , gridPosition.y, gridPosition.z-1)).y;
-		dH_dY = 2 * dH_dY;
-	}
-
-
-
-	return make_float2(dH_dX, dH_dY);
-}
-
-
-__device__ float2 FetchTextureSurface::Position::GradientFluctuatuionAtXZ(cudaSurfaceObject_t surf, int3 gridPosition, int3 gridSize)
-{
-	float dH_dX = 0.0f;
-	float dH_dY = 0.0f;
-
-	if (gridPosition.x % (gridSize.x - 1) != 0 && gridPosition.z % (gridSize.z - 1) != 0)
-	{
-		dH_dX = this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x + 1, gridPosition.y, gridPosition.z)).y;
-		dH_dX -= this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x - 1, gridPosition.y, gridPosition.z)).y;
-
-
-		dH_dY = this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y, gridPosition.z + 1)).y;
-		dH_dY -= this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y, gridPosition.z - 1)).y;
-	}
-
-
-
-
-	return make_float2(dH_dX, dH_dY);
-}
-
-
-__device__  float FetchTextureSurface::Position::ValueAtXY_Surface_float(cudaSurfaceObject_t tex, int2 gridPos)
-{
-	float data;
-	surf2Dread(&data, tex, gridPos.x *sizeof(float), gridPos.y);
-
-	return data;
-};
-
-__device__  float4 FetchTextureSurface::Position::ValueAtXYZ_Surface_float4(cudaSurfaceObject_t surf, int3 gridPos)
-{
-	float4 data;
-	surf3Dread(&data, surf, gridPos.x * sizeof(float4), gridPos.y,gridPos.z);
-
-	return data;
-};
-
-__device__  float4 FetchTextureSurface::Position::ValueAtXY_Surface_float4(cudaSurfaceObject_t tex, int2 gridPos)
-{
-	float4 data;
-	surf2Dread(&data, tex, gridPos.x * 4 * sizeof(float), gridPos.y);
-
-	return data;
-};
-
-
-
-
-
 
 
 __device__  float4 ValueAtXYZ_float4(cudaTextureObject_t tex, float3 position)

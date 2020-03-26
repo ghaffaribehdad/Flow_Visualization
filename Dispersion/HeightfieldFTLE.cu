@@ -220,7 +220,7 @@ void HeightfieldFTLE::gradient3D_Single_ftle()
 	blocks = static_cast<unsigned int>((this->n_particles % (thread.x * thread.y) == 0 ?
 		n_particles / (thread.x * thread.y) : n_particles / (thread.x * thread.y) + 1));
 
-	heightFieldGradient3D<FetchTextureSurface::Position> << < blocks, thread >> >
+	heightFieldGradient3D<FetchTextureSurface::Channel_X> << < blocks, thread >> >
 		(
 			s_HeightSurface_Primary.getSurfaceObject(),
 			*dispersionOptions,

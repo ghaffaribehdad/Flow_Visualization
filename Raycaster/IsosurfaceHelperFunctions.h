@@ -94,20 +94,5 @@ namespace FetchTextureSurface
 		);
 	};
 
-	struct Position : public Measure
-	{
-		//calculates the value of the field at position XYZ
-		__device__ float4 ValueAtXY(cudaTextureObject_t tex, float2 position);
-		__device__ float ValueAtXY_Surface_float(cudaSurfaceObject_t tex, int2 gridPos);
-		__device__ float4 ValueAtXYZ_Surface_float4(cudaSurfaceObject_t tex, int3 gridPos);
-		__device__ float4 ValueAtXY_Surface_float4(cudaSurfaceObject_t tex, int2 gridPos);
-		__device__ float2 GradientAtXY_Grid(cudaSurfaceObject_t surf, int2 gridPosition);
-		__device__ float2 GradientAtXYZ_Grid(cudaSurfaceObject_t surf, int3 gridPosition);
-		__device__ float2 GradientFluctuatuionAtXT(cudaSurfaceObject_t surf, int3 gridPosition, int3 gridSize);
-		__device__ float2 GradientFluctuatuionAtXZ(cudaSurfaceObject_t surf, int3 gridPosition, int3 gridSize);
-
-	};
-
-
 
 }

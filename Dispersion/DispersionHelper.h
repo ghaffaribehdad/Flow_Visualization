@@ -60,15 +60,6 @@ __global__ void traceDispersion3D_path
 
 
 
-template <typename Observable>
-__global__ void heightFieldGradient
-(
-
-	cudaSurfaceObject_t heightFieldSurface,
-	cudaSurfaceObject_t heightFieldSurface_gradient,
-	DispersionOptions dispersionOptions,
-	SolverOptions	solverOptions
-);
 
 template <typename Observable>
 __global__ void heightFieldGradient3D

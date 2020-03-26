@@ -18,10 +18,10 @@ template __global__ void CudaIsoSurfacRenderer<struct FetchTextureSurface::Chann
 template __global__ void CudaIsoSurfacRenderer<struct FetchTextureSurface::Channel_Z>			(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
 template __global__ void CudaIsoSurfacRenderer<struct FetchTextureSurface::ShearStress>		(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
 template __global__ void CudaIsoSurfacRenderer<struct FetchTextureSurface::TurbulentDiffusivity>(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
-template __global__ void CudaTerrainRenderer< struct FetchTextureSurface::Position >			(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float samplingRate, float IsosurfaceTolerance, DispersionOptions dispersionOptions, int traceTime);
-template __global__ void CudaTerrainRenderer_extra< struct FetchTextureSurface::Position >(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t heightField, cudaTextureObject_t extraField, int rays, float samplingRate, float IsosurfaceTolerance, DispersionOptions dispersionOptions, int traceTime);
-template __global__ void CudaTerrainRenderer_extra_double< struct FetchTextureSurface::Position >(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t heightField_Primary, cudaTextureObject_t extraField_Primary, cudaTextureObject_t heightField_Secondary, cudaTextureObject_t extraField_Seconary, int rays, float samplingRate, float IsosurfaceTolerance, DispersionOptions dispersionOptions, int traceTime);
-template __global__ void CudaTerrainRenderer_extra_fluctuation< struct FetchTextureSurface::Position >(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t heightField, cudaTextureObject_t extraField, int rays, float samplingRate, float IsosurfaceTolerance, FluctuationheightfieldOptions fluctuationOptions);
+template __global__ void CudaTerrainRenderer< struct FetchTextureSurface::Channel_X >			(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float samplingRate, float IsosurfaceTolerance, DispersionOptions dispersionOptions, int traceTime);
+template __global__ void CudaTerrainRenderer_extra< struct FetchTextureSurface::Channel_X >(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t heightField, cudaTextureObject_t extraField, int rays, float samplingRate, float IsosurfaceTolerance, DispersionOptions dispersionOptions, int traceTime);
+template __global__ void CudaTerrainRenderer_extra_double< struct FetchTextureSurface::Channel_X >(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t heightField_Primary, cudaTextureObject_t extraField_Primary, cudaTextureObject_t heightField_Secondary, cudaTextureObject_t extraField_Seconary, int rays, float samplingRate, float IsosurfaceTolerance, DispersionOptions dispersionOptions, int traceTime);
+template __global__ void CudaTerrainRenderer_extra_fluctuation< struct FetchTextureSurface::Channel_X >(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t heightField, cudaTextureObject_t extraField, int rays, float samplingRate, float IsosurfaceTolerance, FluctuationheightfieldOptions fluctuationOptions);
 
 
 
@@ -847,9 +847,7 @@ __global__ void CudaTerrainRenderer_extra
 	int traceTime
 )
 {
-	int index = blockIdx.x * blockDim.y * blockDim.x;
-	index += threadIdx.y * blockDim.x;
-	index += threadIdx.x;
+	int index = CUDA_INDEX;
 
 	if (index < rays)
 	{
@@ -913,7 +911,6 @@ __global__ void CudaTerrainRenderer_extra
 					float diffuse = max(dot(normalize(gradient), viewDir), 0.0f);
 
 					
-
 					float3 rgb_min = 
 					{ 
 						dispersionOptions.minColor[0],

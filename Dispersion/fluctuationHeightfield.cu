@@ -118,7 +118,7 @@ void FluctuationHeightfield::gradientFluctuationfield()
 
 	// After this step the heightSurface is populated with the height of each particle
 
-	fluctuationfieldGradient3D<FetchTextureSurface::Position> << < blocks, thread >> >
+	fluctuationfieldGradient3D<FetchTextureSurface::Channel_X> << < blocks, thread >> >
 		(
 			s_HeightSurface_Primary.getSurfaceObject(),
 			*this->solverOptions,
@@ -143,7 +143,7 @@ __host__ void FluctuationHeightfield::rendering()
 	blocks = static_cast<unsigned int>((this->rays % (thread.x * thread.y) == 0 ? rays / (thread.x * thread.y) : rays / (thread.x * thread.y) + 1));
 
 
-	CudaTerrainRenderer_extra_fluctuation<FetchTextureSurface::Position> << < blocks, thread >> >
+	CudaTerrainRenderer_extra_fluctuation<FetchTextureSurface::Channel_X> << < blocks, thread >> >
 		(
 			this->raycastingSurface.getSurfaceObject(),
 			this->t_HeightSurface_Primary.getTexture(),
