@@ -1,21 +1,21 @@
 #include "DispersionHelper.h"
-#include "..//Cuda/helper_math.h"
-#include "..//Cuda/CudaHelperFunctions.h"
+#include "../Cuda/helper_math.h"
+#include "../Cuda/CudaHelperFunctions.h"
 
 //Explicit Instantiation
-template __global__ void heightFieldGradient<struct IsosurfaceHelper::Position>(cudaSurfaceObject_t heightFieldSurface,\
+template __global__ void heightFieldGradient<struct FetchTextureSurface::Position>(cudaSurfaceObject_t heightFieldSurface,\
 	cudaSurfaceObject_t heightFieldSurface_gradient ,\
 	DispersionOptions dispersionOptions,\
 	SolverOptions	solverOptions
 );
-template __global__ void heightFieldGradient3D<struct IsosurfaceHelper::Position>\
+template __global__ void heightFieldGradient3D<struct FetchTextureSurface::Position>\
 (\
 	cudaSurfaceObject_t heightFieldSurface,\
 	DispersionOptions dispersionOptions,\
 	SolverOptions	solverOptions\
 );
 
-template __global__ void fluctuationfieldGradient3D<struct IsosurfaceHelper::Position>\
+template __global__ void fluctuationfieldGradient3D<struct FetchTextureSurface::Position>\
 (\
 	cudaSurfaceObject_t heightFieldSurface3D,
 	SolverOptions solverOptions,
@@ -40,9 +40,7 @@ __global__ void traceDispersion
 	int nParticles = dispersionOptions.gridSize_2D[0] * dispersionOptions.gridSize_2D[1];
 
 
-	int index = blockIdx.x * blockDim.y * blockDim.x;
-	index += threadIdx.y * blockDim.x;
-	index += threadIdx.x;
+	int index = CUDA_INDEX;
 	 
 	if (index < nParticles)
 	{
@@ -57,7 +55,7 @@ __global__ void traceDispersion
 		for (int i = 0; i < timeStep; i++)
 		{
 
-			RK4Stream(velocityField, &particle[index], ARRAYTOFLOAT3(solverOptions.gridDiameter), ARRAYTOINT3(solverOptions.gridSize), dt);
+			RK4Stream(velocityField, &particle[index], Array2Float3(solverOptions.gridDiameter), Array2Int3(solverOptions.gridSize), dt);
 		}
 		
 
@@ -86,9 +84,7 @@ __global__ void  traceDispersion3D_path
 	// Extract dispersion options
 	int nParticles = dispersionOptions.gridSize_2D[0] * dispersionOptions.gridSize_2D[1];
 
-	int index = blockIdx.x * blockDim.y * blockDim.x;
-	index += threadIdx.y * blockDim.x;
-	index += threadIdx.x;
+	int index = CUDA_INDEX;
 
 	if (index < nParticles)
 	{
@@ -129,63 +125,9 @@ __global__ void  traceDispersion3D_path
 
 
 			// copy it in the surface3D
-			surf3Dwrite(heightTexel, heightFieldSurface3D, sizeof(float4) * index_x, index_y, timestep);
-			surf3Dwrite(extraTexel, heightFieldSurface3D_extra, sizeof(float4) * index_x, index_y, timestep);
+			surf3Dwrite(heightTexel, heightFieldSurface3D, sizeof(float4) * index_y, index_x, timestep);
+			surf3Dwrite(extraTexel, heightFieldSurface3D_extra, sizeof(float4) * index_y, index_x, timestep);
 
-	}
-}
-
-
-__global__ void  traceDispersion3D_extra
-(
-	Particle* particle,
-	cudaSurfaceObject_t heightFieldSurface3D,
-	cudaSurfaceObject_t heightFieldSurface3D_extra,
-	cudaTextureObject_t velocityField,
-	SolverOptions solverOptions,
-	DispersionOptions dispersionOptions
-)
-{
-	// Extract dispersion options
-	float dt = dispersionOptions.dt;
-	int tracingTime = solverOptions.lastIdx - solverOptions.firstIdx;
-	int nParticles = dispersionOptions.gridSize_2D[0] * dispersionOptions.gridSize_2D[1];
-
-
-	int index = blockIdx.x * blockDim.y * blockDim.x;
-	index += threadIdx.y * blockDim.x;
-	index += threadIdx.x;
-
-	if (index < nParticles)
-	{
-	
-		// find the index of the particle
-		int index_y = index / dispersionOptions.gridSize_2D[1];
-		int index_x = index - (index_y * dispersionOptions.gridSize_2D[1]);
-
-
-		// Trace particle using RK4 
-		for (int time = 0; time < tracingTime; time++)
-		{
-			for(int i = 0 ; i < dispersionOptions.sampling_step; i++)
-			{ 
-				// Advect the particle
-				RK4Stream(velocityField, &particle[index], ARRAYTOFLOAT3(solverOptions.gridDiameter), ARRAYTOINT3(solverOptions.gridSize), dt);
-			}
-			// extract the height
-			float3 position = particle[index].m_position;
-			float3 velocity = particle[index].m_velocity;
-
-			float4 heightTexel = { position.y,0.0,0.0,position.x };
-			float4 extraTexel = { position.z, velocity.x ,velocity.x, velocity.z };
-
-
-			// copy it in the surface3D
-			surf3Dwrite(heightTexel, heightFieldSurface3D, sizeof(float4) * index_x, index_y, time);
-			surf3Dwrite(extraTexel, heightFieldSurface3D_extra, sizeof(float4) * index_x, index_y, time);
-
-
-		}
 	}
 }
 
@@ -222,7 +164,7 @@ __global__ void  traceDispersion3D
 		{
 
 			// Advect the particle
-			RK4Stream(velocityField, &particle[index], ARRAYTOFLOAT3(solverOptions.gridDiameter),ARRAYTOINT3(solverOptions.gridSize), dt);
+			RK4Stream(velocityField, &particle[index], Array2Float3(solverOptions.gridDiameter),Array2Int3(solverOptions.gridSize), dt);
 		
 			// extract the height
 			float4 height = { particle[index].m_position.y,0.0,0.0,0.0 };
@@ -299,15 +241,12 @@ __global__ void heightFieldGradient3D
 {
 
 	Observable observable;
-	int index = blockIdx.x * blockDim.y * blockDim.x;
-	index += threadIdx.y * blockDim.x;
-	index += threadIdx.x;
+	int index = CUDA_INDEX;
 
 	int gridPoints = dispersionOptions.gridSize_2D[0] * dispersionOptions.gridSize_2D[1];
 
 	if (index < gridPoints)
 	{
-
 
 		for (int time = 0; time < solverOptions.lastIdx - solverOptions.firstIdx; time++)
 		{
@@ -336,9 +275,6 @@ __global__ void heightFieldGradient3D
 				gradient = { normalize(make_float3(1.0,gradient.x, gradient.y)).y, normalize(make_float3(1.0,gradient.x, gradient.y)).z };
 			}
 
-
-
-
 			float4 texel = { 0,0,0,0 };
 			texel.x = observable.ValueAtXYZ_Surface_float4(heightFieldSurface3D, make_int3(index_x, index_y,time)).x;
 			texel.y = gradient.x;
@@ -362,47 +298,29 @@ __global__ void heightFieldGradient3DFTLE
 	SolverOptions solverOptions
 )
 {
-
-	int index = blockIdx.x * blockDim.y * blockDim.x;
-	index += threadIdx.y * blockDim.x;
-	index += threadIdx.x;
+	int index = CUDA_INDEX;
 
 	int gridPoints = dispersionOptions.gridSize_2D[0] * dispersionOptions.gridSize_2D[1];
+	
 
 	if (index < gridPoints)
 	{
-
-
+		int3 gridSize = { dispersionOptions.gridSize_2D[0] , dispersionOptions.gridSize_2D[1], solverOptions.lastIdx - solverOptions.firstIdx - 1 };
+		FetchTextureSurface::Channel_X fetchSurface;
 		for (int time = 1; time < solverOptions.lastIdx - solverOptions.firstIdx-1; time++)
 		{
 			int index_y = index / dispersionOptions.gridSize_2D[1];
 			int index_x = index - (index_y * dispersionOptions.gridSize_2D[1]);
 
-			float3 gradient = { 0.0f,0.0f, 0.0f};
-
-			// check the boundaries
-			if (index_x % (dispersionOptions.gridSize_2D[0] - 1) == 0.0f || index_y % (dispersionOptions.gridSize_2D[1] - 1) == 0.0f)
-			{
-				// do nothing
-
-			}
-			else
-			{
-				gradient = GradientAtXYZ_X_Surface(heightFieldSurface3D, make_int3(index_x, index_y, time));
-				gradient = gradient /
-					make_float3
-					(
-						solverOptions.gridDiameter[0] / (dispersionOptions.gridSize_2D[0] - 1),
-						solverOptions.gridDiameter[1] / (dispersionOptions.gridSize_2D[1] - 1),
-						solverOptions.gridDiameter[2] /	(solverOptions.lastIdx - solverOptions.firstIdx - 1)
-					);
-
-
-				gradient = normalize(gradient);
-			}
-
-
-
+			float3 gradient = fetchSurface.GradientAtXYZ_Surf
+			(
+				heightFieldSurface3D, make_int3(index_x, index_y, time),
+				ARRAYTOFLOAT3(solverOptions.gridDiameter),
+				gridSize
+			);
+			
+			gradient = normalize(gradient);
+		
 
 			float4 texel = { 0,0,0,0 };
 			texel.x = ValueAtXYZ_Surface_float4(heightFieldSurface3D, make_int3(index_x, index_y, time)).x;

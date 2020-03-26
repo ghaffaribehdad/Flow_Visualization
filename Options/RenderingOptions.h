@@ -20,7 +20,7 @@ struct RenderingOptions
 	float minMeasure = 0.0f;
 
 	bool isRaycasting = false;
-	float bgColor[4] = { 0.0f,0.0f,0.0f,1.0f };
+	float bgColor[4] = { 1.0f,1.0f,1.0f,1.0f };
 
 	bool showSeedBox = true;
 	bool showVolumeBox = true;

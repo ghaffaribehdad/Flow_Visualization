@@ -725,6 +725,13 @@ void RenderImGuiOptions::drawDispersionOptions()
 		this->updateDispersion = true;
 
 	}
+
+	if (ImGui::Checkbox("Enable Marching", &dispersionOptions->marching))
+	{
+		this->updateDispersion = true;
+		this->updateFTLE = true;
+	}
+
 	
 	ImGui::End();
 

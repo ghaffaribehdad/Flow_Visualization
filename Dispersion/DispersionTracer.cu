@@ -12,10 +12,10 @@
 bool HeightfieldGenerator::retrace()
 {
 	this->a_HeightSurface_Primary.release();
-	this->a_HeightSurface_Primary_Ex.release();
+	this->a_HeightSurface_Primary_Extra.release();
 
-	cudaDestroyTextureObject(this->t_HeightSurface_Primary);
-	cudaDestroyTextureObject(this->t_HeightSurface_Primary_Ex);
+	cudaDestroyTextureObject(this->t_HeightSurface_Primary.getTexture());
+	cudaDestroyTextureObject(this->t_HeightSurface_Primary_Extra.getTexture());
 
 	cudaFree(d_particle);
 
@@ -52,18 +52,8 @@ bool HeightfieldGenerator::initialize
 		return false;
 
 
-	// Depending on the Rendering mode initialize single or double surface
-	if (dispersionOptions->renderingMode == dispersionOptionsMode::HeightfieldRenderingMode::SINGLE_SURFACE)
-	{
-		singleSurfaceInitialization();
-	}
-	else
-	{
-		doubleSurfaceInitialization();
-	}
-
-
-
+	singleSurfaceInitialization();
+	
 	return true;
 }
 
@@ -90,7 +80,7 @@ __host__ bool HeightfieldGenerator::InitializeParticles()
 	seedParticle_tiltedPlane
 	(
 		h_particle,
-		ARRAYTOFLOAT3(solverOptions->gridDiameter),
+		Array2Float3(solverOptions->gridDiameter),
 		ARRAYTOINT2(dispersionOptions->gridSize_2D),
 		dispersionOptions->seedWallNormalDist,
 		dispersionOptions->tilt_deg
@@ -114,12 +104,12 @@ __host__ bool HeightfieldGenerator::InitializeHeightArray3D_Single(int x, int y,
 	this->a_HeightSurface_Primary.setDimension(x, y, z);
 
 
-	this->a_HeightSurface_Primary_Ex.setDimension(x, y, z);
+	this->a_HeightSurface_Primary_Extra.setDimension(x, y, z);
 
 	// initialize the 3D array
 	if (!a_HeightSurface_Primary.initialize())
 		return false;
-	if (!a_HeightSurface_Primary_Ex.initialize())
+	if (!a_HeightSurface_Primary_Extra.initialize())
 		return false;
 
 	return true;
@@ -134,71 +124,16 @@ __host__ bool HeightfieldGenerator::InitializeHeightArray3D_Single(int3 gridSize
 	this->a_HeightSurface_Primary.setDimension(gridSize.x, gridSize.y, gridSize.z);
 
 
-	this->a_HeightSurface_Primary_Ex.setDimension(gridSize.x, gridSize.y, gridSize.z);
+	this->a_HeightSurface_Primary_Extra.setDimension(gridSize.x, gridSize.y, gridSize.z);
 
 	// initialize the 3D array
 	if (!a_HeightSurface_Primary.initialize())
 		return false;
-	if (!a_HeightSurface_Primary_Ex.initialize())
+	if (!a_HeightSurface_Primary_Extra.initialize())
 		return false;
 
 	return true;
 }
-
-
-
-__host__ bool HeightfieldGenerator::InitializeHeightArray3D_Double(int x, int y, int z)
-{
-	// Set dimensions and initialize height field as a 3D CUDA Array
-	this->a_HeightSurface_Primary.setDimension(x, y, z);
-	this->a_HeightSurface_Secondary.setDimension(x, y, z);
-
-
-	this->a_HeightSurface_Primary_Ex.setDimension(x, y, z);
-	this->a_HeightSurface_Secondary_Ex.setDimension(x, y, z);
-
-	// initialize the 3D array
-	if (!a_HeightSurface_Primary.initialize())
-		return false;
-	if (!a_HeightSurface_Primary_Ex.initialize())
-		return false;
-
-
-	if (!a_HeightSurface_Secondary.initialize())
-		return false;
-	if (!a_HeightSurface_Secondary_Ex.initialize())
-		return false;
-
-	return true;
-}
-
-
-
-
-__host__ bool HeightfieldGenerator::InitializeHeightArray3D_Double(int3 gridSize)
-{
-	// Set dimensions and initialize height field as a 3D CUDA Array
-	this->a_HeightSurface_Primary.setDimension(gridSize.x, gridSize.y, gridSize.z);
-	this->a_HeightSurface_Secondary.setDimension(gridSize.x, gridSize.y, gridSize.z);
-
-
-	this->a_HeightSurface_Primary_Ex.setDimension(gridSize.x, gridSize.y, gridSize.z);
-	this->a_HeightSurface_Secondary_Ex.setDimension(gridSize.x, gridSize.y, gridSize.z);
-
-	// initialize the 3D array
-	if (!a_HeightSurface_Primary.initialize())
-		return false;
-	if (!a_HeightSurface_Primary_Ex.initialize())
-		return false;
-
-	if (!a_HeightSurface_Secondary.initialize())
-		return false;
-	if (!a_HeightSurface_Secondary_Ex.initialize())
-		return false;
-
-	return true;
-}
-
 
 
 __host__ bool HeightfieldGenerator::InitializeHeightSurface3D_Single()
@@ -208,51 +143,21 @@ __host__ bool HeightfieldGenerator::InitializeHeightSurface3D_Single()
 	if (!this->s_HeightSurface_Primary.initializeSurface())
 		return false;
 
-	this->s_HeightSurface_Primary_Ex.setInputArray(a_HeightSurface_Primary_Ex.getArrayRef());
-	if (!this->s_HeightSurface_Primary_Ex.initializeSurface())
+	this->s_HeightSurface_Primary_Extra.setInputArray(a_HeightSurface_Primary_Extra.getArrayRef());
+	if (!this->s_HeightSurface_Primary_Extra.initializeSurface())
 		return false;
 
 	return true;
 }
 
 
-__host__ bool HeightfieldGenerator::InitializeHeightSurface3D_Double()
-{
-	// Assign the hightArray to the hightSurface and initialize the surface
-	this->s_HeightSurface_Primary.setInputArray(a_HeightSurface_Primary.getArrayRef());
-	this->s_HeightSurface_Primary_Ex.setInputArray(a_HeightSurface_Primary_Ex.getArrayRef());
-
-	
-	if (!this->s_HeightSurface_Primary.initializeSurface())
-		return false;
-
-	if (!this->s_HeightSurface_Primary_Ex.initializeSurface())
-		return false;
-
-
-	//##########	Secondary #################
-
-
-	this->s_HeightSurface_Secondary.setInputArray(a_HeightSurface_Secondary.getArrayRef());
-	this->s_HeightSurface_Secondary_Ex.setInputArray(a_HeightSurface_Secondary_Ex.getArrayRef());
-
-
-
-	if (!this->s_HeightSurface_Secondary.initializeSurface())
-		return false;
-
-	if (!this->s_HeightSurface_Secondary_Ex.initializeSurface())
-		return false;
-
-	return true;
-}
 
 
 // Release resources 
 bool HeightfieldGenerator::release()
 {
 	Raycasting::release();
-	cudaDestroyTextureObject(this->t_HeightSurface_Primary);
+	cudaDestroyTextureObject(this->t_HeightSurface_Primary.getTexture());
 	this->a_HeightSurface_Primary.release();
 
 	return true;
@@ -269,19 +174,26 @@ void HeightfieldGenerator::trace3D_path_Single()
 	
 	for (int i = 0; i < solverOptions->lastIdx - solverOptions->firstIdx ; i++)
 	{
-		if (i == 0)
+		if (i == 0) // initial time step
 		{
+			
 			// Load i 'dx field in volume_IO into field
-			this->LoadVelocityfield(i + solverOptions->currentIdx);
+			volume_IO.readVolume(i + solverOptions->currentIdx);
 			// Copy and initialize velocityfield texture
-			this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, t_velocityField_0);
+			t_velocityField_0.setField(volume_IO.getField_float());
+			t_velocityField_0.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
 			// Release the velocityfield from host (volume_IO)
-			primary_IO.release();
+			volume_IO.release();
+
+
 
 			// Same procedure for the second texture
-			this->LoadVelocityfield(i+ solverOptions->currentIdx + 1);
-			this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, t_velocityField_1);
-			primary_IO.release();
+			volume_IO.readVolume(i + solverOptions->currentIdx + 1);
+			
+			t_velocityField_1.setField(volume_IO.getField_float());
+			t_velocityField_1.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
+			// Release the velocityfield from host (volume_IO)
+			volume_IO.release();
 
 		}
 		else
@@ -290,20 +202,21 @@ void HeightfieldGenerator::trace3D_path_Single()
 			if (i % 2 == 0)
 			{
 				
-				this->LoadVelocityfield(i + solverOptions->currentIdx);
-				this->t_velocityField_1.release();
-				this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, t_velocityField_1);
-				primary_IO.release();
+				volume_IO.readVolume(solverOptions->currentIdx + i + 1);
+				t_velocityField_1.release();
+				t_velocityField_1.setField(volume_IO.getField_float());
+				t_velocityField_1.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
+				volume_IO.release();
 
 				RK4Step = RK4STEP::EVEN;
 			}
-			// Odd integration steps
 			else
 			{
-				this->LoadVelocityfield(i + solverOptions->currentIdx);
-				this->t_velocityField_0.release();
-				this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, t_velocityField_0);
-				primary_IO.release();
+				volume_IO.readVolume(solverOptions->currentIdx + i +1);
+				t_velocityField_0.release();
+				t_velocityField_0.setField(volume_IO.getField_float());
+				t_velocityField_0.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
+				volume_IO.release();
 
 				RK4Step = RK4STEP::ODD;
 
@@ -311,14 +224,11 @@ void HeightfieldGenerator::trace3D_path_Single()
 
 		}
 
-		// initialize proper velocityfield
-
-		// trace
 		traceDispersion3D_path << < blocks, thread >> >
 			(
 				d_particle,
 				s_HeightSurface_Primary.getSurfaceObject(),
-				s_HeightSurface_Primary_Ex.getSurfaceObject(),
+				s_HeightSurface_Primary_Extra.getSurfaceObject(),
 				this->t_velocityField_0.getTexture(),
 				this->t_velocityField_1.getTexture(),
 				*solverOptions,
@@ -336,194 +246,9 @@ void HeightfieldGenerator::trace3D_path_Single()
 
 
 
-void HeightfieldGenerator::trace3D_path_Double()
-{
-	// Calculates the block and grid sizes
-	unsigned int blocks;
-	dim3 thread = { maxBlockDim,maxBlockDim,1 };
-	blocks = BLOCK_THREAD(n_particles);
-
-	RK4STEP RK4Step = RK4STEP::ODD;
-
-	for (int i = 0; i < solverOptions->lastIdx - solverOptions->firstIdx; i++)
-	{
-		if (i == 0)
-		{
-			// Load i 'dx field in volume_IO into field
-			this->LoadVelocityfield(i + solverOptions->currentIdx);
-			// Copy and initialize velocityfield texture
-			this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, t_velocityField_0);
-			// Release the velocityfield from host (volume_IO)
-			primary_IO.release();
-
-			// Same procedure for the second texture
-			this->LoadVelocityfield(i + solverOptions->currentIdx + 1);
-			this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, t_velocityField_1);
-			primary_IO.release();
-
-		}
-		else
-		{
-			// Even integration steps
-			if (i % 2 == 0)
-			{
-
-				this->LoadVelocityfield(i + solverOptions->currentIdx);
-				this->t_velocityField_1.release();
-				this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, t_velocityField_1);
-				primary_IO.release();
-
-				RK4Step = RK4STEP::ODD;
-			}
-			// Odd integration steps
-			else
-			{
-				this->LoadVelocityfield(i + solverOptions->currentIdx);
-				this->t_velocityField_0.release();
-				this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, t_velocityField_0);
-				primary_IO.release();
-
-				RK4Step = RK4STEP::EVEN;
-
-			}
-
-		}
-
-		// initialize proper velocityfield
-
-		// trace
-		traceDispersion3D_path << < blocks, thread >> >
-			(
-				d_particle,
-				s_HeightSurface_Primary.getSurfaceObject(),
-				s_HeightSurface_Primary_Ex.getSurfaceObject(),
-				this->t_velocityField_0.getTexture(),
-				this->t_velocityField_1.getTexture(),
-				*solverOptions,
-				*dispersionOptions,
-				RK4Step,
-				i
-				);
-	}
 
 
 
-	/*###############################################
-	#												#
-	#				For the second field			#
-	#												#
-	################################################*/
-
-	cudaFree(d_particle);
-	this->InitializeParticles();
-
-	RK4Step = RK4STEP::ODD;
-
-	for (int i = 0; i < solverOptions->lastIdx - solverOptions->firstIdx; i++)
-	{
-		if (i == 0)
-		{
-			// Load i 'dx field in volume_IO into field
-			secondary_IO.readVolume(i + solverOptions->currentIdx);
-			this->field = secondary_IO.getField_float();
-
-
-			// Copy and initialize velocityfield texture
-			this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, t_velocityField_0);
-			// Release the velocityfield from host (volume_IO)
-			secondary_IO.release();
-
-			// Same procedure for the second texture
-			secondary_IO.readVolume(i + solverOptions->currentIdx+1);
-			this->field = secondary_IO.getField_float();
-
-
-			this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, t_velocityField_1);
-			secondary_IO.release();
-
-		}
-		else
-		{
-			// Even integration steps
-			if (i % 2 == 0)
-			{
-
-				secondary_IO.readVolume(i + solverOptions->currentIdx);
-				this->field = secondary_IO.getField_float();
-
-
-				this->t_velocityField_1.release();
-				this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, t_velocityField_1);
-				secondary_IO.release();
-
-				RK4Step = RK4STEP::ODD;
-			}
-			// Odd integration steps
-			else
-			{
-
-				secondary_IO.readVolume(i + solverOptions->currentIdx);
-				this->field = secondary_IO.getField_float();
-
-				this->t_velocityField_0.release();
-				this->initializeVolumeTexuture(cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap, t_velocityField_0);
-				secondary_IO.release();
-
-				RK4Step = RK4STEP::EVEN;
-
-			}
-
-		}
-
-		// initialize proper velocityfield
-
-		// trace
-		traceDispersion3D_path << < blocks, thread >> >
-			(
-				d_particle,
-				s_HeightSurface_Secondary.getSurfaceObject(),
-				s_HeightSurface_Secondary_Ex.getSurfaceObject(),
-				this->t_velocityField_0.getTexture(),
-				this->t_velocityField_1.getTexture(),
-				*solverOptions,
-				*dispersionOptions,
-				RK4Step,
-				i
-				);
-	}
-
-
-
-	// Calculates the gradients and store it in the cuda surface
-	cudaFree(d_particle);
-}
-
-
-
-
-void HeightfieldGenerator::trace3D()
-{
-	// Calculates the block and grid sizes
-	unsigned int blocks;
-	dim3 thread = { maxBlockDim,maxBlockDim,1 };
-	blocks = static_cast<unsigned int>((this->n_particles % (thread.x * thread.y) == 0 ?
-		n_particles / (thread.x * thread.y) : n_particles / (thread.x * thread.y) + 1));
-
-	// After this step the heightSurface is populated with the height of each particle
-	traceDispersion3D_extra << < blocks, thread >> >
-		(
-			d_particle,
-			s_HeightSurface_Primary.getSurfaceObject(),
-			s_HeightSurface_Primary_Ex.getSurfaceObject(),
-			this->t_velocityField_0.getTexture(),
-			*solverOptions,
-			*dispersionOptions
-		);
-
-
-	// Calculates the gradients and store it in the cuda surface
-	cudaFree(d_particle);
-}
 
 
 __host__ void HeightfieldGenerator::rendering()
@@ -543,11 +268,11 @@ __host__ void HeightfieldGenerator::rendering()
 	// Depending on the Rendering mode choose the terrain Rendering function
 	if (dispersionOptions->renderingMode == dispersionOptionsMode::HeightfieldRenderingMode::SINGLE_SURFACE)
 	{
-		CudaTerrainRenderer_extra<IsosurfaceHelper::Position> << < blocks, thread >> >
+		CudaTerrainRenderer_Marching_extra<< < blocks, thread >> >
 			(
 				this->raycastingSurface.getSurfaceObject(),
-				this->t_HeightSurface_Primary,
-				this->t_HeightSurface_Primary_Ex,
+				this->t_HeightSurface_Primary.getTexture(),
+				this->t_HeightSurface_Primary_Extra.getTexture(),
 				int(this->rays),
 				this->raycastingOptions->samplingRate_0,
 				this->raycastingOptions->tolerance_0,
@@ -555,22 +280,7 @@ __host__ void HeightfieldGenerator::rendering()
 				solverOptions->lastIdx - solverOptions->firstIdx
 				);
 	}
-	else
-	{
-		CudaTerrainRenderer_extra_double<IsosurfaceHelper::Position> << < blocks, thread >> >
-			(
-				this->raycastingSurface.getSurfaceObject(),
-				this->t_HeightSurface_Primary,
-				this->t_HeightSurface_Primary_Ex,
-				this->t_HeightSurface_Secondary,
-				this->t_HeightSurface_Secondary_Ex,
-				int(this->rays),
-				this->raycastingOptions->samplingRate_0,
-				this->raycastingOptions->tolerance_0,
-				*dispersionOptions,
-				solverOptions->lastIdx - solverOptions->firstIdx
-				);
-	}
+
 
 
 
@@ -603,102 +313,6 @@ bool HeightfieldGenerator::updateScene()
 
 
 
-
-
-bool HeightfieldGenerator::InitializeHeightTexture3D_Single()
-{
-
-
-	// Set Texture Description
-	cudaTextureDesc texDesc;
-	cudaResourceDesc resDesc;
-	cudaResourceViewDesc viewDes;
-
-	memset(&resDesc, 0, sizeof(resDesc));
-	memset(&texDesc, 0, sizeof(texDesc));
-	memset(&viewDes, 0, sizeof(viewDes));
-
-
-
-	resDesc.resType = cudaResourceTypeArray;
-	resDesc.res.array.array = this->a_HeightSurface_Primary.getArray();
-
-	// Texture Description
-	texDesc.normalizedCoords = true;
-	texDesc.filterMode = cudaFilterModeLinear;
-	texDesc.addressMode[0] = cudaTextureAddressMode::cudaAddressModeClamp;
-	texDesc.addressMode[1] = cudaTextureAddressMode::cudaAddressModeClamp;
-	texDesc.addressMode[2] = cudaTextureAddressMode::cudaAddressModeClamp;
-	texDesc.readMode = cudaReadModeElementType;
-
-	// Create the texture and bind it to the array
-	gpuErrchk(cudaCreateTextureObject(&this->t_HeightSurface_Primary, &resDesc, &texDesc, NULL));
-
-
-	// Use same properties with another array
-	resDesc.res.array.array = this->a_HeightSurface_Primary_Ex.getArray();
-	gpuErrchk(cudaCreateTextureObject(&this->t_HeightSurface_Primary_Ex, &resDesc, &texDesc, NULL));
-
-	return true;
-}
-
-
-
-bool HeightfieldGenerator::InitializeHeightTexture3D_Double()
-{
-
-
-	// Set Texture Description
-	cudaTextureDesc texDesc;
-	cudaResourceDesc resDesc;
-	cudaResourceViewDesc viewDes;
-
-	memset(&resDesc, 0, sizeof(resDesc));
-	memset(&texDesc, 0, sizeof(texDesc));
-	memset(&viewDes, 0, sizeof(viewDes));
-
-
-
-	resDesc.resType = cudaResourceTypeArray;
-	resDesc.res.array.array = this->a_HeightSurface_Primary.getArray();
-
-
-	// Texture Description
-	texDesc.normalizedCoords = true;
-	texDesc.filterMode = cudaFilterModeLinear;
-	texDesc.addressMode[0] = cudaTextureAddressMode::cudaAddressModeClamp;
-	texDesc.addressMode[1] = cudaTextureAddressMode::cudaAddressModeClamp;
-	texDesc.addressMode[2] = cudaTextureAddressMode::cudaAddressModeClamp;
-	texDesc.readMode = cudaReadModeElementType;
-
-	// Create the texture and bind it to the array
-	gpuErrchk(cudaCreateTextureObject(&this->t_HeightSurface_Primary, &resDesc, &texDesc, NULL));
-
-
-	// Use same properties with another array
-	resDesc.res.array.array = this->a_HeightSurface_Primary_Ex.getArray();
-	gpuErrchk(cudaCreateTextureObject(&this->t_HeightSurface_Primary_Ex, &resDesc, &texDesc, NULL));
-
-
-	//#######################	Secondary	######################################
-
-	resDesc.res.array.array = this->a_HeightSurface_Secondary.getArray();
-	// Create the texture and bind it to the array
-	gpuErrchk(cudaCreateTextureObject(&this->t_HeightSurface_Secondary, &resDesc, &texDesc, NULL));
-
-	resDesc.res.array.array = this->a_HeightSurface_Secondary_Ex.getArray();
-	gpuErrchk(cudaCreateTextureObject(&this->t_HeightSurface_Secondary_Ex, &resDesc, &texDesc, NULL));
-
-
-
-	return true;
-}
-
-
-
-
-
-
 void HeightfieldGenerator::gradient3D_Single()
 {
 
@@ -708,7 +322,7 @@ void HeightfieldGenerator::gradient3D_Single()
 	blocks = static_cast<unsigned int>((this->n_particles % (thread.x * thread.y) == 0 ?
 		n_particles / (thread.x * thread.y) : n_particles / (thread.x * thread.y) + 1));
 
-	heightFieldGradient3D<IsosurfaceHelper::Position> << < blocks, thread >> >
+	heightFieldGradient3D<FetchTextureSurface::Position> << < blocks, thread >> >
 		(
 			s_HeightSurface_Primary.getSurfaceObject(),
 			*dispersionOptions,
@@ -719,52 +333,10 @@ void HeightfieldGenerator::gradient3D_Single()
 }
 
 
-void HeightfieldGenerator::gradient3D_Double()
-{
-
-	// Calculates the block and grid sizes
-	unsigned int blocks;
-	dim3 thread = { maxBlockDim,maxBlockDim,1 };
-	blocks = static_cast<unsigned int>((this->n_particles % (thread.x * thread.y) == 0 ?
-		n_particles / (thread.x * thread.y) : n_particles / (thread.x * thread.y) + 1));
-
-	heightFieldGradient3D<IsosurfaceHelper::Position> << < blocks, thread >> >
-		(
-			s_HeightSurface_Primary.getSurfaceObject(),
-			*dispersionOptions,
-			*solverOptions
-			);
-
-
-	heightFieldGradient3D<IsosurfaceHelper::Position> << < blocks, thread >> >
-		(
-			s_HeightSurface_Secondary.getSurfaceObject(),
-			*dispersionOptions,
-			*solverOptions
-			);
-
-
-}
-
-
-
-bool HeightfieldGenerator::LoadVelocityfield(const unsigned int& idx)
-{
-
-	if (!primary_IO.readVolume(idx))
-		return false;
-
-	this->field = primary_IO.getField_float();
-
-	return true;
-}
-
-
-
 bool HeightfieldGenerator::singleSurfaceInitialization()
 {
 	// initialize volume Input Output
-	primary_IO.Initialize(this->solverOptions);
+	volume_IO.Initialize(this->solverOptions);
 
 
 	// Initialize Height Field as an empty cuda array 3D
@@ -792,55 +364,13 @@ bool HeightfieldGenerator::singleSurfaceInitialization()
 
 
 	this->s_HeightSurface_Primary.destroySurface();
-	this->s_HeightSurface_Primary_Ex.destroySurface();
+	this->s_HeightSurface_Primary_Extra.destroySurface();
 
-	if (!this->InitializeHeightTexture3D_Single())
-		return false;
+	t_HeightSurface_Primary.setArray(a_HeightSurface_Primary.getArrayRef());
+	t_HeightSurface_Primary.initialize_array(false,cudaAddressModeClamp, cudaAddressModeClamp, cudaAddressModeClamp);
 
-	return true;
-}
-
-
-bool HeightfieldGenerator::doubleSurfaceInitialization()
-{
-
-	// initialize Primary Volume Input Output Object
-	primary_IO.Initialize(this->solverOptions);
-
-	// initialize Secondary Volume Input Output Object
-	secondary_IO.Initialize(this->solverOptions);
-	secondary_IO.setFileName(this->dispersionOptions->fileNameSecondary);
-	secondary_IO.setFilePath(this->dispersionOptions->filePathSecondary);
-
-	// Initialize Height Field as an empty CUDA array 3D
-	if (!this->InitializeHeightArray3D_Double
-	(
-		dispersionOptions->gridSize_2D[0],
-		dispersionOptions->gridSize_2D[1],
-		solverOptions->lastIdx - solverOptions->firstIdx
-	))
-		return false;
-
-
-
-	// Bind the array of heights to the CUDA surface
-	if (!this->InitializeHeightSurface3D_Double())
-		return false;
-
-
-	// Trace particle and store their heights on the Height Surface
-	this->trace3D_path_Double();
-
-
-	// Store gradient and height on the surface
-	this->gradient3D_Double();
-
-
-	this->s_HeightSurface_Primary.destroySurface();
-	this->s_HeightSurface_Secondary.destroySurface();
-
-	if (!this->InitializeHeightTexture3D_Double())
-		return false;
+	t_HeightSurface_Primary_Extra.setArray(a_HeightSurface_Primary_Extra.getArrayRef());
+	t_HeightSurface_Primary_Extra.initialize_array(false, cudaAddressModeClamp, cudaAddressModeClamp, cudaAddressModeClamp);
 
 	return true;
 }

@@ -30,8 +30,8 @@ struct DispersionOptions
 {
 	// Seeding Options
 	int gridSize_2D[2] = { 192,192 }; //TODO:: Add dynamic seed size
-	float seedWallNormalDist = 0.1f;
-	float tilt_deg = 15.0f;
+	float seedWallNormalDist = 0.01f;
+	float tilt_deg = 10.0f;
 
 
 	char	fileNameSecondary[100] = "FieldP";
@@ -54,17 +54,19 @@ struct DispersionOptions
 	int renderingMode = static_cast<int>(dispersionOptionsMode::HeightfieldRenderingMode::SINGLE_SURFACE);
 	float max_val = 1.0f;
 	float min_val = 0.0f;
-	float minColor[4] = { 0.0f,1.0f,0.0f,1.0f };
-	float maxColor[4] = { 0.0f,0.0f,1.0f,1.0f };
+	float minColor[4] = { 67.0f / 255.0f,162.0f / 255.0f,202.0f / 255.0f };
+	float maxColor[4] = { 168.0f / 255.0f,221.0f / 255.0f,181.0f / 255.0f };
 
 
-	float minColor_secondary[4] = { 1.0f,0.0f,0.0f,1.0f };
-	float maxColor_secondary[4] = { 1.0f,0.0f,0.0f,1.0f };
+	float minColor_secondary[4] = { 67.0f / 255.0f,162.0f/ 255.0f,202.0f / 255.0f };
+	float maxColor_secondary[4] = { 168.0f / 255.0f,221.0f / 255.0f,181.0f / 255.0f };
 
 	// Advection Options
 	int timestep = 1;
 	float dt = 0.001f;
 	int sampling_step = 10;
+
+	bool marching = false;
 
 	// Rendering status
 	bool initialized = false;
@@ -80,7 +82,7 @@ struct DispersionOptions
 	int file_counter = 0;
 
 	bool saveScreenshot = false;
-	bool ftleIsosurface = true;
+	bool ftleIsosurface = false;
 
 	float ftleIsoValue = 0.0f;
 

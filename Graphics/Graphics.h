@@ -69,6 +69,7 @@ public:
 	CrossSectionOptions				crossSectionOptions;
 	FluctuationheightfieldOptions	fluctuationheightfieldOptions;
 	TurbulentMixingOptions			turbulentMixingOptions;
+	FSLEOptions						fsleOptions;
 
 	// Getter Functions
 	IDXGIAdapter* GetAdapter();

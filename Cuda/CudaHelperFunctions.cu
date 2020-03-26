@@ -93,8 +93,8 @@ __global__ void TracingPath(Particle* d_particles, cudaTextureObject_t t_Velocit
 		// line_index indicates the line segment index
 		int line_index = index * solverOptions.lineLength;
 
-		float3 gridDiameter = ARRAYTOFLOAT3(solverOptions.gridDiameter);
-		int3 gridSize = ARRAYTOINT3(solverOptions.gridSize);
+		float3 gridDiameter = Array2Float3(solverOptions.gridDiameter);
+		int3 gridSize = Array2Int3(solverOptions.gridSize);
 
 		if (odd)
 		{
@@ -242,8 +242,8 @@ __global__ void TracingStream
 		float dt = solverOptions.dt;
 
 
-		float3 gridDiameter = ARRAYTOFLOAT3(solverOptions.gridDiameter);
-		int3 gridsize = ARRAYTOINT3(solverOptions.gridSize);
+		float3 gridDiameter = Array2Float3(solverOptions.gridDiameter);
+		int3 gridsize = Array2Int3(solverOptions.gridSize);
 
 		float3 temp_position = *d_particles[index].getPosition();
 
@@ -349,7 +349,7 @@ __global__ void TracingStream
 			}
 
 			// Do not check if it is out
-			RK4Stream(t_VelocityField, &d_particles[index], gridDiameter, ARRAYTOINT3(solverOptions.gridSize), dt);
+			RK4Stream(t_VelocityField, &d_particles[index], gridDiameter, Array2Int3(solverOptions.gridSize), dt);
 
 			// Update position based on the projection
 			switch (solverOptions.projection)
@@ -397,8 +397,8 @@ __global__ void TracingStream
 		int lineLength = solverOptions.lineLength;
 		int index_buffer = index * lineLength;
 		float dt = solverOptions.dt;
-		float3 gridDiameter = ARRAYTOFLOAT3(solverOptions.gridDiameter);
-		int3 gridSize = ARRAYTOINT3(solverOptions.gridSize);
+		float3 gridDiameter = Array2Float3(solverOptions.gridDiameter);
+		int3 gridSize = Array2Int3(solverOptions.gridSize);
 
 		float3 temp_position = *d_particles[index].getPosition();
 
@@ -523,7 +523,7 @@ __global__ void TracingStream
 			}
 
 			// Do not check if it is out
-			RK4Stream(t_VelocityField, &d_particles[index], gridDiameter, ARRAYTOINT3(solverOptions.gridSize), dt);
+			RK4Stream(t_VelocityField, &d_particles[index], gridDiameter, Array2Int3(solverOptions.gridSize), dt);
 
 			// Update position based on the projection
 			switch (solverOptions.projection)
@@ -576,8 +576,8 @@ __global__ void TracingStream
 		int lineLength = solverOptions.lineLength;
 		int index_buffer = index * lineLength;
 		float dt = solverOptions.dt;
-		float3 gridDiameter = ARRAYTOFLOAT3(solverOptions.gridDiameter);
-		int3 gridSize = ARRAYTOINT3(solverOptions.gridSize);
+		float3 gridDiameter = Array2Float3(solverOptions.gridDiameter);
+		int3 gridSize = Array2Int3(solverOptions.gridSize);
 		float3 temp_position = *d_particles[index].getPosition();
 
 		d_particles[index].updateVelocity(gridDiameter, gridSize, t_VelocityField);
@@ -697,7 +697,7 @@ __global__ void TracingStream
 			}
 
 			// Do not check if it is out
-			RK4Stream(t_VelocityField, &d_particles[index], ARRAYTOFLOAT3(solverOptions.gridDiameter), ARRAYTOINT3(solverOptions.gridSize), dt);
+			RK4Stream(t_VelocityField, &d_particles[index], Array2Float3(solverOptions.gridDiameter), Array2Int3(solverOptions.gridSize), dt);
 
 			// Update position based on the projection
 			switch (solverOptions.projection)
@@ -957,7 +957,7 @@ __device__ void	RK4Path
 		//####################### K2 ######################
 		float3 k2 = { 0,0,0 };
 
-		relativePos = world2Tex(particle->m_position + k1, gridDiameter, gridSize);
+		relativePos = world2Tex(particle->m_position + (k1 * 0.5f), gridDiameter, gridSize);
 
 		velocity4D = tex3D<float4>(t_VelocityField_0, relativePos.x, relativePos.y, relativePos.z);
 		velocity = { velocity4D.x,velocity4D.y,velocity4D.z };
@@ -976,7 +976,7 @@ __device__ void	RK4Path
 		//####################### K3 ######################
 		float3 k3 = { 0,0,0 };
 
-		relativePos = world2Tex(particle->m_position + k2, gridDiameter, gridSize);
+		relativePos = world2Tex(particle->m_position + (k2 * 0.5f), gridDiameter, gridSize);
 
 		velocity4D = tex3D<float4>(t_VelocityField_0, relativePos.x, relativePos.y, relativePos.z);
 		velocity = { velocity4D.x,velocity4D.y,velocity4D.z };
@@ -995,7 +995,7 @@ __device__ void	RK4Path
 
 		float3 k4 = { 0,0,0 };
 
-		relativePos = world2Tex(particle->m_position + k3, gridDiameter, gridSize);
+		relativePos = world2Tex(particle->m_position + k3 , gridDiameter, gridSize);
 		velocity4D = tex3D<float4>(t_VelocityField_1, relativePos.x, relativePos.y, relativePos.z);
 		velocity = { velocity4D.x,velocity4D.y,velocity4D.z };
 
@@ -1007,8 +1007,8 @@ __device__ void	RK4Path
 
 		if (periodicity)
 		{
-			particle->updateVelocity(gridDiameter, gridSize,t_VelocityField_1);
 			particle->m_position = newPosition;
+			particle->updateVelocity(gridDiameter, gridSize,t_VelocityField_1);
 		}
 		else
 		{

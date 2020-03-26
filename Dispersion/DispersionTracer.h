@@ -42,7 +42,6 @@ public:
 	void rendering() override;
 
 	virtual bool updateScene() override;
-	void trace3D();	 //Traces the streamlines
 
 
 	virtual void show(RenderImGuiOptions* renderImGuiOptions) override
@@ -80,7 +79,6 @@ public:
 
 	bool retrace();
 	virtual void gradient3D_Single();
-	void gradient3D_Double();
 
 protected:
 
@@ -89,7 +87,7 @@ protected:
 
 
 	virtual void trace3D_path_Single();
-	void trace3D_path_Double();
+
 
 
 	virtual bool initializeShaders() override;
@@ -103,47 +101,31 @@ protected:
 
 	virtual bool InitializeParticles();
 	virtual bool singleSurfaceInitialization();
-	bool doubleSurfaceInitialization();
+
 
 	bool InitializeHeightArray3D_Single(int x, int y ,int z);
 	virtual bool InitializeHeightArray3D_Single(int3 gridSize);
 
-	bool InitializeHeightArray3D_Double(int x, int y, int z);
-	virtual bool InitializeHeightArray3D_Double(int3 gridSize);
+
 
 
 	virtual bool InitializeHeightSurface3D_Single();
-	virtual bool InitializeHeightSurface3D_Double();
 
 
-	virtual bool InitializeHeightTexture3D_Single();
-	virtual bool InitializeHeightTexture3D_Double();
 
-
-	bool LoadVelocityfield(const unsigned int & idx);
 
 	DispersionOptions* dispersionOptions;
 
 	// Primary Height Surface
 	CudaSurface s_HeightSurface_Primary;
-	CudaSurface s_HeightSurface_Primary_Ex;
+	CudaSurface s_HeightSurface_Primary_Extra;
 
-	cudaTextureObject_t t_HeightSurface_Primary;
-	cudaTextureObject_t t_HeightSurface_Primary_Ex;
+	VolumeTexture3D t_HeightSurface_Primary;
+	VolumeTexture3D t_HeightSurface_Primary_Extra;
 
 	CudaArray_3D<float4> a_HeightSurface_Primary;
-	CudaArray_3D<float4> a_HeightSurface_Primary_Ex;		
+	CudaArray_3D<float4> a_HeightSurface_Primary_Extra;		
 
-
-	// Secondary Height Surface
-	CudaSurface s_HeightSurface_Secondary;
-	CudaSurface s_HeightSurface_Secondary_Ex;
-
-	cudaTextureObject_t t_HeightSurface_Secondary;
-	cudaTextureObject_t t_HeightSurface_Secondary_Ex;
-
-	CudaArray_3D<float4> a_HeightSurface_Secondary;
-	CudaArray_3D<float4> a_HeightSurface_Secondary_Ex;
 };
 
 

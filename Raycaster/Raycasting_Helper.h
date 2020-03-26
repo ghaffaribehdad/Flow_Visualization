@@ -7,6 +7,7 @@
 
 
 __device__ float2 findIntersections(const float3 pixelPos, const BoundingBox boundingBox);
+__device__ float findExitPoint(const float2 & entery, const float2 & dir, const float2 & cellSize);
 
 __device__ float3 pixelPosition(const BoundingBox  boundingBox, const int i, const int j);
 

@@ -50,7 +50,7 @@ __host__ bool PathlineSolver::solve()
 			// set the pointer to the volume texture
 			this->volumeTexture_0.setField(h_VelocityField);					
 			// initialize the volume texture
-			this->volumeTexture_0.initialize(ARRAYTOINT3(solverOptions->gridSize),false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
+			this->volumeTexture_0.initialize(Array2Int3(solverOptions->gridSize),false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
 			// release host memory
 			volume_IO.release();
 			
@@ -60,7 +60,7 @@ __host__ bool PathlineSolver::solve()
 			this->volume_IO.readVolume(solverOptions->currentIdx+1);
 			this->h_VelocityField = this->volume_IO.getField_float();
 			this->volumeTexture_1.setField(h_VelocityField);
-			this->volumeTexture_1.initialize(ARRAYTOINT3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
+			this->volumeTexture_1.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
 
 			volume_IO.release();
 
@@ -73,7 +73,7 @@ __host__ bool PathlineSolver::solve()
 
 			this->volumeTexture_1.release();
 			this->volumeTexture_1.setField(h_VelocityField);
-			this->volumeTexture_1.initialize(ARRAYTOINT3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
+			this->volumeTexture_1.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
 
 			volume_IO.release();
 
@@ -89,7 +89,7 @@ __host__ bool PathlineSolver::solve()
 
 			this->volumeTexture_0.release();
 			this->volumeTexture_0.setField(h_VelocityField);
-			this->volumeTexture_0.initialize(ARRAYTOINT3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
+			this->volumeTexture_0.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
 
 			volume_IO.release();
 

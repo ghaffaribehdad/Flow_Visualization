@@ -23,8 +23,8 @@ __global__ void  traceDispersion3D_path_FTLE
 
 	if (index < nParticles)
 	{
-		float3 gridDiameter = ARRAYTOFLOAT3(solverOptions.gridDiameter);
-		int3 gridSize = ARRAYTOINT3(solverOptions.gridSize);
+		float3 gridDiameter = Array2Float3(solverOptions.gridDiameter);
+		int3 gridSize = Array2Int3(solverOptions.gridSize);
 
 
 
@@ -56,7 +56,6 @@ __global__ void  traceDispersion3D_path_FTLE
 
 		// extract the height
 		float3 position = particle[index * FTLE_NEIGHBOR].m_position;
-		float3 velocity = particle[index * FTLE_NEIGHBOR].m_velocity;
 
 		float4 heightTexel = { position.y,0.0,0.0,0.0 };
 		float4 extraTexel = { ftle, 0.0f ,0.0f, 0.0f};
@@ -70,6 +69,102 @@ __global__ void  traceDispersion3D_path_FTLE
 }
 
 
+
+
+__global__ void  traceDispersion3D_path_FSLE
+(
+	Particle* particle,
+	cudaSurfaceObject_t heightFieldSurface3D,
+	cudaSurfaceObject_t heightFieldSurface3D_extra,
+	cudaTextureObject_t velocityField_0,
+	cudaTextureObject_t velocityField_1,
+	SolverOptions solverOptions,
+	DispersionOptions dispersionOptions,
+	FSLEOptions fsleOptions,
+	RK4STEP RK4step,
+	int timestep
+)
+{
+	// Extract dispersion options
+	int nParticles = dispersionOptions.gridSize_2D[0] * dispersionOptions.gridSize_2D[1];
+
+	int index = CUDA_INDEX;
+
+	if (index < nParticles)
+	{
+		float3 gridDiameter = Array2Float3(solverOptions.gridDiameter);
+		int3 gridSize = Array2Int3(solverOptions.gridSize);
+
+
+
+		// find the index of the particle (!!!!must be revised!!!!)
+		int index_y = index / dispersionOptions.gridSize_2D[1];
+		int index_x = index - (index_y * dispersionOptions.gridSize_2D[1]);
+
+
+		// Trace particle using RK4 
+
+		switch (RK4step)
+		{
+		case RK4STEP::EVEN:
+			for (int i = 0; i < FTLE_NEIGHBOR; i++)
+			{
+				RK4Path(velocityField_0, velocityField_1, &particle[index * FTLE_NEIGHBOR + i], gridDiameter, gridSize, dispersionOptions.dt, true);
+			}
+			break;
+
+		case RK4STEP::ODD:
+			for (int i = 0; i < FTLE_NEIGHBOR; i++)
+			{
+				RK4Path(velocityField_1, velocityField_0, &particle[index * FTLE_NEIGHBOR + i], gridDiameter, gridSize, dispersionOptions.dt, true);
+			}
+			break;
+		}
+
+		float fsle = 0;
+
+		if (particle[index * FTLE_NEIGHBOR].diverged)
+		{
+			fsle = particle[index * FTLE_NEIGHBOR].fsle;
+		}
+		else
+		{
+			float averageDist = averageNeighborDistance(&particle[index * FTLE_NEIGHBOR]);
+			if (averageDist > fsleOptions.separation_factor * fsleOptions.initial_separation)
+			{
+				particle[index * FTLE_NEIGHBOR].diverged = true;
+				fsle = log(fsleOptions.separation_factor) / (timestep * solverOptions.dt);
+				particle[index * FTLE_NEIGHBOR].fsle = fsle;
+			}
+		}
+		
+
+		// extract the height
+		float3 position = particle[index * FTLE_NEIGHBOR].m_position;
+
+		float4 heightTexel = { position.y,0.0,0.0,0.0 };
+		float4 extraTexel = { fsle, 0.0f ,0.0f, 0.0f };
+
+
+		// copy it in the surface3D
+		surf3Dwrite(heightTexel, heightFieldSurface3D, sizeof(float4) * index_x, index_y, timestep);
+		surf3Dwrite(extraTexel, heightFieldSurface3D_extra, sizeof(float4) * index_x, index_y, timestep);
+
+	}
+}
+
+
+__device__ float averageNeighborDistance(Particle* particles)
+{
+	float distance =
+		VecMagnitude(particles[0].m_position - particles[1].m_position) +
+		VecMagnitude(particles[0].m_position - particles[2].m_position) +
+		VecMagnitude(particles[0].m_position - particles[3].m_position) +
+		VecMagnitude(particles[0].m_position - particles[4].m_position) +
+		VecMagnitude(particles[0].m_position - particles[5].m_position) +
+		VecMagnitude(particles[0].m_position - particles[6].m_position);
+	return distance / 6.0f;
+}
 
 __device__ float FTLE3D(Particle* particles, float distance, float T)
 {

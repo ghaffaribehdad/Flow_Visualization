@@ -6,7 +6,9 @@ struct SolverOptions
 {
 public:
 	char fileName[100] ="FieldP";
-	char  filePath[100] ="D:\\copy\\ref\\Binary_z_Major\\Padded\\";
+	//char  filePath[100] ="D:\\copy\\ref\\Binary_z_Major\\Padded\\";	// Reference Dataset
+	char  filePath[100] ="G:\\OscillatingWall\\Padded\\";				// Oscillating wall
+	//char  filePath[100] ="D:\\copy\\bf\\Binary_z_Major\\Padded\\";			// Virtual body		
 
 
 	float seedWallNormalDist = 0.1f;
@@ -42,7 +44,7 @@ public:
 
 
 	int firstIdx = 1;
-	int lastIdx = 100;
+	int lastIdx = 200;
 	int currentIdx =1;
 
 	

@@ -38,7 +38,7 @@ class Raycasting
 
 private:
 	VolumeTexture3D volumeTexture;
-	VolumeTexture1D t_average_temp;
+	//VolumeTexture1D t_average_temp;
 
 protected:
 
@@ -68,44 +68,35 @@ protected:
 	VertexBuffer<TexCoordVertex> vertexBuffer;
 
 
-	Microsoft::WRL::ComPtr<ID3D11Texture2D>			raycastingTexture;
-	Microsoft::WRL::ComPtr< ID3D11RenderTargetView> renderTargetView;
-	Microsoft::WRL::ComPtr<ID3D11RasterizerState>	rasterizerstate;
-	Microsoft::WRL::ComPtr<ID3D11SamplerState>		samplerState;	// For depth test between raycasting and line rendering
-	Microsoft::WRL::ComPtr <ID3D11ShaderResourceView> shaderResourceView;
-	Microsoft::WRL::ComPtr<ID3D11BlendState>		blendState;
+	Microsoft::WRL::ComPtr<ID3D11Texture2D>				raycastingTexture;
+	Microsoft::WRL::ComPtr< ID3D11RenderTargetView>		renderTargetView;
+	Microsoft::WRL::ComPtr<ID3D11RasterizerState>		rasterizerstate;
+	Microsoft::WRL::ComPtr<ID3D11SamplerState>			samplerState;	// For depth test between raycasting and line rendering
+	Microsoft::WRL::ComPtr <ID3D11ShaderResourceView>	shaderResourceView;
+	Microsoft::WRL::ComPtr<ID3D11BlendState>			blendState;
 
-	ID3D11Device* device		= nullptr;
-	IDXGIAdapter* pAdapter		= nullptr;
+	ID3D11Device* device				= nullptr;
+	IDXGIAdapter* pAdapter				= nullptr;
 	ID3D11DeviceContext* deviceContext	= nullptr;
-
-	Camera* camera = nullptr;
+	Camera* camera						= nullptr;
 
 	CudaSurface raycastingSurface;
-
 	Interoperability interoperatibility;
 
-	// To handle first dataset
-	Volume_IO_Z_Major primary_IO;
-
-	// To handle second dataset
-	Volume_IO_Z_Major secondary_IO;
-
-
+	Volume_IO_Z_Major volume_IO;
 
 
 	__host__ virtual bool initializeBoundingBox(); // Create and copy a Boundingbox in the Device constant memory
-	__host__ bool initializeIO();
-	__host__ bool initializeVolumeTexuture(cudaTextureAddressMode , cudaTextureAddressMode, cudaTextureAddressMode);
-	__host__ bool initializeVolumeTexuture(cudaTextureAddressMode , cudaTextureAddressMode, cudaTextureAddressMode, VolumeTexture3D & volumeTexture);
+	__host__ virtual bool initializeShaders();
+
+	// Interoperation methods (do not override or modify)
 	__host__ bool initializeRaycastingTexture();
 	__host__ bool initializeRaycastingInteroperability();
+	__host__ bool createRaycastingShaderResourceView();
+	__host__ bool initializeScene();
 	__host__ bool initializeCudaSurface();
 	__host__ bool initializeRasterizer();
 	__host__ bool initializeSamplerstate();
-	__host__ bool createRaycastingShaderResourceView();
-	__host__ bool initializeScene();
-	__host__ virtual bool initializeShaders();
 	__host__ void setShaders();
 
 public:
@@ -113,13 +104,12 @@ public:
 	__host__ virtual bool initialize(cudaTextureAddressMode, cudaTextureAddressMode, cudaTextureAddressMode);
 	__host__ virtual bool release();
 	__host__ virtual void rendering();
-	//__host__ void saveTexture();
 	__host__ virtual bool updateScene();
+
+
 	__host__ bool resize();
-	
-
 	__host__  void draw();
-
+	//__host__ void saveTexture();
 
 
 	__host__ ID3D11Texture2D * getTexture()
@@ -141,7 +131,7 @@ public:
 
 	);
 
-	virtual __host__ void show(RenderImGuiOptions* renderImGuiOptions)
+	__host__ virtual  void show(RenderImGuiOptions* renderImGuiOptions)
 	{
 		if (renderImGuiOptions->showRaycasting)
 		{
@@ -150,6 +140,7 @@ public:
 				this->initialize(cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
 				this->raycastingOptions->initialized = true;
 			}
+
 			this->draw();
 
 			if (renderImGuiOptions->updateRaycasting)
@@ -159,6 +150,8 @@ public:
 				renderImGuiOptions->updateRaycasting = false;
 
 			}
+
+			
 		}
 	}
 
@@ -238,6 +231,32 @@ __global__ void CudaTerrainRenderer
 
 template <typename Observable>
 __global__ void CudaTerrainRenderer_extra
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t heightField,
+	cudaTextureObject_t extraField,
+	int rays,
+	float samplingRate,
+	float IsosurfaceTolerance,
+	DispersionOptions dispersionOptions,
+	int traceTime
+);
+
+
+__global__ void CudaTerrainRenderer_Marching_extra
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t heightField,
+	cudaTextureObject_t extraField,
+	int rays,
+	float samplingRate,
+	float IsosurfaceTolerance,
+	DispersionOptions dispersionOptions,
+	int traceTime
+);
+
+
+__global__ void CudaTerrainRenderer_Marching_extra_FSLE
 (
 	cudaSurfaceObject_t raycastingSurface,
 	cudaTextureObject_t heightField,

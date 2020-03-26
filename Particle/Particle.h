@@ -2,14 +2,12 @@
 
 #include "cuda_runtime.h"
 
-class Particle
+struct Particle
 {
 
-public:
 	float3 m_position = { 0,0,0 };
 	float3 m_velocity = { 0,0,0 };
 	bool outOfScope = false;
-public:
 
 	__device__ void checkPosition(const float3& gridDiameter);
 	__device__ void updatePosition(const float dt);
@@ -47,6 +45,7 @@ public:
 		m_velocity = _velocity;
 	}
 
-
+	bool diverged = false;
+	float fsle = 0;
 	
 };

@@ -101,7 +101,7 @@ void CUDASolver::InitializeParticles(SeedingPattern seedingPattern)
 
 		case SeedingPattern::SEED_TILTED_PLANE:
 		{
-			float3 gridDiamter = ARRAYTOFLOAT3(solverOptions->gridDiameter);
+			float3 gridDiamter = Array2Float3(solverOptions->gridDiameter);
 			seedParticle_tiltedPlane
 			(
 				this->h_Particles,

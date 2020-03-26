@@ -24,7 +24,7 @@ __host__ bool StreamlineSolver::solve()
 	
 	// Copy data to the texture memory
 	this->volumeTexture.setField(h_VelocityField);
-	this->volumeTexture.initialize(ARRAYTOINT3(solverOptions->gridSize));
+	this->volumeTexture.initialize(Array2Int3(solverOptions->gridSize));
 
 
 	// Release it from Host
@@ -133,7 +133,7 @@ __host__ void StreamlineSolver::measureFieldGeneration()
 
 	// Copy data to the texture memory
 	this->volumeTexture.setField(h_VelocityField);
-	this->volumeTexture.initialize(ARRAYTOINT3(solverOptions->gridSize));
+	this->volumeTexture.initialize(Array2Int3(solverOptions->gridSize));
 
 	
 	// Release it from Host

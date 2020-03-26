@@ -1,5 +1,8 @@
 #pragma once
 
+#define ARRAYTOFLOAT3(X) {X[0],X[1],X[2]}
+#define ARRAYTOINT3(X) {X[0],X[1],X[2]}
+
 #include "cuda_runtime.h"
 #include <corecrt_math.h>
 #include <ctgmath>
@@ -25,12 +28,22 @@ enum RK4STEP
 };
 
 // convert array to built-in cuda structures
- inline __host__ __device__ float3 ARRAYTOFLOAT3(float* a_float)
+ inline __host__ __device__ float3 Array2Float3(float* a_float)
 {
 	return make_float3(a_float[0], a_float[1], a_float[2]);
 }
 
-inline __host__ __device__ int3 ARRAYTOINT3(int* a_int)
+ inline __host__ __device__ float2 FLOAT3XY(const float3& a)
+ {
+	 return make_float2(a.x, a.y);
+ }
+
+ inline __host__ __device__ int2 INT3XY(const int3& a)
+ {
+	 return make_int2(a.x, a.y);
+ }
+
+inline __host__ __device__ int3 Array2Int3(int* a_int)
 {
 	return make_int3(a_int[0], a_int[1], a_int[2]);
 }
@@ -112,6 +125,17 @@ inline __host__ __device__ float4 operator/(float4 a, float4 b)
 		);
 }
 
+inline __host__ __device__ float4 operator+=(float4 a, float4 b)
+{
+	return make_float4
+	(
+		a.x += b.x,
+		a.y += b.y,
+		a.z += b.z,
+		a.w += b.w
+	);
+}
+
 inline __host__ __device__ float4 operator/(float4 a, float b)
 {
 	return make_float4
@@ -127,9 +151,9 @@ inline __host__ __device__ float3 operator/(float3 a, int3 b)
 {
 	return make_float3
 	(
-		a.x / b.x,
-		a.y / b.y,
-		a.z / b.z
+		a.x / (float)b.x,
+		a.y / (float)b.y,
+		a.z / (float)b.z
 	);
 }
 
@@ -137,8 +161,8 @@ inline __host__ __device__ float2 operator/(float2 a, int2 b)
 {
 	return make_float2
 	(
-		a.x / b.x,
-		a.y / b.y
+		a.x / (float)b.x,
+		a.y / (float)b.y
 	);
 }
 
@@ -205,6 +229,11 @@ inline __host__ __device__ float2 operator*(float a, float2 b)
 	return make_float2(a * b.x, a * b.y);
 }
 
+inline __host__ __device__ float2 operator*(float a, int2 b)
+{
+	return make_float2(a * b.x, a * b.y);
+}
+
 inline __host__ __device__ float3 operator*(float b, float3 a)
 {
 	return make_float3(a.x * b, a.y * b, a.z * b);
@@ -223,6 +252,8 @@ inline __host__ __device__ float3 operator/(const float3& a, const float& b)
 {
 	return make_float3(a.x / b, a.y / b, a.z / b);
 }
+
+
 
 inline __host__ __device__ float2 operator/(const float2& a, const float2& b)
 {

@@ -2,6 +2,7 @@
 
 #include "DispersionTracer.h"
 #include "ftleHelperFunctions.h"
+#include "..//Options/FSLEOptions.h"
 
 
 
@@ -10,6 +11,8 @@ class HeightfieldFTLE : public HeightfieldGenerator
 
 
 public:
+
+	FSLEOptions * fsleOptions = nullptr;
 
 	virtual void show(RenderImGuiOptions* renderImGuiOptions)
 	{

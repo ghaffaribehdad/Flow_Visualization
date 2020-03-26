@@ -23,7 +23,7 @@
     <ProjectGuid>{5ED80AD9-E879-4064-9C7D-914BD7E09A58}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>DXTutorial</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
     <CudaToolkitCustomDir>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1</CudaToolkitCustomDir>
     <ProjectName>Flow_Visualization</ProjectName>
   </PropertyGroup>
@@ -44,13 +44,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -173,6 +173,7 @@
       <TargetMachinePlatform>64</TargetMachinePlatform>
       <CodeGeneration>compute_61,sm_61</CodeGeneration>
       <Optimization>O3</Optimization>
+      <GPUDebugInfo>false</GPUDebugInfo>
     </CudaCompile>
     <CudaLink>
       <AdditionalDependencies>cudart.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -207,9 +208,11 @@
     <ClInclude Include="Dispersion\fluctuationHeightfield.h" />
     <ClInclude Include="Dispersion\ftleHelperFunctions.h" />
     <ClInclude Include="Dispersion\HightfieldFTLE.h" />
+    <ClInclude Include="FSLE\FSLE.h" />
     <ClInclude Include="Options\CrossSectionOptions.h" />
     <ClInclude Include="Options\DispresionOptions.h" />
     <ClInclude Include="Options\fluctuationheightfieldOptions.h" />
+    <ClInclude Include="Options\FSLEOptions.h" />
     <ClInclude Include="Options\RenderingOptions.h" />
     <ClInclude Include="Options\TurbulentMixingOptions.h" />
     <ClInclude Include="ParticleTracing\ParticleTracing.h" />
@@ -224,6 +227,7 @@
     <ClInclude Include="Window\RenderWindow.h" />
     <ClInclude Include="Window\WindowContainer.h" />
     <CudaCompile Include="Dispersion\fluctuationHeightfield.cu" />
+    <CudaCompile Include="FSLE\FSLE.cu" />
     <CudaCompile Include="Particle\Particle.cu" />
     <CudaCompile Include="Raycaster\BoundingBox.cu">
       <FileType>Document</FileType>

@@ -94,6 +94,50 @@ __device__ float2 findIntersections(const float3 pixelPos, const BoundingBox bou
 }
 
 
+
+
+
+
+__device__ float findExitPoint(const float2& entery, const float2& dir, const float2 & cellSize)
+{
+
+	// First we find intersection on X and Then Y
+	// Then we compare the ray parameter (t) and then we choose the minimum t
+	
+	float2 step = entery / cellSize;
+	float2 edge = { 0,0 };
+
+	if (dir.x < 0)
+	{
+		edge.x = (ceil(step.x) - 1) * cellSize.x;
+	}
+	else
+	{
+		edge.x = (floor(step.x) + 1) * cellSize.x;
+	}
+
+	if (dir.y < 0)
+	{
+		edge.y = (ceil(step.y) - 1) * cellSize.y;
+	}
+	else
+	{
+		edge.y = (floor(step.y) + 1) * cellSize.y;
+	}
+
+	float t_x = 0;
+	float t_y = 0;
+
+
+	t_x = (edge.x - entery.x) / dir.x;
+	t_y = (edge.y - entery.y) / dir.y;
+
+	// take the minimum value of ray parameter
+	return fmax(fmin(t_x, t_y), 0.00001f);
+}
+
+
+
 __device__ float3 pixelPosition(const BoundingBox  boundingBox, const int i, const int j)
 {
 	// Height of the Image Plane

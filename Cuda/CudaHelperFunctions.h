@@ -129,10 +129,10 @@ __device__ float3 binarySearch
 	bool side = 0; // 1 -> right , 0 -> left
 	int counter = 0;
 
-	while (fabsf(observable.ValueAtXYZ(field, relative_position) - value) > tolerance&& counter < maxIteration)
+	while (fabsf(observable.ValueAtXYZ_Tex(field, relative_position) - value) > tolerance&& counter < maxIteration)
 	{
 
-		if (observable.ValueAtXYZ(field, relative_position) - value > 0)
+		if (observable.ValueAtXYZ_Tex(field, relative_position) - value > 0)
 		{
 			if (side)
 			{

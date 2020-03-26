@@ -91,7 +91,6 @@ public:
 	void traceFluctuationfield3D();
 	void gradientFluctuationfield();
 	virtual void rendering() override;
-	virtual bool InitializeHeightTexture3D_Single() override;
 	__host__ bool initializeBoundingBox() override;
 
 

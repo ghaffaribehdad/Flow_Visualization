@@ -120,6 +120,12 @@
     <Filter Include="Source Files\VolumeIO">
       <UniqueIdentifier>{5ed3d2df-c2eb-43ca-b046-755688e3c729}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\FSLE">
+      <UniqueIdentifier>{13b5cdc7-ca94-498f-9b32-22ff0e4116f8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\FSLE">
+      <UniqueIdentifier>{a61e3d10-ae8b-44ff-99b6-3c638378845a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -415,6 +421,12 @@
     <ClInclude Include="VolumeIO\Volume_IO_Z_Major.h">
       <Filter>Header Files\VolumeIO</Filter>
     </ClInclude>
+    <ClInclude Include="FSLE\FSLE.h">
+      <Filter>Header Files\FSLE</Filter>
+    </ClInclude>
+    <ClInclude Include="Options\FSLEOptions.h">
+      <Filter>Header Files\Options</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\geometryshaderLineTube.hlsl">
@@ -495,6 +507,9 @@
     </CudaCompile>
     <CudaCompile Include="Dispersion\ftleHelperFunctions.cu">
       <Filter>Source Files\Heightfield</Filter>
+    </CudaCompile>
+    <CudaCompile Include="FSLE\FSLE.cu">
+      <Filter>Source Files\FSLE</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

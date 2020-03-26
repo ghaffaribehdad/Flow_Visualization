@@ -53,9 +53,11 @@ bool FluctuationHeightfield::initialize
 
 	this->s_HeightSurface_Primary.destroySurface();
 
-	if (!this->InitializeHeightTexture3D_Single())
-		return false;
+	this->t_HeightSurface_Primary.setArray(a_HeightSurface_Primary.getArrayRef());
+	this->t_HeightSurface_Primary_Extra.setArray(a_HeightSurface_Primary_Extra.getArrayRef());
 
+	this->t_HeightSurface_Primary.initialize_array();
+	this->t_HeightSurface_Primary.initialize_array();
 
 	return true;
 }
@@ -68,8 +70,8 @@ void  FluctuationHeightfield::traceFluctuationfield3D()
 
 	for (int t = 0; t < m_gridSize3D.z; t++)
 	{
-		this->primary_IO.readVolumePlane(t + fluctuationheightfieldOptions->firstIdx, VolumeIO::readPlaneMode::YZ, fluctuationheightfieldOptions->spanwisePos);
-		float* p_temp = primary_IO.getField_float();
+		this->volume_IO.readVolumePlane(t + fluctuationheightfieldOptions->firstIdx, VolumeIO::readPlaneMode::YZ, fluctuationheightfieldOptions->spanwisePos);
+		float* p_temp = volume_IO.getField_float();
 
 		size_t counter_t = 0;
 
@@ -91,7 +93,7 @@ void  FluctuationHeightfield::traceFluctuationfield3D()
 			}
 		}
 
-		primary_IO.release();
+		volume_IO.release();
 	}
 
 
@@ -116,7 +118,7 @@ void FluctuationHeightfield::gradientFluctuationfield()
 
 	// After this step the heightSurface is populated with the height of each particle
 
-	fluctuationfieldGradient3D<IsosurfaceHelper::Position> << < blocks, thread >> >
+	fluctuationfieldGradient3D<FetchTextureSurface::Position> << < blocks, thread >> >
 		(
 			s_HeightSurface_Primary.getSurfaceObject(),
 			*this->solverOptions,
@@ -141,11 +143,11 @@ __host__ void FluctuationHeightfield::rendering()
 	blocks = static_cast<unsigned int>((this->rays % (thread.x * thread.y) == 0 ? rays / (thread.x * thread.y) : rays / (thread.x * thread.y) + 1));
 
 
-	CudaTerrainRenderer_extra_fluctuation<IsosurfaceHelper::Position> << < blocks, thread >> >
+	CudaTerrainRenderer_extra_fluctuation<FetchTextureSurface::Position> << < blocks, thread >> >
 		(
 			this->raycastingSurface.getSurfaceObject(),
-			this->t_HeightSurface_Primary,
-			this->t_HeightSurface_Primary_Ex,
+			this->t_HeightSurface_Primary.getTexture(),
+			this->t_HeightSurface_Primary_Extra.getTexture(),
 			int(this->rays),
 			this->fluctuationheightfieldOptions->samplingRate_0,
 			this->raycastingOptions->tolerance_0,
@@ -180,39 +182,6 @@ __host__ bool FluctuationHeightfield::initializeBoundingBox()
 
 	return true;
 }
-
-__host__ bool FluctuationHeightfield::InitializeHeightTexture3D_Single()
-{
-
-	// Set Texture Description
-	cudaTextureDesc texDesc;
-	cudaResourceDesc resDesc;
-
-	memset(&resDesc, 0, sizeof(resDesc));
-	memset(&texDesc, 0, sizeof(texDesc));
-
-
-	resDesc.resType = cudaResourceTypeArray;
-	resDesc.res.array.array = this->a_HeightSurface_Primary.getArray();
-	
-
-	// Texture Description
-	texDesc.normalizedCoords = true;
-	texDesc.filterMode = cudaFilterModeLinear;
-	texDesc.addressMode[0] = cudaTextureAddressMode::cudaAddressModeClamp;
-	texDesc.addressMode[1] = cudaTextureAddressMode::cudaAddressModeClamp;
-	texDesc.addressMode[2] = cudaTextureAddressMode::cudaAddressModeClamp;
-	texDesc.readMode = cudaReadModeElementType;
-
-	// Create the texture and bind it to the array
-	gpuErrchk(cudaCreateTextureObject(&this->t_HeightSurface_Primary, &resDesc, &texDesc, NULL));
-
-
-
-	return true;
-
-}
-
 
 
 __host__ bool FluctuationHeightfield::InitializeHeightArray3D_Single(int3 gridSize)

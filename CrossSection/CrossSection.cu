@@ -25,7 +25,7 @@ bool CrossSection::initialize
 	// set the number of rays = number of pixels
 	this->rays = size_t(*this->width) * size_t(*this->height);
 
-	primary_IO.Initialize(this->solverOptions);
+	volume_IO.Initialize(this->solverOptions);
 
 	if (this->crossSectionOptions->mode == CrossSectionOptionsMode::SpanMode::WALL_NORMAL)
 	{
@@ -45,11 +45,11 @@ bool CrossSection::initialize
 void CrossSection::retraceCrossSectionField()
 {
 	this->t_volumeTexture.release();
-	this->primary_IO.readVolume(solverOptions->currentIdx);		// Read a velocity volume
-	t_volumeTexture.setField(primary_IO.getField_float());	// Pass a pointer to the Cuda volume texture
-	t_volumeTexture.initialize(ARRAYTOINT3(solverOptions->gridSize), false, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);					// Initilize the Cuda texture
+	this->volume_IO.readVolume(solverOptions->currentIdx);		// Read a velocity volume
+	t_volumeTexture.setField(volume_IO.getField_float());	// Pass a pointer to the Cuda volume texture
+	t_volumeTexture.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);					// Initilize the Cuda texture
 
-	primary_IO.release();										// Release velocity volume from host memory
+	volume_IO.release();										// Release velocity volume from host memory
 }
 
 
@@ -140,7 +140,7 @@ __host__ void CrossSection::rendering()
 
 	else if (this->crossSectionOptions->mode == CrossSectionOptionsMode::SpanMode::VOL_3D)
 	{
-		CudaIsoSurfacRendererSpaceTime<IsosurfaceHelper::Velocity_X> << < blocks, thread >> >
+		CudaIsoSurfacRendererSpaceTime<FetchTextureSurface::Channel_X> << < blocks, thread >> >
 			(
 				this->raycastingSurface.getSurfaceObject(),
 				this->t_volumeTexture.getTexture(),
@@ -160,12 +160,12 @@ template <> void CrossSection::traceCrossSectionField< CrossSectionOptionsMode::
 {
 
 	
-	this->primary_IO.readVolume(solverOptions->currentIdx);		// Read a velocity volume
-	t_volumeTexture.setField(primary_IO.getField_float());	// Pass a pointer to the Cuda volume texture
+	this->volume_IO.readVolume(solverOptions->currentIdx);		// Read a velocity volume
+	t_volumeTexture.setField(volume_IO.getField_float());	// Pass a pointer to the Cuda volume texture
 	
 	t_volumeTexture.initialize(ARRAYTOINT3(solverOptions->gridSize), false, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);								// Initilize the Cuda texture
 
-	primary_IO.release();
+	volume_IO.release();
 
 
 }
@@ -192,10 +192,10 @@ template <> void CrossSection::traceCrossSectionField< CrossSectionOptionsMode::
 
 			for (int i = 0; i < solverOptions->gridSize[2] * 4; i++)
 			{
-				h_velocity[i + pass] = primary_IO.getField_float()[i];
+				h_velocity[i + pass] = volume_IO.getField_float()[i];
 			}
 			pass += solverOptions->gridSize[2] * 4;
-			primary_IO.release();
+			volume_IO.release();
 		}
 
 	}

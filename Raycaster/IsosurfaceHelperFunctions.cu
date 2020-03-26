@@ -4,33 +4,244 @@
 #include "BoundingBox.h"
 #include "..//Cuda/CudaHelperFunctions.h"
 
-
-
-
-__device__ float3 IsosurfaceHelper::Observable::GradientAtXYZ(cudaTextureObject_t tex, float3 relativePos, int3 gridSize)
+__device__ float FetchTextureSurface::Measure::ValueAtXYZ_Tex(cudaTextureObject_t tex, const float3 & position)
 {
-	int3 gridPoint_0 = floorMult(relativePos, gridSize);
-	int3 gridPoint_1 = ceilMult(relativePos, gridSize);
-
-
-	return { 0,0,0 };
+	return 0;
 }
 
-__device__  float3 IsosurfaceHelper::Observable::GradientAtGrid(cudaTextureObject_t tex, float3 position, int3 gridSize)
+
+__device__ float3 FetchTextureSurface::Measure::ValueAtXYZ_XYZ_Tex(cudaTextureObject_t tex, const float3 & position)
 {
-	float3 h = { 1.0f, 1.0f ,1.0f };
-	h =  h/gridSize;
-	float dV_dX = this->ValueAtXYZ(tex, make_float3(position.x + 1 , position.y, position.z));
-	float dV_dY = this->ValueAtXYZ(tex, make_float3(position.x, position.y + 1 , position.z));
-	float dV_dZ = this->ValueAtXYZ(tex, make_float3(position.x, position.y, position.z + 1));
+	float4 data = tex3D<float4>(tex, position.x, position.y, position.z);
+	return make_float3(data.x, data.y, data.z);
 
-	dV_dX -= this->ValueAtXYZ(tex, make_float3(position.x - 1 , position.y, position.z));
-	dV_dY -= this->ValueAtXYZ(tex, make_float3(position.x, position.y - 1, position.z));
-	dV_dZ -= this->ValueAtXYZ(tex, make_float3(position.x, position.y, position.z - 1 ));
-
-	return { dV_dX / (2.0f * h.x) ,dV_dY / (2.0f * h.y), dV_dZ / (2.0f * h.z) };
 }
 
+__device__ float2 FetchTextureSurface::Measure::ValueAtXYZ_XY_Tex(cudaTextureObject_t tex, const float3 & position)
+{
+
+	float4 data = tex3D<float4>(tex, position.x, position.y, position.z);
+	return make_float2(data.x, data.y);
+
+}
+
+__device__ float2 FetchTextureSurface::Measure::ValueAtXYZ_XZ_Tex(cudaTextureObject_t tex, const float3 & position)
+{
+
+	float4 data = tex3D<float4>(tex, position.x, position.y, position.z);
+	return make_float2(data.x, data.z);
+
+}
+
+__device__ float2 FetchTextureSurface::Measure::ValueAtXYZ_YZ_Tex(cudaTextureObject_t tex, const float3 & position)
+{
+
+	float4 data = tex3D<float4>(tex, position.x, position.y, position.z);
+	return make_float2(data.y, data.z);
+
+}
+
+__device__  float FetchTextureSurface::Measure::ValueAtXYZ_Surf(cudaSurfaceObject_t surf, const int3 & position)
+{
+	return 0;
+}
+
+__device__  float3 FetchTextureSurface::Measure::ValueAtXYZ_XYZ_Surf(cudaSurfaceObject_t surf, const int3 & position)
+{
+	float4 data;
+	surf3Dread(&data, surf, position.x * sizeof(float4), position.y, position.z);
+
+	return make_float3(data.x,data.y,data.z);
+}
+
+
+__device__  float2 FetchTextureSurface::Measure::ValueAtXYZ_XY_Surf(cudaSurfaceObject_t surf, const int3 & position)
+{
+	float4 data;
+	surf3Dread(&data, surf, position.x * sizeof(float4), position.y, position.z);
+
+	return make_float2(data.x, data.y);
+}
+
+__device__  float2 FetchTextureSurface::Measure::ValueAtXYZ_XZ_Surf(cudaSurfaceObject_t surf, const int3 & position)
+{
+	float4 data;
+	surf3Dread(&data, surf, position.x * sizeof(float4), position.y, position.z);
+
+	return make_float2(data.x, data.z);
+}
+
+__device__  float2 FetchTextureSurface::Measure::ValueAtXYZ_YZ_Surf(cudaSurfaceObject_t surf, const int3 & position)
+{
+	float4 data;
+	surf3Dread(&data, surf, position.x * sizeof(float4), position.y, position.z);
+
+	return make_float2(data.y, data.z);
+}
+
+
+
+__device__ float3 FetchTextureSurface::Measure::GradientAtXYZ_Surf(cudaSurfaceObject_t surf, const int3 & position,const float3 & gridDiamter, const int3 & gridSize)
+{
+	float3 h = gridDiamter / gridSize;
+	float3 gradient = { 0,0,0 };
+
+	if (position.x == 0)
+	{
+		gradient.x += ValueAtXYZ_Surf(surf, make_int3(position.x + 1, position.y, position.z));
+		gradient.x -= ValueAtXYZ_Surf(surf, make_int3(position.x, position.y, position.z));
+		gradient.x = gradient.x / h.x;
+	}
+	else if (position.x == gridSize.x - 1)
+	{
+		gradient.x += ValueAtXYZ_Surf(surf, make_int3(position.x, position.y, position.z));
+		gradient.x -= ValueAtXYZ_Surf(surf, make_int3(position.x-1, position.y, position.z));
+		gradient.x = gradient.x / h.x;
+	}
+	else
+	{
+		gradient.x += ValueAtXYZ_Surf(surf, make_int3(position.x + 1, position.y, position.z));
+		gradient.x -= ValueAtXYZ_Surf(surf, make_int3(position.x - 1, position.y, position.z));
+		gradient.x = gradient.x / (2.0f * h.x);
+	}
+
+	if (position.y == 0)
+	{
+		gradient.y += ValueAtXYZ_Surf(surf, make_int3(position.x , position.y + 1, position.z));
+		gradient.y -= ValueAtXYZ_Surf(surf, make_int3(position.x, position.y, position.z));
+		gradient.y = gradient.y / h.y;
+	}
+	else if (position.y == gridSize.y - 1)
+	{
+		gradient.y += ValueAtXYZ_Surf(surf, make_int3(position.x, position.y, position.z));
+		gradient.y -= ValueAtXYZ_Surf(surf, make_int3(position.x, position.y - 1, position.z));
+		gradient.y = gradient.y / h.y;
+	}
+	else
+	{
+		gradient.y += ValueAtXYZ_Surf(surf, make_int3(position.x, position.y + 1, position.z));
+		gradient.y -= ValueAtXYZ_Surf(surf, make_int3(position.x, position.y - 1, position.z));
+		gradient.y = gradient.y / (2.0f *h.y);
+
+	}
+
+	if (position.z == 0)
+	{
+		gradient.z += ValueAtXYZ_Surf(surf, make_int3(position.x , position.y, position.z + 1));
+		gradient.z -= ValueAtXYZ_Surf(surf, make_int3(position.x, position.y, position.z));
+		gradient.z = gradient.z / h.z;
+	}
+	else if (position.z == gridSize.z - 1)
+	{
+		gradient.z += ValueAtXYZ_Surf(surf, make_int3(position.x, position.y, position.z));
+		gradient.z -= ValueAtXYZ_Surf(surf, make_int3(position.x, position.y, position.z -1));
+		gradient.z = gradient.z / h.z;
+	}
+	else
+	{
+		gradient.z += ValueAtXYZ_Surf(surf, make_int3(position.x, position.y, position.z+1));
+		gradient.z -= ValueAtXYZ_Surf(surf, make_int3(position.x, position.y, position.z-1));
+		gradient.z = gradient.z / (2.0f*h.z);
+
+	}
+
+	return gradient;
+}
+
+
+__device__ float3 FetchTextureSurface::Measure::GradientAtXYZ_Tex(cudaTextureObject_t tex, const float3 & position, const float3 & gridDiamter, const int3 & gridSize)
+{
+	float3 h = gridDiamter / gridSize;
+	float3 gradient = { 0,0,0 };
+
+
+	gradient.x += ValueAtXYZ_Tex(tex, make_float3(position.x + 1, position.y, position.z));
+	gradient.y += ValueAtXYZ_Tex(tex, make_float3(position.x, position.y + 1, position.z));
+	gradient.z += ValueAtXYZ_Tex(tex, make_float3(position.x, position.y, position.z + 1));
+
+	gradient.x -= ValueAtXYZ_Tex(tex, make_float3(position.x - 1, position.y, position.z));
+	gradient.y -= ValueAtXYZ_Tex(tex, make_float3(position.x, position.y - 1, position.z));
+	gradient.z -= ValueAtXYZ_Tex(tex, make_float3(position.x, position.y, position.z - 1));
+
+
+	return  gradient /(2.0f * h.x);
+
+}
+
+__device__  float FetchTextureSurface::Channel_X::ValueAtXYZ_Surf(cudaSurfaceObject_t surf, const int3 & position)
+{
+	float4 data;
+	surf3Dread(&data, surf, position.x * sizeof(float4), position.y, position.z);
+
+	return data.x;
+}
+
+
+__device__  float FetchTextureSurface::Channel_Y::ValueAtXYZ_Surf(cudaSurfaceObject_t surf, const int3 & position)
+{
+	float4 data;
+	surf3Dread(&data, surf, position.x * sizeof(float4), position.y, position.z);
+
+	return data.y;
+}
+
+__device__  float FetchTextureSurface::Channel_Z::ValueAtXYZ_Surf(cudaSurfaceObject_t surf, const int3 & position)
+{
+	float4 data;
+	surf3Dread(&data, surf, position.x * sizeof(float4), position.y, position.z);
+
+	return data.z;
+}
+
+__device__  float FetchTextureSurface::Channel_W::ValueAtXYZ_Surf(cudaSurfaceObject_t surf, const int3 & position)
+{
+	float4 data;
+	surf3Dread(&data, surf, position.x * sizeof(float4), position.y, position.z);
+
+	return data.w;
+}
+
+__device__  float FetchTextureSurface::Velocity_Magnitude::ValueAtXYZ_Surf(cudaSurfaceObject_t surf, const int3 & position)
+{
+	float4 data;
+	surf3Dread(&data, surf, position.x * sizeof(float4), position.y, position.z);
+	float3 velocity = make_float3(data.x, data.y, data.z);
+
+	return VecMagnitude(velocity);
+}
+
+__device__ float FetchTextureSurface::Channel_X::ValueAtXYZ_Tex(cudaTextureObject_t tex, const float3 & position)
+{
+
+	return tex3D<float4>(tex, position.x, position.y, position.z).x;
+}
+
+__device__ float FetchTextureSurface::Channel_Y::ValueAtXYZ_Tex(cudaTextureObject_t tex, const float3 & position)
+{
+
+	return tex3D<float4>(tex, position.x, position.y, position.z).y;
+}
+__device__ float FetchTextureSurface::Channel_Z::ValueAtXYZ_Tex(cudaTextureObject_t tex, const float3 & position)
+{
+
+	return tex3D<float4>(tex, position.x, position.y, position.z).z;
+}
+
+
+__device__ float FetchTextureSurface::Channel_W::ValueAtXYZ_Tex(cudaTextureObject_t tex, const float3 & position)
+{
+
+	return tex3D<float4>(tex, position.x, position.y, position.z).w;
+}
+
+__device__ float FetchTextureSurface::Velocity_Magnitude::ValueAtXYZ_Tex(cudaTextureObject_t tex, const float3 & position)
+{
+
+	float4 data = tex3D<float4>(tex, position.x, position.y, position.z);
+	float3 velocity = make_float3(data.x, data.y, data.z);
+
+	return VecMagnitude(velocity);
+}
 
 __device__  float3 GradientAtGrid_X(cudaTextureObject_t tex, float3 position, int3 gridSize)
 {
@@ -48,34 +259,10 @@ __device__  float3 GradientAtGrid_X(cudaTextureObject_t tex, float3 position, in
 }
 
 
-__device__ float IsosurfaceHelper::Velocity_Magnitude::ValueAtXYZ(cudaTextureObject_t tex, float3 position)
-{
-	float4 _velocity = tex3D<float4>(tex, position.x, position.y, position.z);
-	float3 velocity = make_float3(_velocity.x, _velocity.y, _velocity.z);
-	return fabsf(sqrtf(dot(velocity, velocity)));
-}
 
-__device__ float4 IsosurfaceHelper::Velocity_XYZT::ValueAtXYZ_float4(cudaTextureObject_t tex, float3 position)
-{
-	return tex3D<float4>(tex, position.x, position.y, position.z);
-}
 
-__device__ float IsosurfaceHelper::Velocity_X::ValueAtXYZ(cudaTextureObject_t tex, float3 position)
-{
-	return tex3D<float4>(tex, position.x, position.y, position.z).x;
-}
 
-__device__ float IsosurfaceHelper::Velocity_Y::ValueAtXYZ(cudaTextureObject_t tex, float3 position)
-{
-	return  tex3D<float4>(tex, position.x, position.y, position.z).y;
-}
-
-__device__ float IsosurfaceHelper::Velocity_Z::ValueAtXYZ(cudaTextureObject_t tex, float3 position)
-{
-	return  tex3D<float4>(tex, position.x, position.y, position.z).z;
-}
-
-__device__ float IsosurfaceHelper::ShearStress::ValueAtXYZ(cudaTextureObject_t tex, float3 position)
+__device__ float FetchTextureSurface::ShearStress::ValueAtXYZ_Tex(cudaTextureObject_t tex, const float3 & position)
 {
 	float4 dV_dY = tex3D<float4>(tex, position.x, position.y + 0.001 / 2.0f, position.z);
 	
@@ -87,7 +274,7 @@ __device__ float IsosurfaceHelper::ShearStress::ValueAtXYZ(cudaTextureObject_t t
 }
 
 
-__device__ float4 IsosurfaceHelper::Position::ValueAtXY(cudaTextureObject_t tex, float2 position)
+__device__ float4 FetchTextureSurface::Position::ValueAtXY(cudaTextureObject_t tex, float2 position)
 {
 	return   tex2D<float4>(tex, position.x, position.y);
 }
@@ -95,7 +282,7 @@ __device__ float4 IsosurfaceHelper::Position::ValueAtXY(cudaTextureObject_t tex,
 
 
 
-__device__  float2 IsosurfaceHelper::Position::GradientAtXY_Grid(cudaSurfaceObject_t surf, int2 gridPosition)
+__device__  float2 FetchTextureSurface::Position::GradientAtXY_Grid(cudaSurfaceObject_t surf, int2 gridPosition)
 {
 	float dH_dX = this->ValueAtXY_Surface_float(surf, make_int2(gridPosition.x + 1, gridPosition.y));
 	float dH_dY = this->ValueAtXY_Surface_float(surf, make_int2(gridPosition.x, gridPosition.y + 1));
@@ -114,7 +301,7 @@ __device__  float4 ValueAtXYZ_Surface_float4(cudaSurfaceObject_t surf, int3 grid
 	return data;
 }
 
-__device__  float2 IsosurfaceHelper::Position::GradientAtXYZ_Grid(cudaSurfaceObject_t surf, int3 gridPosition)
+__device__  float2 FetchTextureSurface::Position::GradientAtXYZ_Grid(cudaSurfaceObject_t surf, int3 gridPosition)
 {
 	float dH_dX = this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x + 1, gridPosition.y, gridPosition.z)).x;
 	float dH_dY = this->ValueAtXYZ_Surface_float4(surf, make_int3(gridPosition.x, gridPosition.y + 1 , gridPosition.z)).x;
@@ -189,7 +376,7 @@ __device__  float3 GradientAtXYZ_W_Surface(cudaSurfaceObject_t surf, int3 gridPo
 	return make_float3(dH_dX, dH_dY, dH_dZ);
 }
 
-__device__ float2 IsosurfaceHelper::Position::GradientFluctuatuionAtXT(cudaSurfaceObject_t surf, int3 gridPosition, int3 gridSize)
+__device__ float2 FetchTextureSurface::Position::GradientFluctuatuionAtXT(cudaSurfaceObject_t surf, int3 gridPosition, int3 gridSize)
 {
 	float dH_dX = 0.0f;
 	float dH_dY = 0.0f;
@@ -237,7 +424,7 @@ __device__ float2 IsosurfaceHelper::Position::GradientFluctuatuionAtXT(cudaSurfa
 }
 
 
-__device__ float2 IsosurfaceHelper::Position::GradientFluctuatuionAtXZ(cudaSurfaceObject_t surf, int3 gridPosition, int3 gridSize)
+__device__ float2 FetchTextureSurface::Position::GradientFluctuatuionAtXZ(cudaSurfaceObject_t surf, int3 gridPosition, int3 gridSize)
 {
 	float dH_dX = 0.0f;
 	float dH_dY = 0.0f;
@@ -259,7 +446,7 @@ __device__ float2 IsosurfaceHelper::Position::GradientFluctuatuionAtXZ(cudaSurfa
 }
 
 
-__device__  float IsosurfaceHelper::Position::ValueAtXY_Surface_float(cudaSurfaceObject_t tex, int2 gridPos)
+__device__  float FetchTextureSurface::Position::ValueAtXY_Surface_float(cudaSurfaceObject_t tex, int2 gridPos)
 {
 	float data;
 	surf2Dread(&data, tex, gridPos.x *sizeof(float), gridPos.y);
@@ -267,7 +454,7 @@ __device__  float IsosurfaceHelper::Position::ValueAtXY_Surface_float(cudaSurfac
 	return data;
 };
 
-__device__  float4 IsosurfaceHelper::Position::ValueAtXYZ_Surface_float4(cudaSurfaceObject_t surf, int3 gridPos)
+__device__  float4 FetchTextureSurface::Position::ValueAtXYZ_Surface_float4(cudaSurfaceObject_t surf, int3 gridPos)
 {
 	float4 data;
 	surf3Dread(&data, surf, gridPos.x * sizeof(float4), gridPos.y,gridPos.z);
@@ -275,7 +462,7 @@ __device__  float4 IsosurfaceHelper::Position::ValueAtXYZ_Surface_float4(cudaSur
 	return data;
 };
 
-__device__  float4 IsosurfaceHelper::Position::ValueAtXY_Surface_float4(cudaSurfaceObject_t tex, int2 gridPos)
+__device__  float4 FetchTextureSurface::Position::ValueAtXY_Surface_float4(cudaSurfaceObject_t tex, int2 gridPos)
 {
 	float4 data;
 	surf2Dread(&data, tex, gridPos.x * 4 * sizeof(float), gridPos.y);
@@ -295,82 +482,30 @@ __device__  float4 ValueAtXYZ_float4(cudaTextureObject_t tex, float3 position)
 }
 
 
-
-
-__device__  float4 IsosurfaceHelper::Observable::ValueAtXYZ_float4(cudaTextureObject_t tex, float3 position)
-{
-	return tex3D<float4>(tex, position.x, position.y, position.z);
-}
-
-
-// TODO
-__device__  float4 IsosurfaceHelper::Observable::ValueAtXYZ_float4
-(
-	cudaSurfaceObject_t surf,
-	int3 position,
-	IsosurfaceHelper::cudaSurfaceAddressMode addressMode ,
-	bool interpolation
-)
+__device__ float FetchTextureSurface::TurbulentDiffusivity::ValueAtXYZ_avgtemp(cudaTextureObject_t tex, float3 position, int3 gridSize, cudaTextureObject_t avg_temp)
 {
 
-	float4 data;
+	//float temperature = ValueAtXYZ(tex, position);
+	//float averageTemp = tex1D<float>(avg_temp, position.z);
 
-	switch (addressMode)
-	{
-		case IsosurfaceHelper::cudaSurfaceAddressMode::cudaAddressModeBorder:
-		{
-			surf3Dread(&data, surf, position.x * sizeof(float4), position.y, position.z);
-
-			break;
-		}
-		case IsosurfaceHelper::cudaSurfaceAddressMode::cudaAddressModeClamp:
-		{
-			break;
-		}
-		case IsosurfaceHelper::cudaSurfaceAddressMode::cudaAddressModeMirror:
-		{
-			break;
-		}
-		case IsosurfaceHelper::cudaSurfaceAddressMode::cudaAddressModeWrap:
-		{
-
-			break;
-		}
-	}
-	return { -1.0f,-1.0f,-1.0f,-1.0f };
-};
+	//float h = 1.0f/ (float)gridSize.z;
 
 
+	//float3 grad = GradientAtGrid(tex, position, gridSize);
+	//grad.z += (tex1D<float>(avg_temp, position.z + h) - tex1D<float>(avg_temp, position.z - h))/ (2.0f * h);
+	//float pr = 0.001f;
+	//float ra = 100000.0f;
 
+	//float epsilion_theta = dot(grad, grad) / sqrtf(pr * ra);
+	//float theta_sqrd = (temperature - averageTemp) * (temperature - averageTemp);
 
-__device__ float IsosurfaceHelper::TurbulentDiffusivity::ValueAtXYZ(cudaTextureObject_t tex, float3 position)
-{
-	return tex3D<float4>(tex, position.x, position.y, position.z).w;
-}
-
-__device__ float IsosurfaceHelper::TurbulentDiffusivity::ValueAtXYZ_avgtemp(cudaTextureObject_t tex, float3 position, int3 gridSize, cudaTextureObject_t avg_temp)
-{
-
-	float temperature = ValueAtXYZ(tex, position);
-	float averageTemp = tex1D<float>(avg_temp, position.z);
-
-	float h = 1.0f/ (float)gridSize.z;
-
-
-	float3 grad = GradientAtGrid(tex, position, gridSize);
-	grad.z += (tex1D<float>(avg_temp, position.z + h) - tex1D<float>(avg_temp, position.z - h))/ (2.0f * h);
-	float pr = 0.001f;
-	float ra = 100000.0f;
-
-	float epsilion_theta = dot(grad, grad) / sqrtf(pr * ra);
-	float theta_sqrd = (temperature - averageTemp) * (temperature - averageTemp);
-
-	return  theta_sqrd / epsilion_theta;
+	//return  theta_sqrd / epsilion_theta;
+	return 0;
 }
 
 
 
-__device__  float3 IsosurfaceHelper::TurbulentDiffusivity::GradientAtGrid_AvgTemp(cudaTextureObject_t tex, float3 position, int3 gridSize, cudaTextureObject_t avg_temp)
+__device__  float3 FetchTextureSurface::TurbulentDiffusivity::GradientAtGrid_AvgTemp(cudaTextureObject_t tex, float3 position, int3 gridSize, cudaTextureObject_t avg_temp)
 {
 	float3 h = { 1.0f, 1.0f ,1.0f };
 	h = 2 * h / gridSize;
@@ -386,7 +521,7 @@ __device__  float3 IsosurfaceHelper::TurbulentDiffusivity::GradientAtGrid_AvgTem
 }
 
 
-__device__ float3 IsosurfaceHelper::TurbulentDiffusivity::binarySearch_avgtemp
+__device__ float3 FetchTextureSurface::TurbulentDiffusivity::binarySearch_avgtemp
 (
 	cudaTextureObject_t field,
 	cudaTextureObject_t average_temp,

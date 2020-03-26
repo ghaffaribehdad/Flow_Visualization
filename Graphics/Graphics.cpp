@@ -403,6 +403,7 @@ bool Graphics::InitializeResources()
 		this->deviceContext.Get(),
 		&this->dispersionOptions
 	);
+	heightfieldFTLE.fsleOptions = &fsleOptions;
 	
 	if (!streamlineRenderer.initializeBuffers())
 		return false;

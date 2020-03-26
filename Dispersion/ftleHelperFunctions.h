@@ -3,6 +3,7 @@
 #include "../Particle/Particle.h"
 #include "../Options/DispresionOptions.h"
 #include "../Options/SolverOptions.h"
+#include "../Options/FSLEOptions.h"
 
 enum RK4STEP;
 
@@ -22,4 +23,19 @@ __global__ void  traceDispersion3D_path_FTLE
 	int timestep
 );
 
+__global__ void  traceDispersion3D_path_FSLE
+(
+	Particle* particle,
+	cudaSurfaceObject_t heightFieldSurface3D,
+	cudaSurfaceObject_t heightFieldSurface3D_extra,
+	cudaTextureObject_t velocityField_0,
+	cudaTextureObject_t velocityField_1,
+	SolverOptions solverOptions,
+	DispersionOptions dispersionOptions,
+	FSLEOptions fsleOptions,
+	RK4STEP RK4step,
+	int timestep
+);
+
 __device__ float FTLE3D(Particle* particles, float distance, float T);
+__device__ float averageNeighborDistance(Particle* particles);;
