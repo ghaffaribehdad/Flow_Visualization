@@ -71,7 +71,6 @@ __global__ void heightFieldGradient3D
 );
 
 
-
 __global__ void heightFieldGradient3DFTLE
 (
 
@@ -90,4 +89,44 @@ __global__ void fluctuationfieldGradient3D
 
 );
 
+__global__ void textureMean
+(
+	cudaTextureObject_t t_height,
+	cudaTextureObject_t t_ftle,
+	float * d_mean_height,
+	float * d_mean_ftle,
+	DispersionOptions dispersionOptions,
+	SolverOptions solverOptions
+);
+
+__global__ void fetch_ftle_height
+(
+	cudaTextureObject_t t_height,
+	cudaTextureObject_t t_ftle,
+	float * d_height,
+	float * d_ftle,
+	SolverOptions solverOptions
+);
+
+
+__global__ void pearson_terms
+(
+	cudaTextureObject_t t_height,
+	cudaTextureObject_t t_ftle,
+	float * d_mean_height,
+	float * d_mean_ftle,
+	float * d_pearson_cov,
+	float * d_pearson_var_ftle,
+	float * d_pearson_var_height,
+	DispersionOptions dispersionOptions,
+	SolverOptions solverOptions
+);
+
+__global__ void pearson
+(
+	float * d_pearson_cov,
+	float * d_pearson_var_ftle,
+	float * d_pearson_var_height,
+	SolverOptions solverOptions
+);
 

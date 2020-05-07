@@ -317,3 +317,118 @@ __global__ void fluctuationfieldGradient3D
 
 	}
 }
+
+
+
+
+__global__ void fetch_ftle_height
+(
+	cudaTextureObject_t t_height,
+	cudaTextureObject_t t_ftle,
+	float * d_height,
+	float * d_ftle,
+	SolverOptions solverOptions
+)
+{
+	int index = threadIdx.x;
+
+	// extract the values
+	d_height[index]		= ValueAtXYZ_float4(t_height, make_float3(index, 10, solverOptions.timeSteps - 1)).x;
+	d_ftle[index]		= ValueAtXYZ_float4(t_ftle, make_float3(index, 10, solverOptions.timeSteps - 1)).x;
+
+}
+
+
+
+__global__ void textureMean(
+	cudaTextureObject_t t_height,
+	cudaTextureObject_t t_ftle,
+	float * d_mean_height,
+	float * d_mean_ftle,
+	DispersionOptions dispersionOptions,
+	SolverOptions solverOptions
+)
+{
+	int index = CUDA_INDEX;
+	int gridPoints = dispersionOptions.gridSize_2D[0] * dispersionOptions.gridSize_2D[1];
+
+	if (index < gridPoints)
+	{
+		int index_y = index / dispersionOptions.gridSize_2D[1]; // 
+		int index_x = index - (index_y * dispersionOptions.gridSize_2D[1]);
+
+		float height = 0;
+		float ftle = 0;
+
+		for(int time = 0; time < solverOptions.timeSteps; time++)
+		{
+			// extract the values
+			height = ValueAtXYZ_float4(t_height, make_float3(index_x, index_y, time)).x;
+			ftle = ValueAtXYZ_float4(t_ftle, make_float3(index_x, index_y, solverOptions.timeSteps - 1)).x;
+
+			// add them to the mean values
+			atomicAdd_system(&d_mean_height[time], height / (float)gridPoints);
+			atomicAdd_system(&d_mean_ftle[time], ftle / (float)gridPoints );
+
+		}
+
+	}
+}
+
+
+__global__ void pearson_terms(
+	cudaTextureObject_t t_height,
+	cudaTextureObject_t t_ftle,
+	float * d_mean_height,
+	float * d_mean_ftle,
+	float * d_pearson_cov,
+	float * d_pearson_var_ftle,
+	float * d_pearson_var_height,
+	DispersionOptions dispersionOptions,
+	SolverOptions solverOptions
+)
+{
+	int index = CUDA_INDEX;
+	int gridPoints = dispersionOptions.gridSize_2D[0] * dispersionOptions.gridSize_2D[1];
+
+	if (index < gridPoints)
+	{
+		int index_y = index / dispersionOptions.gridSize_2D[1]; // 
+		int index_x = index - (index_y * dispersionOptions.gridSize_2D[1]);
+
+		float covariance = 0;
+		float variance_ftle = 0;
+		float variance_height = 0;
+
+		for (int time = 0; time < solverOptions.timeSteps; time++)
+		{
+			// calculate terms of pearson
+			covariance = (ValueAtXYZ_float4(t_height, make_float3(index_x, index_y, time)).x - d_mean_height[time]) * (ValueAtXYZ_float4(t_ftle, make_float3(index_x, index_y, solverOptions.timeSteps - 1)).x - d_mean_ftle[time]);
+			variance_height =powf( ValueAtXYZ_float4(t_height, make_float3(index_x, index_y, time)).x - d_mean_height[time], 2.0f);
+			variance_ftle =powf( ValueAtXYZ_float4(t_ftle, make_float3(index_x, index_y, solverOptions.timeSteps - 1)).x - d_mean_ftle[time],2.0f);
+			
+
+			atomicAdd_system(&d_pearson_cov[time], covariance);
+			atomicAdd_system(&d_pearson_var_ftle[time], variance_ftle);
+			atomicAdd_system(&d_pearson_var_height[time], variance_height);
+			
+
+		}
+
+	}
+}
+
+
+
+__global__ void pearson(
+	float * d_pearson_cov,
+	float * d_pearson_var_ftle,
+	float * d_pearson_var_height,
+	SolverOptions solverOptions
+)
+{
+	int index = threadIdx.x;
+
+	d_pearson_cov[index] = d_pearson_cov[index] / sqrtf(d_pearson_var_ftle[index] * d_pearson_var_height[index]);
+	
+}

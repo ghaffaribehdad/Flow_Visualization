@@ -56,20 +56,20 @@ void seedParticle_ZY_Plane_FTLE
 	// Size of the mesh in X, Y and Z direction
 	float meshSize_x = (float)gridDiameter.x / (gridSize.x - 1);
 	float meshSize_z = (float)gridDiameter.z / (gridSize.y - 1);
-	float height_step = gridDiameter.y * sinf(tilt * 3.1415f / 180.0f) / gridSize.x;
+	float height_step = gridDiameter.y * sinf(tilt * 3.1415f / 180.0f) / (gridSize.x-1);
 
 	for (int x = 0; x < gridSize.x; x++)
 	{
 		for (int z = 0; z < gridSize.y; z++)
 		{
 
-			particle[x * gridSize.y * 7 + z * 7 + 0].m_position = { meshSize_x * x,y_slice + z * height_step,meshSize_z * z };				// (x , y , z)
-			particle[x * gridSize.y * 7 + z * 7 + 1].m_position = { meshSize_x * x + delta_x ,y_slice + z * height_step,meshSize_z * z };	// (x+1, y ,z)
-			particle[x * gridSize.y * 7 + z * 7 + 2].m_position = { meshSize_x * x - delta_x ,y_slice + z * height_step,meshSize_z * z };	// (x-1, y ,z)
-			particle[x * gridSize.y * 7 + z * 7 + 3].m_position = { meshSize_x * x,y_slice + z * height_step + delta_x,meshSize_z * z };	// (x, y+1 ,z)
-			particle[x * gridSize.y * 7 + z * 7 + 4].m_position = { meshSize_x * x,y_slice + z * height_step - delta_x,meshSize_z * z };	// (x, y-1 ,z)
-			particle[x * gridSize.y * 7 + z * 7 + 5].m_position = { meshSize_x * x,y_slice + z * height_step,meshSize_z * z + delta_x };	// (x, y, z+1)
-			particle[x * gridSize.y * 7 + z * 7 + 6].m_position = { meshSize_x * x,y_slice + z * height_step,meshSize_z * z - delta_x };	// (x, y, z-1)
+			particle[x * gridSize.y * 7 + z * 7 + 0].m_position = { meshSize_x * x,y_slice + z * height_step,meshSize_z * z };				// (x , y , z)[0]
+			particle[x * gridSize.y * 7 + z * 7 + 1].m_position = { meshSize_x * x + delta_x ,y_slice + z * height_step,meshSize_z * z };	// (x+1, y ,z)[1]
+			particle[x * gridSize.y * 7 + z * 7 + 2].m_position = { meshSize_x * x - delta_x ,y_slice + z * height_step,meshSize_z * z };	// (x-1, y ,z)[2]
+			particle[x * gridSize.y * 7 + z * 7 + 3].m_position = { meshSize_x * x,y_slice + z * height_step + delta_x,meshSize_z * z };	// (x, y+1 ,z)[3]
+			particle[x * gridSize.y * 7 + z * 7 + 4].m_position = { meshSize_x * x,y_slice + z * height_step - delta_x,meshSize_z * z };	// (x, y-1 ,z)[4]
+			particle[x * gridSize.y * 7 + z * 7 + 5].m_position = { meshSize_x * x,y_slice + z * height_step,meshSize_z * z + delta_x };	// (x, y, z+1)[5]
+			particle[x * gridSize.y * 7 + z * 7 + 6].m_position = { meshSize_x * x,y_slice + z * height_step,meshSize_z * z - delta_x };	// (x, y, z-1)[6]
 
 		}
 	}

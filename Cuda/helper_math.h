@@ -2,6 +2,8 @@
 
 #define ARRAYTOFLOAT3(X) {X[0],X[1],X[2]}
 #define ARRAYTOINT3(X) {X[0],X[1],X[2]}
+#define I_3X3_F fMat3X3(1.0f,0,0,0,1.0f,0,0,0,1.0f)
+#define I_3X3_D dMat3X3(1.0,0,0,0,1.0,0,0,0,1.0)
 
 #include "cuda_runtime.h"
 #include <corecrt_math.h>
@@ -14,6 +16,7 @@
 #define Y_HAT {0.0f,1.0f,0.0f}
 #define Z_HAT {0.0f, 0.0f, 1.0f}
 #define CUDA_PI_F 3.141592654f
+#define CUDA_PI_D 3.141592654
 
 
 #define CUDA_INDEX (blockIdx.x* blockDim.y* blockDim.x + threadIdx.y * blockDim.x + threadIdx.x)
@@ -65,6 +68,16 @@ inline __host__ __device__ bool outofTexture(float3 position)
 		return true;
 
 	return false;
+}
+
+__device__ __host__ inline double3 operator*(double& a, double3 & b)
+{
+	return make_double3
+	(
+		a * b.x,
+		a * b.y,
+		a * b.z
+	);
 }
 
 inline __host__ __device__ float3 operator*(float3 a, float3 b)
@@ -285,6 +298,12 @@ inline __host__ __device__ float dot(const float3& a, const float3& b)
 {
 	return a.x * b.x + a.y * b.y + a.z * b.z;
 }
+
+inline __host__ __device__ double dot(const double3& a, const double3& b)
+{
+	return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
 inline __host__ __device__ float dot(const float4&  a, const float4& b)
 {
 	return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
@@ -335,6 +354,12 @@ inline __host__ __device__ float3 operator-(float3 a, float3 b)
 {
 	return make_float3(a.x - b.x, a.y - b.y, a.z - b.z);
 }
+
+inline __host__ __device__ double3 operator-(double3 a, double3 b)
+{
+	return make_double3(a.x - b.x, a.y - b.y, a.z - b.z);
+}
+
 
 inline __host__ __device__ float DecodeFloatRGBA(float4 rgba) {
 	return dot(rgba, make_float4(1.0f, 1.0f / 255.0f, 1.0f / 65025.0f, 1.0f / 16581375.0f));
@@ -511,6 +536,7 @@ struct fMat3X3
 	float3 r2;
 	float3 r3;
 
+
 	__host__ __device__ fMat3X3
 	(
 		const float3& _r1,
@@ -546,7 +572,16 @@ struct fMat3X3
 		return make_float3(r1.z, r2.z, r3.z);
 	}
 
+	__host__ __device__ float det()
+	{
+		float d1 = r1.x * ((r2.y * r3.z) - ( r3.y * r2.z));
+		float d2 = r1.y * ((r2.x * r3.z) - ( r3.x * r2.z));
+		float d3 = r1.z * ((r2.x * r3.y) - ( r3.x * r2.y));
+
+		return d1 - d2 + d3;
+	}
 };
+
 
 
 __device__ __host__ inline fMat3X3 transpose(fMat3X3& a)
@@ -559,6 +594,43 @@ __device__ __host__ inline fMat3X3 transpose(fMat3X3& a)
 	);
 }
 
+__device__ __host__ inline fMat3X3 operator*(float & a, fMat3X3& b)
+{
+	return fMat3X3
+	(
+		a* b.r1,
+		a* b.r2,
+		a* b.r3
+	);
+}
+
+
+
+
+__device__ __host__ inline fMat3X3 operator*(fMat3X3& b, float & a)
+{
+	return fMat3X3
+	(
+		a * b.r1,
+		a * b.r2,
+		a * b.r3
+	);
+}
+
+
+
+__device__ __host__ inline fMat3X3 operator-(const fMat3X3& a, const fMat3X3& b)
+{
+	return fMat3X3
+	(
+		a.r1 - b.r1,
+		a.r2 - b.r2,
+		a.r3 - b.r3
+	);
+}
+
+
+
 __device__ __host__ inline fMat3X3 mult(fMat3X3& a, fMat3X3& b)
 {
 	return fMat3X3
@@ -568,6 +640,127 @@ __device__ __host__ inline fMat3X3 mult(fMat3X3& a, fMat3X3& b)
 		dot(a.r3, b.c1()), dot(a.r3, b.c2()), dot(a.r3, b.c3())
 	);
 }
+
+
+
+
+
+struct dMat3X3
+{
+	double3 r1;
+	double3 r2;
+	double3 r3;
+
+
+	__host__ __device__ dMat3X3
+	(
+		const double3 & _r1,
+		const double3 & _r2,
+		const double3 & _r3
+	) :r1(_r1), r2(_r2), r3(_r3) {}
+
+	__host__ __device__ dMat3X3
+	(
+		const double& _r1x,
+		const double& _r1y,
+		const double& _r1z,
+		const double& _r2x,
+		const double& _r2y,
+		const double& _r2z,
+		const double& _r3x,
+		const double& _r3y,
+		const double& _r3z
+	) : r1{ _r1x,_r1y,_r1z }, r2{ _r2x,_r2y,_r2z }, r3{ _r3x,_r3y,_r3z } {}
+
+	__host__ __device__ const double3 c1()
+	{
+		return make_double3(r1.x, r2.x, r3.x);
+	}
+
+	__host__ __device__ double3 c2()
+	{
+		return make_double3(r1.y, r2.y, r3.y);
+	}
+
+	__host__ __device__ double3 c3()
+	{
+		return make_double3(r1.z, r2.z, r3.z);
+	}
+
+	__host__ __device__ double det()
+	{
+		double d1 = r1.x * ((r2.y * r3.z) - (r3.y * r2.z));
+		double d2 = r1.y * ((r2.x * r3.z) - (r3.x * r2.z));
+		double d3 = r1.z * ((r2.x * r3.y) - (r3.x * r2.y));
+
+		return d1 - d2 + d3;
+	}
+};
+
+
+__device__ __host__ inline dMat3X3 operator*(double & a, dMat3X3& b)
+{
+	return dMat3X3
+	(
+		a* b.r1,
+		a* b.r2,
+		a* b.r3
+	);
+}
+
+__device__ __host__ inline dMat3X3 transpose(dMat3X3& a)
+{
+	return dMat3X3
+	(
+		make_double3(a.r1.x, a.r2.x, a.r3.x),
+		make_double3(a.r1.y, a.r2.y, a.r3.y),
+		make_double3(a.r1.z, a.r2.z, a.r3.z)
+	);
+}
+
+
+
+
+__device__ __host__ inline dMat3X3 operator*(dMat3X3& b, double & a)
+{
+	return dMat3X3
+	(
+		a * b.r1,
+		a * b.r2,
+		a * b.r3
+	);
+}
+
+
+
+__device__ __host__ inline dMat3X3 operator-(const dMat3X3& a, const dMat3X3& b)
+{
+	return dMat3X3
+	(
+		a.r1 - b.r1,
+		a.r2 - b.r2,
+		a.r3 - b.r3
+	);
+}
+
+
+
+__device__ __host__ inline dMat3X3 mult(dMat3X3& a, dMat3X3& b)
+{
+	return dMat3X3
+	(
+		dot(a.r1, b.c1()), dot(a.r1, b.c2()), dot(a.r1, b.c3()),
+		dot(a.r2, b.c1()), dot(a.r2, b.c2()), dot(a.r2, b.c3()),
+		dot(a.r3, b.c1()), dot(a.r3, b.c2()), dot(a.r3, b.c3())
+	);
+}
+
+
+
+
+
+
+
 
 
 
@@ -627,7 +820,102 @@ __device__ __host__ inline void eigensolveHasan(const fMat3X3& J, float3& sorted
 }
 
 
+
+__device__ __host__ inline float eigenValueMax(fMat3X3 & J)
+{
+	float3 eig = { 0.0f, 0.0f,0.0f };
+
+	float p1 = pow(J.r1.y, 2.0f) + pow(J.r1.z,2.0f) + pow(J.r2.z, 2.0f);
+	
+	if (p1 == 0)
+	{
+		eig.x = J.r1.x;
+		eig.y = J.r2.y;
+		eig.z = J.r3.z;
+	}
+	else
+	{
+		float q = (J.r1.x + J.r2.y + J.r3.z) / 3.0f;
+		float p2 = pow(J.r1.x - q, 2.0f) + pow(J.r2.y - q, 2.0f) + pow(J.r3.z - q, 2.0f) + 2 * p1;
+		float p = sqrtf(p2 / 6.0f);
+		fMat3X3 I = I_3X3_F;
+		fMat3X3 B = J - (q * I);// I is the identity matrix	
+		float p_ = (1.0f / p);
+		B = p_ * B;
+		
+		float r = B.det() * 0.5f;
+		float phi = 0.0f;
+
+		if (r <= -1)
+			phi = CUDA_PI_F / 3.0f;
+		else if (r >= 1)
+			phi = 0;
+		else
+			phi = acos(r) / 3.0f;
+
+		// the eigenvalues satisfy eig3 <= eig2 <= eig1
+		eig.x = q + 2.0f * p * cos(phi);
+		eig.z = q + 2.0f * p * cos(phi + (2.0f * CUDA_PI_F / 3.0f));
+		eig.y = 3.0f * q - eig.x - eig.z; // % since trace(A) = eig1 + eig2 + eig3;
+
+	}
+
+	return eig.x;
+}
+
+
+
+__device__ __host__ inline double eigenValueMax(dMat3X3 & J)
+{
+	double3 eig = { 0.0, 0.0,0.0 };
+
+	double p1 = pow(J.r1.y, 2.0) + pow(J.r1.z, 2.0) + pow(J.r2.z, 2.0);
+
+	if (p1 == 0)
+	{
+		eig.x = J.r1.x;
+		eig.y = J.r2.y;
+		eig.z = J.r3.z;
+	}
+	else
+	{
+		double q = (J.r1.x + J.r2.y + J.r3.z) / 3.0f;
+		double p2 = pow(J.r1.x - q, 2.0) + pow(J.r2.y - q, 2.0) + pow(J.r3.z - q, 2.0) + 2 * p1;
+		double p = sqrt(p2 / 6.0);
+		dMat3X3 I = I_3X3_D;
+		dMat3X3 B = J - (q * I);// I is the identity matrix	
+		double p_ = (1.0f / p);
+		B = p_ * B;
+
+		double r = B.det() * 0.5;
+		double phi = 0.0;
+
+		if (r <= -1)
+			phi = CUDA_PI_F / 3.0;
+		else if (r >= 1)
+			phi = 0;
+		else
+			phi = acos(r) / 3.0;
+
+		// the eigenvalues satisfy eig3 <= eig2 <= eig1
+		eig.x = q + 2.0 * p * cos(phi);
+		eig.z = q + 2.0 * p * cos(phi + (2.0 * CUDA_PI_D / 3.0));
+		eig.y = 3.0 * q - eig.x - eig.z; // % since trace(A) = eig1 + eig2 + eig3;
+
+	}
+
+	return eig.x;
+}
+
+
 __device__ __host__ inline float3 world2Tex(const float3& position, const float3& dimension, const int3& size)
 {
 	return (position / dimension) * size;
 }
+
+__device__ __host__ inline float3 saturateRGB(const float3 & rgb, const float & saturate)
+{
+	float3 rgb_complement = make_float3(1, 1, 1) - rgb;
+	return ((1 - saturate) * rgb_complement) + rgb;
+}
+

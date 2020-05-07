@@ -53,11 +53,11 @@ bool FluctuationHeightfield::initialize
 
 	this->s_HeightSurface_Primary.destroySurface();
 
-	this->t_HeightSurface_Primary.setArray(a_HeightSurface_Primary.getArrayRef());
-	this->t_HeightSurface_Primary_Extra.setArray(a_HeightSurface_Primary_Extra.getArrayRef());
+	this->volumeTexture3D_height.setArray(a_HeightSurface_Primary.getArrayRef());
+	this->volumeTexture3D_height_extra.setArray(a_HeightSurface_Primary_Extra.getArrayRef());
 
-	this->t_HeightSurface_Primary.initialize_array();
-	this->t_HeightSurface_Primary.initialize_array();
+	this->volumeTexture3D_height.initialize_array();
+	this->volumeTexture3D_height.initialize_array();
 
 	return true;
 }
@@ -146,8 +146,8 @@ __host__ void FluctuationHeightfield::rendering()
 	CudaTerrainRenderer_extra_fluctuation<FetchTextureSurface::Channel_X> << < blocks, thread >> >
 		(
 			this->raycastingSurface.getSurfaceObject(),
-			this->t_HeightSurface_Primary.getTexture(),
-			this->t_HeightSurface_Primary_Extra.getTexture(),
+			this->volumeTexture3D_height.getTexture(),
+			this->volumeTexture3D_height_extra.getTexture(),
 			int(this->rays),
 			this->fluctuationheightfieldOptions->samplingRate_0,
 			this->raycastingOptions->tolerance_0,

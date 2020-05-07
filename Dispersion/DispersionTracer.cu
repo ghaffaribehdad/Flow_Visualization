@@ -14,8 +14,8 @@ bool HeightfieldGenerator::retrace()
 	this->a_HeightSurface_Primary.release();
 	this->a_HeightSurface_Primary_Extra.release();
 
-	cudaDestroyTextureObject(this->t_HeightSurface_Primary.getTexture());
-	cudaDestroyTextureObject(this->t_HeightSurface_Primary_Extra.getTexture());
+	cudaDestroyTextureObject(this->volumeTexture3D_height.getTexture());
+	cudaDestroyTextureObject(this->volumeTexture3D_height_extra.getTexture());
 
 	cudaFree(d_particle);
 
@@ -157,7 +157,7 @@ __host__ bool HeightfieldGenerator::InitializeHeightSurface3D_Single()
 bool HeightfieldGenerator::release()
 {
 	Raycasting::release();
-	cudaDestroyTextureObject(this->t_HeightSurface_Primary.getTexture());
+	cudaDestroyTextureObject(this->volumeTexture3D_height.getTexture());
 	this->a_HeightSurface_Primary.release();
 
 	return true;
@@ -271,8 +271,8 @@ __host__ void HeightfieldGenerator::rendering()
 		CudaTerrainRenderer_Marching_extra<< < blocks, thread >> >
 			(
 				this->raycastingSurface.getSurfaceObject(),
-				this->t_HeightSurface_Primary.getTexture(),
-				this->t_HeightSurface_Primary_Extra.getTexture(),
+				this->volumeTexture3D_height.getTexture(),
+				this->volumeTexture3D_height_extra.getTexture(),
 				int(this->rays),
 				this->raycastingOptions->samplingRate_0,
 				this->raycastingOptions->tolerance_0,
@@ -366,11 +366,11 @@ bool HeightfieldGenerator::singleSurfaceInitialization()
 	this->s_HeightSurface_Primary.destroySurface();
 	this->s_HeightSurface_Primary_Extra.destroySurface();
 
-	t_HeightSurface_Primary.setArray(a_HeightSurface_Primary.getArrayRef());
-	t_HeightSurface_Primary.initialize_array(false,cudaAddressModeClamp, cudaAddressModeClamp, cudaAddressModeClamp);
+	volumeTexture3D_height.setArray(a_HeightSurface_Primary.getArrayRef());
+	volumeTexture3D_height.initialize_array(false,cudaAddressModeClamp, cudaAddressModeClamp, cudaAddressModeClamp);
 
-	t_HeightSurface_Primary_Extra.setArray(a_HeightSurface_Primary_Extra.getArrayRef());
-	t_HeightSurface_Primary_Extra.initialize_array(false, cudaAddressModeClamp, cudaAddressModeClamp, cudaAddressModeClamp);
+	volumeTexture3D_height_extra.setArray(a_HeightSurface_Primary_Extra.getArrayRef());
+	volumeTexture3D_height_extra.initialize_array(false, cudaAddressModeClamp, cudaAddressModeClamp, cudaAddressModeClamp);
 
 	return true;
 }

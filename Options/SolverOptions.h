@@ -38,14 +38,17 @@ public:
 	float dt = 0.001f;
 	float advectTime = 0.0f;
 
+
+
 	int lineLength = 1024;
 	int lines_count = 1024;
 	float line_thickness = 0.0f;
 
 
-	int firstIdx = 1;
-	int lastIdx = 200;
-	int currentIdx =1;
+	int firstIdx = 400;
+	int lastIdx = 750;
+	int currentIdx =400;
+	int timeSteps = lastIdx - firstIdx + 1;
 
 	
 	int colorMode = 0;

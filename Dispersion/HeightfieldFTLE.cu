@@ -4,6 +4,7 @@
 #include "DispersionHelper.h"
 #include "..//Cuda/Cuda_helper_math_host.h"
 #include "../Raycaster/Raycasting.h"
+#include "../VolumeIO/BinaryWriter.h"
 
 
 extern __constant__  BoundingBox d_boundingBox;
@@ -20,7 +21,7 @@ __host__ bool HeightfieldFTLE::InitializeParticles()
 		ARRAYTOINT2(dispersionOptions->gridSize_2D),
 		dispersionOptions->seedWallNormalDist,
 		dispersionOptions->tilt_deg,
-		dispersionOptions->ftleDistance
+		dispersionOptions->initial_distance
 	);
 
 	size_t Particles_byte = sizeof(Particle) * n_particles * FTLE_NEIGHBOR;
@@ -44,12 +45,14 @@ void HeightfieldFTLE::trace3D_path_Single()
 
 	RK4STEP RK4Step = RK4STEP::EVEN;
 
+
+	// Forward FTLE
 	for (int i = 0; i < solverOptions->lastIdx - solverOptions->firstIdx; i++)
 	{
 		if (i == 0)
 		{
 			// Load i 'dx field in volume_IO into field
-			volume_IO.readVolume(i + solverOptions->currentIdx);
+			volume_IO.readVolume(solverOptions->currentIdx);
 			// Copy and initialize velocityfield texture
 			t_velocityField_0.setField(volume_IO.getField_float());
 			t_velocityField_0.initialize(Array2Int3(solverOptions->gridSize),false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
@@ -58,7 +61,7 @@ void HeightfieldFTLE::trace3D_path_Single()
 
 
 			// Same procedure for the second texture
-			volume_IO.readVolume(i + solverOptions->currentIdx + 1);
+			volume_IO.readVolume(solverOptions->currentIdx + 1);
 			t_velocityField_1.setField(volume_IO.getField_float());
 			t_velocityField_1.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
 			// Release the velocityfield from host (volume_IO)
@@ -98,7 +101,7 @@ void HeightfieldFTLE::trace3D_path_Single()
 
 		}
 
-		traceDispersion3D_path_FSLE << < blocks, thread >> >
+		traceDispersion3D_path_FTLE << < blocks, thread >> >
 			(
 				d_particle,
 				s_HeightSurface_Primary.getSurfaceObject(),
@@ -107,11 +110,84 @@ void HeightfieldFTLE::trace3D_path_Single()
 				this->t_velocityField_1.getTexture(),
 				*solverOptions,
 				*dispersionOptions,
-				*fsleOptions,
 				RK4Step,
 				i
 				);
 	}
+
+
+	//// Backward FTLE Calculations
+	//for (int i = 0; i < solverOptions->lastIdx - solverOptions->firstIdx; i++)
+	//{
+	//	if (i == 0)
+	//	{
+	//		// Load i 'dx field in volume_IO into field
+	//		volume_IO.readVolume(solverOptions->currentIdx);
+	//		// Copy and initialize velocityfield texture
+	//		t_velocityField_0.setField(volume_IO.getField_float());
+	//		t_velocityField_0.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
+	//		// Release the velocityfield from host (volume_IO)
+	//		volume_IO.release();
+
+
+	//		// Same procedure for the second texture
+	//		volume_IO.readVolume(solverOptions->currentIdx - 1);
+	//		t_velocityField_1.setField(volume_IO.getField_float());
+	//		t_velocityField_1.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
+	//		// Release the velocityfield from host (volume_IO)
+	//		volume_IO.release();
+
+	//	}
+	//	else
+	//	{
+	//		// Even integration steps
+	//		if (i % 2 == 0)
+	//		{
+
+	//			// Same procedure for the second texture
+	//			volume_IO.readVolume(solverOptions->currentIdx - 1 - i);
+	//			t_velocityField_1.release();
+	//			t_velocityField_1.setField(volume_IO.getField_float());
+	//			t_velocityField_1.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
+	//			// Release the velocityfield from host (volume_IO)
+	//			volume_IO.release();
+
+	//			RK4Step = RK4STEP::EVEN;
+	//		}
+	//		// Odd integration steps
+	//		else
+	//		{
+	//			// Same procedure for the second texture
+	//			volume_IO.readVolume( solverOptions->currentIdx - 1 - i);
+	//			t_velocityField_0.release();
+	//			t_velocityField_0.setField(volume_IO.getField_float());
+	//			t_velocityField_0.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
+	//			// Release the velocityfield from host (volume_IO)
+	//			volume_IO.release();
+
+	//			RK4Step = RK4STEP::ODD;
+
+	//		}
+
+	//	}
+
+	//	traceDispersion3D_path_FTLE << < blocks, thread >> >
+	//		(
+	//			d_particle,
+	//			s_HeightSurface_Primary.getSurfaceObject(),
+	//			s_HeightSurface_Primary_Extra.getSurfaceObject(),
+	//			this->t_velocityField_0.getTexture(),
+	//			this->t_velocityField_1.getTexture(),
+	//			*solverOptions,
+	//			*dispersionOptions,
+	//			RK4Step,
+	//			i,
+	//			FTLE_Direction::BACKWARD_FTLE
+	//			);
+	//}
+
+
+
 
 	// Calculates the gradients and store it in the cuda surface
 	cudaFree(d_particle);
@@ -140,8 +216,8 @@ void HeightfieldFTLE::rendering()
 			CudaTerrainRenderer_Marching_extra_FSLE << < blocks, thread >> >
 				(
 					this->raycastingSurface.getSurfaceObject(),
-					this->t_HeightSurface_Primary.getTexture(),
-					this->t_HeightSurface_Primary_Extra.getTexture(),
+					this->volumeTexture3D_height.getTexture(),
+					this->volumeTexture3D_height_extra.getTexture(),
 					int(this->rays),
 					this->raycastingOptions->samplingRate_0,
 					this->raycastingOptions->tolerance_0,
@@ -155,8 +231,8 @@ void HeightfieldFTLE::rendering()
 		CudaRaycasting_FTLE << < blocks, thread >> >
 			(
 				this->raycastingSurface.getSurfaceObject(),
-				this->t_HeightSurface_Primary.getTexture(),
-				this->t_HeightSurface_Primary_Extra.getTexture(),
+				this->volumeTexture3D_height.getTexture(),
+				this->volumeTexture3D_height_extra.getTexture(),
 				int(this->rays),
 				this->raycastingOptions->samplingRate_0,
 				this->raycastingOptions->tolerance_0,
@@ -194,7 +270,6 @@ bool HeightfieldFTLE::singleSurfaceInitialization()
 	this->trace3D_path_Single();
 
 
-	// Store gradient and height on the surface
 	this->gradient3D_Single_ftle();
 
 
@@ -202,11 +277,15 @@ bool HeightfieldFTLE::singleSurfaceInitialization()
 	this->s_HeightSurface_Primary_Extra.destroySurface();
 		
 
-	this->t_HeightSurface_Primary.setArray(a_HeightSurface_Primary.getArrayRef());
-	this->t_HeightSurface_Primary_Extra.setArray(a_HeightSurface_Primary_Extra.getArrayRef());
+	this->volumeTexture3D_height.setArray(a_HeightSurface_Primary.getArrayRef());
+	this->volumeTexture3D_height_extra.setArray(a_HeightSurface_Primary_Extra.getArrayRef());
 
-	this->t_HeightSurface_Primary.initialize_array(false,cudaAddressModeClamp, cudaAddressModeClamp, cudaAddressModeClamp);
-	this->t_HeightSurface_Primary_Extra.initialize_array(false,cudaAddressModeClamp, cudaAddressModeClamp, cudaAddressModeClamp);
+	this->volumeTexture3D_height.initialize_array(false,cudaAddressModeClamp, cudaAddressModeClamp, cudaAddressModeClamp);
+	this->volumeTexture3D_height_extra.initialize_array(false,cudaAddressModeClamp, cudaAddressModeClamp, cudaAddressModeClamp);
+
+	// calculate the correlation between ftle and height
+	this->correlation();
+	// Store gradient and height on the surface
 
 	return true;		
 }
@@ -226,6 +305,119 @@ void HeightfieldFTLE::gradient3D_Single_ftle()
 			*dispersionOptions,
 			*solverOptions
 			);
+}
+
+void HeightfieldFTLE::correlation()
+{
+	//// Calculates the block and grid sizes
+	//unsigned int blocks;
+	//dim3 thread = { maxBlockDim,maxBlockDim,1 };
+	//blocks = BLOCK_THREAD(n_particles);
+	//
+	//// Allocate device memory
+	//gpuErrchk(cudaMalloc((void**)&d_mean_ftle, sizeof(float) * solverOptions->timeSteps));
+	//gpuErrchk(cudaMalloc((void**)&d_mean_height, sizeof(float) * solverOptions->timeSteps));
+	//gpuErrchk(cudaMalloc((void**)&d_pearson_cov, sizeof(float) * solverOptions->timeSteps));
+	//gpuErrchk(cudaMalloc((void**)&d_pearson_var_ftle, sizeof(float) * solverOptions->timeSteps));
+	//gpuErrchk(cudaMalloc((void**)&d_pearson_var_height, sizeof(float) * solverOptions->timeSteps));
+
+
+
+	//// Initialize the mean value to zero at device
+	//gpuErrchk(cudaMemset(this->d_mean_ftle, 0, sizeof(float) * solverOptions->timeSteps));
+	//gpuErrchk(cudaMemset(this->d_mean_height, 0, sizeof(float) * solverOptions->timeSteps));
+	//gpuErrchk(cudaMemset(this->d_pearson_cov, 0, sizeof(float) * solverOptions->timeSteps));
+	//gpuErrchk(cudaMemset(this->d_pearson_var_ftle, 0, sizeof(float) * solverOptions->timeSteps));
+	//gpuErrchk(cudaMemset(this->d_pearson_var_height, 0, sizeof(float) * solverOptions->timeSteps));
+
+
+
+
+	gpuErrchk(cudaMalloc((void**)&d_ftle, sizeof(float) * dispersionOptions->gridSize_2D[0]));
+	gpuErrchk(cudaMalloc((void**)&d_height, sizeof(float) * dispersionOptions->gridSize_2D[0]));
+
+	fetch_ftle_height << < 1, dispersionOptions->gridSize_2D[0] >> >
+		(
+			volumeTexture3D_height.getTexture(),
+			volumeTexture3D_height_extra.getTexture(),
+			d_height,
+			d_ftle,
+			*solverOptions
+			);
+
+	BinaryWriter binaryWriter;
+	binaryWriter.setFileName("ftleValues.bin");
+	binaryWriter.setFilePath("D:\\FTLE_HEIGHT\\");
+	binaryWriter.setBufferSize(sizeof(float)*dispersionOptions->gridSize_2D[0]);
+
+	h_ftle = new float[dispersionOptions->gridSize_2D[0]];
+	h_height = new float[dispersionOptions->gridSize_2D[0]];
+	gpuErrchk(cudaMemcpy(h_ftle, d_ftle, sizeof(float)*dispersionOptions->gridSize_2D[0], cudaMemcpyDeviceToHost));
+	gpuErrchk(cudaMemcpy(h_height, d_height, sizeof(float)*dispersionOptions->gridSize_2D[0], cudaMemcpyDeviceToHost));
+
+	binaryWriter.setBuffer(reinterpret_cast<char*>(h_ftle));
+	binaryWriter.write();
+	binaryWriter.setFileName("heightValues.bin");
+	binaryWriter.setBuffer(reinterpret_cast<char*>(h_height));
+	binaryWriter.write();
+
+
+	
+
+
+	//// calculate the mean values
+	//textureMean << < blocks, thread >> >
+	//	(
+	//		volumeTexture3D_height.getTexture(),
+	//		volumeTexture3D_height_extra.getTexture(),
+	//		d_mean_height,
+	//		d_mean_ftle,
+	//		*dispersionOptions,
+	//		*solverOptions
+	//	);
+
+	//pearson_terms << < blocks, thread >> >
+	//	(
+	//		volumeTexture3D_height.getTexture(),
+	//		volumeTexture3D_height_extra.getTexture(),
+	//		d_mean_height,
+	//		d_mean_ftle,
+	//		d_pearson_cov,
+	//		d_pearson_var_ftle,
+	//		d_pearson_var_height,
+	//		*dispersionOptions,
+	//		*solverOptions
+	//		);
+
+	//fetchftle_height << < blocks, thread >> >
+	//(
+	//	volumeTexture3D_height.getTexture(),
+	//	volumeTexture3D_height_extra.getTexture(),
+	//	d_mean_height,
+	//	d_mean_ftle,
+	//	*dispersionOptions,
+	//	*solverOptions
+	//);
+
+	//pearson << < 1, solverOptions->timeSteps >> >
+	//	(
+	//		d_pearson_cov,
+	//		d_pearson_var_ftle,
+	//		d_pearson_var_height,
+	//		*solverOptions
+	//		);
+
+	//h_pearson = new float[solverOptions->timeSteps];
+	//gpuErrchk(cudaMemcpy(h_pearson, d_pearson_cov, sizeof(float)*solverOptions->timeSteps, cudaMemcpyDeviceToHost));
+
+	//
+
+
+	//gpuErrchk(cudaFree(d_mean_ftle));
+	//gpuErrchk(cudaFree(d_mean_height));
+	//gpuErrchk(cudaFree(d_pearson_var_ftle));
+	//gpuErrchk(cudaFree(d_pearson_var_height));
+
 }
 
 

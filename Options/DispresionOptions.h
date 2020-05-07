@@ -30,8 +30,12 @@ struct DispersionOptions
 {
 	// Seeding Options
 	int gridSize_2D[2] = { 192,192 }; //TODO:: Add dynamic seed size
-	float seedWallNormalDist = 0.01f;
-	float tilt_deg = 10.0f;
+	float seedWallNormalDist = 0.20f;
+	//float seedWallNormalDist = 0.20f;
+	//float seedWallNormalDist = 0.30f;
+	//float seedWallNormalDist = 0.50f;
+
+	float tilt_deg = 0.0f;
 
 
 	char	fileNameSecondary[100] = "FieldP";
@@ -43,7 +47,7 @@ struct DispersionOptions
 	float hegiht_tolerance = 0.01f;
 
 	// Distance of the neighboring particle in FTLE calculation
-	float ftleDistance = 0.001f;
+	float initial_distance = 0.0001f;
 
 	// Binary Search Options
 	float binarySearchTolerance = 0.1f;
@@ -52,10 +56,10 @@ struct DispersionOptions
 	// Color Coding
 	int colorCode = static_cast<int>(dispersionOptionsMode::dispersionColorCode::NONE);
 	int renderingMode = static_cast<int>(dispersionOptionsMode::HeightfieldRenderingMode::SINGLE_SURFACE);
-	float max_val = 1.0f;
-	float min_val = 0.0f;
-	float minColor[4] = { 67.0f / 255.0f,162.0f / 255.0f,202.0f / 255.0f };
-	float maxColor[4] = { 168.0f / 255.0f,221.0f / 255.0f,181.0f / 255.0f };
+	float max_val = 4.0f;
+	float min_val = 0.0f; 
+	float minColor[4] = { 5 / 255.0f,113 / 255.0f,176 / 255.0f };
+	float maxColor[4] = { 202 / 255.0f,0 / 255.0f,32 / 255.0f };
 
 
 	float minColor_secondary[4] = { 67.0f / 255.0f,162.0f/ 255.0f,202.0f / 255.0f };
@@ -87,6 +91,8 @@ struct DispersionOptions
 	float ftleIsoValue = 0.0f;
 
 	float isoValueTolerance = 0.01f;
+	bool forward = true;
+	bool backward = false;
 
 };
 

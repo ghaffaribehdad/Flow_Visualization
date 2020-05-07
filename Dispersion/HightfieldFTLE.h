@@ -57,5 +57,18 @@ private:
 	virtual void rendering() override;
 	virtual bool singleSurfaceInitialization() override;
 	void gradient3D_Single_ftle();
+	void correlation();
 	virtual bool initializeBoundingBox() override;
+
+	float * h_pearson;
+
+	float * h_ftle;
+	float * h_height;
+	float * d_mean_ftle;
+	float * d_ftle;
+	float * d_height;
+	float * d_mean_height;
+	float * d_pearson_cov;
+	float * d_pearson_var_ftle;
+	float * d_pearson_var_height;
 };

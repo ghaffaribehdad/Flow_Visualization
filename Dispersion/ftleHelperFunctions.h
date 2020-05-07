@@ -6,6 +6,11 @@
 #include "../Options/FSLEOptions.h"
 
 enum RK4STEP;
+enum FTLE_Direction
+{
+	FORWARD_FTLE = 0,
+	BACKWARD_FTLE
+};
 
 
 #define FTLE_NEIGHBOR 7 //Number of neighboring particle (6) + the center particle (1)
@@ -20,8 +25,11 @@ __global__ void  traceDispersion3D_path_FTLE
 	SolverOptions solverOptions,
 	DispersionOptions dispersionOptions,
 	RK4STEP RK4step,
-	int timestep
+	int timestep,
+	unsigned int direction = FTLE_Direction::FORWARD_FTLE
 );
+
+
 
 __global__ void  traceDispersion3D_path_FSLE
 (
@@ -37,5 +45,6 @@ __global__ void  traceDispersion3D_path_FSLE
 	int timestep
 );
 
-__device__ float FTLE3D(Particle* particles, float distance, float T);
+__device__ float FTLE3D(Particle* particles, const float & distance);
+__device__ float FTLE3D_test(Particle* particles, const float & distance);
 __device__ float averageNeighborDistance(Particle* particles);;

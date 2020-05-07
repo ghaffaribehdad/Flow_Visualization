@@ -1698,8 +1698,7 @@ __global__ void CudaTerrainRenderer_extra_double
 	int traceTime
 )
 {
-	Observable observable;
-
+	
 	int index = blockIdx.x * blockDim.y * blockDim.x;
 	index += threadIdx.y * blockDim.x;
 	index += threadIdx.x;
@@ -2448,13 +2447,19 @@ __global__ void CudaTerrainRenderer_Marching_extra_FSLE
 				// fetch texel from the GPU memory
 				float4 hightFieldVal = ValueAtXYZ_float4(heightField, relativePos);
 
+				float3 relativePos_initial = world2Tex
+				(
+					make_float3(position.x, position.z, 0),
+					make_float3(d_boundingBox.m_dimensions.x, d_boundingBox.m_dimensions.z, static_cast<float>(traceTime)),
+					make_int3(dispersionOptions.gridSize_2D[0], dispersionOptions.gridSize_2D[1], static_cast<float> (traceTime))
+				);
+				float initialHeight = ValueAtXYZ_float4(heightField, relativePos_initial).x;
+				float offset = d_boundingBox.m_dimensions.y / 2.0f;
+				float relativeHeight = hightFieldVal.x - initialHeight + offset;
+
 				// check if we have a hit 
 				if (position.y - hightFieldVal.x > 0 && position.y - hightFieldVal.x < dispersionOptions.hegiht_tolerance)
 				{
-
-					
-
-
 
 					float3 gradient = { hightFieldVal.y,-1,hightFieldVal.z };
 					// shading (no ambient)
@@ -2463,10 +2468,27 @@ __global__ void CudaTerrainRenderer_Marching_extra_FSLE
 
 					float3 rgb_min = Array2Float3(dispersionOptions.minColor);
 					float3 rgb_max = Array2Float3(dispersionOptions.maxColor);
+					float fsle = 0.0f;
 
-					float fsle = ValueAtXYZ_float4(extraField, relativePos).x;
-					float extractedVal = saturate((fsle - dispersionOptions.min_val) / (dispersionOptions.max_val - dispersionOptions.min_val));
-					float3 rgb = (1.0f - extractedVal) * rgb_min + extractedVal * rgb_max;
+					if (dispersionOptions.forward)
+						fsle = ValueAtXYZ_float4(extraField, relativePos).x;
+					else
+						fsle = ValueAtXYZ_float4(extraField, relativePos).y;
+
+					float3 rgb = { 0,0,0 };
+
+					float extractedVal = saturate((fsle - dispersionOptions.min_val) / (dispersionOptions.max_val - dispersionOptions.min_val)) * 2;
+					if (extractedVal > 1)
+					{
+						rgb = saturateRGB(rgb_max, extractedVal - 1);
+					}
+					else
+					{
+						rgb = saturateRGB(rgb_min, 1-extractedVal);
+					}
+
+
+					//float3 rgb = (1.0f - extractedVal) * rgb_min + extractedVal * rgb_max;
 
 					rgb = rgb * diffuse;
 

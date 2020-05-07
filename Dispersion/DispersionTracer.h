@@ -120,8 +120,8 @@ protected:
 	CudaSurface s_HeightSurface_Primary;
 	CudaSurface s_HeightSurface_Primary_Extra;
 
-	VolumeTexture3D t_HeightSurface_Primary;
-	VolumeTexture3D t_HeightSurface_Primary_Extra;
+	VolumeTexture3D volumeTexture3D_height;
+	VolumeTexture3D volumeTexture3D_height_extra;
 
 	CudaArray_3D<float4> a_HeightSurface_Primary;
 	CudaArray_3D<float4> a_HeightSurface_Primary_Extra;		

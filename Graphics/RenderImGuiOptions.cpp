@@ -333,8 +333,8 @@ void RenderImGuiOptions::drawSolverOptions()
 	ImGui::SameLine();
 	if (ImGui::Button("b2f", ImVec2(80, 25)))
 	{
-		this->camera->SetPosition(-10.7, 4.6, -0.0001);
-		this->camera->SetLookAtPos({ -0.9, -0.33, 0 });
+		this->camera->SetPosition(-10.7f, 4.6f, -0.0001f);
+		this->camera->SetLookAtPos({ -0.9f, -0.33f, 0 });
 
 		this->updateRaycasting = true;
 		this->updateDispersion = true;
@@ -626,6 +626,23 @@ void RenderImGuiOptions::drawDispersionOptions()
 
 	}
 
+	if (ImGui::Checkbox("Forward-FTLE", &dispersionOptions->forward))
+	{
+		dispersionOptions->backward = !dispersionOptions->forward;
+		this->updateDispersion = true;
+		this->updateFTLE = true;
+
+	}
+
+	ImGui::SameLine();
+	if (ImGui::Checkbox("Backward-FTLE", &dispersionOptions->backward))
+	{
+		dispersionOptions->forward = !dispersionOptions->backward;
+		this->updateDispersion = true;
+		this->updateFTLE = true;
+
+	}
+
 
 	if (ImGui::DragFloat("ftle Isosurface", &dispersionOptions->ftleIsoValue, 0.0001f, 0.0f, 100.0f, "%5f"))
 	{
@@ -859,6 +876,9 @@ void RenderImGuiOptions::drawFluctuationHeightfieldOptions()
 		{
 			fluctuationOptions->firstIdx = fluctuationOptions->lastIdx;
 		}
+
+		solverOptions->timeSteps = solverOptions->lastIdx - solverOptions->firstIdx + 1;
+
 	}
 
 	if (ImGui::InputInt("Last Index", &(fluctuationOptions->lastIdx)))
@@ -867,6 +887,8 @@ void RenderImGuiOptions::drawFluctuationHeightfieldOptions()
 		{
 			fluctuationOptions->firstIdx = fluctuationOptions->lastIdx;
 		}
+
+		solverOptions->timeSteps = solverOptions->lastIdx - solverOptions->firstIdx + 1;
 
 	}
 

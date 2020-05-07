@@ -64,6 +64,7 @@ void Engine::Update()
 	{
 		this->gfx.camera.AdjustPosition(this->gfx.camera.GetViewXMVector() * 1.5f*cameraSpeed * dt);
 		this->gfx.viewChanged();
+		std::printf("hi\n");
 	}
 
 
@@ -85,18 +86,18 @@ void Engine::Update()
 		this->gfx.viewChanged();
 
 	}
-	//if (keyboard.KeyIsPressed(VK_SPACE))
-	//{
-	//	this->gfx.camera.AdjustPosition(gfx.camera.GetUpXMVector()*  cameraSpeed * dt);
-	//	this->gfx.viewChanged();
+	if (keyboard.KeyIsPressed(VK_SPACE))
+	{
+		this->gfx.camera.AdjustPosition(gfx.camera.GetUpXMVector()*  cameraSpeed * dt);
+		this->gfx.viewChanged();
 
-	//}
-	//if (keyboard.KeyIsPressed('Z'))
-	//{
-	//	this->gfx.camera.AdjustPosition(gfx.camera.GetUpXMVector() * -cameraSpeed * dt);
-	//	this->gfx.viewChanged();
+	}
+	if (keyboard.KeyIsPressed('Z'))
+	{
+		this->gfx.camera.AdjustPosition(gfx.camera.GetUpXMVector() * -cameraSpeed * dt);
+		this->gfx.viewChanged();
 
-	//}
+	}
 
 	// Resize the window
 	if (this->resize)
