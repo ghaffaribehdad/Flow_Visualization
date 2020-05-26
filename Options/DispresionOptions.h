@@ -17,10 +17,11 @@ namespace dispersionOptionsMode
 
 	};
 
-	enum HeightfieldRenderingMode
+	enum HeightMode
 	{
-		SINGLE_SURFACE = 0,
-		DOUBLE_SURFACE
+		Height,
+		FTLE,
+		COUNT
 	};
 }
 
@@ -55,7 +56,7 @@ struct DispersionOptions
 
 	// Color Coding
 	int colorCode = static_cast<int>(dispersionOptionsMode::dispersionColorCode::NONE);
-	int renderingMode = static_cast<int>(dispersionOptionsMode::HeightfieldRenderingMode::SINGLE_SURFACE);
+	int heightMode = dispersionOptionsMode::HeightMode::FTLE;
 	float max_val = 4.0f;
 	float min_val = 0.0f; 
 	float minColor[4] = { 5 / 255.0f,113 / 255.0f,176 / 255.0f };
@@ -93,6 +94,9 @@ struct DispersionOptions
 	float isoValueTolerance = 0.01f;
 	bool forward = true;
 	bool backward = false;
+
+	bool timeNormalization = true;
+	float scale = 0.005f;
 
 };
 

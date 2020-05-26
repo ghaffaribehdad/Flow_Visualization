@@ -67,9 +67,9 @@ __host__ bool Raycasting::resize()
 
 __host__ bool Raycasting::initialize
 (
-	cudaTextureAddressMode addressMode_X = cudaAddressModeBorder,
-	cudaTextureAddressMode addressMode_Y = cudaAddressModeBorder,
-	cudaTextureAddressMode addressMode_Z = cudaAddressModeBorder
+	cudaTextureAddressMode addressMode_X,
+	cudaTextureAddressMode addressMode_Y,
+	cudaTextureAddressMode addressMode_Z 
 )
 {
 	if (!this->initializeRaycastingTexture())				// initilize texture (the texture we need to write to)
@@ -84,27 +84,15 @@ __host__ bool Raycasting::initialize
 
 
 	// Read and set field
-	if (!this->raycastingOptions->fileLoaded)		// Load data set into the texture memory
-	{
-		this->volume_IO.Initialize(this->solverOptions);
-		this->volume_IO.readVolume(this->solverOptions->currentIdx);
-		float * field = volume_IO.getField_float();
-		this->volumeTexture.setField(field);
-		this->volumeTexture.initialize(Array2Int3(solverOptions->gridSize), false, addressMode_X, addressMode_Y, addressMode_Z);
-		this->volume_IO.release();
-		this->raycastingOptions->fileLoaded = true;
-	}
-	if (this->raycastingOptions->fileChanged)
-	{
-		this->volumeTexture.release();
+	this->volume_IO.Initialize(this->solverOptions);
+	this->volume_IO.readVolume(this->solverOptions->currentIdx);
+	float * field = volume_IO.getField_float();
+	this->volumeTexture.setField(field);
+	this->volumeTexture.initialize(Array2Int3(solverOptions->gridSize), false, addressMode_X, addressMode_Y, addressMode_Z);
+	this->volume_IO.release();
+	this->raycastingOptions->fileLoaded = true;
+	
 
-		this->volume_IO.readVolume(solverOptions->currentIdx);
-		float * field = volume_IO.getField_float();
-		this->volumeTexture.setField(field);
-		this->volumeTexture.initialize(Array2Int3(solverOptions->gridSize), false, addressMode_X, addressMode_Y, addressMode_Z) ;
-
-		this->raycastingOptions->fileChanged = false;
-	}
 
 	//if (raycastingOptions->isoMeasure_0 == IsoMeasure::TURBULENT_DIFFUSIVITY)
 	//{
@@ -119,6 +107,24 @@ __host__ bool Raycasting::initialize
 	return true;
 
 }
+
+void Raycasting::updateFile
+(
+	cudaTextureAddressMode addressMode_X,
+	cudaTextureAddressMode addressMode_Y,
+	cudaTextureAddressMode addressMode_Z
+)
+{
+	this->volumeTexture.release();
+
+	this->volume_IO.readVolume(solverOptions->currentIdx);
+	float * field = volume_IO.getField_float();
+	this->volumeTexture.setField(field);
+	this->volumeTexture.initialize(Array2Int3(solverOptions->gridSize), false, addressMode_X, addressMode_Y, addressMode_Z);
+
+	this->raycastingOptions->fileChanged = false;
+}
+
 
 __host__ bool Raycasting::release()
 {
@@ -219,8 +225,24 @@ __host__ void Raycasting::rendering()
 					this->raycastingOptions->samplingRate_0,
 					this->raycastingOptions->tolerance_0
 				);
+			
 			break;
 		}
+
+		case IsoMeasure::Velocity_X_Plane:
+		{
+			int3 gridSize = Array2Int3(solverOptions->gridSize);
+			CudaIsoSurfacRenderer_float_PlaneColor << < blocks, thread >> >
+				(
+					raycastingSurface.getSurfaceObject(),
+					this->volumeTexture.getTexture(),
+					int(this->rays),
+					gridSize,
+					*raycastingOptions
+					);
+			break;
+		}
+
 
 		//case IsoMeasure::TURBULENT_DIFFUSIVITY:
 		//{
@@ -503,6 +525,315 @@ __global__ void CudaIsoSurfacRenderer
 }
 
 
+
+
+__global__ void CudaIsoSurfacRenderer_float
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field1,
+	int rays,
+	int3 gridSize,
+	TimeSpace3DOptions timeSpace3DOptions
+)
+{
+
+
+	int index = CUDA_INDEX;
+
+	if (index < rays)
+	{
+
+		// determine pixel position based on the index of the thread
+		int2 pixel = index2pixel(index, d_boundingBox.m_width);
+
+		float3 pixelPos = pixelPosition(d_boundingBox, pixel.x, pixel.y);
+		float2 NearFar = findIntersections(pixelPos, d_boundingBox);
+
+		// if inside the bounding box
+		if (NearFar.y != -1)
+		{
+
+			float3 rayDir = normalize(pixelPos - d_boundingBox.m_eyePos);
+
+			// near and far plane
+			float n = 0.1f;
+			float f = 1000.0f;
+
+			// Add the offset to the eye position
+			float3 eyePos = d_boundingBox.m_eyePos + d_boundingBox.m_dimensions / 2.0;
+
+			for (float t = NearFar.x; t < NearFar.y; t = t + timeSpace3DOptions.samplingRate)
+			{
+				// Position of the isosurface
+				float3 position = pixelPos + (rayDir * t);
+
+				// Adds an offset to position while the center of the grid is at gridDiamter/2
+				position += d_boundingBox.m_dimensions / 2.0;
+
+				//Relative position calculates the position of the point on the CUDA texture
+				float3 relativePos = world2Tex(position, d_boundingBox.m_dimensions, gridSize);
+
+
+				// check if we have a hit 
+				if (
+						tex3D<float>(field1, relativePos.x, relativePos.y, relativePos.z) > timeSpace3DOptions.isoValue &&
+						position.y < d_boundingBox.m_dimensions.y * timeSpace3DOptions.wallNormalClipping
+					)
+				{
+
+					// Correct the position via binary search
+					float3 step = rayDir * t;
+					position = binarySearch_tex1D(field1, position, d_boundingBox.m_dimensions, gridSize, step , timeSpace3DOptions.isoValue, timeSpace3DOptions.tolerance, timeSpace3DOptions.iteration);
+					relativePos = world2Tex(position, d_boundingBox.m_dimensions, gridSize);
+
+					// calculates gradient
+					float3 gradient = GradientAtXYZ_Tex(field1, relativePos, d_boundingBox.m_dimensions, gridSize);
+
+					// shading (no ambient)
+					float diffuse = max(dot(normalize(gradient), d_boundingBox.m_viewDir), 0.0f);
+					float3 rgb = d_raycastingColor * diffuse;
+
+					float depth = depthfinder(position, eyePos, d_boundingBox.m_viewDir, f, n);
+
+					float4 rgba = { rgb.x, rgb.y, rgb.z, depth };
+
+					// write back color and depth into the texture (surface)
+					// stride size of 4 * floats for each texel
+					surf2Dwrite(rgba, raycastingSurface, 4 * sizeof(float) * pixel.x, pixel.y);
+					break;
+				}
+
+
+			}
+
+
+		}
+
+	}
+
+
+} 
+
+
+__global__ void CudaIsoSurfacRenderer_float_PlaneColor
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field1,
+	int rays,
+	int3 gridSize,
+	TimeSpace3DOptions timeSpace3DOptions
+)
+{
+
+
+	int index = CUDA_INDEX;
+
+	if (index < rays)
+	{
+
+		// determine pixel position based on the index of the thread
+		int2 pixel = index2pixel(index, d_boundingBox.m_width);
+
+		float3 pixelPos = pixelPosition(d_boundingBox, pixel.x, pixel.y);
+		float2 NearFar = findIntersections(pixelPos, d_boundingBox);
+
+		// if inside the bounding box
+		if (NearFar.y != -1)
+		{
+
+			float3 rayDir = normalize(pixelPos - d_boundingBox.m_eyePos);
+
+			// near and far plane
+			float n = 0.1f;
+			float f = 1000.0f;
+
+			// Add the offset to the eye position
+			float3 eyePos = d_boundingBox.m_eyePos + d_boundingBox.m_dimensions / 2.0;
+
+			for (float t = NearFar.x; t < NearFar.y; t = t + timeSpace3DOptions.samplingRate)
+			{
+				// Position of the isosurface
+				float3 position = pixelPos + (rayDir * t);
+
+				// Adds an offset to position while the center of the grid is at gridDiamter/2
+				position += d_boundingBox.m_dimensions / 2.0;
+
+				//Relative position calculates the position of the point on the CUDA texture
+				float3 relativePos = world2Tex(position, d_boundingBox.m_dimensions, gridSize);
+
+
+				// check if we have a hit 
+				if (
+					position.y < d_boundingBox.m_dimensions.y * timeSpace3DOptions.wallNormalClipping &&
+					position.y > d_boundingBox.m_dimensions.y * timeSpace3DOptions.wallNormalClipping - timeSpace3DOptions.tolerance
+					)
+				{
+
+
+
+
+					float vorticity = tex3D<float>(field1, relativePos.x, relativePos.y, relativePos.z);
+					
+					float depth = depthfinder(position, eyePos, d_boundingBox.m_viewDir, f, n);
+
+					float3 rgb_min =
+					{
+						timeSpace3DOptions.minColor[0],
+						timeSpace3DOptions.minColor[1],
+						timeSpace3DOptions.minColor[2],
+					};
+
+					float3 rgb_max =
+					{
+						timeSpace3DOptions.maxColor[0],
+						timeSpace3DOptions.maxColor[1],
+						timeSpace3DOptions.maxColor[2],
+					};
+
+					vorticity -= timeSpace3DOptions.isoValue;
+					float y_saturated = 0.0f;
+					float3 rgb = { 0,0,0 };
+					if (vorticity > 0)
+					{
+						float3 rgb_min_complement = make_float3(1, 1, 1) - rgb_min;
+						y_saturated = saturate(vorticity / timeSpace3DOptions.maxVal);
+						rgb = rgb_min_complement * (1 - y_saturated) + rgb_min;
+					}
+					else
+					{
+						float3 rgb_max_complement = make_float3(1, 1, 1) - rgb_max;
+						y_saturated = saturate(fabs(vorticity / timeSpace3DOptions.minVal));
+						rgb = rgb_max_complement * (1 - y_saturated) + rgb_max;
+					}
+
+					float4 rgba = { rgb.x, rgb.y, rgb.z, depth };
+
+					// write back color and depth into the texture (surface)
+					// stride size of 4 * floats for each texel
+					surf2Dwrite(rgba, raycastingSurface, 4 * sizeof(float) * pixel.x, pixel.y);
+					break;
+				}
+
+
+			}
+
+
+		}
+
+	}
+
+
+}
+
+
+__global__ void CudaIsoSurfacRenderer_float_PlaneColor
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field1,
+	int rays,
+	int3 gridSize,
+	RaycastingOptions raycastingOptions
+)
+{
+
+
+	int index = CUDA_INDEX;
+
+	if (index < rays)
+	{
+
+		// determine pixel position based on the index of the thread
+		int2 pixel = index2pixel(index, d_boundingBox.m_width);
+
+		float3 pixelPos = pixelPosition(d_boundingBox, pixel.x, pixel.y);
+		float2 NearFar = findIntersections(pixelPos, d_boundingBox);
+
+		// if inside the bounding box
+		if (NearFar.y != -1)
+		{
+
+			float3 rayDir = normalize(pixelPos - d_boundingBox.m_eyePos);
+
+			// near and far plane
+			float n = 0.1f;
+			float f = 1000.0f;
+
+			// Add the offset to the eye position
+			float3 eyePos = d_boundingBox.m_eyePos + d_boundingBox.m_dimensions / 2.0;
+
+			for (float t = NearFar.x; t < NearFar.y; t = t + raycastingOptions.samplingRate_0)
+			{
+				// Position of the isosurface
+				float3 position = pixelPos + (rayDir * t);
+
+				// Adds an offset to position while the center of the grid is at gridDiamter/2
+				position += d_boundingBox.m_dimensions / 2.0;
+
+				//Relative position calculates the position of the point on the CUDA texture
+				float3 relativePos = world2Tex(position, d_boundingBox.m_dimensions, gridSize);
+
+
+				// check if we have a hit 
+				if (
+					position.y < d_boundingBox.m_dimensions.y * raycastingOptions.wallNormalClipping &&
+					position.y > d_boundingBox.m_dimensions.y * raycastingOptions.wallNormalClipping - raycastingOptions.planeThinkness
+					)
+				{
+
+
+					float velocity = tex3D<float4>(field1, relativePos.x, relativePos.y, relativePos.z).x;
+					float depth = depthfinder(position, eyePos, d_boundingBox.m_viewDir, f, n);
+
+					float3 rgb_min =
+					{
+						raycastingOptions.minColor[0],
+						raycastingOptions.minColor[1],
+						raycastingOptions.minColor[2],
+					};
+
+					float3 rgb_max =
+					{
+						raycastingOptions.maxColor[0],
+						raycastingOptions.maxColor[1],
+						raycastingOptions.maxColor[2],
+					};
+
+					float y_saturated = 0.0f;
+					float3 rgb = { 0,0,0 };
+					if (velocity > 0)
+					{
+						float3 rgb_min_complement = make_float3(1, 1, 1) - rgb_min;
+						y_saturated = saturate(velocity / raycastingOptions.maxVal);
+						rgb = rgb_min_complement * (1 - y_saturated) + rgb_min;
+					}
+					else
+					{
+						float3 rgb_max_complement = make_float3(1, 1, 1) - rgb_max;
+						y_saturated = saturate(fabs(velocity / raycastingOptions.minVal));
+						rgb = rgb_max_complement * (1 - y_saturated) + rgb_max;
+					}
+
+					float4 rgba = { rgb.x, rgb.y, rgb.z, depth };
+
+					// write back color and depth into the texture (surface)
+					// stride size of 4 * floats for each texel
+					surf2Dwrite(rgba, raycastingSurface, 4 * sizeof(float) * pixel.x, pixel.y);
+					break;
+				}
+
+
+			}
+
+
+		}
+
+	}
+
+
+}
+
+
+
 template <typename Observable>
 __global__ void CudaTerrainRenderer
 (
@@ -530,6 +861,7 @@ __global__ void CudaTerrainRenderer
 		// copy values from constant memory to local memory (which one is faster?)
 		float3 viewDir = d_boundingBox.m_viewDir;
 		float3 pixelPos = pixelPosition(d_boundingBox, pixel.x, pixel.y);
+
 		float2 NearFar = findIntersections(pixelPos, d_boundingBox);
 
 
@@ -723,115 +1055,6 @@ __global__ void CudaTerrainRenderer_extra_FTLE
 	}
 }
 
-
-
-
-
-__global__ void CudaRaycasting_FTLE
-(
-	cudaSurfaceObject_t raycastingSurface,
-	cudaTextureObject_t heightField,
-	cudaTextureObject_t extraField,
-	int rays,
-	float samplingRate,
-	float IsosurfaceTolerance,
-	DispersionOptions dispersionOptions,
-	int traceTime
-)
-{
-
-	int index = CUDA_INDEX;
-
-	if (index < rays)
-	{
-		FetchTextureSurface::Channel_X channel_X;
-		// determine pixel position based on the index of the thread
-		int2 pixel;
-		pixel.y = index / d_boundingBox.m_width;
-		pixel.x = index - pixel.y * d_boundingBox.m_width;
-
-		// copy values from constant memory to local memory (which one is faster?)
-		float3 viewDir = d_boundingBox.m_viewDir;
-		float3 pixelPos = pixelPosition(d_boundingBox, pixel.x, pixel.y);
-		float2 NearFar = findIntersections(pixelPos, d_boundingBox);
-
-
-		// if inside the bounding box
-		if (NearFar.y != -1)
-		{
-
-			float3 rayDir = normalize(pixelPos - d_boundingBox.m_eyePos);
-			int3 gridSize = make_int3(dispersionOptions.gridSize_2D[0], dispersionOptions.gridSize_2D[1], traceTime);
-
-
-			// near and far plane
-			float n = 0.1f;
-			float f = 1000.0f;
-
-			// Add the offset to the eye position
-			float3 eyePos = d_boundingBox.m_eyePos + d_boundingBox.m_dimensions / 2.0;
-
-			for (float t = NearFar.x; t < NearFar.y; t = t + samplingRate)
-			{
-				// Position of the isosurface
-				float3 position = pixelPos + (rayDir * t);
-
-				// Adds an offset to position while the center of the grid is at gridDiamter/2
-				position += d_boundingBox.m_dimensions / 2.0;
-
-
-
-				//Relative position calculates the position of the point on the cuda texture
-				float3 relativePos = world2Tex(position, d_boundingBox.m_dimensions, gridSize);
-
-
-				// fetch texels from the GPU memory
-				float ftle = ValueAtXYZ_Texture_float4(extraField, relativePos).x;
-
-				// check if we have a hit 
-				if (dispersionOptions.ftleIsoValue - ftle < 0)
-				{
-
-					
-					dispersionOptions.isoValueTolerance = dispersionOptions.isoValueTolerance;
-					float3 gradient = channel_X.GradientAtXYZ_Tex(extraField, relativePos,d_boundingBox.m_dimensions,gridSize);
-					float diffuse = max(dot(normalize(gradient), viewDir), 0.0f);
-
-					
-					// shading (no ambient)
-
-					float3 rgb = make_float3(dispersionOptions.minColor[0], dispersionOptions.minColor[1], dispersionOptions.minColor[2]);
-					
-					rgb = rgb * diffuse;
-
-					//// vector from eye to isosurface
-					float3 position_viewCoordinate = position - eyePos;
-
-					//// calculates the z-value
-					float z_dist = abs(dot(viewDir, position_viewCoordinate));
-
-					//// calculate non-linear depth between 0 to 1
-					float depth = (f) / (f - n);
-					depth += (-1.0f / z_dist) * (f * n) / (f - n);
-
-					float4 rgba = { rgb.x , rgb.y, rgb.z, depth };
-
-
-					// write back color and depth into the texture (surface)
-					// stride size of 4 * floats for each texel
-					surf2Dwrite(rgba, raycastingSurface, sizeof(float4) * pixel.x, pixel.y);
-					break;
-				}
-
-
-			}
-
-
-
-		}
-
-	}
-}
 
 
 template <typename Observable>
@@ -2389,8 +2612,7 @@ __global__ void CudaTerrainRenderer_Marching_extra_FSLE
 	int rays,
 	float samplingRate,
 	float IsosurfaceTolerance,
-	DispersionOptions dispersionOptions,
-	int traceTime
+	DispersionOptions dispersionOptions
 )
 {
 	int index = CUDA_INDEX;
@@ -2423,8 +2645,6 @@ __global__ void CudaTerrainRenderer_Marching_extra_FSLE
 			float3 eyePos = d_boundingBox.m_eyePos + d_boundingBox.m_dimensions / 2.0;
 			float t = t_range.x;
 
-			float2 cellSize_XZ = make_float2(d_boundingBox.m_dimensions.x, d_boundingBox.m_dimensions.z) /
-				make_int2(dispersionOptions.gridSize_2D[0], dispersionOptions.gridSize_2D[1]);
 
 			// While the ray is within the Bounding Box
 			while (t < t_range.y)
@@ -2440,22 +2660,13 @@ __global__ void CudaTerrainRenderer_Marching_extra_FSLE
 				float3 relativePos = world2Tex
 				(
 					make_float3(position.x, position.z, static_cast<float>(dispersionOptions.timestep)),
-					make_float3(d_boundingBox.m_dimensions.x, d_boundingBox.m_dimensions.z, static_cast<float>(traceTime)),
-					make_int3(dispersionOptions.gridSize_2D[0], dispersionOptions.gridSize_2D[1], static_cast<float> (traceTime))
+					make_float3(d_boundingBox.m_dimensions.x, d_boundingBox.m_dimensions.z, d_boundingBox.gridSize.z),
+					d_boundingBox.gridSize
 				);
 
 				// fetch texel from the GPU memory
 				float4 hightFieldVal = ValueAtXYZ_float4(heightField, relativePos);
 
-				float3 relativePos_initial = world2Tex
-				(
-					make_float3(position.x, position.z, 0),
-					make_float3(d_boundingBox.m_dimensions.x, d_boundingBox.m_dimensions.z, static_cast<float>(traceTime)),
-					make_int3(dispersionOptions.gridSize_2D[0], dispersionOptions.gridSize_2D[1], static_cast<float> (traceTime))
-				);
-				float initialHeight = ValueAtXYZ_float4(heightField, relativePos_initial).x;
-				float offset = d_boundingBox.m_dimensions.y / 2.0f;
-				float relativeHeight = hightFieldVal.x - initialHeight + offset;
 
 				// check if we have a hit 
 				if (position.y - hightFieldVal.x > 0 && position.y - hightFieldVal.x < dispersionOptions.hegiht_tolerance)
@@ -2511,15 +2722,15 @@ __global__ void CudaTerrainRenderer_Marching_extra_FSLE
 					surf2Dwrite(rgba, raycastingSurface, sizeof(float4) * pixel.x, pixel.y);
 					break;
 				}
-				if (dispersionOptions.marching)
+				if (!dispersionOptions.marching)
 				{
 					t = t + samplingRate;
 				}
-				else
-				{
-					t = t + fmin(samplingRate, findExitPoint(make_float2(position.x, position.z), make_float2(rayDir.x, rayDir.z), cellSize_XZ));
+				//else
+				//{
+				//	t = t + fmin(samplingRate, findExitPoint(make_float2(position.x, position.z), make_float2(rayDir.x, rayDir.z), cellSize_XZ));
 
-				}
+				//}
 
 			}
 
@@ -2527,3 +2738,180 @@ __global__ void CudaTerrainRenderer_Marching_extra_FSLE
 
 	}
 }
+
+
+
+__global__ void CudaTerrainRenderer_Marching_extra_FTLE_Color
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t heightField,
+	cudaTextureObject_t extraField,
+	int rays,
+	float samplingRate,
+	float IsosurfaceTolerance,
+	DispersionOptions dispersionOptions
+)
+{
+	int index = CUDA_INDEX;
+
+	if (index < rays)
+	{
+
+		// determine pixel position based on the index of the thread
+		int2 pixel;
+		pixel.y = index / d_boundingBox.m_width;
+		pixel.x = index - pixel.y * d_boundingBox.m_width;
+
+		// copy values from constant memory to local memory (which one is faster?)
+		float3 viewDir = d_boundingBox.m_viewDir;
+		float3 pixelPos = pixelPosition(d_boundingBox, pixel.x, pixel.y);
+		float2 t_range = findIntersections(pixelPos, d_boundingBox);
+
+
+		// if inside the bounding box
+		if (t_range.y != -1)
+		{
+
+			float3 rayDir = normalize(pixelPos - d_boundingBox.m_eyePos);
+
+			// near and far plane
+			float n = 0.1f;
+			float f = 1000.0f;
+
+			// Add the offset to the eye position
+			float3 eyePos = d_boundingBox.m_eyePos + d_boundingBox.m_dimensions / 2.0;
+			float t = t_range.x;
+
+
+			// While the ray is within the Bounding Box
+			while (t < t_range.y)
+			{
+
+				// Position of the isosurface
+				float3 position = pixelPos + (rayDir * t);
+
+				// Adds an offset to position while the center of the grid is at gridDiamter/2
+				position += d_boundingBox.m_dimensions / 2.0;
+
+				//Relative position calculates the position of the point on the cuda texture
+				float3 relativePos = world2Tex
+				(
+					make_float3(position.x, position.z, static_cast<float>(dispersionOptions.timestep)),
+					make_float3(d_boundingBox.m_dimensions.x, d_boundingBox.m_dimensions.z, d_boundingBox.gridSize.z),
+					d_boundingBox.gridSize
+				);
+
+				// fetch texel from the GPU memory
+				float4 ftle = ValueAtXYZ_float4(extraField, relativePos);
+				ftle.x *= dispersionOptions.scale;
+
+
+				// check if we have a hit 
+				if (position.y - ftle.x > 0 && position.y - ftle.x < dispersionOptions.hegiht_tolerance)
+				{
+					float3 gradient = normalize(GradientAtXYZ_Tex_X_Height(extraField, relativePos));
+					gradient = normalize(make_float3(gradient.x, -1.0f, gradient.y));
+
+					// shading (no ambient)
+					float diffuse = max(dot(gradient, viewDir), 0.0f);
+					float height = ValueAtXYZ_float4(extraField, relativePos).x;
+
+
+					float3 rgb_min = Array2Float3(dispersionOptions.minColor);
+					float3 rgb_max = Array2Float3(dispersionOptions.maxColor);
+					float3 rgb = rgb_min;
+
+
+					rgb = rgb * diffuse;
+
+					// vector from eye to isosurface
+					float3 position_viewCoordinate = position - eyePos;
+
+					// calculates the z-value
+					float z_dist = abs(dot(viewDir, position_viewCoordinate));
+
+					// calculate non-linear depth between 0 to 1
+					float depth = (f) / (f - n);
+					depth += (-1.0f / z_dist) * (f * n) / (f - n);
+
+
+
+					float4 rgba = { rgb.x , rgb.y, rgb.z, depth };
+
+					// write back color and depth into the texture (surface)
+					// stride size of 4 * floats for each texel
+					surf2Dwrite(rgba, raycastingSurface, sizeof(float4) * pixel.x, pixel.y);
+					break;
+				}
+				if (!dispersionOptions.marching)
+				{
+					t = t + samplingRate;
+				}
+				//else
+				//{
+				//	t = t + fmin(samplingRate, findExitPoint(make_float2(position.x, position.z), make_float2(rayDir.x, rayDir.z), cellSize_XZ));
+
+				//}
+
+			}
+
+		}
+
+	}
+}
+
+
+
+
+__device__ float3 binarySearch_tex1D
+(
+	cudaTextureObject_t field,
+	float3& _position,
+	float3& gridDiameter,
+	int3& gridSize,
+	float3& _samplingStep,
+	float& value,
+	float& tolerance,
+	int maxIteration
+)
+{
+	float3 position = _position;
+	float3 relative_position = world2Tex(position, gridDiameter, gridSize);
+	float3 samplingStep = _samplingStep * 0.5f;
+	bool side = 0; // 1 -> right , 0 -> left
+	int counter = 0;
+
+	while (fabsf(tex3D<float>(field, relative_position.x, relative_position.y, relative_position.z) - value) > tolerance&& counter < maxIteration)
+	{
+
+		if (tex3D<float>(field, relative_position.x, relative_position.y, relative_position.z) - value > 0)
+		{
+			if (side)
+			{
+				samplingStep = 0.5 * samplingStep;
+			}
+			position = position - samplingStep;
+			relative_position = world2Tex(position, gridDiameter, gridSize);
+			side = 0;
+
+		}
+		else
+		{
+
+			if (!side)
+			{
+				samplingStep = 0.5 * samplingStep;
+			}
+
+			position = position + samplingStep;
+			relative_position = world2Tex(position, gridDiameter, gridSize);
+			side = 1;
+
+		}
+		counter++;
+
+	}
+
+	return position;
+
+};

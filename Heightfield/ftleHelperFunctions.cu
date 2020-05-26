@@ -55,7 +55,8 @@ __global__ void  traceDispersion3D_path_FTLE
 
 		float ftle = FTLE3D(&particle[index * FTLE_NEIGHBOR], dispersionOptions.initial_distance);
 
-		// extract the height
+		if (dispersionOptions.timeNormalization)
+			ftle /= (timestep*solverOptions.dt + 0.0000001f);
 		float3 position = particle[index * FTLE_NEIGHBOR].m_position;
 
 

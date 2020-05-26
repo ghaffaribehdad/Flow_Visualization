@@ -10,7 +10,7 @@
 #include "..//Raycaster/Raycasting.h"
 
 
-class HeightfieldGenerator : public Raycasting
+class Heightfield : public Raycasting
 {
 public:
 
@@ -87,9 +87,6 @@ protected:
 
 
 	virtual void trace3D_path_Single();
-
-
-
 	virtual bool initializeShaders() override;
 
 	Particle* h_particle = nullptr;
@@ -102,16 +99,7 @@ protected:
 	virtual bool InitializeParticles();
 	virtual bool singleSurfaceInitialization();
 
-
-	bool InitializeHeightArray3D_Single(int x, int y ,int z);
-	virtual bool InitializeHeightArray3D_Single(int3 gridSize);
-
-
-
-
-	virtual bool InitializeHeightSurface3D_Single();
-
-
+	virtual bool InitializeHeightSurface3D();
 
 
 	DispersionOptions* dispersionOptions;

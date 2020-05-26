@@ -27,6 +27,7 @@ enum IsoMeasure
 	Velocity_Z,
 	ShearStress,
 	TURBULENT_DIFFUSIVITY,
+	Velocity_X_Plane,
 	COUNT
 };
 
@@ -38,7 +39,8 @@ static const char* const IsoMeasureModes[] =
 	"Velocity Y",
 	"Velocity Z",
 	"Shear Stress",
-	"Turbulent Diffusivity"
+	"Turbulent Diffusivity",
+	"Velocity X Planar"
 };
 static const char* const ColorModeList[] = {"V", "Vx", "Vy", "Vz","i_Vx","i_Vy","i_Vz"};
 
@@ -101,6 +103,12 @@ static const char* const FieldMode[] =
 	"ff (Vx,Vy)",
 	"ff (Vz,Vy)",
 	"fi (Vx,Vy)"
+};
+
+static const char* const heightMode[] =
+{
+	"Height",
+	"FTLE"
 };
 
 

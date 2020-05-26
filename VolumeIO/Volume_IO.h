@@ -59,11 +59,21 @@ namespace VolumeIO
 		// Return a pointer to array of floats
 		float* getField_float();
 
-		// Return a pointer to a single plane of volumetric data
-		float* getPlane_float()
+		std::vector<char>::iterator getBegin()
 		{
-			return planeBuffer;
+			return buffer.begin();
 		}
+
+		std::vector<char>::iterator getEnd()
+		{
+			return buffer.end();
+		}
+
+		void setSolverOptions(SolverOptions * _solverOptions)
+		{
+			this->m_solverOptions = _solverOptions;
+		}
+
 		// Clear the vector
 		void release();
 		bool Read();

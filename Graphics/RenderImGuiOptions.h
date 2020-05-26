@@ -14,6 +14,7 @@
 #include "../Options/RenderingOptions.h"
 #include "../Options/CrossSectionOptions.h"
 #include "../Options/TurbulentMixingOptions.h"
+#include "../Options/TimeSpace3DOptions.h"
 
 #include "Camera.h"
 #include "../Timer/Timer.h"
@@ -39,6 +40,8 @@ private:
 	CrossSectionOptions*			crossSectionOptions;
 	FluctuationheightfieldOptions*	fluctuationOptions;
 	TurbulentMixingOptions*			turbulentMixingOptions;
+	TimeSpace3DOptions*				timeSpace3DOptions;
+
 
 	// background color
 	float bgColor[3] = { 0,0,0 };
@@ -55,7 +58,8 @@ public:
 		DispersionOptions * _dispersionOptions,
 		FluctuationheightfieldOptions * _fluctuationheightfieldOptions,
 		CrossSectionOptions * _crossSectionOptions,
-		TurbulentMixingOptions* _turbulentMixingOptions
+		TurbulentMixingOptions* _turbulentMixingOptions,
+		TimeSpace3DOptions * _timeSpace3DOptions
 	)
 	{
 		this->camera	= _camera;
@@ -68,6 +72,7 @@ public:
 		this->fluctuationOptions	= _fluctuationheightfieldOptions;
 		this->crossSectionOptions	= _crossSectionOptions;
 		this->turbulentMixingOptions = _turbulentMixingOptions;
+		this->timeSpace3DOptions = _timeSpace3DOptions;
 	}
 
 	bool updateRaycasting		= false;
@@ -81,20 +86,23 @@ public:
 	bool updatefluctuation		= false;
 	bool updateCrossSection		= false;
 	bool updateTurbulentMixing	= false;
+	bool updateTimeSpaceField	= false;
+
 
 	
 	
-	bool showStreamlines		= false;
-	bool showPathlines			= false;
-	bool showRaycasting			= false;
-	bool showCrossSection		= false;
-	bool showDispersion			= false;
-	bool showFTLE				= false;
-	bool showTurbulentMixing	= false;
-	bool showFluctuationHeightfield = false;
+	bool showStreamlines				= false;
+	bool showPathlines					= false;
+	bool showRaycasting					= false;
+	bool showCrossSection				= false;
+	bool showDispersion					= false;
+	bool showFTLE						= false;
+	bool showTurbulentMixing			= false;
+	bool showFluctuationHeightfield		= false;
+	bool showTimeSpaceField				= false;
+
 
 	bool releaseTurbulentMixing = false;
-
 
 	bool streamlineRendering	= true;
 	bool pathlineRendering		= false;
@@ -112,6 +120,7 @@ public:
 		this->drawFluctuationHeightfieldOptions();	
 		this->drawCrossSectionOptions();			
 		this->drawTurbulentMixingOptions();
+		this->drawTimeSpaceField();
 	}
 
 
@@ -134,6 +143,7 @@ private:
 	void drawDispersionOptions();				// draw options of dispersion calculation
 	void drawFluctuationHeightfieldOptions();	// draw options of heightfield of fluctuation 
 	void drawCrossSectionOptions();				// draw options of CrossSection rendering
+	void drawTimeSpaceField();
 	void drawTurbulentMixingOptions();
 
 

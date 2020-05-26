@@ -20,13 +20,14 @@
 #include "BoxRenderer.h"
 #include "RenderImGuiOptions.h"
 #include "PathlineRenderer.h"
-#include "../Dispersion/DispersionTracer.h"
-#include "../Dispersion/fluctuationHeightfield.h"
+#include "../Heightfield/Heightfield.h"
+#include "../Heightfield/fluctuationHeightfield.h"
+#include "../Raycaster/TimeSpaceField.h"
 
 #include "../CrossSection/CrossSection.h"
 
 #include "../TurbulentMixing/TurbulentMixing.h"
-#include "../Dispersion/HightfieldFTLE.h"
+#include "../Heightfield/HightfieldFTLE.h"
 
 
 
@@ -46,6 +47,7 @@ public:
 		this->renderImGuiOptions.updateCrossSection = true;
 		this->renderImGuiOptions.updateTurbulentMixing = true;
 		this->renderImGuiOptions.updateFTLE = true;
+		this->renderImGuiOptions.updateTimeSpaceField = true;
 	}
 
 
@@ -66,6 +68,7 @@ public:
 	RenderingOptions				renderingOptions;
 	RaycastingOptions				raycastingOptions;
 	DispersionOptions				dispersionOptions;
+	TimeSpace3DOptions				timeSpace3DOptions;
 	CrossSectionOptions				crossSectionOptions;
 	FluctuationheightfieldOptions	fluctuationheightfieldOptions;
 	TurbulentMixingOptions			turbulentMixingOptions;
@@ -182,10 +185,12 @@ private:
 
 	// Raycasting (This object would write into a texture and pass it to the graphics then we need to use sampler state to show it on the backbuffer)
 	Raycasting				raycasting;
-	HeightfieldGenerator	dispersionTracer;
+	Heightfield				dispersionTracer;
 	FluctuationHeightfield	fluctuationHeightfield;
 	TurbulentMixing			turbulentMixing;
 	HeightfieldFTLE			heightfieldFTLE;
+	TimeSpaceField			timeSpacefield;
+
 
 
 

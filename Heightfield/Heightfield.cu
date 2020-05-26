@@ -1,4 +1,4 @@
-#include "DispersionTracer.h"
+#include "Heightfield.h"
 #include "DispersionHelper.h"
 #include "..//ErrorLogger/ErrorLogger.h"
 #include "..//Raycaster/IsosurfaceHelperFunctions.h"
@@ -9,7 +9,7 @@
 
 //explicit instantiation
 
-bool HeightfieldGenerator::retrace()
+bool Heightfield::retrace()
 {
 	this->a_HeightSurface_Primary.release();
 	this->a_HeightSurface_Primary_Extra.release();
@@ -29,7 +29,7 @@ bool HeightfieldGenerator::retrace()
 	return true;
 }
 
-bool HeightfieldGenerator::initialize
+bool Heightfield::initialize
 (
 	cudaTextureAddressMode addressMode_X ,
 	cudaTextureAddressMode addressMode_Y ,
@@ -57,7 +57,7 @@ bool HeightfieldGenerator::initialize
 	return true;
 }
 
-void HeightfieldGenerator::setResources(Camera* _camera,
+void Heightfield::setResources(Camera* _camera,
 	int* _width,
 	int* _height,
 	SolverOptions* _solverOption,
@@ -73,7 +73,7 @@ void HeightfieldGenerator::setResources(Camera* _camera,
 }
 
 
-__host__ bool HeightfieldGenerator::InitializeParticles()
+__host__ bool Heightfield::InitializeParticles()
 {
 	this->n_particles = dispersionOptions->gridSize_2D[0] * dispersionOptions->gridSize_2D[1];
 	this->h_particle = new Particle[n_particles];
@@ -98,45 +98,9 @@ __host__ bool HeightfieldGenerator::InitializeParticles()
 
 
 
-__host__ bool HeightfieldGenerator::InitializeHeightArray3D_Single(int x, int y, int z)
-{
-	// Set dimensions and initialize height field as a 3D CUDA Array
-	this->a_HeightSurface_Primary.setDimension(x, y, z);
 
 
-	this->a_HeightSurface_Primary_Extra.setDimension(x, y, z);
-
-	// initialize the 3D array
-	if (!a_HeightSurface_Primary.initialize())
-		return false;
-	if (!a_HeightSurface_Primary_Extra.initialize())
-		return false;
-
-	return true;
-}
-
-
-
-
-__host__ bool HeightfieldGenerator::InitializeHeightArray3D_Single(int3 gridSize)
-{
-	// Set dimensions and initialize height field as a 3D CUDA Array
-	this->a_HeightSurface_Primary.setDimension(gridSize.x, gridSize.y, gridSize.z);
-
-
-	this->a_HeightSurface_Primary_Extra.setDimension(gridSize.x, gridSize.y, gridSize.z);
-
-	// initialize the 3D array
-	if (!a_HeightSurface_Primary.initialize())
-		return false;
-	if (!a_HeightSurface_Primary_Extra.initialize())
-		return false;
-
-	return true;
-}
-
-
-__host__ bool HeightfieldGenerator::InitializeHeightSurface3D_Single()
+__host__ bool Heightfield::InitializeHeightSurface3D()
 {
 	// Assign the hightArray to the hightSurface and initialize the surface
 	this->s_HeightSurface_Primary.setInputArray(a_HeightSurface_Primary.getArrayRef());
@@ -154,7 +118,7 @@ __host__ bool HeightfieldGenerator::InitializeHeightSurface3D_Single()
 
 
 // Release resources 
-bool HeightfieldGenerator::release()
+bool Heightfield::release()
 {
 	Raycasting::release();
 	cudaDestroyTextureObject(this->volumeTexture3D_height.getTexture());
@@ -163,7 +127,7 @@ bool HeightfieldGenerator::release()
 	return true;
 }
 
-void HeightfieldGenerator::trace3D_path_Single()
+void Heightfield::trace3D_path_Single()
 {
 	// Calculates the block and grid sizes
 	unsigned int blocks;
@@ -251,7 +215,7 @@ void HeightfieldGenerator::trace3D_path_Single()
 
 
 
-__host__ void HeightfieldGenerator::rendering()
+__host__ void Heightfield::rendering()
 {
 	this->deviceContext->PSSetSamplers(0, 1, this->samplerState.GetAddressOf());
 	//this->deviceContext->OMSetBlendState(this->blendState.Get(), NULL, 0xFFFFFFFF);
@@ -266,28 +230,22 @@ __host__ void HeightfieldGenerator::rendering()
 	
 
 	// Depending on the Rendering mode choose the terrain Rendering function
-	if (dispersionOptions->renderingMode == dispersionOptionsMode::HeightfieldRenderingMode::SINGLE_SURFACE)
-	{
-		CudaTerrainRenderer_Marching_extra<< < blocks, thread >> >
-			(
-				this->raycastingSurface.getSurfaceObject(),
-				this->volumeTexture3D_height.getTexture(),
-				this->volumeTexture3D_height_extra.getTexture(),
-				int(this->rays),
-				this->raycastingOptions->samplingRate_0,
-				this->raycastingOptions->tolerance_0,
-				*dispersionOptions,
-				solverOptions->lastIdx - solverOptions->firstIdx
-				);
-	}
-
-
-
+	CudaTerrainRenderer_Marching_extra<< < blocks, thread >> >
+		(
+			this->raycastingSurface.getSurfaceObject(),
+			this->volumeTexture3D_height.getTexture(),
+			this->volumeTexture3D_height_extra.getTexture(),
+			int(this->rays),
+			this->raycastingOptions->samplingRate_0,
+			this->raycastingOptions->tolerance_0,
+			*dispersionOptions,
+			solverOptions->lastIdx - solverOptions->firstIdx
+			);
 
 }
 
 
-bool HeightfieldGenerator::updateScene()
+bool Heightfield::updateScene()
 {
 	if (!this->initializeRaycastingInteroperability())	// Create interoperability while we need to release it at the end of rendering
 		return false;
@@ -313,7 +271,7 @@ bool HeightfieldGenerator::updateScene()
 
 
 
-void HeightfieldGenerator::gradient3D_Single()
+void Heightfield::gradient3D_Single()
 {
 
 	// Calculates the block and grid sizes
@@ -333,25 +291,31 @@ void HeightfieldGenerator::gradient3D_Single()
 }
 
 
-bool HeightfieldGenerator::singleSurfaceInitialization()
+bool Heightfield::singleSurfaceInitialization()
 {
 	// initialize volume Input Output
 	volume_IO.Initialize(this->solverOptions);
 
 
-	// Initialize Height Field as an empty cuda array 3D
-	if (!this->InitializeHeightArray3D_Single
-	(
+
+	// initialize the 3D array
+	if (!a_HeightSurface_Primary.initialize(dispersionOptions->gridSize_2D[0],
+		dispersionOptions->gridSize_2D[1],
+		solverOptions->lastIdx - solverOptions->firstIdx)
+		)
+			return false;
+	if (!a_HeightSurface_Primary_Extra.initialize(
 		dispersionOptions->gridSize_2D[0],
 		dispersionOptions->gridSize_2D[1],
-		solverOptions->lastIdx - solverOptions->firstIdx
-	))
+		solverOptions->lastIdx - solverOptions->firstIdx)
+		)
 		return false;
 
 
 
+
 	// Bind the array of heights to the cuda surface
-	if (!this->InitializeHeightSurface3D_Single())
+	if (!this->InitializeHeightSurface3D())
 		return false;
 
 
@@ -377,7 +341,7 @@ bool HeightfieldGenerator::singleSurfaceInitialization()
 
 
 
-bool HeightfieldGenerator::initializeShaders()
+bool Heightfield::initializeShaders()
 {
 
 	if (this->vertexBuffer.Get() == nullptr)
@@ -430,17 +394,9 @@ bool HeightfieldGenerator::initializeShaders()
 			return false;
 
 		// Depending on the Rendering mode initialize single or double surface
-		if (dispersionOptions->renderingMode == dispersionOptionsMode::HeightfieldRenderingMode::SINGLE_SURFACE)
-		{
-			if (!pixelshader.Initialize(this->device, shaderfolder + L"pixelshaderTextureSampler.cso"))
-				return false;
-		}
-		else
-		{
-			if (!pixelshader.Initialize(this->device, shaderfolder + L"pixelshaderTextureSampler_Double.cso"))
-				return false;
-		}
-		
+
+		if (!pixelshader.Initialize(this->device, shaderfolder + L"pixelshaderTextureSampler.cso"))
+			return false;
 	}
 
 

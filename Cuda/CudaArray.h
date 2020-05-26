@@ -55,9 +55,6 @@ class CudaArray_3D
 
 private:
 	cudaArray_t cuArray;
-	size_t width = 0;
-	size_t height = 0;
-	size_t depth = 0;
 	cudaExtent extent = { 0,0,0 };
 	bool initialized = false;
 	cudaChannelFormatDesc channelFormatDesc;
@@ -66,19 +63,20 @@ private:
 
 public:
 
-	bool initialize()
+
+	bool initialize(const int & x, const int & y, const int & z)
 	{
 
-		this->extent = make_cudaExtent(this->width, this->height, this->depth);
+		this->extent = make_cudaExtent(x, y, z);
 
 		// Create Format description based on the template typename
 		this->channelFormatDesc = cudaCreateChannelDesc<T>();
 
 		// Allocate 3D Array
 		gpuErrchk(cudaMalloc3DArray(&this->cuArray, &channelFormatDesc, extent))
-		
-		// set initialization status to true
-		this->initialized = true;
+
+			// set initialization status to true
+			this->initialized = true;
 
 		return true;
 	}
@@ -110,12 +108,6 @@ public:
 
 	}
 
-	void setDimension(const int& _width, const int& _height, int& _depth)
-	{
-		this->width = _width;
-		this->height = _height;
-		this->depth = _depth;
-	}
 
 	cudaArray_t getArray()
 	{

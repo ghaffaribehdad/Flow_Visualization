@@ -91,22 +91,22 @@ __global__ void Vorticity
 );
 
 
-template <typename Observable>
-__device__ float3 binarySearch
-(
-	Observable& observable,
-	cudaTextureObject_t field,
-	float3& _position,
-	float3& gridDiameter,
-	float3& _samplingStep,
-	float& value,
-	float& tolerance,
-	int maxIteration
-);
 
 
 
-
+//template <typename Observable>
+//__device__ float3 binarySearch
+//(
+//	Observable& observable,
+//	cudaTextureObject_t field,
+//	float3& _position,
+//	float3& gridDiameter,
+//	int3& gridSize,
+//	float3& _samplingStep,
+//	float& value,
+//	float& tolerance,
+//	int maxIteration
+//);
 
 
 template <typename Observable>

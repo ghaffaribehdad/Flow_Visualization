@@ -1,12 +1,12 @@
 #pragma once
 
-#include "DispersionTracer.h"
+#include "Heightfield.h"
 #include "ftleHelperFunctions.h"
 #include "..//Options/FSLEOptions.h"
 
 
 
-class HeightfieldFTLE : public HeightfieldGenerator
+class HeightfieldFTLE : public Heightfield
 {
 
 
@@ -56,7 +56,7 @@ private:
 	virtual void trace3D_path_Single() override;
 	virtual void rendering() override;
 	virtual bool singleSurfaceInitialization() override;
-	void gradient3D_Single_ftle();
+	void gradient3D(cudaSurfaceObject_t cudaSurface);
 	void correlation();
 	virtual bool initializeBoundingBox() override;
 
@@ -71,4 +71,5 @@ private:
 	float * d_pearson_cov;
 	float * d_pearson_var_ftle;
 	float * d_pearson_var_height;
+	int3 gridSize = { 0,0,0 };
 };

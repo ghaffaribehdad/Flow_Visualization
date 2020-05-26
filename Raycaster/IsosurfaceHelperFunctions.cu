@@ -4,11 +4,6 @@
 #include "BoundingBox.h"
 #include "..//Cuda/CudaHelperFunctions.h"
 
-__device__ float FetchTextureSurface::Measure::ValueAtXYZ_Tex(cudaTextureObject_t tex, const float3 & position)
-{
-	return 0;
-}
-
 
 __device__ float3 FetchTextureSurface::Measure::ValueAtXYZ_XYZ_Tex(cudaTextureObject_t tex, const float3 & position)
 {
@@ -41,10 +36,7 @@ __device__ float2 FetchTextureSurface::Measure::ValueAtXYZ_YZ_Tex(cudaTextureObj
 
 }
 
-__device__  float FetchTextureSurface::Measure::ValueAtXYZ_Surf(cudaSurfaceObject_t surf, const int3 & position)
-{
-	return 0;
-}
+
 
 __device__  float3 FetchTextureSurface::Measure::ValueAtXYZ_XYZ_Surf(cudaSurfaceObject_t surf, const int3 & position)
 {
@@ -168,6 +160,82 @@ __device__ float3 FetchTextureSurface::Measure::GradientAtXYZ_Tex(cudaTextureObj
 
 }
 
+
+
+__device__ float3 GradientAtXYZ_Tex_W(cudaTextureObject_t tex, const float3 & position, const float3 & gridDiamter, const int3 & gridSize)
+{
+	float3 h = gridDiamter / gridSize;
+	float3 gradient = { 0,0,0 };
+
+	
+	gradient.x += tex3D<float4>(tex, position.x+1, position.y, position.z).w;
+	gradient.y += tex3D<float4>(tex, position.x , position.y +1, position.z).w;
+	gradient.z += tex3D<float4>(tex, position.x , position.y, position.z +1).w;
+
+	gradient.x -= tex3D<float4>(tex, position.x-1, position.y, position.z).w;
+	gradient.y -= tex3D<float4>(tex, position.x , position.y-1, position.z).w;
+	gradient.z -= tex3D<float4>(tex, position.x , position.y, position.z-1).w;
+
+
+	return  gradient / (2.0f * h.x);
+
+}
+
+
+__device__ float3 GradientAtXYZ_Tex_X(cudaTextureObject_t tex, const float3 & position, const float3 & gridDiamter, const int3 & gridSize)
+{
+	float3 h = gridDiamter / gridSize;
+	float3 gradient = { 0,0,0 };
+
+	gradient.x += tex3D<float4>(tex, position.x + 1, position.y, position.z).x;
+	gradient.y += tex3D<float4>(tex, position.x, position.y + 1, position.z).x;
+	gradient.z += tex3D<float4>(tex, position.x, position.y, position.z + 1).x;
+
+	gradient.x -= tex3D<float4>(tex, position.x - 1, position.y, position.z).x;
+	gradient.y -= tex3D<float4>(tex, position.x, position.y - 1, position.z).x;
+	gradient.z -= tex3D<float4>(tex, position.x, position.y, position.z - 1).x;
+
+
+	return  gradient / (2.0f * h.x);
+
+}
+
+__device__ float3 GradientAtXYZ_Tex_X_Height(cudaTextureObject_t tex, const float3 & position)
+{
+	float3 gradient = { 0,0,0 };
+
+
+	gradient.x += tex3D<float4>(tex, position.x + 1, position.y, position.z).x;
+	gradient.y += tex3D<float4>(tex, position.x, position.y + 1, position.z).x;
+
+	gradient.x -= tex3D<float4>(tex, position.x - 1, position.y, position.z).x;
+	gradient.y -= tex3D<float4>(tex, position.x, position.y - 1, position.z).x;
+
+
+	return  gradient;
+
+}
+
+
+__device__ float3 GradientAtXYZ_Tex(cudaTextureObject_t tex, const float3 & position, const float3 & gridDiamter, const int3 & gridSize)
+{
+	float3 h = gridDiamter / gridSize;
+	float3 gradient = { 0,0,0 };
+
+
+	gradient.x += tex3D<float>(tex, position.x + 1, position.y, position.z);
+	gradient.y += tex3D<float>(tex, position.x, position.y + 1, position.z);
+	gradient.z += tex3D<float>(tex, position.x, position.y, position.z + 1);
+
+	gradient.x -= tex3D<float>(tex, position.x - 1, position.y, position.z);
+	gradient.y -= tex3D<float>(tex, position.x, position.y - 1, position.z);
+	gradient.z -= tex3D<float>(tex, position.x, position.y, position.z - 1);
+
+
+	return  gradient / (2.0f * h.x);
+
+}
+
 __device__  float FetchTextureSurface::Channel_X::ValueAtXYZ_Surf(cudaSurfaceObject_t surf, const int3 & position)
 {
 	float4 data;
@@ -260,8 +328,6 @@ __device__  float3 GradientAtGrid_X(cudaTextureObject_t tex, float3 position, in
 
 
 
-
-
 __device__ float FetchTextureSurface::ShearStress::ValueAtXYZ_Tex(cudaTextureObject_t tex, const float3 & position)
 {
 	float4 dV_dY = tex3D<float4>(tex, position.x, position.y + 0.001 / 2.0f, position.z);
@@ -272,6 +338,7 @@ __device__ float FetchTextureSurface::ShearStress::ValueAtXYZ_Tex(cudaTextureObj
 
 	return fabsf(sqrtf(dot(ShearStress, ShearStress)));
 }
+
 
 
 
@@ -450,3 +517,27 @@ __device__ float3 FetchTextureSurface::TurbulentDiffusivity::binarySearch_avgtem
 	return position;
 
 };
+
+
+
+__device__ fMat3X3 FetchTextureSurface::Measure_Jacobian::jacobian(cudaTextureObject_t tex, const float3 & position, const float3 & h)
+{
+	fMat3X3 jac = { 0,0,0,0,0,0,0,0,0 };
+
+	jac.r1 = Measure::ValueAtXYZ_XYZ_Tex(tex, make_float3(position.x + 1, position.y, position.z));
+	jac.r1 -= Measure::ValueAtXYZ_XYZ_Tex(tex, make_float3(position.x - 1, position.y, position.z));
+
+	jac.r2 = Measure::ValueAtXYZ_XYZ_Tex(tex, make_float3(position.x, position.y +1, position.z));
+	jac.r2 -= Measure::ValueAtXYZ_XYZ_Tex(tex, make_float3(position.x, position.y-1, position.z));
+
+	jac.r3 = Measure::ValueAtXYZ_XYZ_Tex(tex, make_float3(position.x , position.y, position.z+1));
+	jac.r3 -= Measure::ValueAtXYZ_XYZ_Tex(tex, make_float3(position.x , position.y, position.z-1));
+
+	// This would give us the Jacobian Matrix
+	jac.r1 = jac.r1 / (2 * h.x);
+	jac.r2 = jac.r2 / (2 * h.y);
+	jac.r2 = jac.r3 / (2 * h.z);
+
+	return jac;
+	;
+}

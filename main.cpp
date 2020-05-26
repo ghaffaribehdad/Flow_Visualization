@@ -4,6 +4,7 @@
 #include <random>
 #include <io.h>
 #include <fcntl.h>
+#include <iostream>
 
 int APIENTRY wWinMain(
 	_In_ HINSTANCE hInstance,\
@@ -12,22 +13,10 @@ int APIENTRY wWinMain(
 	_In_ int nCmdShow)
 {
 
-
-	// Source: https://justcheckingonall.wordpress.com/2008/08/29/console-window-win32-app/
-
+	// https://stackoverflow.com/questions/15543571/allocconsole-not-displaying-cout
 	AllocConsole();
-
-	HANDLE handle_out = GetStdHandle(STD_OUTPUT_HANDLE);
-	int hCrt = _open_osfhandle((long)handle_out, _O_TEXT);
-	FILE* hf_out = _fdopen(hCrt, "w");
-	setvbuf(hf_out, NULL, _IONBF, 1);
-	*stdout = *hf_out;
-
-	HANDLE handle_in = GetStdHandle(STD_INPUT_HANDLE);
-	hCrt = _open_osfhandle((long)handle_in, _O_TEXT);
-	FILE* hf_in = _fdopen(hCrt, "r");
-	setvbuf(hf_in, NULL, _IONBF, 128);
-	*stdin = *hf_in;
+	freopen("CONOUT$", "w", stdout);
+	std::cout << "This works" << std::endl;
 
 
 	// define the engine

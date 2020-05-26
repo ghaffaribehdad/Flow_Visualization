@@ -86,6 +86,7 @@ void Graphics::RenderFrame()
 	crossSection			.show(&renderImGuiOptions);		// Cross Section rendering
 	heightfieldFTLE			.show(&renderImGuiOptions);		// Heightfield Rendering FTLE
 	fluctuationHeightfield	.show(&renderImGuiOptions);		// Fluctuation Heightfield
+	timeSpacefield			.show(&renderImGuiOptions);		// Time Space raycasting
 
 	/*
 
@@ -403,6 +404,22 @@ bool Graphics::InitializeResources()
 		this->deviceContext.Get(),
 		&this->dispersionOptions
 	);
+
+
+	timeSpacefield.setResources
+	(
+		&this->camera,
+		&this->windowWidth,
+		&this->windowHeight,
+		&this->solverOptions,
+		&this->raycastingOptions,
+		&this->renderingOptions,
+		this->device.Get(),
+		this->adapter,
+		this->deviceContext.Get(),
+		&this->timeSpace3DOptions
+	);
+
 	heightfieldFTLE.fsleOptions = &fsleOptions;
 	
 	if (!streamlineRenderer.initializeBuffers())
@@ -554,7 +571,8 @@ bool Graphics::InitializeImGui(HWND hwnd)
 			&dispersionOptions,
 			&fluctuationheightfieldOptions,
 			&crossSectionOptions,
-			&turbulentMixingOptions
+			&turbulentMixingOptions,
+			&timeSpace3DOptions
 		);
 
 
@@ -601,16 +619,19 @@ void Graphics::Resize(HWND hwnd)
 
 	// Reinitialize Resources and Scene accordingly
 	this->InitializeDirectXResources();
-	this->InitializeCamera();  // no-leak
+	this->InitializeCamera();  
 	this->InitializeResources();
+
+	camera.SetPosition(-10.7f, 4.0f, -5.37f);
+	camera.SetLookAtPos({ 0.75f,-0.35f,0.55f });
 
 	if (this->renderImGuiOptions.showRaycasting)
 	{
 		this->raycasting.resize();
 	}
 
-
 }
+
 
 IDXGIAdapter* Graphics::GetAdapter()
 {

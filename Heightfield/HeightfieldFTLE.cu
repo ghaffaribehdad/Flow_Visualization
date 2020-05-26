@@ -207,28 +207,25 @@ void HeightfieldFTLE::rendering()
 	blocks = static_cast<unsigned int>((this->rays % (thread.x * thread.y) == 0 ? rays / (thread.x * thread.y) : rays / (thread.x * thread.y) + 1));
 
 
-
-	// Depending on the Rendering mode choose the terrain Rendering function
-	if (!dispersionOptions->ftleIsosurface)
+	switch (dispersionOptions->heightMode) 
 	{
-		if (dispersionOptions->renderingMode == dispersionOptionsMode::HeightfieldRenderingMode::SINGLE_SURFACE)
-		{
-			CudaTerrainRenderer_Marching_extra_FSLE << < blocks, thread >> >
-				(
-					this->raycastingSurface.getSurfaceObject(),
-					this->volumeTexture3D_height.getTexture(),
-					this->volumeTexture3D_height_extra.getTexture(),
-					int(this->rays),
-					this->raycastingOptions->samplingRate_0,
-					this->raycastingOptions->tolerance_0,
-					*dispersionOptions,
-					solverOptions->lastIdx - solverOptions->firstIdx + 1
-					);
-		}
+	case dispersionOptionsMode::HeightMode::Height:
+	{
+		CudaTerrainRenderer_Marching_extra_FSLE << < blocks, thread >> >
+		(
+				this->raycastingSurface.getSurfaceObject(),
+				this->volumeTexture3D_height.getTexture(),
+				this->volumeTexture3D_height_extra.getTexture(),
+				int(this->rays),
+				this->raycastingOptions->samplingRate_0,
+				this->raycastingOptions->tolerance_0,
+				*dispersionOptions
+				);
+		break;
 	}
-	else
+	case dispersionOptionsMode::HeightMode::FTLE:
 	{
-		CudaRaycasting_FTLE << < blocks, thread >> >
+		CudaTerrainRenderer_Marching_extra_FTLE_Color << < blocks, thread >> >
 			(
 				this->raycastingSurface.getSurfaceObject(),
 				this->volumeTexture3D_height.getTexture(),
@@ -236,10 +233,14 @@ void HeightfieldFTLE::rendering()
 				int(this->rays),
 				this->raycastingOptions->samplingRate_0,
 				this->raycastingOptions->tolerance_0,
-				*dispersionOptions,
-				solverOptions->lastIdx - solverOptions->firstIdx + 1
+				*dispersionOptions
 				);
+		break;
 	}
+	}
+
+
+
 
 }
 
@@ -248,30 +249,34 @@ bool HeightfieldFTLE::singleSurfaceInitialization()
 	
 	// initialize volume Input Output
 	volume_IO.Initialize(this->solverOptions);
-
+	gridSize = { dispersionOptions->gridSize_2D[0],	dispersionOptions->gridSize_2D[1],	solverOptions->lastIdx - solverOptions->firstIdx };
 
 	// Initialize Height Field as an empty cuda array 3D
-	if (!this->InitializeHeightArray3D_Single
-	(
-		dispersionOptions->gridSize_2D[0],
-		dispersionOptions->gridSize_2D[1],
-		solverOptions->lastIdx - solverOptions->firstIdx
-	))
-		return false;
-
+	this->a_HeightSurface_Primary.initialize(gridSize.x, gridSize.y, gridSize.z);
+	this->a_HeightSurface_Primary_Extra.initialize(gridSize.x, gridSize.y, gridSize.z);
 
 
 	// Bind the array of heights to the cuda surface
-	if (!this->InitializeHeightSurface3D_Single())
+	if (!this->InitializeHeightSurface3D())
 		return false;
 
 
 	// Trace particle and store their heights on the Height Surface
 	this->trace3D_path_Single();
+	
+	switch (dispersionOptions->heightMode)
+	{
+		case dispersionOptionsMode::HeightMode::Height:
+		{
+			this->gradient3D(s_HeightSurface_Primary.getSurfaceObject());
 
-
-	this->gradient3D_Single_ftle();
-
+		}
+		case dispersionOptionsMode::HeightMode::FTLE:
+		{
+			this->gradient3D(s_HeightSurface_Primary_Extra.getSurfaceObject());
+			break;
+		}
+	}
 
 	this->s_HeightSurface_Primary.destroySurface();
 	this->s_HeightSurface_Primary_Extra.destroySurface();
@@ -291,17 +296,16 @@ bool HeightfieldFTLE::singleSurfaceInitialization()
 }
 
 
-void HeightfieldFTLE::gradient3D_Single_ftle()
+void HeightfieldFTLE::gradient3D(cudaSurfaceObject_t cudaSurface)
 {
 	// Calculates the block and grid sizes
 	unsigned int blocks;
 	dim3 thread = { maxBlockDim,maxBlockDim,1 };
-	blocks = static_cast<unsigned int>((this->n_particles % (thread.x * thread.y) == 0 ?
-		n_particles / (thread.x * thread.y) : n_particles / (thread.x * thread.y) + 1));
+	blocks = BLOCK_THREAD(n_particles);
 
 	heightFieldGradient3D<FetchTextureSurface::Channel_X> << < blocks, thread >> >
 		(
-			s_HeightSurface_Primary.getSurfaceObject(),
+			cudaSurface,
 			*dispersionOptions,
 			*solverOptions
 			);
@@ -330,40 +334,53 @@ void HeightfieldFTLE::correlation()
 	//gpuErrchk(cudaMemset(this->d_pearson_var_ftle, 0, sizeof(float) * solverOptions->timeSteps));
 	//gpuErrchk(cudaMemset(this->d_pearson_var_height, 0, sizeof(float) * solverOptions->timeSteps));
 
+	// Calculates the block and grid sizes
+	unsigned int blocks;
+	dim3 thread = { maxBlockDim,maxBlockDim,1 };
+	blocks = BLOCK_THREAD(dispersionOptions->gridSize_2D[0] * dispersionOptions->gridSize_2D[1]);
 
 
-
-	gpuErrchk(cudaMalloc((void**)&d_ftle, sizeof(float) * dispersionOptions->gridSize_2D[0]));
-	gpuErrchk(cudaMalloc((void**)&d_height, sizeof(float) * dispersionOptions->gridSize_2D[0]));
-
-	fetch_ftle_height << < 1, dispersionOptions->gridSize_2D[0] >> >
-		(
-			volumeTexture3D_height.getTexture(),
-			volumeTexture3D_height_extra.getTexture(),
-			d_height,
-			d_ftle,
-			*solverOptions
-			);
+	gpuErrchk(cudaMalloc((void**)&d_ftle, sizeof(float) * dispersionOptions->gridSize_2D[0] * dispersionOptions->gridSize_2D[1]));
+	gpuErrchk(cudaMalloc((void**)&d_height, sizeof(float) * dispersionOptions->gridSize_2D[0] * dispersionOptions->gridSize_2D[1]));
 
 	BinaryWriter binaryWriter;
-	binaryWriter.setFileName("ftleValues.bin");
 	binaryWriter.setFilePath("D:\\FTLE_HEIGHT\\");
-	binaryWriter.setBufferSize(sizeof(float)*dispersionOptions->gridSize_2D[0]);
 
-	h_ftle = new float[dispersionOptions->gridSize_2D[0]];
-	h_height = new float[dispersionOptions->gridSize_2D[0]];
-	gpuErrchk(cudaMemcpy(h_ftle, d_ftle, sizeof(float)*dispersionOptions->gridSize_2D[0], cudaMemcpyDeviceToHost));
-	gpuErrchk(cudaMemcpy(h_height, d_height, sizeof(float)*dispersionOptions->gridSize_2D[0], cudaMemcpyDeviceToHost));
+	h_ftle = new float[dispersionOptions->gridSize_2D[0]* dispersionOptions->gridSize_2D[1]];
+	h_height = new float[dispersionOptions->gridSize_2D[0] * dispersionOptions->gridSize_2D[1]];
+	binaryWriter.setBufferSize(sizeof(float)*dispersionOptions->gridSize_2D[0]* dispersionOptions->gridSize_2D[1]);
 
-	binaryWriter.setBuffer(reinterpret_cast<char*>(h_ftle));
-	binaryWriter.write();
-	binaryWriter.setFileName("heightValues.bin");
-	binaryWriter.setBuffer(reinterpret_cast<char*>(h_height));
-	binaryWriter.write();
+	for (int time =0; time < solverOptions->timeSteps; time++)
+	{
+		fetch_ftle_height << < blocks,thread >> >
+			(
+				volumeTexture3D_height.getTexture(),
+				volumeTexture3D_height_extra.getTexture(),
+				d_height,
+				d_ftle,
+				*solverOptions,
+				*dispersionOptions,
+				time
+				);
 
 
+		gpuErrchk(cudaMemcpy(h_ftle, d_ftle, sizeof(float)*dispersionOptions->gridSize_2D[0] * dispersionOptions->gridSize_2D[1], cudaMemcpyDeviceToHost));
+		gpuErrchk(cudaMemcpy(h_height, d_height, sizeof(float)*dispersionOptions->gridSize_2D[0] * dispersionOptions->gridSize_2D[1], cudaMemcpyDeviceToHost));
+
+		binaryWriter.setBuffer(reinterpret_cast<char*>(h_ftle));
+		binaryWriter.setFileName("ftle_t" + std::to_string(time) + ".bin");
+		binaryWriter.write();
+
+		binaryWriter.setBuffer(reinterpret_cast<char*>(h_height));
+		binaryWriter.setFileName("height_t" + std::to_string(time) + ".bin");
+		binaryWriter.write();
+	}
+
+	delete[] h_height;
+	delete[] h_ftle;
 	
-
+	cudaFree(d_ftle);
+	cudaFree(d_height);
 
 	//// calculate the mean values
 	//textureMean << < blocks, thread >> >

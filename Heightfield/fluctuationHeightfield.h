@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DispersionTracer.h"
+#include "Heightfield.h"
 #include "..//Options/fluctuationheightfieldOptions.h"
 #include "..//Raycaster/BoundingBox.h"
 
@@ -11,7 +11,7 @@ struct size_t3
 	size_t z;
 };
 
-class FluctuationHeightfield : public HeightfieldGenerator
+class FluctuationHeightfield : public Heightfield
 {
 	// 
 public:
@@ -101,8 +101,8 @@ private:
 	CudaArray_2D<float> heightArray2D;
 	cudaTextureObject_t heightFieldTexture2D;
 
-	virtual bool InitializeHeightSurface3D_Single() override;
-	virtual bool InitializeHeightArray3D_Single(int3 gridSize) override;
+	virtual bool InitializeHeightSurface3D() override;
+
 
 
 };

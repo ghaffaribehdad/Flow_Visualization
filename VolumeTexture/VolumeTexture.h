@@ -65,6 +65,10 @@ private:
 };
 
 
+
+
+
+
 class VolumeTexture2D
 {
 
@@ -177,6 +181,70 @@ private:
 	float* h_field = nullptr;
 
 	float gridDiameter;
+
+
+
+};
+
+
+
+
+template <typename T>
+class VolumeTexture3D_T
+{
+
+public:
+
+	// setter functions
+	void setField(float* _h_field)
+	{
+		this->h_field = _h_field;
+	}
+
+
+	void setArray(cudaArray_t& _cuArray_velocity)
+	{
+		this->cuArray_velocity = _cuArray_velocity;
+	}
+
+
+
+	bool initialize
+	(
+		const int3 & dimension,
+		bool normalizedCoords = false,
+		cudaTextureAddressMode addressMode_x = cudaAddressModeWrap,
+		cudaTextureAddressMode addressMode_y = cudaAddressModeBorder,
+		cudaTextureAddressMode addressMode_z = cudaAddressModeWrap,
+		cudaTextureFilterMode _cudaTextureFilterMode = cudaFilterModeLinear
+	);
+
+	// If the cuda array has been set directly 
+
+	bool initialize_array
+	(
+		bool normalizedCoords = false,
+		cudaTextureAddressMode addressMode_x = cudaAddressModeWrap,
+		cudaTextureAddressMode addressMode_y = cudaAddressModeBorder,
+		cudaTextureAddressMode addressMode_z = cudaAddressModeWrap,
+		cudaTextureFilterMode _cudaTextureFilterMode = cudaFilterModeLinear
+
+	);
+
+	void release();
+
+	cudaTextureObject_t getTexture()
+	{
+		return this->t_field;
+	}
+
+
+private:
+
+	cudaTextureObject_t t_field;
+	cudaArray_t cuArray_velocity;
+	float* h_field = nullptr;
+	float3 gridDiameter;
 
 
 

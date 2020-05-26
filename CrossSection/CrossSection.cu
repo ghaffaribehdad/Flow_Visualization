@@ -259,8 +259,7 @@ void CrossSection::filterExtermum()
 
 void CrossSection::initializedFilterSurface()
 {
-	this->a_field.setDimension(m_dimension.x, m_dimension.y, m_dimension.z);
-	this->a_field.initialize();
+	this->a_field.initialize(m_dimension.x, m_dimension.y, m_dimension.z);
 
 	cudaArray_t pCudaArray = a_field.getArray();
 	this->s_filteringSurface.setInputArray(pCudaArray);

@@ -38,7 +38,7 @@ bool FluctuationHeightfield::initialize
 
 
 	// Initialize Height Field as an empty CUDA array 3D
-	if (!this->InitializeHeightArray3D_Single(make_int3((int)m_gridSize3D.x, (int)m_gridSize3D.y, (int)m_gridSize3D.z)))
+	if (!a_HeightSurface_Primary.initialize(m_gridSize3D.x, m_gridSize3D.y, m_gridSize3D.z))
 		return false;
 
 
@@ -46,7 +46,7 @@ bool FluctuationHeightfield::initialize
 	this->traceFluctuationfield3D();
 
 	// Bind the array of heights to the CUDA surface
-	if (!this->InitializeHeightSurface3D_Single())
+	if (!this->InitializeHeightSurface3D())
 		return false;
 
 	this->gradientFluctuationfield();
@@ -184,21 +184,8 @@ __host__ bool FluctuationHeightfield::initializeBoundingBox()
 }
 
 
-__host__ bool FluctuationHeightfield::InitializeHeightArray3D_Single(int3 gridSize)
-{
-	// Set dimensions and initialize height field as a 3D CUDA Array
-	this->a_HeightSurface_Primary.setDimension(gridSize.x, gridSize.y, gridSize.z);
 
-	// initialize the 3D array
-	if (!a_HeightSurface_Primary.initialize())
-		return false;
-
-
-	return true;
-}
-
-
-__host__ bool FluctuationHeightfield::InitializeHeightSurface3D_Single()
+__host__ bool FluctuationHeightfield::InitializeHeightSurface3D()
 {
 	// Assign the hightArray to the hightSurface and initialize the surface
 	cudaArray_t pCudaArray = NULL;

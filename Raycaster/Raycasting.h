@@ -36,12 +36,9 @@ class Raycasting
 {
 
 
-private:
-	VolumeTexture3D volumeTexture;
-	//VolumeTexture1D t_average_temp;
-
 protected:
 
+	VolumeTexture3D volumeTexture;
 
 	float* averageTemp = nullptr;
 	float* d_averageTemp = nullptr;
@@ -98,10 +95,21 @@ protected:
 	__host__ bool initializeRasterizer();
 	__host__ bool initializeSamplerstate();
 	__host__ void setShaders();
+	__host__ void updateFile
+	(
+		cudaTextureAddressMode addressMode_X = cudaAddressModeBorder,
+		cudaTextureAddressMode addressMode_Y = cudaAddressModeBorder,
+		cudaTextureAddressMode addressMode_Z = cudaAddressModeBorder
+	);
 
 public:
 
-	__host__ virtual bool initialize(cudaTextureAddressMode, cudaTextureAddressMode, cudaTextureAddressMode);
+	__host__ virtual bool initialize
+	(
+		cudaTextureAddressMode addressMode_X = cudaAddressModeBorder,
+		cudaTextureAddressMode addressMode_Y = cudaAddressModeBorder,
+		cudaTextureAddressMode addressMode_Z = cudaAddressModeBorder
+	);
 	__host__ virtual bool release();
 	__host__ virtual void rendering();
 	__host__ virtual bool updateScene();
@@ -150,6 +158,11 @@ public:
 				renderImGuiOptions->updateRaycasting = false;
 
 			}
+			if (raycastingOptions->fileChanged)
+			{
+				this->updateFile();
+				this->updateScene();
+			}
 
 			
 		}
@@ -171,6 +184,32 @@ __global__ void CudaIsoSurfacRenderer
 	float IsosurfaceTolerance
 );
 
+__global__ void CudaIsoSurfacRenderer_float
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field1,
+	int rays,
+	int3 gridSize,
+	TimeSpace3DOptions timeSpace3DOptions
+);
+
+__global__ void CudaIsoSurfacRenderer_float_PlaneColor
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field1,
+	int rays,
+	int3 gridSize,
+	TimeSpace3DOptions timeSpace3DOptions
+);
+
+__global__ void CudaIsoSurfacRenderer_float_PlaneColor
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field1,
+	int rays,
+	int3 gridSize,
+	RaycastingOptions raycastingOptions
+);
 
 __global__ void CudaIsoSurfacRenderer_TurbulentDiffusivity
 (
@@ -264,12 +303,10 @@ __global__ void CudaTerrainRenderer_Marching_extra_FSLE
 	int rays,
 	float samplingRate,
 	float IsosurfaceTolerance,
-	DispersionOptions dispersionOptions,
-	int traceTime
+	DispersionOptions dispersionOptions
 );
 
-
-__global__ void CudaTerrainRenderer_extra_FTLE
+__global__ void CudaTerrainRenderer_Marching_extra_FTLE_Color
 (
 	cudaSurfaceObject_t raycastingSurface,
 	cudaTextureObject_t heightField,
@@ -277,11 +314,11 @@ __global__ void CudaTerrainRenderer_extra_FTLE
 	int rays,
 	float samplingRate,
 	float IsosurfaceTolerance,
-	DispersionOptions dispersionOptions,
-	int traceTime
+	DispersionOptions dispersionOptions
 );
 
-__global__ void CudaRaycasting_FTLE
+
+__global__ void CudaTerrainRenderer_extra_FTLE
 (
 	cudaSurfaceObject_t raycastingSurface,
 	cudaTextureObject_t heightField,
@@ -333,3 +370,16 @@ __global__ void CudaFilterExtremumX
 	int z
 );
 
+
+
+__device__ float3 binarySearch_tex1D
+(
+	cudaTextureObject_t field,
+	float3& _position,
+	float3& gridDiameter,
+	int3& gridSize,
+	float3& _samplingStep,
+	float& value,
+	float& tolerance,
+	int maxIteration
+);

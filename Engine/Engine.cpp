@@ -64,7 +64,6 @@ void Engine::Update()
 	{
 		this->gfx.camera.AdjustPosition(this->gfx.camera.GetViewXMVector() * 1.5f*cameraSpeed * dt);
 		this->gfx.viewChanged();
-		std::printf("hi\n");
 	}
 
 

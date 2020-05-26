@@ -919,3 +919,29 @@ __device__ __host__ inline float3 saturateRGB(const float3 & rgb, const float & 
 	return ((1 - saturate) * rgb_complement) + rgb;
 }
 
+__device__ __host__ inline float3 float4tofloat3(const float4 & a)
+{
+	return make_float3(a.x, a.y, a.z);
+}
+
+__device__ inline fMat3X3 Jacobian(cudaTextureObject_t t_velocityField, float3 h, float3 position)
+{
+	fMat3X3 jac = { 0,0,0,0,0,0,0,0,0 };
+
+	jac.r1 = float4tofloat3(tex3D<float4>(t_velocityField, position.x + 1, position.y, position.z));
+	jac.r1 -= float4tofloat3(tex3D<float4>(t_velocityField, position.x - 1, position.y, position.z));
+
+	jac.r2 = float4tofloat3(tex3D<float4>(t_velocityField, position.x, position.y + 1, position.z));
+	jac.r2 -= float4tofloat3(tex3D<float4>(t_velocityField, position.x, position.y - 1, position.z));
+
+	jac.r3 = float4tofloat3(tex3D<float4>(t_velocityField, position.x, position.y, position.z + 1));
+	jac.r3 -= float4tofloat3(tex3D<float4>(t_velocityField, position.x, position.y, position.z - 1));
+
+	// This would give us the Jacobian Matrix
+	jac.r1 = jac.r1 / (2 * h.x);
+	jac.r2 = jac.r2 / (2 * h.y);
+	jac.r2 = jac.r3 / (2 * h.z);
+
+	return jac;
+}
+

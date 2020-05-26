@@ -181,20 +181,24 @@
     </CudaLink>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <CudaCompile Include="Dispersion\DispersionHelper.cu">
+    <CudaCompile Include="Heightfield\DispersionHelper.cu">
       <FileType>Document</FileType>
     </CudaCompile>
-    <CudaCompile Include="Dispersion\DispersionTracer.cu">
+    <CudaCompile Include="Heightfield\Heightfield.cu">
       <FileType>Document</FileType>
     </CudaCompile>
     <CudaCompile Include="CrossSection\CrossSection.cu">
       <FileType>Document</FileType>
     </CudaCompile>
-    <CudaCompile Include="Dispersion\ftleHelperFunctions.cu" />
-    <CudaCompile Include="Dispersion\HeightfieldFTLE.cu">
+    <CudaCompile Include="Heightfield\ftleHelperFunctions.cu" />
+    <CudaCompile Include="Heightfield\HeightfieldFTLE.cu">
       <FileType>Document</FileType>
     </CudaCompile>
     <ClCompile Include="Particle\ParticleHelperFunctions.cpp" />
+    <CudaCompile Include="Raycaster\FieldGenerator3D.cu" />
+    <CudaCompile Include="Raycaster\TimeSpaceField.cu">
+      <FileType>Document</FileType>
+    </CudaCompile>
     <ClCompile Include="Timer\Timer.cpp" />
     <ClCompile Include="VolumeIO\BinaryWriter.cpp" />
     <ClCompile Include="VolumeIO\Volume_IO.cpp" />
@@ -204,19 +208,23 @@
     <ClInclude Include="Cuda\CudaArray.h" />
     <ClInclude Include="Cuda\Cuda_helper_math_host.h" />
     <ClInclude Include="DispersionHelper.h" />
-    <ClInclude Include="Dispersion\DispersionTracer.h" />
-    <ClInclude Include="Dispersion\fluctuationHeightfield.h" />
-    <ClInclude Include="Dispersion\ftleHelperFunctions.h" />
-    <ClInclude Include="Dispersion\HightfieldFTLE.h" />
+    <ClInclude Include="Heightfield\DispersionHelper.h" />
+    <ClInclude Include="Heightfield\Heightfield.h" />
+    <ClInclude Include="Heightfield\fluctuationHeightfield.h" />
+    <ClInclude Include="Heightfield\ftleHelperFunctions.h" />
+    <ClInclude Include="Heightfield\HightfieldFTLE.h" />
     <ClInclude Include="FSLE\FSLE.h" />
     <ClInclude Include="Options\CrossSectionOptions.h" />
     <ClInclude Include="Options\DispresionOptions.h" />
     <ClInclude Include="Options\fluctuationheightfieldOptions.h" />
     <ClInclude Include="Options\FSLEOptions.h" />
     <ClInclude Include="Options\RenderingOptions.h" />
+    <ClInclude Include="Options\TimeSpace3DOptions.h" />
     <ClInclude Include="Options\TurbulentMixingOptions.h" />
     <ClInclude Include="ParticleTracing\ParticleTracing.h" />
     <ClInclude Include="Particle\ParticleHelperFunctions.h" />
+    <ClInclude Include="Raycaster\FieldGenerator3D.h" />
+    <ClInclude Include="Raycaster\TimeSpaceField.h" />
     <ClInclude Include="Timer\Timer.h" />
     <ClInclude Include="TurbulentMixing\TurbulentMixing.h" />
     <ClInclude Include="TurbulentMixing\TurbulentMixingHelper.h" />
@@ -226,7 +234,7 @@
     <ClInclude Include="VolumeIO\Volume_IO_Z_Major.h" />
     <ClInclude Include="Window\RenderWindow.h" />
     <ClInclude Include="Window\WindowContainer.h" />
-    <CudaCompile Include="Dispersion\fluctuationHeightfield.cu" />
+    <CudaCompile Include="Heightfield\fluctuationHeightfield.cu" />
     <CudaCompile Include="FSLE\FSLE.cu" />
     <CudaCompile Include="Particle\Particle.cu" />
     <CudaCompile Include="Raycaster\BoundingBox.cu">

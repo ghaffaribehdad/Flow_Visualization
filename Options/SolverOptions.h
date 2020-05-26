@@ -7,8 +7,9 @@ struct SolverOptions
 public:
 	char fileName[100] ="FieldP";
 	//char  filePath[100] ="D:\\copy\\ref\\Binary_z_Major\\Padded\\";	// Reference Dataset
-	char  filePath[100] ="G:\\OscillatingWall\\Padded\\";				// Oscillating wall
+	//char  filePath[100] ="G:\\OscillatingWall\\Padded\\";				// Oscillating wall
 	//char  filePath[100] ="D:\\copy\\bf\\Binary_z_Major\\Padded\\";			// Virtual body		
+	char  filePath[100] ="G:\\KIT3_ZMajor_Padded\\";			// KIT3		
 
 
 	float seedWallNormalDist = 0.1f;
@@ -20,17 +21,19 @@ public:
 	int fileToSave = 1000;
 
 	int channels = 4;
-	int gridSize[3] = { 192,192,192 };
-	int seedGrid[3] = { 2,2,1 };
-	int gridSize_2D[2] = { 50,50 };
+	int gridSize[3] = { 64,503,2048 };				//KIT3
+	//int gridSize[3] = { 192,192,192 };			//KIT2
+	int seedGrid[3] = { 5,5,10 };
+	int gridSize_2D[2] = { 192,192 };
 
-	//float gridDiameter[3] = { 1,2,5 };
-	float gridDiameter[3] = { 7.854f,2.0f,3.1415f };	//KIT2
-	//float gridDiameter[3] = { 2.0f,2.0f,0.5f };	//Schumacher
+	float gridDiameter[3] = { 5.0f,3.0f,5.0f };				//KIT3
+	//float gridDiameter[3] = { 7.854f,2.0f,3.1415f };		//KIT2
+	//float gridDiameter[3] = { 2.0f,2.0f,0.5f };			//Schumacher
 	
+	float volumeDiameter[3] = { 0.4f,2.0f,7.0f };
 
-	float seedBox[3] = { 7.854f,2.0f,3.1415f };			//KIT2
-	//float seedBox[3] = { 1,2,5 };
+	//float seedBox[3] = { 7.854f,2.0f,3.1415f };				//KIT2
+	float seedBox[3] = { 5.0f,3.0f,5.0f };						//KIT3
 	float seedBoxPos[3] = { 0.0f, 0.0f, 0.0f }; 
 
 	int precision = 32;
@@ -45,9 +48,9 @@ public:
 	float line_thickness = 0.0f;
 
 
-	int firstIdx = 400;
-	int lastIdx = 750;
-	int currentIdx =400;
+	int firstIdx = 1;
+	int lastIdx = 100;
+	int currentIdx =1;
 	int timeSteps = lastIdx - firstIdx + 1;
 
 	

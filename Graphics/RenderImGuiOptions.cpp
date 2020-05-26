@@ -148,6 +148,7 @@ void RenderImGuiOptions::drawSolverOptions()
 			solverOptions->firstIdx = solverOptions->lastIdx;
 		}
 		this->updatePathlines = true;
+		
 		if (solverOptions->currentIdx < solverOptions->firstIdx)
 		{
 			solverOptions->currentIdx = solverOptions->firstIdx;
@@ -181,6 +182,7 @@ void RenderImGuiOptions::drawSolverOptions()
 		this->updatePathlines = true;
 		this->crossSectionOptions->updateTime = true;
 		this->updateCrossSection = true;
+		this->raycastingOptions->fileChanged = true;
 	}
 
 	ImGui::PopItemWidth();
@@ -485,6 +487,7 @@ void RenderImGuiOptions::drawLineRenderingOptions()
 
 
 
+
 	ImGui::End();
 
 }
@@ -506,6 +509,8 @@ void RenderImGuiOptions::drawRaycastingOptions()
 	if (ImGui::Combo("Isosurface Measure 0", &raycastingOptions->isoMeasure_0, IsoMeasureModes,(int)IsoMeasure::COUNT))
 	{
 		this->updateRaycasting = true;
+		this->updateTimeSpaceField = true;
+
 	}
 
 
@@ -520,11 +525,13 @@ void RenderImGuiOptions::drawRaycastingOptions()
 		this->updateFTLE = true;
 
 
+
 	}
 
 	if (ImGui::DragFloat("Isovalue 0", &raycastingOptions->isoValue_0, 0.001f))
 	{
 		this->updateRaycasting = true;
+		this->updateTimeSpaceField = true;
 	}
 
 	if (ImGui::DragFloat("Tolerance 0", &raycastingOptions->tolerance_0, 0.00001f,0.0001f,5,"%5f"))
@@ -544,7 +551,6 @@ void RenderImGuiOptions::drawRaycastingOptions()
 	{
 		this->updateRaycasting = true;
 		this->updateDispersion = true;
-
 	}
 
 	if (this->raycastingOptions->fileLoaded)
@@ -556,6 +562,42 @@ void RenderImGuiOptions::drawRaycastingOptions()
 		ImGui::Text("File is not loaded yet!");
 	}
 
+	if (raycastingOptions->isoMeasure_0 == IsoMeasure::Velocity_X_Plane)
+	{
+		if (ImGui::InputFloat("Min Value", (float*)&raycastingOptions->minVal, 1.0f))
+		{
+			this->updateRaycasting = true;
+
+		}
+
+		if (ImGui::InputFloat("max Value", (float*)&raycastingOptions->maxVal, 1.0f))
+		{
+			this->updateRaycasting = true;
+
+		}
+
+		if (ImGui::InputFloat("plane Thickness", (float*)& raycastingOptions->planeThinkness, 0.001f, 0.01f))
+		{
+			this->updateRaycasting = true;
+		}
+
+		if (ImGui::InputFloat("Wall-normal clipping", &raycastingOptions->wallNormalClipping, 0.01f, 0.1f))
+		{
+			if (raycastingOptions->wallNormalClipping > 1.0f)
+			{
+				raycastingOptions->wallNormalClipping = 1.0f;
+			}
+			else if (raycastingOptions->wallNormalClipping < 0.0f)
+			{
+				raycastingOptions->wallNormalClipping = 0.0f;
+			}
+
+			this->updateRaycasting = true;
+		}
+	}
+
+	
+
 	ImGui::End();
 
 }
@@ -564,6 +606,12 @@ void RenderImGuiOptions::drawRaycastingOptions()
 void RenderImGuiOptions::drawDispersionOptions()
 {
 	ImGui::Begin("Dispersion Options");
+
+
+	if (ImGui::Combo("Field Mode", &dispersionOptions->heightMode, heightMode, dispersionOptionsMode::HeightMode::COUNT))
+	{
+
+	}
 
 	if (solverOptions->lastIdx - solverOptions->firstIdx > 0)
 	{
@@ -584,23 +632,6 @@ void RenderImGuiOptions::drawDispersionOptions()
 			this->updateFTLE = true;
 			this->dispersionOptions->released = false;
 		}
-	}
-
-	if (ImGui::Combo("Rendering Mode", &dispersionOptions->renderingMode, HeightfieldRenderingMode, 2)) {}
-
-
-	if (dispersionOptions->renderingMode == dispersionOptionsMode::HeightfieldRenderingMode::DOUBLE_SURFACE)
-	{
-		ImGui::Separator();
-		ImGui::Text("Secondary File:");
-		if (ImGui::InputText("File Path Secondary", dispersionOptions->filePathSecondary, sizeof(dispersionOptions->filePathSecondary)))
-		{
-		}
-
-		if (ImGui::InputText("File Name Secondary", dispersionOptions->fileNameSecondary, sizeof(dispersionOptions->fileNameSecondary)))
-		{
-		}
-		ImGui::Separator();
 	}
 	
 	if (ImGui::InputInt("Save index", &dispersionOptions->file_counter, 1, 10)) {}
@@ -624,6 +655,12 @@ void RenderImGuiOptions::drawDispersionOptions()
 
 		this->dispersionOptions->retrace = true;
 
+	}
+
+	if (ImGui::DragFloat("height scale", &dispersionOptions->scale,0.0001f,0.00001f,100.0f,"%5f"))
+	{
+		this->updateDispersion = true;
+		this->updateFTLE = true;
 	}
 
 	if (ImGui::Checkbox("Forward-FTLE", &dispersionOptions->forward))
@@ -683,49 +720,36 @@ void RenderImGuiOptions::drawDispersionOptions()
 
 		}
 	}
-	
 
-	
+	ImGui::Text("Color Coding:");
 
-	if (dispersionOptions->renderingMode == dispersionOptionsMode::HeightfieldRenderingMode::SINGLE_SURFACE)
+	if (ImGui::ColorEdit4("Minimum", (float*)&dispersionOptions->minColor))
 	{
+		updateDispersion = true;
+		this->updateFTLE = true;
 
-		ImGui::Text("Color Coding:");
-
-		if (ImGui::ColorEdit4("Minimum", (float*)&dispersionOptions->minColor))
-		{
-			updateDispersion = true;
-			this->updateFTLE = true;
-
-		}
-		if (ImGui::InputFloat("Min Value", (float*)&dispersionOptions->min_val, 0.1f))
-		{
-			updateDispersion = true;
-			this->updateFTLE = true;
-
-		}
-
-		if (ImGui::ColorEdit4("Maximum", (float*)&dispersionOptions->maxColor))
-		{
-			updateDispersion = true;
-			this->updateFTLE = true;
-
-		}
-
-		if (ImGui::InputFloat("Max Value", (float*)&dispersionOptions->max_val, 0.1f))
-		{
-			updateDispersion = true;
-			this->updateFTLE = true;
-
-		}
 	}
-	else
+	if (ImGui::InputFloat("Min Value", (float*)&dispersionOptions->min_val, 0.1f))
 	{
-		if (ImGui::DragFloat("Transparency Secondary", &dispersionOptions->transparencySecondary, 0.001f, 0.0f, 1.0f))
-		{
-			this->updateDispersion = true;
-		}
+		updateDispersion = true;
+		this->updateFTLE = true;
+
 	}
+
+	if (ImGui::ColorEdit4("Maximum", (float*)&dispersionOptions->maxColor))
+	{
+		updateDispersion = true;
+		this->updateFTLE = true;
+
+	}
+
+	if (ImGui::InputFloat("Max Value", (float*)&dispersionOptions->max_val, 0.1f))
+	{
+		updateDispersion = true;
+		this->updateFTLE = true;
+
+	}
+	
 
 	if (ImGui::InputInt2("Grid Size 2D", dispersionOptions->gridSize_2D, sizeof(dispersionOptions->gridSize_2D)))
 	{
@@ -1028,14 +1052,108 @@ void RenderImGuiOptions::drawTurbulentMixingOptions()
 		}
 	}
 
+	 
+	ImGui::End();
+
+}
 
 
 
 
 
+void RenderImGuiOptions::drawTimeSpaceField()
+{
+	ImGui::Begin("Time-Space");
 
+
+	// Show Cross Sections
+	if (ImGui::Checkbox("Render Time Space", &this->showTimeSpaceField))
+	{
+		this->updateTimeSpaceField = true;
+	}
+
+
+	if (ImGui::DragFloat("Isovalue", &timeSpace3DOptions->isoValue, 1.0f))
+	{
+		this->updateTimeSpaceField = true;
+	}
+
+
+	if (ImGui::DragFloat("Sampling Rate", &timeSpace3DOptions->samplingRate, 0.00001f, 0.0001f, 1.0f, "%.5f"))
+	{
+		if (timeSpace3DOptions->samplingRate < 0.0001f)
+		{
+			timeSpace3DOptions->samplingRate = 0.0001f;
+		}
+
+		this->updateTimeSpaceField = true;
+
+	}
+
+	if (ImGui::DragFloat("Tolerance", &timeSpace3DOptions->tolerance, 0.00001f, 0.0001f, 5, "%5f"))
+	{
+		this->updateTimeSpaceField = true;
+
+	}
+
+
+	if (ImGui::DragFloat("Isovalue Tolerance", &timeSpace3DOptions->isoValueTolerance,0.001f,0.01f,100, "%5f"))
+	{
+		this->updateTimeSpaceField = true;
+
+	}
+
+	if (ImGui::DragInt("Iterations", &timeSpace3DOptions->iteration,1,10,100))
+	{
+		this->updateTimeSpaceField = true;
+
+	}
+
+	if (ImGui::InputInt("First time step", &timeSpace3DOptions->t_first))
+	{
+
+	}
+
+	if (ImGui::InputInt("Last time step", &timeSpace3DOptions->t_last))
+	{
+
+	}
+
+	if(ImGui::InputFloat("Wall-normal clipping", &timeSpace3DOptions->wallNormalClipping, 0.01f, 0.1f))
+	{
+		if (timeSpace3DOptions->wallNormalClipping > 1.0f)
+		{
+			timeSpace3DOptions->wallNormalClipping = 1.0f;
+		}
+		else if (timeSpace3DOptions->wallNormalClipping < 0.0f)
+		{
+			timeSpace3DOptions->wallNormalClipping = 0.0f;
+		}
+
+		this->updateTimeSpaceField = true;
+	}
+
+	if (ImGui::ColorEdit3("Isosurface Color", (float*)& timeSpace3DOptions->color))
+	{
+
+		this->updateTimeSpaceField = true;
+
+	}
+
+
+
+	if (ImGui::InputFloat("Min Value", (float*)&timeSpace3DOptions->minVal, 1.0f))
+	{
+		this->updateTimeSpaceField = true;
+
+	}
+
+	if (ImGui::InputFloat("max Value", (float*)&timeSpace3DOptions->maxVal, 1.0f))
+	{
+		this->updateTimeSpaceField = true;
+
+	}
 
 
 	ImGui::End();
-
 }

@@ -279,9 +279,7 @@ __global__ void fluctuationfieldGradient3D
 {
 
 	Observable observable;
-	int index = blockIdx.x * blockDim.y * blockDim.x;
-	index += threadIdx.y * blockDim.x;
-	index += threadIdx.x;
+	int index = CUDA_INDEX;
 	
 	int timeDim = 1 + solverOptions.lastIdx - solverOptions.firstIdx;
 
@@ -327,15 +325,25 @@ __global__ void fetch_ftle_height
 	cudaTextureObject_t t_ftle,
 	float * d_height,
 	float * d_ftle,
-	SolverOptions solverOptions
+	SolverOptions solverOptions,
+	DispersionOptions dispersionOptions,
+	int timestep
 )
 {
-	int index = threadIdx.x;
+	int index = CUDA_INDEX;
 
-	// extract the values
-	d_height[index]		= ValueAtXYZ_float4(t_height, make_float3(index, 10, solverOptions.timeSteps - 1)).x;
-	d_ftle[index]		= ValueAtXYZ_float4(t_ftle, make_float3(index, 10, solverOptions.timeSteps - 1)).x;
 
+	if (index < dispersionOptions.gridSize_2D[0] * dispersionOptions.gridSize_2D[1])
+	{	
+		int2 dim = make_int2(dispersionOptions.gridSize_2D[0], dispersionOptions.gridSize_2D[1]);
+		int2 pixel = { 0,0 };
+		pixel = IndexToPixel(index,dim);
+
+
+		d_height[index] = ValueAtXYZ_float4(t_height, make_float3(pixel.x, pixel.y, timestep)).x;
+		d_ftle[index] = ValueAtXYZ_float4(t_ftle, make_float3(pixel.x, pixel.y, timestep)).x;
+
+	}
 }
 
 

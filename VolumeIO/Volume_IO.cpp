@@ -53,7 +53,7 @@ bool VolumeIO::Volume_IO::Read(std::streampos _begin, size_t size)
 	}
 	else
 	{
-		std::printf(std::string("Successfully Open File: " + m_fileName).c_str());
+		//std::printf(std::string("Successfully Open File: " + fullName +  "\n").c_str());
 	}
 
 	//
@@ -92,13 +92,13 @@ bool VolumeIO::Volume_IO::Read()
 	if (!myFile.is_open())
 	{
 		std::string error_string = "Failed to open file : ";
-		error_string += m_fileName;
+		error_string += fullName;
 		ErrorLogger::Log(error_string);
 		return false;
 	}
 	else
 	{
-		std::printf(std::string("Successfully Open File: " + m_fileName).c_str());
+		std::printf(std::string("Successfully Open File: " + fullName + "\n").c_str());
 	}
 	// get the starting position
 	std::streampos start = myFile.tellg();

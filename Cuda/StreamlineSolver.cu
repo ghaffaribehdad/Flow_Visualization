@@ -108,15 +108,13 @@ __host__ void StreamlineSolver::measureFieldGeneration()
 	blocks = static_cast<unsigned int>((gridpoints % (thread.x * thread.y) == 0 ?
 		gridpoints / (thread.x * thread.y) : gridpoints / (thread.x * thread.y) + 1));
 
-	// set and initialize the CUDA 3D array
-	this->a_Measure.setDimension
+
+	this->a_Measure.initialize
 	(
 		solverOptions->gridSize[0],
 		solverOptions->gridSize[1],
 		solverOptions->gridSize[2]
 	);
-
-	this->a_Measure.initialize();
 
 	// initialize the CUDA surface 
 
