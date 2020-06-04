@@ -31,7 +31,7 @@ struct CrossSectionOptions
 	bool updateTime = false;
 	int slice = 0;
 
-	bool saveScreenshot = false;
+	
 	bool filterMinMax = false;
 
 	float min_max_threshold = 0.01f;

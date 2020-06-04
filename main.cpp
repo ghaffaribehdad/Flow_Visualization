@@ -16,7 +16,6 @@ int APIENTRY wWinMain(
 	// https://stackoverflow.com/questions/15543571/allocconsole-not-displaying-cout
 	AllocConsole();
 	freopen("CONOUT$", "w", stdout);
-	std::cout << "This works" << std::endl;
 
 
 	// define the engine

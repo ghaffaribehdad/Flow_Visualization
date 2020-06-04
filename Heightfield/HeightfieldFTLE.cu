@@ -14,6 +14,9 @@ __host__ bool HeightfieldFTLE::InitializeParticles()
 {
 	this->n_particles = dispersionOptions->gridSize_2D[0] * dispersionOptions->gridSize_2D[1];
 	this->h_particle = new Particle[n_particles * FTLE_NEIGHBOR] ;
+
+	// Using grid spacing to seed neighboring particles
+	float3 delta = Array2Float3(solverOptions->gridDiameter) / Array2Int3(solverOptions->gridSize);
 	seedParticle_ZY_Plane_FTLE
 	(
 		h_particle,
@@ -21,7 +24,7 @@ __host__ bool HeightfieldFTLE::InitializeParticles()
 		ARRAYTOINT2(dispersionOptions->gridSize_2D),
 		dispersionOptions->seedWallNormalDist,
 		dispersionOptions->tilt_deg,
-		dispersionOptions->initial_distance
+		delta
 	);
 
 	size_t Particles_byte = sizeof(Particle) * n_particles * FTLE_NEIGHBOR;

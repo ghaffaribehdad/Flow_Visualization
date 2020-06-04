@@ -109,6 +109,9 @@ public:
 	bool streamlineGenerating	= false;
 
 
+	bool saveScreenshot = false;
+	bool saved = false;
+
 
 	void drawOptionWindows()
 	{

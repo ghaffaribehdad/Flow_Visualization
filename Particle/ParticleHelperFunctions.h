@@ -29,7 +29,7 @@ void seedParticle_ZY_Plane_FTLE
 	const int2& gridSize,
 	const float& y_slice,
 	const float& tilt,
-	const float& delta_x
+	const float3& delta
 ); 
 
 

@@ -41,6 +41,11 @@ void RenderImGuiOptions::drawSolverOptions()
 
 	}
 
+	if (ImGui::Checkbox("Save Screenshot", &this->saveScreenshot))
+	{
+		
+
+	}
 
 	
 	if (ImGui::InputText("File Path", solverOptions->filePath, sizeof(solverOptions->filePath)))
@@ -154,6 +159,7 @@ void RenderImGuiOptions::drawSolverOptions()
 			solverOptions->currentIdx = solverOptions->firstIdx;
 			this->updateStreamlines = true;
 
+
 		}
 
 	}
@@ -183,6 +189,7 @@ void RenderImGuiOptions::drawSolverOptions()
 		this->crossSectionOptions->updateTime = true;
 		this->updateCrossSection = true;
 		this->raycastingOptions->fileChanged = true;
+		this->saved = false;
 	}
 
 	ImGui::PopItemWidth();
@@ -641,8 +648,6 @@ void RenderImGuiOptions::drawDispersionOptions()
 	{
 		this->updateDispersion = true;
 		this->updateFTLE = true;
-
-		//this->dispersionOptions->saveScreenshot = true;
 	}
 
 
@@ -1023,11 +1028,7 @@ void RenderImGuiOptions::drawCrossSectionOptions()
 	}
 
 
-	if (ImGui::Button("Save Screenshot", ImVec2(80, 25)))
-	{
-		this->crossSectionOptions->saveScreenshot = true;
 
-	}
 
 
 	ImGui::End();

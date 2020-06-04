@@ -82,8 +82,8 @@ struct DispersionOptions
 
 	// To save screenshots:
 	
-	std::string fileName = "test";
-	std::string filePath = "G:\\Screenshots\\";
+	std::string fileName = "FTLE";
+	std::string filePath = "G:\\Screenshots\\Isosurfaces\\";
 	int file_counter = 0;
 
 	bool saveScreenshot = false;

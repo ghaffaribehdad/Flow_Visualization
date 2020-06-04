@@ -118,24 +118,12 @@ void Graphics::RenderFrame()
 	##############################################################
 
 	*/
-	if (crossSectionOptions.saveScreenshot)
-	{
-		std::string fullName = dispersionOptions.filePath + dispersionOptions.fileName + std::to_string(dispersionOptions.file_counter) + std::string(".jpg");
-		this->saveTextureJPEG(getBackBuffer(), fullName);
-		dispersionOptions.file_counter++;
-		crossSectionOptions.slice++;
-		renderImGuiOptions.updateCrossSection = true;
-		if (!(dispersionOptions.file_counter < solverOptions.lastIdx - solverOptions.firstIdx))
-			crossSectionOptions.saveScreenshot = false;
 
-	}
-
-	if (dispersionOptions.saveScreenshot)
+	if (renderImGuiOptions.saveScreenshot && !renderImGuiOptions.saved)
 	{
-		std::string fullName = dispersionOptions.filePath + dispersionOptions.fileName + std::to_string(dispersionOptions.file_counter) + std::string(".jpg");
+		std::string fullName = dispersionOptions.filePath + dispersionOptions.fileName + std::to_string(solverOptions.currentIdx) + std::string(".jpg");
 		this->saveTextureJPEG(getBackBuffer(), fullName);
-		dispersionOptions.file_counter++;
-		dispersionOptions.saveScreenshot = false;
+		renderImGuiOptions.saved = true;
 	}
 
 	//#############################################################

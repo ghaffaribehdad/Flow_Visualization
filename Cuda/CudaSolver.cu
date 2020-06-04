@@ -5,7 +5,7 @@
 
 CUDASolver::CUDASolver()
 {
-	std::printf("A solver is created!\n");
+	//std::printf("A solver is created!\n");
 }
 
 // Initilize the solver
