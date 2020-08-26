@@ -9,7 +9,6 @@
 
 
 
-// Switch the velocity texture for even and odd case
 __device__ void	RK4Path
 (
 	cudaTextureObject_t t_VelocityField_0,
@@ -18,19 +17,10 @@ __device__ void	RK4Path
 	float3 gridDiameter,
 	int3 gridSize,
 	float dt,
-	bool periodicity
+	bool periodicity,
+	float3 velocityScale = { 1.0f,1.0f,1.0f }
 );
 
-__device__ void	RK4Path
-(
-	cudaTextureObject_t t_VelocityField_0,
-	cudaTextureObject_t t_VelocityField_1,
-	Particle* particle,
-	float3 gridDiameter,
-	int3 gridSize,
-	float3 dt,
-	bool periodicity
-);
 
 // Switch the velocity texture for even and odd case
 __device__ void	RK4Path_linear
@@ -64,19 +54,10 @@ __device__ void RK4Stream
 	Particle* particle,
 	const float3& gridDiameter,
 	const int3& gridSize,
-	const float4& velocityScale,
-	float dt
+	float dt,
+	float3 velocityScale = { 1.0f,1.0f,1.0f }
 );
 
-__device__ void RK4Stream
-(
-	cudaTextureObject_t t_VelocityField_0,
-	Particle* particle,
-	const float3& gridDiameter,
-	const int3& gridSize,
-	const float4& velocityScale,
-	float3 dt
-);
 
 
 __global__ void TracingPath

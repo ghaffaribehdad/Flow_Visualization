@@ -50,7 +50,7 @@ __global__ void traceDispersion
 		for (int i = 0; i < timeStep; i++)
 		{
 
-			RK4Stream(velocityField, &particle[index], Array2Float3(solverOptions.gridDiameter), Array2Int3(solverOptions.gridSize),Array2Float4(solverOptions.velocityScale), dt);
+			RK4Stream(velocityField, &particle[index], Array2Float3(solverOptions.gridDiameter), Array2Int3(solverOptions.gridSize), dt, Array2Float3(solverOptions.velocityScalingFactor));
 		}
 		
 
@@ -157,7 +157,7 @@ __global__ void  traceDispersion3D
 		{
 
 			// Advect the particle
-			RK4Stream(velocityField, &particle[index], Array2Float3(solverOptions.gridDiameter),Array2Int3(solverOptions.gridSize), Array2Float4(solverOptions.velocityScale), dt);
+			RK4Stream(velocityField, &particle[index], Array2Float3(solverOptions.gridDiameter),Array2Int3(solverOptions.gridSize), dt, Array2Float3(solverOptions.velocityScalingFactor));
 		
 			// extract the height
 			float4 height = { particle[index].m_position.y,0.0,0.0,0.0 };

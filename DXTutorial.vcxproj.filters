@@ -99,9 +99,6 @@
     <Filter Include="Header Files\CrossSection">
       <UniqueIdentifier>{d8132c8c-c1d9-4dab-9089-bf32d68dfaab}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\CrossSection">
-      <UniqueIdentifier>{9ee9efb1-3adb-4dad-9d4c-a14ee7a2f0d2}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\VolumeIO">
       <UniqueIdentifier>{7cf1bc11-6f0c-42ef-9bfe-4c5f04d91865}</UniqueIdentifier>
     </Filter>
@@ -270,9 +267,6 @@
     </ClInclude>
     <ClInclude Include="Graphics\ImGui\imstb_truetype.h">
       <Filter>Header Files\Graphics\ImGui</Filter>
-    </ClInclude>
-    <ClInclude Include="CUDA\CudaDevice.h">
-      <Filter>Header Files\Cuda</Filter>
     </ClInclude>
     <ClInclude Include="CUDA\CudaSolver.h">
       <Filter>Header Files\Cuda</Filter>

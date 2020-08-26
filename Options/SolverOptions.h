@@ -41,9 +41,10 @@ public:
 	int channels = 4;
 	int gridSize[3] = { 64,503,2048 };						//KIT3
 	//int gridSize[3] = { 100,503,500 };					//KIT3 timespace short spanwise
-	float velocityScale[4] = { 1.0f,1.0f,1.0f,1.0f };		// time-space scale
+	float velocityScalingFactor[3] = { 1.0f,1.0f,1.0f};		// time-space scale
 	//int gridSize[3] = { 192,192,192 };					//KIT2
 	//int gridSize[3] = { 32,1024,1024 };					//TUI ra1e5
+
 
 
 	int seedGrid[3] = { 5,5,10 };

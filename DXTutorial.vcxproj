@@ -299,7 +299,6 @@
   <ItemGroup>
     <ClInclude Include="Raycaster\BoundingBox.h" />
     <ClInclude Include="Cuda\cudaSurface.h" />
-    <ClInclude Include="CUDA\CudaDevice.h" />
     <ClInclude Include="CUDA\CudaSolver.h" />
     <ClInclude Include="Cuda\Interoperability.h" />
     <ClInclude Include="VolumeTexture\VolumeTexture.h" />

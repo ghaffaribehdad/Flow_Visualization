@@ -49,6 +49,7 @@ void RenderImGuiOptions::drawSolverOptions()
 
 	if (ImGui::Checkbox("Optical Flow", &solverOptions->opticalFlow))
 	{
+		divideArrayFloat3Int3(solverOptions->velocityScalingFactor, solverOptions->gridDiameter, solverOptions->gridSize);
 		this->updatePathlines = true;
 		this->updateStreamlines = true;
 
@@ -90,7 +91,7 @@ void RenderImGuiOptions::drawSolverOptions()
 		this->updatePathlines = true;
 	}
 
-	if (ImGui::DragFloat3("Velocity Scale", solverOptions->velocityScale,0.01f))
+	if (ImGui::DragFloat3("Velocity Scale", solverOptions->velocityScalingFactor,0.01f))
 	{
 		this->updateVolumeBox = true;
 		this->updateRaycasting = true;
