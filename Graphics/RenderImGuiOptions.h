@@ -42,6 +42,9 @@ private:
 	TurbulentMixingOptions*			turbulentMixingOptions;
 	TimeSpace3DOptions*				timeSpace3DOptions;
 
+	Dataset::Dataset dataset = Dataset::Dataset::NONE;
+
+
 
 	// background color
 	float bgColor[3] = { 0,0,0 };
@@ -124,6 +127,7 @@ public:
 		this->drawCrossSectionOptions();			
 		this->drawTurbulentMixingOptions();
 		this->drawTimeSpaceField();
+		this->drawDataset();
 	}
 
 
@@ -148,6 +152,7 @@ private:
 	void drawCrossSectionOptions();				// draw options of CrossSection rendering
 	void drawTimeSpaceField();
 	void drawTurbulentMixingOptions();
+	void drawDataset();
 
 
 };

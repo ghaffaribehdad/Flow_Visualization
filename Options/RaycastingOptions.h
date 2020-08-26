@@ -30,4 +30,12 @@ public:
 
 	float minVal = -1.0f;
 	float maxVal = +1.0f;
+
+	bool identicalDataset = true;
+
+
+	char fileName[100] = "timespaceOFstreamwise";
+	char filePath[100] = "F:\\Dataset\\KIT3\\binary_fluc_z_major\\OpticalFlowPaddedStreamwise\\";
+	int timestep = 1;
+
 };

@@ -3,6 +3,13 @@
 #include "../Particle/Particle.h"
 #include "../Cuda/CudaHelperFunctions.h"
 
+
+enum RK4STEP
+{
+	EVEN = 0,
+	ODD
+};
+
 __global__ void  traceDispersion3D_path_FTLE
 (
 	Particle* particle,

@@ -9,12 +9,21 @@
 class BoxRenderer : public LineRenderer
 {
 public:
-	virtual void show(RenderImGuiOptions* renderImGuiOptions) override
+	virtual void show(RenderImGuiOptions* renderImGuiOptions, float * diamter, float * center = nullptr)
 	{
-		float center[3] = { 0,0,0 };
-		this->updateScene(this->solverOptions->gridDiameter, center);
+		if (center == nullptr)
+		{
+			float origin[3] = { 0.0f,0.0f,0.0f };
+			this->updateScene(diamter, origin);
+		}
+		else
+		{
+			this->updateScene(diamter, center);
+		}
+		
 		renderImGuiOptions->updateVolumeBox = false;
 	}
+
 private:
 
 	Vertex edges[24];

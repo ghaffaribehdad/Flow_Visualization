@@ -5,7 +5,6 @@
 #include "../Options/SolverOptions.h"
 #include "..//Graphics/Vertex.h"
 #include "..//Raycaster/IsosurfaceHelperFunctions.h"
-#include "helper_math.h"
 #include "cuda_runtime.h"
 
 
@@ -22,16 +21,40 @@ __device__ void	RK4Path
 	bool periodicity
 );
 
-
-__device__ void	Euler_2D
+__device__ void	RK4Path
 (
-	const int2& initialGridPosition,
-	float2& finalGridPosition,
-	const int2& gridSize,
-	const float2& gridDiameter,
-	const float& dt,
-	cudaTextureObject_t t_VelocityField_0
+	cudaTextureObject_t t_VelocityField_0,
+	cudaTextureObject_t t_VelocityField_1,
+	Particle* particle,
+	float3 gridDiameter,
+	int3 gridSize,
+	float3 dt,
+	bool periodicity
 );
+
+// Switch the velocity texture for even and odd case
+__device__ void	RK4Path_linear
+(
+	cudaTextureObject_t t_VelocityField_0,
+	cudaTextureObject_t t_VelocityField_1,
+	Particle* particle,
+	float3 gridDiameter,
+	int3 gridSize,
+	float dt,
+	bool periodicity
+);
+
+
+
+//__device__ void	Euler_2D
+//(
+//	const int2& initialGridPosition,
+//	float2& finalGridPosition,
+//	const int2& gridSize,
+//	const float2& gridDiameter,
+//	const float& dt,
+//	cudaTextureObject_t t_VelocityField_0
+//);
 
 
 
@@ -41,7 +64,18 @@ __device__ void RK4Stream
 	Particle* particle,
 	const float3& gridDiameter,
 	const int3& gridSize,
+	const float4& velocityScale,
 	float dt
+);
+
+__device__ void RK4Stream
+(
+	cudaTextureObject_t t_VelocityField_0,
+	Particle* particle,
+	const float3& gridDiameter,
+	const int3& gridSize,
+	const float4& velocityScale,
+	float3 dt
 );
 
 
@@ -65,30 +99,30 @@ __global__ void TracingStream
 	Vertex* p_VertexBuffer
 );
 
-__global__ void TracingStream
-(
-	Particle* d_particles,
-	cudaTextureObject_t t_VelocityField,
-	SolverOptions solverOptions,
-	Vertex* p_VertexBuffer,
-	float4* d_VertexBuffer
-);
-__global__ void TracingStream
-(
-	Particle* d_particles,
-	cudaTextureObject_t t_VelocityField,
-	cudaTextureObject_t t_Vorticity,
-	SolverOptions solverOptions,
-	Vertex* p_VertexBuffer,
-	float4* d_VertexBuffer
-);
-
-__global__ void Vorticity
-(
-	cudaTextureObject_t t_VelocityField,
-	SolverOptions solverOptions,
-	cudaSurfaceObject_t	s_measure
-);
+//__global__ void TracingStream
+//(
+//	Particle* d_particles,
+//	cudaTextureObject_t t_VelocityField,
+//	SolverOptions solverOptions,
+//	Vertex* p_VertexBuffer,
+//	float4* d_VertexBuffer
+//);
+//__global__ void TracingStream
+//(
+//	Particle* d_particles,
+//	cudaTextureObject_t t_VelocityField,
+//	cudaTextureObject_t t_Vorticity,
+//	SolverOptions solverOptions,
+//	Vertex* p_VertexBuffer,
+//	float4* d_VertexBuffer
+//);
+//
+//__global__ void Vorticity
+//(
+//	cudaTextureObject_t t_VelocityField,
+//	SolverOptions solverOptions,
+//	cudaSurfaceObject_t	s_measure
+//);
 
 
 

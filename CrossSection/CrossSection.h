@@ -20,6 +20,7 @@ private:
 	CrossSectionOptions* crossSectionOptions;
 	VolumeTexture3D t_volumeTexture;
 	VolumeTexture3D t_volumeGradient;
+	Volume_IO_X_Major volume_IO_X_Major;
 
 
 	void filterExtermum();

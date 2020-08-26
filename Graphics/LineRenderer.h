@@ -66,7 +66,7 @@ public:
 
 	virtual void addBox(float* edges, float* pos, DirectX::XMFLOAT4 color) {};			// Adds static scenes
 
-	virtual void show(RenderImGuiOptions* renderImGuiOptions) = 0;
+	//virtual void show(RenderImGuiOptions* renderImGuiOptions) = 0;
 	virtual void updateBuffers() {};						// Virutal function to implement Main Routine of the LineRenderer
 	virtual void draw(Camera& camera, D3D11_PRIMITIVE_TOPOLOGY Toplogy) {}		// Draw results to the backbuffer
 	virtual bool initializeBuffers() { return true; }		// initilize vertex, constant and index buffer

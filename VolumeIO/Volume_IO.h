@@ -5,6 +5,7 @@
 #include <fstream>
 
 #include "../Options/SolverOptions.h"
+#include "../Options/RaycastingOptions.h"
 
 
 namespace VolumeIO
@@ -38,7 +39,8 @@ namespace VolumeIO
 
 		// Setter and getter functions
 
-		virtual void Initialize(SolverOptions* _solverOption);
+		void Initialize(SolverOptions* _solverOptions);
+		void Initialize(RaycastingOptions* _raycastingOptions);
 		void Initialize(std::string _fileName, std::string _filePath);
 
 		void setFileName(std::string _fileName);

@@ -5,6 +5,7 @@
 #include "..//Cuda/Cuda_helper_math_host.h"
 #include "../Raycaster/Raycasting.h"
 #include "../VolumeIO/BinaryWriter.h"
+#include "../Raycaster/IsosurfaceHelperFunctions.h"
 
 
 extern __constant__  BoundingBox d_boundingBox;
@@ -191,7 +192,6 @@ void HeightfieldFTLE::trace3D_path_Single()
 
 
 
-
 	// Calculates the gradients and store it in the cuda surface
 	cudaFree(d_particle);
 }
@@ -292,7 +292,7 @@ bool HeightfieldFTLE::singleSurfaceInitialization()
 	this->volumeTexture3D_height_extra.initialize_array(false,cudaAddressModeClamp, cudaAddressModeClamp, cudaAddressModeClamp);
 
 	// calculate the correlation between ftle and height
-	this->correlation();
+	this->writeFTLE();
 	// Store gradient and height on the surface
 
 	return true;		
@@ -468,4 +468,42 @@ __host__ bool HeightfieldFTLE::initializeBoundingBox()
 	delete h_boundingBox;
 
 	return true;
+}
+
+
+void HeightfieldFTLE::writeFTLE()
+{
+	// Calculates the block and grid sizes
+	unsigned int blocks;
+	dim3 thread = { maxBlockDim,maxBlockDim,1 };
+	blocks = BLOCK_THREAD(dispersionOptions->gridSize_2D[0] * dispersionOptions->gridSize_2D[1]);
+
+	h_ftle = new float[dispersionOptions->gridSize_2D[0] * dispersionOptions->gridSize_2D[1]];
+	gpuErrchk(cudaMalloc((void**)&d_ftle, sizeof(float) * dispersionOptions->gridSize_2D[0] * dispersionOptions->gridSize_2D[1]));
+	BinaryWriter binaryWriter;
+	binaryWriter.setFilePath("D:\\FTLE_HEIGHT\\1\\");
+	binaryWriter.setBufferSize(sizeof(float)*dispersionOptions->gridSize_2D[0] * dispersionOptions->gridSize_2D[1]);
+
+
+	for (int i = 0; i < solverOptions->lastIdx - solverOptions->firstIdx; i++)
+	{
+		fetch_ftle << < blocks, thread >> >
+			(
+				volumeTexture3D_height.getTexture(),
+				volumeTexture3D_height_extra.getTexture(),
+				d_ftle,
+				*solverOptions,
+				*dispersionOptions,
+				i
+				);
+
+		gpuErrchk(cudaMemcpy(h_ftle, d_ftle, sizeof(float)*dispersionOptions->gridSize_2D[0] * dispersionOptions->gridSize_2D[1], cudaMemcpyDeviceToHost));
+		binaryWriter.setBuffer(reinterpret_cast<char*>(h_ftle));
+		binaryWriter.setFileName("ftle_t" + std::to_string(i) + ".bin");
+
+		binaryWriter.write();
+	}
+
+	delete[] h_ftle;
+	cudaFree(d_ftle);
 }

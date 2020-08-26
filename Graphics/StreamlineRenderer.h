@@ -14,7 +14,7 @@ private:
 
 public:
 
-	virtual void show(RenderImGuiOptions* renderImGuiOptions) override
+	virtual void show(RenderImGuiOptions* renderImGuiOptions) 
 	{
 		if (renderImGuiOptions->showStreamlines)
 		{
@@ -50,15 +50,16 @@ public:
 
 		this->solverOptions->p_vertexBuffer = this->vertexBuffer.Get();
 
-		if (WriteToFile)
-		{
-			this->updateBuffersAndWriteToFile();
-		}
-		else
-		{
-			this->updateBuffers();
-		}
+		//if (WriteToFile)
+		//{
+		//	this->updateBuffersAndWriteToFile();
+		//}
+		//else
+		//{
+		//	this->updateBuffers();
+		//}
 
+		this->updateBuffers();
 		return true;
 	}
 
@@ -72,14 +73,14 @@ public:
 	}
 
 
-	void updateBuffersAndWriteToFile() 
-	{
+	//void updateBuffersAndWriteToFile() 
+	//{
 
-		this->streamlineSolver.Initialize(solverOptions);
-		this->streamlineSolver.solveAndWrite();
-		this->streamlineSolver.FinalizeCUDA();
+	//	this->streamlineSolver.Initialize(solverOptions);
+	//	this->streamlineSolver.solveAndWrite();
+	//	this->streamlineSolver.FinalizeCUDA();
 
-	}
+	//}
 
 	void draw(Camera& camera, D3D11_PRIMITIVE_TOPOLOGY Topology) override
 	{

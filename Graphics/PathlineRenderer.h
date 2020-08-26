@@ -14,7 +14,7 @@ private:
 
 public:
 
-	virtual void show(RenderImGuiOptions* renderImGuiOptions) override
+	virtual void show(RenderImGuiOptions* renderImGuiOptions) 
 	{
 		if (renderImGuiOptions->showPathlines)
 		{

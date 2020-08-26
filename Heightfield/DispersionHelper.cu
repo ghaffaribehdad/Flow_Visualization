@@ -50,7 +50,7 @@ __global__ void traceDispersion
 		for (int i = 0; i < timeStep; i++)
 		{
 
-			RK4Stream(velocityField, &particle[index], Array2Float3(solverOptions.gridDiameter), Array2Int3(solverOptions.gridSize), dt);
+			RK4Stream(velocityField, &particle[index], Array2Float3(solverOptions.gridDiameter), Array2Int3(solverOptions.gridSize),Array2Float4(solverOptions.velocityScale), dt);
 		}
 		
 
@@ -157,7 +157,7 @@ __global__ void  traceDispersion3D
 		{
 
 			// Advect the particle
-			RK4Stream(velocityField, &particle[index], Array2Float3(solverOptions.gridDiameter),Array2Int3(solverOptions.gridSize), dt);
+			RK4Stream(velocityField, &particle[index], Array2Float3(solverOptions.gridDiameter),Array2Int3(solverOptions.gridSize), Array2Float4(solverOptions.velocityScale), dt);
 		
 			// extract the height
 			float4 height = { particle[index].m_position.y,0.0,0.0,0.0 };
@@ -343,6 +343,29 @@ __global__ void fetch_ftle_height
 		d_height[index] = ValueAtXYZ_float4(t_height, make_float3(pixel.x, pixel.y, timestep)).x;
 		d_ftle[index] = ValueAtXYZ_float4(t_ftle, make_float3(pixel.x, pixel.y, timestep)).x;
 
+	}
+}
+
+__global__ void fetch_ftle
+(
+	cudaTextureObject_t t_height,
+	cudaTextureObject_t t_ftle,
+	float * d_ftle,
+	SolverOptions solverOptions,
+	DispersionOptions dispersionOptions,
+	int timestep
+)
+{
+	int index = CUDA_INDEX;
+
+
+	if (index < dispersionOptions.gridSize_2D[0] * dispersionOptions.gridSize_2D[1])
+	{
+		int2 dim = make_int2(dispersionOptions.gridSize_2D[0], dispersionOptions.gridSize_2D[1]);
+		int2 pixel = { 0,0 };
+		pixel = IndexToPixel(index, dim);
+
+		d_ftle[index] = ValueAtXYZ_float4(t_ftle, make_float3(pixel.x, pixel.y, timestep)).x;
 	}
 }
 

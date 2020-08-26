@@ -47,12 +47,19 @@ void RenderImGuiOptions::drawSolverOptions()
 
 	}
 
+	if (ImGui::Checkbox("Optical Flow", &solverOptions->opticalFlow))
+	{
+		this->updatePathlines = true;
+		this->updateStreamlines = true;
+
+	}
+
 	
-	if (ImGui::InputText("File Path", solverOptions->filePath, sizeof(solverOptions->filePath)))
+	if (ImGui::InputText("File Path", _strdup(solverOptions->filePath.c_str()), 100 * sizeof(char)))
 	{
 	}
 
-	if (ImGui::InputText("File Name", solverOptions->fileName, sizeof(solverOptions->fileName)))
+	if (ImGui::InputText("File Name", _strdup(solverOptions->fileName.c_str()), 100*sizeof(char)))
 	{
 	}
 
@@ -76,6 +83,14 @@ void RenderImGuiOptions::drawSolverOptions()
 		this->updatePathlines = true;
 	}
 	if (ImGui::InputFloat3("Grid Diameter", solverOptions->gridDiameter, sizeof(solverOptions->gridDiameter)))
+	{
+		this->updateVolumeBox = true;
+		this->updateRaycasting = true;
+		this->updateStreamlines = true;
+		this->updatePathlines = true;
+	}
+
+	if (ImGui::DragFloat3("Velocity Scale", solverOptions->velocityScale,0.01f))
 	{
 		this->updateVolumeBox = true;
 		this->updateRaycasting = true;
@@ -187,6 +202,7 @@ void RenderImGuiOptions::drawSolverOptions()
 		this->updateStreamlines = true;
 		this->updatePathlines = true;
 		this->crossSectionOptions->updateTime = true;
+		this->solverOptions->fileChanged = true;
 		this->updateCrossSection = true;
 		this->raycastingOptions->fileChanged = true;
 		this->saved = false;
@@ -259,6 +275,12 @@ void RenderImGuiOptions::drawSolverOptions()
 		if (ImGui::Checkbox("Render Streamlines", &this->showStreamlines))
 		{
 			this->updateStreamlines = true;
+			this->solverOptions->fileChanged = true;
+		}
+
+		if (this->showStreamlines)
+		{
+
 		}
 	}
 
@@ -505,8 +527,20 @@ void RenderImGuiOptions::drawRaycastingOptions()
 
 	ImGui::Begin("Raycasting Options");
 	
+	if (ImGui::Checkbox("Identical Data", &this->raycastingOptions->identicalDataset))
+	{}
 
 
+	if (!raycastingOptions->identicalDataset)
+	{
+		//if (ImGui::InputText("File Path", solverOptions->filePath, sizeof(raycastingOptions->filePath)))
+		//{
+		//}
+
+		//if (ImGui::InputText("File Name", solverOptions->fileName, sizeof(raycastingOptions->fileName)))
+		//{
+		//}
+	}
 	if (ImGui::Checkbox("Enable Raycasintg", &this->showRaycasting)) 
 	{
 		this->renderingOptions->isRaycasting = this->showRaycasting;
@@ -1054,6 +1088,92 @@ void RenderImGuiOptions::drawTurbulentMixingOptions()
 	}
 
 	 
+	ImGui::End();
+
+}
+
+
+
+void RenderImGuiOptions::drawDataset()
+{
+
+	ImGui::Begin("Datasets");
+
+
+	if (ImGui::Combo("Dataset", reinterpret_cast<int*>(&this->dataset),Dataset::datasetList, Dataset::Dataset::COUNT))
+	{
+		this->updateStreamlines = true;
+		this->solverOptions->fileChanged = true;
+		switch (dataset)
+		{
+			case Dataset::Dataset::MOTIONFIELD_KIT3:
+			{
+
+				this->solverOptions->fileName = "of_streamwise";
+				this->solverOptions->filePath = "F:\\Dataset\\KIT3\\binary_fluc_z_major\\OpticalFlowPaddedStreamwise\\";
+				this->solverOptions->gridDiameter[0] = 0.4f;
+				this->solverOptions->gridDiameter[1] = 2.0f;
+				this->solverOptions->gridDiameter[2] = 7.0f;
+				this->solverOptions->gridSize[0] = 64;
+				this->solverOptions->gridSize[1] = 503;
+				this->solverOptions->gridSize[2] = 2048;
+				this->solverOptions->dt = 0.001f;
+				break;
+			}
+			case Dataset::Dataset::KIT2REF:
+			{
+				break;
+			}
+			case Dataset::Dataset::KIT3:
+			{
+				this->solverOptions->fileName = "FieldP";
+				this->solverOptions->filePath = "F:\\Dataset\\KIT3\\binary_fluc_z_major\\Padded\\";
+				this->solverOptions->gridDiameter[0] = 0.4f;
+				this->solverOptions->gridDiameter[1] = 2.0f;
+				this->solverOptions->gridDiameter[2] = 7.0f;
+				this->solverOptions->gridSize[0] = 64;
+				this->solverOptions->gridSize[1] = 503;
+				this->solverOptions->gridSize[2] = 2048;
+				this->solverOptions->dt = 0.001f;
+				break;
+
+			}
+
+			case Dataset::Dataset::KIT3_MIPMAP:
+			{
+				this->solverOptions->fileName = "FieldP";
+				this->solverOptions->filePath = "G:\\KIT3MipMapL1\\";
+				this->solverOptions->gridDiameter[0] = 0.4f;
+				this->solverOptions->gridDiameter[1] = 2.0f;
+				this->solverOptions->gridDiameter[2] = 7.0f;
+				this->solverOptions->gridSize[0] = 32;
+				this->solverOptions->gridSize[1] = 251;
+				this->solverOptions->gridSize[2] = 1024;
+				this->solverOptions->dt = 0.001f;
+				break;
+
+			}
+
+			case Dataset::Dataset::KIT3_OF_MIPMAP:
+			{
+				this->solverOptions->fileName = "OF_m_stream";
+				this->solverOptions->filePath = "G:\\KIT3MipMapL1\\opticalFlow\\";
+				this->solverOptions->gridDiameter[0] = 0.4f;
+				this->solverOptions->gridDiameter[1] = 2.0f;
+				this->solverOptions->gridDiameter[2] = 7.0f;
+				this->solverOptions->gridSize[0] = 32;
+				this->solverOptions->gridSize[1] = 251;
+				this->solverOptions->gridSize[2] = 1024;
+				this->solverOptions->dt = 0.001f;
+				this->solverOptions->opticalFlow = true;
+				break;
+
+			}
+
+		}
+	}
+
+
 	ImGui::End();
 
 }

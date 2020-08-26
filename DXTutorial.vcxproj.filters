@@ -90,9 +90,6 @@
     <Filter Include="Source Files\Timer">
       <UniqueIdentifier>{7d5ec984-9178-439a-9945-bb66df585855}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\HelperFunctions">
-      <UniqueIdentifier>{3f36fdce-061e-4399-b2fa-4ede3597b786}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\Heightfield">
       <UniqueIdentifier>{c25bb9f7-a9fd-47d3-9d26-c241db3ba495}</UniqueIdentifier>
     </Filter>
@@ -125,6 +122,9 @@
     </Filter>
     <Filter Include="Source Files\FSLE">
       <UniqueIdentifier>{a61e3d10-ae8b-44ff-99b6-3c638378845a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Interpolation">
+      <UniqueIdentifier>{69143a17-65e7-4d75-8bbe-561824b99148}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -205,9 +205,6 @@
     </ClCompile>
     <ClCompile Include="VolumeIO\Volume_IO.cpp">
       <Filter>Source Files\VolumeIO</Filter>
-    </ClCompile>
-    <ClCompile Include="Raycaster\TimeSpaceField.cu">
-      <Filter>Source Files\Raycasting</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -355,12 +352,6 @@
     <ClInclude Include="Timer\Timer.h">
       <Filter>Header Files\Timer</Filter>
     </ClInclude>
-    <ClInclude Include="HelperFunctions\HelperFunctions.h">
-      <Filter>Header Files\HelperFunctions</Filter>
-    </ClInclude>
-    <ClInclude Include="DispersionHelper.h">
-      <Filter>Header Files\Heightfield</Filter>
-    </ClInclude>
     <ClInclude Include="Options\DispresionOptions.h">
       <Filter>Header Files\Options</Filter>
     </ClInclude>
@@ -418,9 +409,6 @@
     <ClInclude Include="Options\FSLEOptions.h">
       <Filter>Header Files\Options</Filter>
     </ClInclude>
-    <ClInclude Include="Heightfield\DispersionHelper.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Heightfield\fluctuationHeightfield.h">
       <Filter>Header Files\Heightfield</Filter>
     </ClInclude>
@@ -441,6 +429,12 @@
     </ClInclude>
     <ClInclude Include="Raycaster\FieldGenerator3D.h">
       <Filter>Header Files\Raycasting</Filter>
+    </ClInclude>
+    <ClInclude Include="Interpolation\Interpolation.h">
+      <Filter>Header Files\Interpolation</Filter>
+    </ClInclude>
+    <ClInclude Include="Heightfield\DispersionHelper.h">
+      <Filter>Header Files\Heightfield</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -531,5 +525,6 @@
     <CudaCompile Include="Raycaster\FieldGenerator3D.cu">
       <Filter>Source Files\Raycasting</Filter>
     </CudaCompile>
+    <CudaCompile Include="Raycaster\TimeSpaceField.cu" />
   </ItemGroup>
 </Project>

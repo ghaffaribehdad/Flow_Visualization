@@ -24,11 +24,7 @@
 #define BLOCK_THREAD(kernelCall) static_cast<unsigned int>((kernelCall % (thread.x* thread.y) == 0 ? kernelCall / (thread.x * thread.y) : kernelCall / (thread.x * thread.y) + 1))
 
 
-enum RK4STEP
-{
-	EVEN = 0,
-	ODD
-};
+
 
 // convert array to built-in cuda structures
  inline __host__ __device__ float3 Array2Float3(float* a_float)
@@ -49,6 +45,11 @@ enum RK4STEP
 inline __host__ __device__ int3 Array2Int3(int* a_int)
 {
 	return make_int3(a_int[0], a_int[1], a_int[2]);
+}
+
+inline __host__ __device__ float4 Array2Float4(float* a)
+{
+	return make_float4(a[0], a[1], a[2], a[3]);
 }
 
 inline __host__ __device__ int2 ARRAYTOINT2(int* a_int)
@@ -84,6 +85,19 @@ inline __host__ __device__ float3 operator*(float3 a, float3 b)
 {
 	return make_float3(a.x * b.x, a.y * b.y, a.z * b.z);
 }
+
+
+
+inline __host__ __device__ float4 operator*(float a, float4 b)
+{
+	return make_float4(a * b.x, a * b.y, a * b.z, a * b.w);
+}
+
+inline __host__ __device__ float4 operator*(float4 a, float4 b)
+{
+	return make_float4(a.x * b.x, a.y * b.y, a.z * b.z, a.w * b.w);
+}
+
 
 inline __host__ __device__ float2 operator*(float2 a, int2 b)
 {
@@ -146,6 +160,18 @@ inline __host__ __device__ float4 operator+=(float4 a, float4 b)
 		a.y += b.y,
 		a.z += b.z,
 		a.w += b.w
+	);
+}
+
+
+inline __host__ __device__ float4 operator-=(float4 a, float4 b)
+{
+	return make_float4
+	(
+		a.x -= b.x,
+		a.y -= b.y,
+		a.z -= b.z,
+		a.w -= b.w
 	);
 }
 
@@ -342,13 +368,6 @@ inline __host__ __device__ void operator-=( float3& a, const float3 b)
 	a.z -= b.z;
 }
 
-inline __host__ __device__ void operator-=(float4& a, const float4 b)
-{
-	a.x -= b.x;
-	a.y -= b.y;
-	a.z -= b.z;
-	a.w -= b.z;
-}
 
 inline __host__ __device__ float3 operator-(float3 a, float3 b)
 {
@@ -700,8 +719,7 @@ struct dMat3X3
 
 __device__ __host__ inline dMat3X3 operator*(double & a, dMat3X3& b)
 {
-	return dMat3X3
-	(
+	return dMat3X3(
 		a* b.r1,
 		a* b.r2,
 		a* b.r3
@@ -906,6 +924,22 @@ __device__ __host__ inline double eigenValueMax(dMat3X3 & J)
 
 	return eig.x;
 }
+inline __host__ __device__ float3 operator+(float3 a, float b)
+{
+	return make_float3(a.x + b, a.y + b, a.z + b);
+}
+
+
+inline __host__ __device__ float3 operator-(float3 a, float b)
+{
+	return make_float3(a.x - b, a.y - b, a.z - b);
+}
+
+// floor
+inline __host__ __device__ float3 floor(const float3 v)
+{
+	return make_float3(floor(v.x), floor(v.y), floor(v.z));
+}
 
 
 __device__ __host__ inline float3 world2Tex(const float3& position, const float3& dimension, const int3& size)
@@ -944,4 +978,73 @@ __device__ inline fMat3X3 Jacobian(cudaTextureObject_t t_velocityField, float3 h
 
 	return jac;
 }
+
+
+inline __host__ __device__ float bspline(float t)
+{
+	t = fabs(t);
+	const float a = 2.0f - t;
+
+	if (t < 1.0f) return 2.0f / 3.0f - 0.5f*t*t*a;
+	else if (t < 2.0f) return a * a*a / 6.0f;
+	else return 0.0f;
+}
+
+
+//! Tricubic interpolated texture lookup, using unnormalized coordinates.
+//! Straight forward implementation, using 64 nearest neighbour lookups.
+//! @param tex  3D texture
+//! @param coord  unnormalized 3D texture coordinate
+
+inline __device__ float4 cubicTex3DSimple(cudaTextureObject_t tex, float3 coord)
+{
+	// transform the coordinate from [0,extent] to [-0.5, extent-0.5]
+	const float3 coord_grid = coord - 0.5f;
+	float3 index = floor(coord_grid);
+	const float3 fraction = coord_grid - index;
+	index = index + 0.5f;  //move from [-0.5, extent-0.5] to [0, extent]
+
+	float4 result = { 0.0f,0.0f,0.0f,0.0f };
+	for (float z = -1; z < 2.5f; z++)  //range [-1, 2]
+	{
+		float bsplineZ = bspline(z - fraction.z);
+		float w = index.z + z;
+		for (float y = -1; y < 2.5f; y++)
+		{
+			float bsplineYZ = bspline(y - fraction.y) * bsplineZ;
+			float v = index.y + y;
+			for (float x = -1; x < 2.5f; x++)
+			{
+				float bsplineXYZ = bspline(x - fraction.x) * bsplineYZ;
+				float u = index.x + x;
+				result = result + bsplineXYZ * tex3D<float4>(tex, u, v, w);
+				
+			}
+		}
+	}
+	return result;
+}
+
+
+inline __device__ dMat3X3 jacobian(cudaTextureObject_t t_VelocityField, const float3& relativePos, const float3& h)
+{
+	dMat3X3 jac = { 0,0,0,0,0,0,0,0,0 };
+	
+	float4 dVx = tex3D<float4>(t_VelocityField, relativePos.x + h.x / 2.0, relativePos.y, relativePos.z);
+	 dVx -= tex3D<float4>(t_VelocityField, relativePos.x - h.x / 2.0, relativePos.y, relativePos.z);
+
+	float4 dVy = tex3D<float4>(t_VelocityField, relativePos.x, relativePos.y + h.x / 2.0, relativePos.z);
+	 dVy -= tex3D<float4>(t_VelocityField, relativePos.x, relativePos.y - h.x / 2.0, relativePos.z);
+
+	float4 dVz = tex3D<float4>(t_VelocityField, relativePos.x, relativePos.y, relativePos.z + h.x / 2.0);
+	 dVz -= tex3D<float4>(t_VelocityField, relativePos.x, relativePos.y, relativePos.z - h.x / 2.0);
+
+	// This would give us the Jacobian Matrix
+	dVx = dVx / h.x;
+	dVy = dVy / h.y;
+	dVz = dVz / h.z;
+
+	return jac;
+}
+
 

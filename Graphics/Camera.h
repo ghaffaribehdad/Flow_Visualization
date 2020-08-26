@@ -67,6 +67,8 @@ private:
 	XMMATRIX projectionMatrix;
 	XMFLOAT3 viewDir;
 	XMFLOAT3 upDir;
+	XMVECTOR v_viewDir;
+	XMVECTOR v_upDir;
 
 
 	const XMVECTOR DEFAULT_FORWARD_VECTOR = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);

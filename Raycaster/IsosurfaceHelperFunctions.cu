@@ -280,7 +280,6 @@ __device__  float FetchTextureSurface::Velocity_Magnitude::ValueAtXYZ_Surf(cudaS
 
 __device__ float FetchTextureSurface::Channel_X::ValueAtXYZ_Tex(cudaTextureObject_t tex, const float3 & position)
 {
-
 	return tex3D<float4>(tex, position.x, position.y, position.z).x;
 }
 

@@ -77,8 +77,8 @@ void Graphics::RenderFrame()
 	##############################################################
 
 	*/
-	volumeBox				.show(&renderImGuiOptions);		// Show Volume Box
-	seedBox					.show(&renderImGuiOptions);		// Show Seed Box
+	volumeBox				.show(&renderImGuiOptions,solverOptions.gridDiameter);		// Show Volume Box
+	seedBox					.show(&renderImGuiOptions,solverOptions.seedBox,solverOptions.seedBoxPos);		// Show Seed Box
 	streamlineRenderer		.show(&renderImGuiOptions);		// Streamline rendering
 	pathlineRenderer		.show(&renderImGuiOptions);		// Pathline rendering
 	raycasting				.show(&renderImGuiOptions);		// Raycasting 
@@ -108,9 +108,7 @@ void Graphics::RenderFrame()
 
 	}
 
-	//#############################################################
 	/*
-
 	##############################################################
 	##															##
 	##						Take Screenshots					##

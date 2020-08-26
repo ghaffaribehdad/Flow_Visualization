@@ -52,6 +52,7 @@ public:
 	
 private:
 
+	void writeFTLE();
 	virtual bool InitializeParticles() override;
 	virtual void trace3D_path_Single() override;
 	virtual void rendering() override;

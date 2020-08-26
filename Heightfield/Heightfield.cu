@@ -6,8 +6,9 @@
 #include "..//Raycaster/Raycasting_Helper.h"
 #include "..//Options/DispresionOptions.h"
 #include "DispersionHelper.h"
+#include "../Particle/ParticleHelperFunctions.h"
 
-//explicit instantiation
+
 
 bool Heightfield::retrace()
 {

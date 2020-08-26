@@ -3,6 +3,7 @@
 #include "..//Cuda/helper_math.h"
 #include "..//ErrorLogger/ErrorLogger.h"
 #include "..//Cuda/Cuda_helper_math_host.h"
+#include "..//Raycaster/IsosurfaceHelperFunctions.h"
 
 extern __constant__  BoundingBox d_boundingBox;
 extern __constant__ float3 d_raycastingColor;
@@ -34,7 +35,7 @@ bool FluctuationHeightfield::initialize
 	this->rays = (*this->width) * (*this->height);				// Set number of rays based on the number of pixels
 
 	// initialize volume Input Output
-	//primary_IO.Initialize(this->fluctuationheightfieldOptions);
+	this->volume_IO_X_Major.Initialize(this->solverOptions);
 
 
 	// Initialize Height Field as an empty CUDA array 3D
@@ -49,7 +50,7 @@ bool FluctuationHeightfield::initialize
 	if (!this->InitializeHeightSurface3D())
 		return false;
 
-	this->gradientFluctuationfield();
+	//this->gradientFluctuationfield();
 
 	this->s_HeightSurface_Primary.destroySurface();
 
@@ -70,8 +71,8 @@ void  FluctuationHeightfield::traceFluctuationfield3D()
 
 	for (int t = 0; t < m_gridSize3D.z; t++)
 	{
-		this->volume_IO.readVolumePlane(t + fluctuationheightfieldOptions->firstIdx, VolumeIO::readPlaneMode::YZ, fluctuationheightfieldOptions->spanwisePos);
-		float* p_temp = volume_IO.getField_float();
+		this->volume_IO_X_Major.readVolumePlane(t + fluctuationheightfieldOptions->firstIdx, VolumeIO::readPlaneMode::YZ, fluctuationheightfieldOptions->spanwisePos);
+		float* p_temp = volume_IO_X_Major.getField_float();
 
 		size_t counter_t = 0;
 
@@ -93,7 +94,7 @@ void  FluctuationHeightfield::traceFluctuationfield3D()
 			}
 		}
 
-		volume_IO.release();
+		volume_IO_X_Major.release();
 	}
 
 

@@ -96,13 +96,15 @@ public:
 
 	FluctuationheightfieldOptions* fluctuationheightfieldOptions;
 private:
+
 	size_t3 m_gridSize3D = { 0,0,0 };
 	int2 m_gridSize2D = { 0,0 };
 	CudaArray_2D<float> heightArray2D;
 	cudaTextureObject_t heightFieldTexture2D;
 
-	virtual bool InitializeHeightSurface3D() override;
 
+	virtual bool InitializeHeightSurface3D() override;
+	Volume_IO_X_Major volume_IO_X_Major;
 
 
 };

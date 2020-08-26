@@ -22,7 +22,7 @@ class StreamlineSolver : public CUDASolver
 public:
 
 	__host__ bool solve() override;
-	__host__ bool solveAndWrite();
+	//__host__ bool solveAndWrite();
 	__host__ void release();
 
 private:
@@ -30,7 +30,7 @@ private:
 	Particle* d_particles;
 	VolumeTexture3D volumeTexture;
 
-	__host__ void measureFieldGeneration();
+	//__host__ void measureFieldGeneration();
 	__host__ bool InitializeVorticityTexture();
 
 	float * h_VelocityField;

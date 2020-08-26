@@ -1,13 +1,16 @@
 #pragma once
 
 #include "../Particle/Particle.h"
-#include "../Particle/ParticleHelperFunctions.h"
-#include "..//Cuda/CudaHelperFunctions.h"
 #include "..//Options/DispresionOptions.h"
 #include "..//Options/SolverOptions.h"
 #include "..//Options/fluctuationheightfieldOptions.h"
 
 
+enum RK4STEP
+{
+	EVEN = 0,
+	ODD
+};
 
 __global__ void traceDispersion
 (
@@ -89,6 +92,16 @@ __global__ void fetch_ftle_height
 	cudaTextureObject_t t_height,
 	cudaTextureObject_t t_ftle,
 	float * d_height,
+	float * d_ftle,
+	SolverOptions solverOptions,
+	DispersionOptions dispersionOptions,
+	int timestep
+);
+
+__global__ void fetch_ftle
+(
+	cudaTextureObject_t t_height,
+	cudaTextureObject_t t_ftle,
 	float * d_ftle,
 	SolverOptions solverOptions,
 	DispersionOptions dispersionOptions,

@@ -198,7 +198,7 @@ const XMVECTOR& Camera::GetUpXMVector()
 {
 
 	XMMATRIX camRotationMatrix = XMMatrixRotationRollPitchYaw(this->rot.x, this->rot.y, this->rot.z);
-	XMVECTOR v_upDir = XMVector3TransformCoord(this->DEFAULT_UP_VECTOR, camRotationMatrix);
+	this-> v_upDir = XMVector3TransformCoord(this->DEFAULT_UP_VECTOR, camRotationMatrix);
 
 	return v_upDir;
 }
@@ -207,7 +207,7 @@ const XMFLOAT3& Camera::GetViewVector()
 {
 
 	XMMATRIX camRotationMatrix = XMMatrixRotationRollPitchYaw(this->rot.x, this->rot.y, this->rot.z);
-	XMVECTOR v_viewDir = XMVector3TransformCoord(this->DEFAULT_FORWARD_VECTOR, camRotationMatrix);
+	this-> v_viewDir = XMVector3TransformCoord(this->DEFAULT_FORWARD_VECTOR, camRotationMatrix);
 
 	XMStoreFloat3(&viewDir, v_viewDir);
 
@@ -218,7 +218,7 @@ const XMVECTOR& Camera::GetViewXMVector()
 {
 
 	XMMATRIX camRotationMatrix = XMMatrixRotationRollPitchYaw(this->rot.x, this->rot.y, this->rot.z);
-	XMVECTOR v_viewDir = XMVector3TransformCoord(this->DEFAULT_FORWARD_VECTOR, camRotationMatrix);
+	this-> v_viewDir = XMVector3TransformCoord(this->DEFAULT_FORWARD_VECTOR, camRotationMatrix);
 
 	return v_viewDir;
 }

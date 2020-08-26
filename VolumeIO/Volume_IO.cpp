@@ -148,6 +148,13 @@ void VolumeIO::Volume_IO::Initialize(SolverOptions* _solverOptions)
 
 }
 
+void VolumeIO::Volume_IO::Initialize(RaycastingOptions* _raycastingOptions)
+{
+	m_fileName = _raycastingOptions->fileName;
+	m_filePath = _raycastingOptions->filePath;
+
+}
+
 
 void VolumeIO::Volume_IO::Initialize(std::string _fileName, std::string _filePath)
 {

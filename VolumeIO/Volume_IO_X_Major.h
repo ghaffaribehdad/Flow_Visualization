@@ -15,15 +15,6 @@ public:
 
 
 
-
-	virtual void Initialize(SolverOptions* _solverOptions) override
-	{
-		m_solverOptions = _solverOptions;
-
-		m_fileName = _solverOptions->fileName;
-		m_filePath = _solverOptions->filePath;
-	}
-
 	virtual bool readVolumePlane(unsigned int idx, VolumeIO::readPlaneMode planeMode, size_t plane)
 	{
 		// Generate absolute path of the file

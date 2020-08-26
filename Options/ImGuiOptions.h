@@ -32,10 +32,38 @@ enum IsoMeasure
 };
 
 
+namespace Dataset
+{
+	enum Dataset
+	{
+		NONE = 0,
+		KIT2REF,
+		KIT3,
+		KIT3_MIPMAP,
+		KIT3_OF_MIPMAP,
+		MOTIONFIELD_KIT3,
+		COUNT
+	};
+
+	static const char* datasetList[]
+	{
+		"None",
+		"KIT2 Ref",
+		"KIT3",
+		"KIT3 MipmapL1",
+		"KIT3 Mipmap_of",
+		"Motion Field KIT3",
+	};
+
+}
+
+
+
 static const char* const IsoMeasureModes[] = 
 { 
 	"Velocity Magnitude",
 	"Velocity X",
+
 	"Velocity Y",
 	"Velocity Z",
 	"Shear Stress",
@@ -65,12 +93,14 @@ static const char* const CrossSectionMode[] =
 	"YZ"
 };
 
+
 static const char* const spanMode[] =
 {
 	"Wall-Normal",
 	"Time",
 	"3D Vol"
 };
+
 
 
 static const char* const ColorCode_fluctuationField[] =
