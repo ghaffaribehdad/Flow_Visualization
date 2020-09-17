@@ -80,7 +80,8 @@ void main(lineadj GS_INPUT input[4], inout TriangleStream<GS_OUTPUT> output)
 		else
 		{
 			tangent0 = normalize(normalize(input[1].inPosition - input[0].inPosition) + normalize(input[2].inPosition - input[1].inPosition));
-			tangent1 = normalize(normalize(input[2].inPosition - input[1].inPosition) + normalize(input[3].inPosition - input[2].inPosition));
+			tangent1 = normalize(normalize(input[2].inPosition - input[1].inPosition) + normalize(input[3].inPosition - input[2].inPosition));		
+	
 		}
 
 		float3 tangent = normalize(tangent0 + tangent1);
@@ -121,8 +122,6 @@ void main(lineadj GS_INPUT input[4], inout TriangleStream<GS_OUTPUT> output)
 			vertex1.outMeasure = input[2].inMeasure;
 
 			// Tangent
-
-
 			vertex0.outTangent = tangent;
 			vertex1.outTangent = tangent;
 

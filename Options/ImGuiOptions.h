@@ -38,10 +38,17 @@ namespace Dataset
 	{
 		NONE = 0,
 		KIT2REF,
+		KIT2REF_OF_TRUNC,
+		KIT2REF_OF_FLUC_TRUNC,
+		KIT2REF_OF_PERIODIC,
+		KIT2BF,
+		KIT2OW,
 		KIT3,
 		KIT3_MIPMAP,
 		KIT3_OF_MIPMAP,
 		MOTIONFIELD_KIT3,
+		MOTIONFIELD_KIT3_PERIODIC,
+		ENSTROPHY_OF_KIT3,
 		COUNT
 	};
 
@@ -49,10 +56,17 @@ namespace Dataset
 	{
 		"None",
 		"KIT2 Ref",
+		"KIT2 Ref OF Trunc",
+		"KIT2 Ref OF Fluc Trunc",
+		"KIT2 Ref OF  PRIODIC",
+		"KIT2 Virtual Body",
+		"KIT2 Oscillating Wall",
 		"KIT3",
 		"KIT3 MipmapL1",
 		"KIT3 Mipmap_of",
 		"Motion Field KIT3",
+		"Motion Field KIT3 Periodic",
+		"Enstrophy OF"
 	};
 
 }
@@ -70,7 +84,45 @@ static const char* const IsoMeasureModes[] =
 	"Turbulent Diffusivity",
 	"Velocity X Planar"
 };
-static const char* const ColorModeList[] = {"V", "Vx", "Vy", "Vz","i_Vx","i_Vy","i_Vz"};
+
+namespace ColorMode
+{
+	static const char* const ColorModeList[] = 
+	{ 
+		"Velocity Magnitude",
+		"u", 
+		"v",
+		"w",
+		"Curvature"
+	};
+	enum ColorMode
+	{
+		VELOCITY_MAG,
+		U_VELOCITY,
+		V_VELOCITY,
+		W_VELOCITY,
+		CURVATURE,
+		COUNT
+	};
+}
+
+namespace LineRenderingMode
+{
+	static const char* const lineRenderingModeList[] =
+	{
+		"Streamlines",
+		"Pathlines",
+		"Streaklines",
+	};
+	enum lineRenderingMode
+	{
+		STREAMLINES,
+		PATHLINES,
+		STREAKLINES,
+		COUNT
+	};
+}
+
 
 static const char* const ColorCode_DispersionList[] = 
 {

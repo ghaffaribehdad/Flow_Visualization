@@ -80,6 +80,7 @@ void Graphics::RenderFrame()
 	volumeBox				.show(&renderImGuiOptions,solverOptions.gridDiameter);		// Show Volume Box
 	seedBox					.show(&renderImGuiOptions,solverOptions.seedBox,solverOptions.seedBoxPos);		// Show Seed Box
 	streamlineRenderer		.show(&renderImGuiOptions);		// Streamline rendering
+	streaklineRenderer		.show(&renderImGuiOptions);		// Streakline rendering
 	pathlineRenderer		.show(&renderImGuiOptions);		// Pathline rendering
 	raycasting				.show(&renderImGuiOptions);		// Raycasting 
 	dispersionTracer		.show(&renderImGuiOptions); 	// Heightfield Rendering
@@ -128,11 +129,17 @@ void Graphics::RenderFrame()
 
 
 
-
 	if (this->renderImGuiOptions.showStreamlines)
 	{	
 
-		this->streamlineRenderer.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ);
+		this->streamlineRenderer.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
+
+	}
+
+	if (this->renderImGuiOptions.showStreaklines)
+	{
+
+		this->streaklineRenderer.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ);
 
 	}
 
@@ -279,6 +286,16 @@ bool Graphics::InitializeResources()
 		this->adapter
 	);
 
+	streaklineRenderer.setResources
+	(
+		this->renderingOptions,
+		this->solverOptions,
+		this->deviceContext.Get(),
+		this->device.Get(),
+		this->adapter
+	);
+
+
 	pathlineRenderer.setResources
 	(
 		this->renderingOptions,
@@ -410,6 +427,9 @@ bool Graphics::InitializeResources()
 	
 	if (!streamlineRenderer.initializeBuffers())
 		return false;
+
+	if (!streaklineRenderer.initializeBuffers())
+		return false;
 	
 	if (!pathlineRenderer.initializeBuffers())
 		return false;
@@ -504,6 +524,9 @@ bool Graphics::InitializeShaders()
 	if (!this->streamlineRenderer.initializeShaders())
 		return false;
 
+	if (!this->streaklineRenderer.initializeShaders())
+		return false;
+
 	if (!this->pathlineRenderer.initializeShaders())
 		return false;
 
@@ -524,8 +547,8 @@ bool Graphics::InitializeScene()
 {
 
 	float center[3] = { 0,0,0 };
-	DirectX::XMFLOAT4 redColor = { 1,0,0,1 };
-	DirectX::XMFLOAT4 greenColor = { 0,1,0,1 };
+	DirectX::XMFLOAT4 redColor = { 1,0,0,1.0f};
+	DirectX::XMFLOAT4 greenColor = { 0,1,0,1.0f };
 
 	volumeBox.addBox(this->solverOptions.gridDiameter, center, greenColor);
 	seedBox.addBox( this->solverOptions.seedBox, this->solverOptions.seedBoxPos, redColor);

@@ -13,7 +13,7 @@
 #include "..//VolumeTexture/VolumeTexture.h"
 
 
-class PathlineSolver : public CUDASolver
+class StreaklineSolver : public CUDASolver
 {
 
 public:
@@ -43,7 +43,4 @@ private:
 	float3* result;
 
 };
-
-
-
 

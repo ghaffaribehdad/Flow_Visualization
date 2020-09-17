@@ -182,12 +182,12 @@ __global__ void  traceDispersion3D_path_FSLE
 __device__ float averageNeighborDistance(Particle* particles)
 {
 	float distance =
-		VecMagnitude(particles[0].m_position - particles[1].m_position) +
-		VecMagnitude(particles[0].m_position - particles[2].m_position) +
-		VecMagnitude(particles[0].m_position - particles[3].m_position) +
-		VecMagnitude(particles[0].m_position - particles[4].m_position) +
-		VecMagnitude(particles[0].m_position - particles[5].m_position) +
-		VecMagnitude(particles[0].m_position - particles[6].m_position);
+		magnitude(particles[0].m_position - particles[1].m_position) +
+		magnitude(particles[0].m_position - particles[2].m_position) +
+		magnitude(particles[0].m_position - particles[3].m_position) +
+		magnitude(particles[0].m_position - particles[4].m_position) +
+		magnitude(particles[0].m_position - particles[5].m_position) +
+		magnitude(particles[0].m_position - particles[6].m_position);
 	return distance / 6.0f;
 }
 
@@ -230,7 +230,7 @@ __device__ float FTLE3D_test(Particle* particles, const float & distance)
 	float averageDist = 0;
 	for (int i = 1; i < 7; i++)
 	{
-		averageDist += VecMagnitude(particles[0].m_position - particles[i].m_position);
+		averageDist += magnitude(particles[0].m_position - particles[i].m_position);
 	}
 	return averageDist;
 }

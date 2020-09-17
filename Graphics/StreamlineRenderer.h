@@ -84,7 +84,7 @@ public:
 
 	void draw(Camera& camera, D3D11_PRIMITIVE_TOPOLOGY Topology) override
 	{
-		initilizeRasterizer();
+		initializeRasterizer();
 		setShaders(Topology);
 		updateConstantBuffer(camera);
 		setBuffers();

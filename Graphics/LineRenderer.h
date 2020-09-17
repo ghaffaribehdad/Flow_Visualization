@@ -25,6 +25,7 @@ protected:
 
 	// Resterizer com pointer
 	Microsoft::WRL::ComPtr<ID3D11RasterizerState> rasterizerstate;
+	Microsoft::WRL::ComPtr<ID3D11BlendState>			blendState;
 
 	// Buffers
 	VertexBuffer<Vertex>				vertexBuffer;
@@ -50,6 +51,7 @@ protected:
 	ID3D11Device*			device;
 	IDXGIAdapter*			pAdapter = nullptr;
 
+
 	
 	
 	virtual void updateIndexBuffer() {}; 			// Update Index buffer to match the vertex buffer (If Index buffer is needed)
@@ -57,7 +59,7 @@ protected:
 
 	virtual void updateConstantBuffer(Camera& _camera);	// Update Constant buffer based on the camera positions and view 
 	bool setShaders(D3D11_PRIMITIVE_TOPOLOGY Topology);					// set shaders and rasterizer
-	bool initilizeRasterizer();			// Create Rasterizer state
+	bool initializeRasterizer();			// Create Rasterizer state
 	virtual void setBuffers();					// set vertex and index and constant buffer
 	virtual bool initilizeIndexBuffer() { return true; }
 

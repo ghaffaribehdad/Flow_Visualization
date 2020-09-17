@@ -351,7 +351,7 @@ inline __host__ __device__ float2 normalize(const float2& v)
 	return v * invLen;
 }
 
-inline __host__ __device__ float VecMagnitude(const float3& v)
+inline __host__ __device__ float magnitude(const float3& v)
 {
 	return sqrtf(dot(v, v));
 }
@@ -360,6 +360,9 @@ inline __host__ __device__ float3 operator-(const float3& a)
 {
 	return make_float3(-a.x, -a.y, -a.z);
 }
+
+
+
 
 inline __host__ __device__ void operator-=( float3& a, const float3 b)
 {
@@ -1046,5 +1049,4 @@ inline __device__ dMat3X3 jacobian(cudaTextureObject_t t_VelocityField, const fl
 
 	return jac;
 }
-
 

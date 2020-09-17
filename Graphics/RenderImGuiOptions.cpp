@@ -16,30 +16,41 @@ void RenderImGuiOptions::drawSolverOptions()
 	ImGui::Text("Mode: ");
 	ImGui::SameLine();
 
-	//Solver Mode
 
-	if (ImGui::Checkbox("Streamline", &this->streamlineRendering))
+
+	if (ImGui::Combo("Line Rendering Mode", &solverOptions->lineRenderingMode, LineRenderingMode::lineRenderingModeList, LineRenderingMode::lineRenderingMode::COUNT))
 	{
-		this->pathlineRendering = !this->streamlineRendering;
-		this->streamlineGenerating = !this->streamlineRendering;
+		switch (solverOptions->lineRenderingMode)
+		{
+		case LineRenderingMode::lineRenderingMode::STREAMLINES:
+		{
+			this->pathlineRendering = !this->streamlineRendering;
+			this->streamlineGenerating = !this->streamlineRendering;
+			break;
+		}
+		case LineRenderingMode::lineRenderingMode::PATHLINES:
+		{
+			this->streamlineGenerating = !this->pathlineRendering;
+			this->streamlineRendering = !this->pathlineRendering;
+			break;
+		}
+		case LineRenderingMode::lineRenderingMode::STREAKLINES:
+		{
+			break;
+		}
+		}
+
+
 	}
 
-	ImGui::SameLine();
-	if (ImGui::Checkbox("Pathline", &this->pathlineRendering))
-	{
-		this->streamlineGenerating = !this->pathlineRendering;
-		this->streamlineRendering = !this->pathlineRendering;
+	//if (ImGui::Checkbox("Streamline Gen.", &this->streamlineGenerating))
+	//{
+	//	this->streamlineRendering = !this->streamlineGenerating;
+	//	this->pathlineRendering = !this->streamlineGenerating;
+	//	this->solverOptions->lines_count = 1000;
+	//	this->solverOptions->lineLength = 1000;
 
-	}
-
-	if (ImGui::Checkbox("Streamline Gen.", &this->streamlineGenerating))
-	{
-		this->streamlineRendering = !this->streamlineGenerating;
-		this->pathlineRendering = !this->streamlineGenerating;
-		this->solverOptions->lines_count = 1000;
-		this->solverOptions->lineLength = 1000;
-
-	}
+	//}
 
 	if (ImGui::Checkbox("Save Screenshot", &this->saveScreenshot))
 	{
@@ -47,13 +58,7 @@ void RenderImGuiOptions::drawSolverOptions()
 
 	}
 
-	if (ImGui::Checkbox("Optical Flow", &solverOptions->opticalFlow))
-	{
-		divideArrayFloat3Int3(solverOptions->velocityScalingFactor, solverOptions->gridDiameter, solverOptions->gridSize);
-		this->updatePathlines = true;
-		this->updateStreamlines = true;
 
-	}
 
 	
 	if (ImGui::InputText("File Path", _strdup(solverOptions->filePath.c_str()), 100 * sizeof(char)))
@@ -91,12 +96,30 @@ void RenderImGuiOptions::drawSolverOptions()
 		this->updatePathlines = true;
 	}
 
-	if (ImGui::DragFloat3("Velocity Scale", solverOptions->velocityScalingFactor,0.01f))
+	if (ImGui::DragFloat3("Velocity Scaling Factor", solverOptions->velocityScalingFactor,0.01f))
 	{
 		this->updateVolumeBox = true;
 		this->updateRaycasting = true;
 		this->updateStreamlines = true;
 		this->updatePathlines = true;
+	}
+	if (ImGui::Button("Optical Flow"))
+	{
+		divideArrayFloat3Int3(solverOptions->velocityScalingFactor, solverOptions->gridDiameter, solverOptions->gridSize);
+		this->solverOptions->dt = 1.0f;
+		this->updatePathlines = true;
+		this->updateStreamlines = true;
+
+	}
+	ImGui::SameLine();
+	if (ImGui::Button("Reset Scaling Factor"))
+	{
+		solverOptions->velocityScalingFactor[0] = 1.0f;
+		solverOptions->velocityScalingFactor[1] = 1.0f;
+		solverOptions->velocityScalingFactor[2] = 1.0f;
+		this->updatePathlines = true;
+		this->updateStreamlines = true;
+
 	}
 
 	if (ImGui::Combo("Seeding Pattern", (int*)&solverOptions->seedingPattern, SeedPatternList, 3))
@@ -230,16 +253,17 @@ void RenderImGuiOptions::drawSolverOptions()
 	}
 
 	// length of the line is fixed for the pathlines
-	if (this->streamlineRendering || this->streamlineGenerating)
+
+	if (solverOptions->lineRenderingMode == LineRenderingMode::lineRenderingMode::STREAMLINES)
 	{
 		if (ImGui::InputInt("Line Length", &(solverOptions->lineLength)))
 		{
-			if (this->solverOptions->lineLength <= 0)
-			{
-				this->solverOptions->lineLength = 1;
-			}
 			this->updateStreamlines = true;
-			this->updatePathlines = true;
+		}
+		if (this->solverOptions->lineLength <= 0)
+		{
+			this->solverOptions->lineLength = 1;
+			this->updateStreamlines = true;
 
 		}
 	}
@@ -247,7 +271,8 @@ void RenderImGuiOptions::drawSolverOptions()
 
 
 
-	if (ImGui::Combo("Color Mode", &solverOptions->colorMode, ColorModeList, 7))
+
+	if (ImGui::Combo("Color Mode", &solverOptions->colorMode, ColorMode::ColorModeList, ColorMode::ColorMode::COUNT))
 	{
 		this->updateStreamlines = true;
 		this->updatePathlines = true;
@@ -257,36 +282,39 @@ void RenderImGuiOptions::drawSolverOptions()
 
 
 
-	if (this->streamlineGenerating)
-	{
-		if (ImGui::InputText("File Path Out", solverOptions->filePath_out, sizeof(solverOptions->filePath_out)))
-		{
-		}
+	//if (this->streamlineGenerating)
+	//{
+	//	if (ImGui::InputText("File Path Out", solverOptions->filePath_out, sizeof(solverOptions->filePath_out)))
+	//	{
+	//	}
 
-		if (ImGui::InputText("File Name Out", solverOptions->fileName_out, sizeof(solverOptions->fileName_out)))
+	//	if (ImGui::InputText("File Name Out", solverOptions->fileName_out, sizeof(solverOptions->fileName_out)))
+	//	{
+	//	}
+	//}
+
+	switch (solverOptions->lineRenderingMode)
+	{
+	case LineRenderingMode::lineRenderingMode::STREAMLINES:
+	{
+		// Show Lines
+		if (this->streamlineRendering || this->streamlineGenerating)
 		{
+			if (ImGui::Checkbox("Render Streamlines", &this->showStreamlines))
+			{
+				this->updateStreamlines = true;
+				this->solverOptions->fileChanged = true;
+			}
+
+			if (this->showStreamlines)
+			{
+
+			}
 		}
+		break;
 	}
 
-
-
-	// Show Lines
-	if (this->streamlineRendering || this->streamlineGenerating)
-	{
-		if (ImGui::Checkbox("Render Streamlines", &this->showStreamlines))
-		{
-			this->updateStreamlines = true;
-			this->solverOptions->fileChanged = true;
-		}
-
-		if (this->showStreamlines)
-		{
-
-		}
-	}
-
-
-	else // PathlineRendering
+	case LineRenderingMode::lineRenderingMode::PATHLINES:
 	{
 		if (this->solverOptions->lastIdx - this->solverOptions->firstIdx >= 2)
 		{
@@ -296,8 +324,28 @@ void RenderImGuiOptions::drawSolverOptions()
 
 			}
 		}
+		break;
+	}
+
+
+	case LineRenderingMode::lineRenderingMode::STREAKLINES:
+	{
+		if (this->solverOptions->lastIdx - this->solverOptions->firstIdx >= 2)
+		{
+			if (ImGui::Checkbox("Render Streaklines", &this->showStreaklines))
+			{
+				this->updateStreaklines = true;
+
+			}
+		}
+		break;
+	}
+
 
 	}
+
+
+
 
 	if (ImGui::Button("Reset View", ImVec2(80, 25)))
 	{
@@ -478,12 +526,8 @@ void RenderImGuiOptions::drawLineRenderingOptions()
 	
 
 
-	if (ImGui::ColorEdit3("Background", (float*)&bgColor))
+	if (ImGui::ColorEdit4("Background", (float*)&renderingOptions->bgColor))
 	{
-		renderingOptions->bgColor[0] = bgColor[0];
-		renderingOptions->bgColor[1] = bgColor[1];
-		renderingOptions->bgColor[2] = bgColor[2];
-
 
 		this->updateRaycasting = true;
 		this->updateDispersion = true;
@@ -1119,12 +1163,135 @@ void RenderImGuiOptions::drawDataset()
 				this->solverOptions->gridSize[1] = 503;
 				this->solverOptions->gridSize[2] = 2048;
 				this->solverOptions->dt = 0.001f;
+				this->solverOptions->periodic = true;
+
 				break;
 			}
 			case Dataset::Dataset::KIT2REF:
 			{
+				this->solverOptions->fileName = "FieldP";
+				this->solverOptions->filePath = "G:\\KIT2Padded\\Reference\\Padded\\";
+				this->solverOptions->gridDiameter[0] = 7.854f;
+				this->solverOptions->gridDiameter[1] = 2.0f;
+				this->solverOptions->gridDiameter[2] = 3.1415f;
+
+				this->solverOptions->seedBox[0] = 7.854f;
+				this->solverOptions->seedBox[1] = 2.0f;
+				this->solverOptions->seedBox[2] = 3.1415f;
+
+				this->solverOptions->gridSize[0] = 192;
+				this->solverOptions->gridSize[1] = 192;
+				this->solverOptions->gridSize[2] = 192;
+				this->solverOptions->dt = 0.001f;
+				this->solverOptions->firstIdx = 1;
+				this->solverOptions->lastIdx = 1000;
+				break;			
+			}
+			case Dataset::Dataset::KIT2REF_OF_TRUNC:
+			{
+				this->solverOptions->fileName = "OF_m_stream";
+				this->solverOptions->filePath = "G:\\KIT2Padded\\Reference\\OpticalFlowTrunc\\";
+				this->solverOptions->gridDiameter[0] = 7.854f;
+				this->solverOptions->gridDiameter[1] = 2.0f;
+				this->solverOptions->gridDiameter[2] = 3.1415f;
+
+				this->solverOptions->seedBox[0] = 7.854f;
+				this->solverOptions->seedBox[1] = 2.0f;
+				this->solverOptions->seedBox[2] = 3.1415f;
+
+				this->solverOptions->gridSize[0] = 182;
+				this->solverOptions->gridSize[1] = 192;
+				this->solverOptions->gridSize[2] = 192;
+				this->solverOptions->dt = 0.001f;
+				this->solverOptions->firstIdx = 1;
+				this->solverOptions->lastIdx = 1000;
+				this->solverOptions->periodic = true;
+
 				break;
 			}
+			case Dataset::Dataset::KIT2REF_OF_FLUC_TRUNC:
+			{
+				this->solverOptions->fileName = "OF_m_stream";
+				this->solverOptions->filePath = "G:\\KIT2Padded\\Reference\\opticalFlowFluc\\";
+				this->solverOptions->gridDiameter[0] = 7.854f;
+				this->solverOptions->gridDiameter[1] = 2.0f;
+				this->solverOptions->gridDiameter[2] = 3.1415f;
+
+				this->solverOptions->seedBox[0] = 7.854f;
+				this->solverOptions->seedBox[1] = 2.0f;
+				this->solverOptions->seedBox[2] = 3.1415f;
+
+				this->solverOptions->gridSize[0] = 182;
+				this->solverOptions->gridSize[1] = 192;
+				this->solverOptions->gridSize[2] = 192;
+				this->solverOptions->dt = 0.001f;
+				this->solverOptions->firstIdx = 1;
+				this->solverOptions->lastIdx = 1000;
+				this->solverOptions->periodic = true;
+
+				break;
+			}
+
+			case Dataset::Dataset::KIT2REF_OF_PERIODIC:
+			{
+				this->solverOptions->fileName = "OF_m_stream";
+				this->solverOptions->filePath = "G:\\KIT2Padded\\Reference\\OpticalFlowTruncPeriodic\\";
+				this->solverOptions->gridDiameter[0] = 7.854f;
+				this->solverOptions->gridDiameter[1] = 2.0f;
+				this->solverOptions->gridDiameter[2] = 3.1415f;
+
+				this->solverOptions->seedBox[0] = 7.854f;
+				this->solverOptions->seedBox[1] = 2.0f;
+				this->solverOptions->seedBox[2] = 3.1415f;
+
+				this->solverOptions->gridSize[0] = 192;
+				this->solverOptions->gridSize[1] = 192;
+				this->solverOptions->gridSize[2] = 192;
+				this->solverOptions->dt = 0.001f;
+				this->solverOptions->firstIdx = 1;
+				this->solverOptions->lastIdx = 1000;
+				this->solverOptions->periodic = true;
+
+				break;
+			}
+			case Dataset::Dataset::KIT2OW:
+			{
+				this->solverOptions->fileName = "FieldP";
+				this->solverOptions->filePath = "G:\\KIT2Padded\\OscillatingWall\\Padded\\";
+				this->solverOptions->gridDiameter[0] = 7.854f;
+				this->solverOptions->gridDiameter[1] = 2.0f;
+				this->solverOptions->gridDiameter[2] = 3.1415f;
+				this->solverOptions->gridSize[0] = 192;
+				this->solverOptions->gridSize[1] = 192;
+				this->solverOptions->gridSize[2] = 192;
+
+				this->solverOptions->seedBox[0] = 7.854f;
+				this->solverOptions->seedBox[1] = 2.0f;
+				this->solverOptions->seedBox[2] = 3.1415f;
+
+				this->solverOptions->dt = 0.001f;
+				this->solverOptions->firstIdx = 1;
+				this->solverOptions->lastIdx = 1000;
+				break;			}
+			case Dataset::Dataset::KIT2BF:
+			{
+				this->solverOptions->fileName = "FieldP";
+				this->solverOptions->filePath = "G:\\KIT2Padded\\VirtualBody\\Padded\\";
+				this->solverOptions->gridDiameter[0] = 7.854f;
+				this->solverOptions->gridDiameter[1] = 2.0f;
+				this->solverOptions->gridDiameter[2] = 3.1415f;
+
+				this->solverOptions->seedBox[0] = 7.854f;
+				this->solverOptions->seedBox[1] = 2.0f;
+				this->solverOptions->seedBox[2] = 3.1415f;
+
+				this->solverOptions->gridSize[0] = 192;
+				this->solverOptions->gridSize[1] = 192;
+				this->solverOptions->gridSize[2] = 192;
+				this->solverOptions->dt = 0.001f;
+				this->solverOptions->firstIdx = 1;
+				this->solverOptions->lastIdx = 1000;
+				break;			}
 			case Dataset::Dataset::KIT3:
 			{
 				this->solverOptions->fileName = "FieldP";
@@ -1132,6 +1299,11 @@ void RenderImGuiOptions::drawDataset()
 				this->solverOptions->gridDiameter[0] = 0.4f;
 				this->solverOptions->gridDiameter[1] = 2.0f;
 				this->solverOptions->gridDiameter[2] = 7.0f;
+
+				this->solverOptions->seedBox[0] = 0.4f;
+				this->solverOptions->seedBox[1] = 2.0f;
+				this->solverOptions->seedBox[2] = 7.0f;
+
 				this->solverOptions->gridSize[0] = 64;
 				this->solverOptions->gridSize[1] = 503;
 				this->solverOptions->gridSize[2] = 2048;
@@ -1143,7 +1315,7 @@ void RenderImGuiOptions::drawDataset()
 			case Dataset::Dataset::KIT3_MIPMAP:
 			{
 				this->solverOptions->fileName = "FieldP";
-				this->solverOptions->filePath = "G:\\KIT3MipMapL1\\";
+				this->solverOptions->filePath = "G:\\KIT3_ZMajor_MipMapL1_Padded\\Padded\\";
 				this->solverOptions->gridDiameter[0] = 0.4f;
 				this->solverOptions->gridDiameter[1] = 2.0f;
 				this->solverOptions->gridDiameter[2] = 7.0f;
@@ -1158,7 +1330,7 @@ void RenderImGuiOptions::drawDataset()
 			case Dataset::Dataset::KIT3_OF_MIPMAP:
 			{
 				this->solverOptions->fileName = "OF_m_stream";
-				this->solverOptions->filePath = "G:\\KIT3MipMapL1\\opticalFlow\\";
+				this->solverOptions->filePath = "G:\\KIT3_ZMajor_MipMapL1_Padded\\opticalFlow\\";
 				this->solverOptions->gridDiameter[0] = 0.4f;
 				this->solverOptions->gridDiameter[1] = 2.0f;
 				this->solverOptions->gridDiameter[2] = 7.0f;
@@ -1166,7 +1338,42 @@ void RenderImGuiOptions::drawDataset()
 				this->solverOptions->gridSize[1] = 251;
 				this->solverOptions->gridSize[2] = 1024;
 				this->solverOptions->dt = 0.001f;
-				this->solverOptions->opticalFlow = true;
+				this->solverOptions->periodic = true;
+
+				break;
+
+			}
+
+			case Dataset::Dataset::MOTIONFIELD_KIT3_PERIODIC:
+			{
+				this->solverOptions->fileName = "OF_m_stream";
+				this->solverOptions->filePath = "G:\\KIT3_ZMajor_MipMapL1_Padded\\OpticalFlowPeriodic\\";
+				this->solverOptions->gridDiameter[0] = 0.4f;
+				this->solverOptions->gridDiameter[1] = 2.0f;
+				this->solverOptions->gridDiameter[2] = 7.0f;
+				this->solverOptions->gridSize[0] = 32;
+				this->solverOptions->gridSize[1] = 251;
+				this->solverOptions->gridSize[2] = 1024;
+				this->solverOptions->dt = 1.0f;
+				this->solverOptions->periodic = true;
+
+				break;
+
+			}
+
+			case Dataset::Dataset::ENSTROPHY_OF_KIT3:
+			{
+				this->solverOptions->fileName = "OF_m_stream";
+				this->solverOptions->filePath = "G:\\KIT3_ZMajor_MipMapL1_Padded\\EnstophyOF\\";
+				this->solverOptions->gridDiameter[0] = 0.4f;
+				this->solverOptions->gridDiameter[1] = 2.0f;
+				this->solverOptions->gridDiameter[2] = 7.0f;
+				this->solverOptions->gridSize[0] = 32;
+				this->solverOptions->gridSize[1] = 251;
+				this->solverOptions->gridSize[2] = 1024;
+				this->solverOptions->dt = 0.001f;
+				this->solverOptions->periodic = true;
+
 				break;
 
 			}

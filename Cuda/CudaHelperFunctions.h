@@ -21,6 +21,31 @@ __device__ void	RK4Path
 	float3 velocityScale = { 1.0f,1.0f,1.0f }
 );
 
+__device__ void	PathEuler
+(
+	cudaTextureObject_t t_VelocityField_0,
+	cudaTextureObject_t t_VelocityField_1,
+	Particle* particle,
+	float3 gridDiameter,
+	int3 gridSize,
+	float dt,
+	bool periodicity,
+	float3 velocityScale = { 1.0f,1.0f,1.0f }
+);
+
+
+__device__ Particle RK4Streak
+(
+	cudaTextureObject_t t_VelocityField_0,
+	cudaTextureObject_t t_VelocityField_1,
+	float3 position,
+	float3 gridDiameter,
+	int3 gridSize,
+	float dt,
+	bool periodicity,
+	float3 velocityScale = { 1.0f,1.0f,1.0f }
+);
+
 
 // Switch the velocity texture for even and odd case
 __device__ void	RK4Path_linear
@@ -63,6 +88,31 @@ __device__ void RK4Stream
 __global__ void TracingPath
 (
 	Particle* d_particles,
+	cudaTextureObject_t t_VelocityField_0,
+	cudaTextureObject_t t_VelocityField_1,
+	SolverOptions solverOptions,
+	Vertex* p_VertexBuffer,
+	bool odd,
+	int step
+);
+
+
+
+__global__ void InitializeVertexBufferStreaklines
+(
+	Particle* d_particles,
+	SolverOptions solverOptions,
+	Vertex* p_VertexBuffer
+);
+
+__global__ void AddOffsetVertexBufferStreaklines
+(
+	SolverOptions solverOptions,
+	Vertex* p_VertexBuffer
+);
+
+__global__ void TracingStreak
+(
 	cudaTextureObject_t t_VelocityField_0,
 	cudaTextureObject_t t_VelocityField_1,
 	SolverOptions solverOptions,

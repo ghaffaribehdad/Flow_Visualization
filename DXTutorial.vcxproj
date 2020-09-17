@@ -181,6 +181,7 @@
     </CudaLink>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <CudaCompile Include="Cuda\StreaklineSolver.cu" />
     <CudaCompile Include="Heightfield\DispersionHelper.cu">
       <FileType>Document</FileType>
     </CudaCompile>
@@ -207,6 +208,9 @@
     <ClInclude Include="CrossSection\CrossSection.h" />
     <ClInclude Include="Cuda\CudaArray.h" />
     <ClInclude Include="Cuda\Cuda_helper_math_host.h" />
+    <ClInclude Include="Cuda\StreaklineSolver.h" />
+    <ClInclude Include="Graphics\StreaklineRenderer.h" />
+    <ClInclude Include="Graphics\StreamlineRenderer.h" />
     <ClInclude Include="Heightfield\DispersionHelper.h" />
     <ClInclude Include="Heightfield\Heightfield.h" />
     <ClInclude Include="Heightfield\fluctuationHeightfield.h" />
@@ -287,7 +291,6 @@
     <ClInclude Include="Graphics\LineRenderer.h" />
     <ClInclude Include="Graphics\BoxRenderer.h" />
     <ClInclude Include="Graphics\PathlineRenderer.h" />
-    <ClInclude Include="Graphics\StreamlineRenderer.h" />
     <ClInclude Include="Options\ImGuiOptions.h" />
     <ClInclude Include="Options\RaycastingOptions.h" />
     <ClInclude Include="Options\SolverOptions.h" />
@@ -354,6 +357,12 @@
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
     </FxCompile>
+    <FxCompile Include="Shaders\geometryShaderSphere.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Geometry</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Geometry</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+    </FxCompile>
     <FxCompile Include="Shaders\pixelshader.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
@@ -392,6 +401,9 @@
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
       <DisableOptimizations Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</DisableOptimizations>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\geometryShaderSphere.hlsl.vsspell" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

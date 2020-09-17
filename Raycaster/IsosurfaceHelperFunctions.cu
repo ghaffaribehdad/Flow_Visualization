@@ -275,7 +275,7 @@ __device__  float FetchTextureSurface::Velocity_Magnitude::ValueAtXYZ_Surf(cudaS
 	surf3Dread(&data, surf, position.x * sizeof(float4), position.y, position.z);
 	float3 velocity = make_float3(data.x, data.y, data.z);
 
-	return VecMagnitude(velocity);
+	return magnitude(velocity);
 }
 
 __device__ float FetchTextureSurface::Channel_X::ValueAtXYZ_Tex(cudaTextureObject_t tex, const float3 & position)
@@ -307,7 +307,7 @@ __device__ float FetchTextureSurface::Velocity_Magnitude::ValueAtXYZ_Tex(cudaTex
 	float4 data = tex3D<float4>(tex, position.x, position.y, position.z);
 	float3 velocity = make_float3(data.x, data.y, data.z);
 
-	return VecMagnitude(velocity);
+	return magnitude(velocity);
 }
 
 __device__  float3 GradientAtGrid_X(cudaTextureObject_t tex, float3 position, int3 gridSize)

@@ -286,9 +286,6 @@
     <ClInclude Include="Raycaster\BoundingBox.h">
       <Filter>Header Files\Raycasting</Filter>
     </ClInclude>
-    <ClInclude Include="Graphics\StreamlineRenderer.h">
-      <Filter>Header Files\Graphics</Filter>
-    </ClInclude>
     <ClInclude Include="Graphics\LineRenderer.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
@@ -430,6 +427,15 @@
     <ClInclude Include="Heightfield\DispersionHelper.h">
       <Filter>Header Files\Heightfield</Filter>
     </ClInclude>
+    <ClInclude Include="Cuda\StreaklineSolver.h">
+      <Filter>Header Files\Cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\StreamlineRenderer.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\StreaklineRenderer.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\geometryshaderLineTube.hlsl">
@@ -454,6 +460,9 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\pixelshaderTextureSampler_Double.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\geometryShaderSphere.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>
@@ -520,5 +529,11 @@
       <Filter>Source Files\Raycasting</Filter>
     </CudaCompile>
     <CudaCompile Include="Raycaster\TimeSpaceField.cu" />
+    <CudaCompile Include="Cuda\StreaklineSolver.cu">
+      <Filter>Source Files\Cuda</Filter>
+    </CudaCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\geometryShaderSphere.hlsl.vsspell" />
   </ItemGroup>
 </Project>

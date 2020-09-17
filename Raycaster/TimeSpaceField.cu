@@ -145,7 +145,7 @@ __global__ void  generateVorticityFieldSpaceTime
 			 jac.r1.y - jac.r2.x
 		 );
 		 float velocity		= tex3D<float>(t_velocityField, timeSpace3DOptions.streamwisePos, index_y, index_x);
-		 float vorticity	= VecMagnitude(vorticity_vec);
+		 float vorticity	= magnitude(vorticity_vec);
 		// copy it in the surface3D
 		surf3Dwrite(vorticity, s_vorticity, sizeof(float) * index_x, index_y, timestep);
 		//surf3Dwrite(vorticity, s_velocity, sizeof(float) * index_x, index_y, timestep);

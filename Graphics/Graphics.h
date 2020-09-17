@@ -17,6 +17,7 @@
 #include "..\\Raycaster\Raycasting.h"
 
 #include "StreamlineRenderer.h"
+#include "StreaklineRenderer.h"
 #include "BoxRenderer.h"
 #include "RenderImGuiOptions.h"
 #include "PathlineRenderer.h"
@@ -180,6 +181,7 @@ private:
 	// Rendering Obejcts
 	PathlineRenderer pathlineRenderer;
 	StreamlineRenderer streamlineRenderer;
+	StreaklineRenderer streaklineRenderer;
 	BoxRenderer volumeBox;
 	BoxRenderer seedBox;
 

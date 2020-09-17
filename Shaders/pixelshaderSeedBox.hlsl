@@ -28,7 +28,10 @@ float4 main(PS_INPUT input) : SV_TARGET
 	//float diffuse = max(dot(normalize(input.outNormal), input.outLightDir), 0.0f);
 	float diffuse = max(dot(normalize(input.outNormal), light1), 0.0f);
 	diffuse += max(dot(normalize(input.outNormal), light2), 0.0f);
-	rgb = rgb * diffuse;
+	rgb.x = rgb.x * diffuse;
+	rgb.y = rgb.y * diffuse;
+	rgb.z = rgb.z * diffuse;
+
 	
 	return rgb;
 }

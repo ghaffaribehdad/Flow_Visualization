@@ -11,6 +11,7 @@ bool LineRenderer::setShaders(D3D11_PRIMITIVE_TOPOLOGY Topology)
 	this->deviceContext->VSSetShader(vertexshader.GetShader(), NULL, 0);			// set vertex shader
 	this->deviceContext->PSSetShader(pixelshader.GetShader(), NULL, 0);		
 	this->deviceContext->GSSetShader(geometryshader.GetShader(), NULL, 0);
+	this->deviceContext->OMSetBlendState(this->blendState.Get(), NULL, 0xFFFFFFFF);
 
 
 	return true;
@@ -102,7 +103,12 @@ bool LineRenderer::initializeShaders()
 		return false;
 	}
 
-	if (!this->geometryshader.Initialize(this->device, shaderfolder + L"geometryshaderLineTube.cso"))
+	//if (!this->geometryshader.Initialize(this->device, shaderfolder + L"geometryshaderLineTube.cso"))
+	//{
+	//	return false;
+	//}
+
+	if (!this->geometryshader.Initialize(this->device, shaderfolder + L"geometryshaderSphere.cso"))
 	{
 		return false;
 	}
@@ -126,7 +132,7 @@ void LineRenderer::cleanPipeline()
 
 
 
-bool LineRenderer::initilizeRasterizer()
+bool LineRenderer::initializeRasterizer()
 {
 	if (this->rasterizerstate.Get() == nullptr)
 	{
@@ -135,15 +141,52 @@ bool LineRenderer::initilizeRasterizer()
 		ZeroMemory(&rasterizerDesc, sizeof(D3D11_RASTERIZER_DESC));
 
 		rasterizerDesc.FillMode = D3D11_FILL_MODE::D3D11_FILL_SOLID;
-		rasterizerDesc.CullMode = D3D11_CULL_MODE::D3D11_CULL_FRONT; // CULLING could be set to none
+		rasterizerDesc.CullMode = D3D11_CULL_MODE::D3D11_CULL_NONE; // CULLING could be set to none
 		rasterizerDesc.MultisampleEnable = true;
 		rasterizerDesc.AntialiasedLineEnable = true;
 		//rasterizerDesc.FrontCounterClockwise = TRUE;//= 1;
+
+
+
+
+
 
 		HRESULT hr = this->device->CreateRasterizerState(&rasterizerDesc, this->rasterizerstate.GetAddressOf());
 		if (FAILED(hr))
 		{
 			ErrorLogger::Log(hr, "Failed to Create rasterizer state.");
+			return false;
+		}
+
+
+
+		//Create the blend state
+		D3D11_BLEND_DESC blendDesc;
+		ZeroMemory(&blendDesc, sizeof(blendDesc));
+
+		D3D11_RENDER_TARGET_BLEND_DESC rtbd;
+		ZeroMemory(&rtbd, sizeof(rtbd));
+
+		rtbd.BlendEnable = true;
+
+		rtbd.SrcBlend = D3D11_BLEND::D3D11_BLEND_SRC_ALPHA;
+		rtbd.SrcBlendAlpha = D3D11_BLEND::D3D11_BLEND_ONE;
+
+		rtbd.DestBlend = D3D11_BLEND::D3D11_BLEND_INV_SRC_ALPHA;
+		rtbd.DestBlendAlpha = D3D11_BLEND::D3D11_BLEND_INV_SRC_ALPHA;
+
+		rtbd.BlendOp = D3D11_BLEND_OP::D3D11_BLEND_OP_ADD;
+		rtbd.BlendOpAlpha = D3D11_BLEND_OP::D3D11_BLEND_OP_ADD;
+
+		rtbd.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE::D3D11_COLOR_WRITE_ENABLE_ALL;
+
+
+		blendDesc.RenderTarget[0] = rtbd;
+
+		hr = this->device->CreateBlendState(&blendDesc, this->blendState.GetAddressOf());
+		if (FAILED(hr))
+		{
+			ErrorLogger::Log(hr, "Failed to create blend state.");
 			return false;
 		}
 	}

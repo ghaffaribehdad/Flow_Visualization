@@ -1,27 +1,27 @@
 #pragma once
 
 #include "LineRenderer.h"
-#include "..//Cuda/PathlineSolver.h"
+#include "..//Cuda/StreaklineSolver.h"
 #include "Vertex.h"
 
-class PathlineRenderer :public LineRenderer
+class StreaklineRenderer :public LineRenderer
 {
 
 
 private:
 
-	PathlineSolver pathlinesolver;
+	StreaklineSolver streaklineSolver;
 
 public:
 
-	virtual void show(RenderImGuiOptions* renderImGuiOptions) 
+	virtual void show(RenderImGuiOptions* renderImGuiOptions)
 	{
-		if (renderImGuiOptions->showPathlines)
+		if (renderImGuiOptions->showStreaklines)
 		{
-			if (renderImGuiOptions->updatePathlines)
+			if (renderImGuiOptions->updateStreaklines)
 			{
 				this->updateScene();
-				renderImGuiOptions->updatePathlines = false;
+				renderImGuiOptions->updateStreaklines = false;
 			}
 		}
 	}
@@ -49,9 +49,9 @@ public:
 	{
 		solverOptions->p_vertexBuffer = this->vertexBuffer.Get();
 
-		this->pathlinesolver.Initialize(solverOptions);
-		this->pathlinesolver.solve();
-		this->pathlinesolver.FinalizeCUDA();
+		this->streaklineSolver.Initialize(solverOptions);
+		this->streaklineSolver.solve();
+		this->streaklineSolver.FinalizeCUDA();
 
 	}
 

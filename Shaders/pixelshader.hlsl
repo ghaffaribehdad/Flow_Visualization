@@ -24,7 +24,7 @@ struct PS_INPUT
 
 float4 main(PS_INPUT input) : SV_TARGET
 {
-	float measure = input.outMeasure + minMeasure;
+	float measure = input.outMeasure - minMeasure;
 
 	float Projection = maxMeasure - minMeasure == 0 ? saturate(measure / (maxMeasure - minMeasure + .00001f)) : saturate(measure / (maxMeasure - minMeasure));
 
@@ -32,6 +32,8 @@ float4 main(PS_INPUT input) : SV_TARGET
 
 	float diffuse = max(dot(normalize(input.outNormal), input.outLightDir),0);
 	rgb = rgb * diffuse;
+	//rgb.w = Projection;
+	rgb.w = 1;
 
 
 	return rgb;

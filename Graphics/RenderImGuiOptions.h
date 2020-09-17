@@ -44,11 +44,6 @@ private:
 
 	Dataset::Dataset dataset = Dataset::Dataset::NONE;
 
-
-
-	// background color
-	float bgColor[3] = { 0,0,0 };
-
 public:
 
 	void setResources
@@ -83,6 +78,7 @@ public:
 	bool updateSeedBox			= false;
 	bool updateVolumeBox		= false;
 	bool updateStreamlines		= false;
+	bool updateStreaklines		= false;
 	bool updatePathlines		= false;
 	bool updateDispersion		= true;
 	bool updateFTLE				= true;
@@ -95,6 +91,7 @@ public:
 	
 	
 	bool showStreamlines				= false;
+	bool showStreaklines				= false;
 	bool showPathlines					= false;
 	bool showRaycasting					= false;
 	bool showCrossSection				= false;
