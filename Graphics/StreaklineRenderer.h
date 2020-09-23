@@ -29,6 +29,7 @@ public:
 
 	bool updateScene()
 	{
+		this->vertexBuffer.Get()->Release();
 
 		HRESULT hr = this->vertexBuffer.Initialize(this->device, NULL, solverOptions->lineLength * solverOptions->lines_count);
 		if (FAILED(hr))
@@ -61,14 +62,58 @@ public:
 		setShaders(Topology);
 		updateConstantBuffer(camera);
 		setBuffers();
-		this->deviceContext->Draw(llInt(solverOptions->lineLength) * llInt(solverOptions->lines_count), 0);
+
+
+		switch (renderingOptions->drawMode)
+		{
+		case DrawMode::DrawMode::STATIONARY:
+		{
+			this->deviceContext->Draw(llInt(solverOptions->lineLength) * llInt(solverOptions->lines_count), 0);
+			break;
+		}
+		case DrawMode::DrawMode::ADVECTION:
+		{
+			for (int i = 1; i <= solverOptions->lines_count; i++)
+			{
+				this->deviceContext->Draw(counter, i * solverOptions->lineLength - counter);
+
+			}
+
+			this->counter++;
+
+			if (counter == solverOptions->lineLength)
+			{
+				counter = 0;
+			}
+
+			break;
+		}
+
+		case DrawMode::DrawMode::CURRENT:
+		{
+			for (int i = 1; i <= solverOptions->lines_count; i++)
+			{
+				this->deviceContext->Draw(renderingOptions->lineLength, i * solverOptions->lineLength - renderingOptions->lineLength - counter);
+
+			}
+
+			this->counter++;
+
+			if (counter == solverOptions->lineLength - renderingOptions->lineLength)
+			{
+				counter = 0;
+			}
+
+
+			break;
+		}
+		}
 		this->cleanPipeline();
 	}
 
 
 	bool initializeBuffers() override
 	{
-
 		HRESULT hr = this->GS_constantBuffer.Initialize(this->device, this->deviceContext);
 		if (FAILED(hr))
 		{
@@ -84,8 +129,8 @@ public:
 		}
 
 
-
-		hr = this->vertexBuffer.Initialize(this->device, NULL, solverOptions->lineLength * solverOptions->lines_count);
+		//Dummy Vertex Buffer which will be expand to the desired size in UpdateScene
+		hr = this->vertexBuffer.Initialize(this->device, NULL, 1);
 		if (FAILED(hr))
 		{
 			ErrorLogger::Log(hr, "Failed to Create Vertex Buffer.");

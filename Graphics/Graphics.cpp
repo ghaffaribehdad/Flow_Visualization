@@ -62,6 +62,13 @@ void Graphics::RenderFrame()
 {
 
 
+	if (renderImGuiOptions.updateShaders)
+	{
+		InitializeShaders();
+		renderImGuiOptions.updateShaders = false;
+
+	}
+
 
 	// Clear Render Target
 	this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), renderingOptions.bgColor);// Clear the target view
@@ -131,8 +138,19 @@ void Graphics::RenderFrame()
 
 	if (this->renderImGuiOptions.showStreamlines)
 	{	
-
-		this->streamlineRenderer.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
+		switch (renderingOptions.renderingMode)
+		{
+		case RenderingMode::RenderingMode::TUBES:
+		{
+			this->streamlineRenderer.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ);
+			break;
+		}
+		case RenderingMode::RenderingMode::SPHERES:
+		{
+			this->streamlineRenderer.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
+			break;
+		}
+		}
 
 	}
 
@@ -165,7 +183,7 @@ void Graphics::RenderFrame()
 
 
 	// Present the backbuffer
-	this->swapchain->Present(0, NULL);
+	this->swapchain->Present(1, NULL);
 }
 
 

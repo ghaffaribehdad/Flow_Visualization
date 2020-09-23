@@ -22,6 +22,7 @@ class LineRenderer
 
 protected:
 	
+	int counter = 0;
 
 	// Resterizer com pointer
 	Microsoft::WRL::ComPtr<ID3D11RasterizerState> rasterizerstate;

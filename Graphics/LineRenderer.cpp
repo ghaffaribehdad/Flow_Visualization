@@ -103,20 +103,42 @@ bool LineRenderer::initializeShaders()
 		return false;
 	}
 
-	//if (!this->geometryshader.Initialize(this->device, shaderfolder + L"geometryshaderLineTube.cso"))
-	//{
-	//	return false;
-	//}
 
-	if (!this->geometryshader.Initialize(this->device, shaderfolder + L"geometryshaderSphere.cso"))
+	switch (renderingOptions->renderingMode)
 	{
-		return false;
+	case RenderingMode::RenderingMode::TUBES:
+	{
+		if (!this->geometryshader.Initialize(this->device, shaderfolder + L"geometryshaderLineTube.cso"))
+		{
+			return false;
+		}
+
+		if (!this->pixelshader.Initialize(this->device, shaderfolder + L"pixelshader.cso"))
+		{
+			return false;
+		}
+		break;
+	}
+	case RenderingMode::RenderingMode::SPHERES:
+	{
+
+		if (!this->geometryshader.Initialize(this->device, shaderfolder + L"geometryshaderSphere.cso"))
+		{
+			return false;
+		}
+
+
+
+		if (!this->pixelshader.Initialize(this->device, shaderfolder + L"pixelShaderSphere.cso"))
+		{
+			return false;
+		}
+		break;
+	}
 	}
 
-	if (!this->pixelshader.Initialize(this->device, shaderfolder + L"pixelshader.cso"))
-	{
-		return false;
-	}
+
+
 
 	return true;
 }

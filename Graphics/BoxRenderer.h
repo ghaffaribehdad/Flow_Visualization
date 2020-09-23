@@ -36,7 +36,7 @@ private:
 
 		for (int i = 0; i < 3; i++)
 		{
-			gridDiameter[i] = p_gridDiameter[i] + this->renderingOptions->tubeRadius;
+			gridDiameter[i] = p_gridDiameter[i] ;
 		}
 
 
@@ -301,7 +301,7 @@ public:
 		GS_constantBuffer.data.View = world * camera.GetViewMatrix();
 		GS_constantBuffer.data.Proj = camera.GetProjectionMatrix();
 		GS_constantBuffer.data.eyePos = camera.GetPositionFloat3();
-		GS_constantBuffer.data.tubeRadius =.015f;
+		GS_constantBuffer.data.tubeRadius =renderingOptions->boxRadius;
 		GS_constantBuffer.data.viewDir = camera.GetViewVector();
 
 		PS_constantBuffer.data.minColor = color;

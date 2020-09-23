@@ -9,7 +9,6 @@ class StreamlineRenderer :public LineRenderer
 
 
 private:
-
 	StreamlineSolver streamlineSolver;
 
 public:
@@ -41,6 +40,7 @@ public:
 
 	bool updateScene(bool WriteToFile = false)
 	{
+		this->vertexBuffer.Get()->Release();
 		HRESULT hr = this->vertexBuffer.Initialize(this->device, NULL, solverOptions->lineLength * solverOptions->lines_count);
 		if (FAILED(hr))
 		{
@@ -84,11 +84,60 @@ public:
 
 	void draw(Camera& camera, D3D11_PRIMITIVE_TOPOLOGY Topology) override
 	{
+
+
 		initializeRasterizer();
 		setShaders(Topology);
 		updateConstantBuffer(camera);
 		setBuffers();
-		this->deviceContext->Draw(llInt(solverOptions->lineLength) * llInt(solverOptions->lines_count),0);
+
+
+		
+
+
+		switch (renderingOptions->drawMode)
+		{
+		case DrawMode::DrawMode::STATIONARY:
+		{
+			this->deviceContext->Draw(llInt(solverOptions->lineLength) * llInt(solverOptions->lines_count),0);
+			break;
+		}
+		case DrawMode::DrawMode::ADVECTION:
+		{
+			for (int i = 0; i < solverOptions->lines_count; i++)
+			{
+				this->deviceContext->Draw(counter, i * solverOptions->lineLength);
+
+			}
+
+			this->counter++;
+
+			if (counter == solverOptions->lineLength)
+			{
+				counter = 0;
+			}
+
+			break;
+		}
+
+		case DrawMode::DrawMode::CURRENT:
+		{
+			for (int i = 0; i < solverOptions->lines_count; i++)
+			{
+				this->deviceContext->Draw(renderingOptions->lineLength, i * solverOptions->lineLength + counter);
+			}
+
+			this->counter++;
+
+			if (counter == solverOptions->lineLength- renderingOptions->lineLength)
+			{
+				counter = 0;
+			}
+
+			break;
+		}
+		}
+
 		this->cleanPipeline();
 	}
 
@@ -135,7 +184,8 @@ public:
 
 
 
-		hr = this->vertexBuffer.Initialize(this->device, NULL, solverOptions->lineLength * solverOptions->lines_count);
+		//Dummy Vertex Buffer which will be expand to the desired size in UpdateScene
+		hr = this->vertexBuffer.Initialize(this->device, NULL, 1);
 		if (FAILED(hr))
 		{
 			ErrorLogger::Log(hr, "Failed to Create Vertex Buffer.");

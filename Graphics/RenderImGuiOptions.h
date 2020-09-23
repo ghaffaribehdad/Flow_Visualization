@@ -86,6 +86,7 @@ public:
 	bool updateCrossSection		= false;
 	bool updateTurbulentMixing	= false;
 	bool updateTimeSpaceField	= false;
+	bool updateShaders = false;
 
 
 	

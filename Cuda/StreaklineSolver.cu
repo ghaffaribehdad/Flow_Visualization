@@ -26,6 +26,7 @@ __host__ bool StreaklineSolver::solve()
 	// Initialize Particles and upload it to GPU
 	this->InitializeParticles(solverOptions->seedingPattern);
 
+	// Number of threads based on the number of lines
 	int blockDim = 256;
 	int thread = (this->solverOptions->lines_count / blockDim) + 1;
 

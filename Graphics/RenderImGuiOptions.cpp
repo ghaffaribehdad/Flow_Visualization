@@ -32,10 +32,12 @@ void RenderImGuiOptions::drawSolverOptions()
 		{
 			this->streamlineGenerating = !this->pathlineRendering;
 			this->streamlineRendering = !this->pathlineRendering;
+			solverOptions->lineLength = solverOptions->lastIdx - solverOptions->firstIdx;
 			break;
 		}
 		case LineRenderingMode::lineRenderingMode::STREAKLINES:
 		{
+			solverOptions->lineLength = solverOptions->lastIdx - solverOptions->firstIdx;
 			break;
 		}
 		}
@@ -201,6 +203,12 @@ void RenderImGuiOptions::drawSolverOptions()
 
 		}
 
+
+		if (solverOptions->lineRenderingMode == LineRenderingMode::lineRenderingMode::STREAKLINES || solverOptions->lineRenderingMode == LineRenderingMode::lineRenderingMode::STREAKLINES)
+		{
+			solverOptions->lineLength = solverOptions->lastIdx - solverOptions->firstIdx;
+		}
+
 	}
 
 	ImGui::SameLine();
@@ -208,7 +216,10 @@ void RenderImGuiOptions::drawSolverOptions()
 	if (ImGui::InputInt("Last Index", &(solverOptions->lastIdx)))
 	{
 		this->updatePathlines = true;
-
+		if (solverOptions->lineRenderingMode == LineRenderingMode::lineRenderingMode::STREAKLINES || solverOptions->lineRenderingMode == LineRenderingMode::lineRenderingMode::STREAKLINES)
+		{
+			solverOptions->lineLength = solverOptions->lastIdx - solverOptions->firstIdx;
+		}
 	}
 
 	if (ImGui::InputInt("Current Index", &(solverOptions->currentIdx),1,2))
@@ -514,7 +525,7 @@ void RenderImGuiOptions::render()
 void RenderImGuiOptions::drawLineRenderingOptions()
 {
 
-	ImGui::Begin("Line Rendering Options");
+	ImGui::Begin("Rendering Options");
 
 
 	if(ImGui::Checkbox("Show Seed Box", &renderingOptions->showSeedBox))
@@ -523,8 +534,28 @@ void RenderImGuiOptions::drawLineRenderingOptions()
 	if (ImGui::Checkbox("Show Volume Box", &renderingOptions->showVolumeBox))
 	{
 	}
-	
 
+	if(ImGui::SliderFloat("Box Radius", &renderingOptions->boxRadius, 0.0f, 1.00f, "%.4f"))
+	{
+	}
+
+	if (ImGui::Combo("Rendering Mode", &renderingOptions->renderingMode, RenderingMode::RenderingModeList, RenderingMode::RenderingMode::COUNT))
+	{
+		this->updateShaders = true;
+	}
+
+	if (ImGui::Combo("Draw Mode", &renderingOptions->drawMode, DrawMode::DrawModeList, DrawMode::DrawMode::COUNT))
+	{
+	}
+
+
+	if (ImGui::InputInt("Line Length", & renderingOptions->lineLength,1,10))
+	{
+		if (renderingOptions->lineLength < 1)
+		{
+			renderingOptions->lineLength = 1;
+		}
+	}
 
 	if (ImGui::ColorEdit4("Background", (float*)&renderingOptions->bgColor))
 	{
@@ -534,7 +565,7 @@ void RenderImGuiOptions::drawLineRenderingOptions()
 	}
 	
 
-	ImGui::SliderFloat("Tube Radius", &renderingOptions->tubeRadius, 0.0f, 0.02f,"%.4f");            // Edit 1 float using a slider from 0.0f to 1.0f
+	ImGui::SliderFloat("Tube Radius", &renderingOptions->tubeRadius, 0.0f, 0.02f,"%.5f");            // Edit 1 float using a slider from 0.0f to 1.0f
 
 
 

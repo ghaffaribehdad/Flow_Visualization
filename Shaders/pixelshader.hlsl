@@ -32,7 +32,6 @@ float4 main(PS_INPUT input) : SV_TARGET
 
 	float diffuse = max(dot(normalize(input.outNormal), input.outLightDir),0);
 	rgb = rgb * diffuse;
-	//rgb.w = Projection;
 	rgb.w = 1;
 
 
