@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include "../Particle/Particle.h"
 #include "..//VolumeTexture/VolumeTexture.h"
+#include "..//Timer/Timer.h"
 
 
 class PathlineSolver : public CUDASolver
@@ -23,7 +24,7 @@ public:
 
 private:
 
-
+	Timer timer;
 	Particle* d_particles;
 
 

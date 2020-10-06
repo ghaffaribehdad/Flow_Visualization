@@ -1343,6 +1343,26 @@ void RenderImGuiOptions::drawDataset()
 
 			}
 
+			case Dataset::Dataset::KIT3FAST:
+			{
+				this->solverOptions->fileName = "FieldP";
+				this->solverOptions->filePath = "G:\\MinimalStreamwise\\Fluc_Z_major_Padded\\";
+				this->solverOptions->gridDiameter[0] = 0.4f;
+				this->solverOptions->gridDiameter[1] = 2.0f;
+				this->solverOptions->gridDiameter[2] = 7.0f;
+
+				this->solverOptions->seedBox[0] = 0.4f;
+				this->solverOptions->seedBox[1] = 2.0f;
+				this->solverOptions->seedBox[2] = 7.0f;
+
+				this->solverOptions->gridSize[0] = 64;
+				this->solverOptions->gridSize[1] = 503;
+				this->solverOptions->gridSize[2] = 2048;
+				this->solverOptions->dt = 0.001f;
+				break;
+
+			}
+
 			case Dataset::Dataset::KIT3_MIPMAP:
 			{
 				this->solverOptions->fileName = "FieldP";

@@ -68,12 +68,27 @@ __host__ bool PathlineSolver::solve()
 
 		else if (step %2 == 0) // => EVEN
 		{
+
+			timer.Start();
 			this->volume_IO.readVolume(solverOptions->currentIdx + step +1);
+
+			timer.Stop();
+			std::printf("Reading time %f ms \n", timer.GetMilisecondsElapsed());
+			timer.Restart();
+
+
 			this->h_VelocityField = this->volume_IO.getField_float();
 
 			this->volumeTexture_1.release();
 			this->volumeTexture_1.setField(h_VelocityField);
+
+			timer.Start();
 			this->volumeTexture_1.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
+
+			timer.Stop();
+			std::printf("Copying to GPU in %f ms \n", timer.GetMilisecondsElapsed());
+			timer.Restart();
+
 
 			volume_IO.release();
 
@@ -83,19 +98,41 @@ __host__ bool PathlineSolver::solve()
 
 		else if (step % 2 != 0) // => ODD
 		{
+			timer.Start();
 
 			this->volume_IO.readVolume(solverOptions->currentIdx + step + 1);
-			this->h_VelocityField = this->volume_IO.getField_float();
 
+			timer.Stop();
+			std::printf("Reading time %f ms \n", timer.GetMilisecondsElapsed());
+			timer.Restart();
+
+
+			this->h_VelocityField = this->volume_IO.getField_float();
 			this->volumeTexture_0.release();
 			this->volumeTexture_0.setField(h_VelocityField);
+
+
+			timer.Start();
+
 			this->volumeTexture_0.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
+
+			timer.Stop();
+			std::printf("Copying to GPU in %f ms \n", timer.GetMilisecondsElapsed());
+			timer.Restart();
+
 
 			volume_IO.release();
 
 			odd = true;
 	
 		}
+
+		timer.Start();
+
+		int numofBlock;
+		cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numofBlock, TracingPath, blockDim, 0);
+		std::printf("Optimized number of blocks are  %d \n", numofBlock);	
+
 
 		TracingPath << <blockDim, thread >> > 
 			(
@@ -107,6 +144,11 @@ __host__ bool PathlineSolver::solve()
 				odd,
 				step
 			);
+
+		timer.Stop();
+		std::printf("Kernel Execution time %f ms \n", timer.GetMilisecondsElapsed());	
+		timer.Restart();
+
 
 
 

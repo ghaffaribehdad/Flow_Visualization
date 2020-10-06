@@ -7,7 +7,6 @@
 #include "../Options/SolverOptions.h"
 #include "../Options/RaycastingOptions.h"
 
-
 namespace VolumeIO
 {
 	enum readPlaneMode
@@ -25,14 +24,18 @@ namespace VolumeIO
 		std::string m_fileName = "";
 		std::string m_filePath = "";
 		std::string fullName = "";
+
+		int3 size = { 0,0,0 };
 		std::vector<unsigned int> index;
 		std::vector<char> buffer;
 		float* field = nullptr;
 		float* planeBuffer = nullptr;
-
 		SolverOptions* m_solverOptions = nullptr;
 
 		bool Read(std::streampos begin, size_t size);
+
+
+		
 
 	public:
 
@@ -45,13 +48,14 @@ namespace VolumeIO
 
 		void setFileName(std::string _fileName);
 		void setFilePath(std::string _filePath);
-
+		void setSize(int * gridSize)
 		bool isEmpty();
 
 
 		bool readVolume(unsigned int idx);	// Generic: Read binary file with a certain index
 		bool readVolume();					// Read binary file without index
 
+		bool compressVolume();
 		// Read a single plane of a volumetric file in binary
 		virtual bool readVolumePlane(unsigned int idx, readPlaneMode planeMode, size_t plane) = 0;
 

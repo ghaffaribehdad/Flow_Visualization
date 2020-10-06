@@ -1,5 +1,48 @@
 #include "Volume_IO.h"
+#include <cmath>
+#include <algorithm>
+#include <fstream>
+#include <string>
+#include <vector>
 #include "..//ErrorLogger/ErrorLogger.h"
+
+#include <string>
+#include <vector>
+
+#include <cuda_runtime.h>
+#include <cuda_profiler_api.h>
+
+
+
+
+
+
+#include <vector>
+
+#include <cuda_runtime.h>
+#include <cuda_profiler_api.h>
+
+#include <cudaCompress/Instance.h>
+#include <cudaCompress/Encode.h>
+#include <cudaCompress/util/Bits.h>
+#include <cudaCompress/util/DWT.h>
+#include <cudaCompress/util/Quantize.h>
+#include <cudaCompress/util/YCoCg.h>
+#include <cudaCompress/Timing.h>
+using namespace cudaCompress;
+
+
+#include "../cudaCompress/src/examples/tthread/tinythread.h"
+
+#include "../cudaCompress/src/examples/tools/entropy.h"
+#include "../cudaCompress/src/examples/tools/imgtools.h"
+#include "../cudaCompress/src/examples/tools/rawfile.h"
+
+#include "../cudaCompress/src/examples/cudaUtil.h"
+
+#include "../cudaCompress/src/examples/CompressImage.h"
+#include "../cudaCompress/src/examples/CompressHeightfield.h"
+#include "../cudaCompress/src/examples/CompressVolume.h"
 
 
 // Read a velocity volume
@@ -14,7 +57,48 @@ bool VolumeIO::Volume_IO::readVolume(unsigned int idx)
 }
 
 
+bool VolumeIO::Volume_IO::compressVolume()
+{
+	const bool doRLEOnlyOnLvl0 = true;
 
+	const unsigned int elemCountTotal = 10 * 10 * 10;
+	const size_t channelCount = 3;
+
+	
+
+	//Read File
+	std::vector<std::vector<float>> data(3);
+	std::vector<float*> dpImages(channelCount);
+
+	// Allocate GPU Memory
+	for (size_t channel = 0; channel < channelCount; channel++)
+	{
+
+		gpuErrchk(cudaMalloc(&dpImages[channel], elemCountTotal * sizeof(float)));
+		gpuErrchk(cudaMemcpy(dpImages[channel], data[channel].data(), elemCountTotal * sizeof(float), cudaMemcpyHostToDevice));
+
+	}
+
+	uint huffmanBits = 0;
+
+
+
+	GPUResources::Config config = CompressVolumeResources::getRequiredResources(size.x, size.y, size.z, (uint)channelCount, huffmanBits);
+	GPUResources shared;
+	shared.create(config);
+	CompressVolumeResources res;
+	res.create(shared.getConfig());
+
+	std::vector<std::vector<uint>> bitStreams(channelCount);
+
+	for (size_t c = 0; c < channelCount; c++) {
+		compressVolumeFloatQuantFirst(shared, res, dpImages[c], size.x, size.y, size.z, 2, bitStreams[c], 0.01, doRLEOnlyOnLvl0);
+	}
+	
+
+
+
+}
 std::vector<char>* VolumeIO::Volume_IO::getField_char()
 {
 	return &this->buffer;
@@ -66,15 +150,16 @@ bool VolumeIO::Volume_IO::Read(std::streampos _begin, size_t size)
 
 	// resize it to fit the dataset
 	(this->buffer).resize(size);
-
 	//read file and store it into buffer 
 	myFile.read(&(buffer.at(0)), size);
+
+	this->field = reinterpret_cast<float*>(&(buffer.at(0)));
 
 
 	// close the file
 	myFile.close();
 
-	this->field = reinterpret_cast<float*>(&(buffer.at(0)));
+
 
 	return true;
 
@@ -145,6 +230,15 @@ void VolumeIO::Volume_IO::Initialize(SolverOptions* _solverOptions)
 	m_fileName = _solverOptions->fileName;
 	m_filePath = _solverOptions->filePath;
 
+
+}
+
+
+void VolumeIO::Volume_IO::setSize(int* gridSize)
+{
+	size.x = gridSize[0];
+	size.y = gridSize[1];
+	size.z = gridSize[2];
 
 }
 
