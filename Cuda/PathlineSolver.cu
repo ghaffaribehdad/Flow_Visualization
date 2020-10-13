@@ -42,88 +42,184 @@ __host__ bool PathlineSolver::solve()
 		// First Step
 		if (step == 0)
 		{
+			if (!solverOptions->Compressed)
+			{
+				// Read current volume
+				this->volume_IO.readVolume(solverOptions->currentIdx);
+				// Return a pointer to volume
+				this->h_VelocityField = this->volume_IO.getField_float();
+				// set the pointer to the volume texture
+				this->volumeTexture_0.setField(h_VelocityField);
+				// initialize the volume texture
+				this->volumeTexture_0.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
+				// release host memory
+				volume_IO.release();
 
-			// Read current volume
-			this->volume_IO.readVolume(solverOptions->currentIdx);				
-			// Return a pointer to volume
-			this->h_VelocityField = this->volume_IO.getField_float();		
-			// set the pointer to the volume texture
-			this->volumeTexture_0.setField(h_VelocityField);					
-			// initialize the volume texture
-			this->volumeTexture_0.initialize(Array2Int3(solverOptions->gridSize),false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
-			// release host memory
-			volume_IO.release();
-			
 
 
-			// same procedure for the second field
-			this->volume_IO.readVolume(solverOptions->currentIdx+1);
-			this->h_VelocityField = this->volume_IO.getField_float();
-			this->volumeTexture_1.setField(h_VelocityField);
-			this->volumeTexture_1.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
+				// same procedure for the second field
+				this->volume_IO.readVolume(solverOptions->currentIdx + 1);
+				this->h_VelocityField = this->volume_IO.getField_float();
+				this->volumeTexture_1.setField(h_VelocityField);
+				this->volumeTexture_1.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
 
-			volume_IO.release();
+				volume_IO.release();
+			}
+			else
+			{
+				// Read current volume
+				this->volume_IO.readVolume(solverOptions->currentIdx,solverOptions);
+				// Return a pointer to volume
+				this->h_VelocityField = this->volume_IO.getField_float_GPU();
+				// set the pointer to the volume texture
+				this->volumeTexture_0.setField(h_VelocityField);
+				// initialize the volume texture
+				this->volumeTexture_0.initialize_devicePointer(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
+				// release host memory
+				volume_IO.releaseGPU();
+
+
+
+				// same procedure for the second field
+				this->volume_IO.readVolume(solverOptions->currentIdx + 1,solverOptions);
+				this->h_VelocityField = this->volume_IO.getField_float_GPU();
+				this->volumeTexture_1.setField(h_VelocityField);
+				this->volumeTexture_1.initialize_devicePointer(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
+
+				volume_IO.releaseGPU();
+			}
+
 
 		}
 
 		else if (step %2 == 0) // => EVEN
 		{
 
-			timer.Start();
-			this->volume_IO.readVolume(solverOptions->currentIdx + step +1);
 
-			timer.Stop();
-			std::printf("Reading time %f ms \n", timer.GetMilisecondsElapsed());
-			timer.Restart();
+			if (!solverOptions->Compressed)
+			{
+				this->volumeTexture_1.release();
+				timer.Start();
+				this->volume_IO.readVolume(solverOptions->currentIdx + step + 1);
 
-
-			this->h_VelocityField = this->volume_IO.getField_float();
-
-			this->volumeTexture_1.release();
-			this->volumeTexture_1.setField(h_VelocityField);
-
-			timer.Start();
-			this->volumeTexture_1.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
-
-			timer.Stop();
-			std::printf("Copying to GPU in %f ms \n", timer.GetMilisecondsElapsed());
-			timer.Restart();
+				timer.Stop();
+				std::printf("Reading time %f ms \n", timer.GetMilisecondsElapsed());
+				timer.Restart();
 
 
-			volume_IO.release();
+				this->h_VelocityField = this->volume_IO.getField_float();
 
-			
-			odd = false;
+				
+				this->volumeTexture_1.setField(h_VelocityField);
+
+				timer.Start();
+				this->volumeTexture_1.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
+
+				timer.Stop();
+				std::printf("Copying to GPU in %f ms \n", timer.GetMilisecondsElapsed());
+				timer.Restart();
+
+
+				volume_IO.release();
+
+
+				odd = false;
+			}
+			else
+			{
+				this->volumeTexture_1.release();
+				timer.Start();
+				this->volume_IO.readVolume(solverOptions->currentIdx + step + 1,solverOptions);
+
+				timer.Stop();
+				std::printf("Reading time %f ms \n", timer.GetMilisecondsElapsed());
+				timer.Restart();
+
+
+				this->h_VelocityField = this->volume_IO.getField_float_GPU();
+
+				
+				this->volumeTexture_1.setField(h_VelocityField);
+
+				timer.Start();
+				this->volumeTexture_1.initialize_devicePointer(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
+
+				timer.Stop();
+				std::printf("Copying to GPU in %f ms \n", timer.GetMilisecondsElapsed());
+				timer.Restart();
+
+
+				volume_IO.releaseGPU();
+
+
+				odd = false;
+			}
+
 		}
 
 		else if (step % 2 != 0) // => ODD
 		{
-			timer.Start();
+			if (!solverOptions->Compressed)
+			{
+				this->volumeTexture_0.release();
+				timer.Start();
 
-			this->volume_IO.readVolume(solverOptions->currentIdx + step + 1);
+				this->volume_IO.readVolume(solverOptions->currentIdx + step + 1);
 
-			timer.Stop();
-			std::printf("Reading time %f ms \n", timer.GetMilisecondsElapsed());
-			timer.Restart();
-
-
-			this->h_VelocityField = this->volume_IO.getField_float();
-			this->volumeTexture_0.release();
-			this->volumeTexture_0.setField(h_VelocityField);
+				timer.Stop();
+				std::printf("Reading time %f ms \n", timer.GetMilisecondsElapsed());
+				timer.Restart();
 
 
-			timer.Start();
-
-			this->volumeTexture_0.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
-
-			timer.Stop();
-			std::printf("Copying to GPU in %f ms \n", timer.GetMilisecondsElapsed());
-			timer.Restart();
+				this->h_VelocityField = this->volume_IO.getField_float();
+				
+				this->volumeTexture_0.setField(h_VelocityField);
 
 
-			volume_IO.release();
+				timer.Start();
 
-			odd = true;
+				this->volumeTexture_0.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
+
+				timer.Stop();
+				std::printf("Copying to GPU in %f ms \n", timer.GetMilisecondsElapsed());
+				timer.Restart();
+
+
+				volume_IO.release();
+
+				odd = true;
+			}
+			else
+			{
+				this->volumeTexture_0.release();
+				timer.Start();
+
+				this->volume_IO.readVolume(solverOptions->currentIdx + step + 1,solverOptions);
+
+				timer.Stop();
+				std::printf("Reading time %f ms \n", timer.GetMilisecondsElapsed());
+				timer.Restart();
+
+
+				this->h_VelocityField = this->volume_IO.getField_float_GPU();
+				
+				this->volumeTexture_0.setField(h_VelocityField);
+
+
+				timer.Start();
+
+				this->volumeTexture_0.initialize_devicePointer(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
+
+				timer.Stop();
+				std::printf("Copying to GPU in %f ms \n", timer.GetMilisecondsElapsed());
+				timer.Restart();
+
+
+				volume_IO.releaseGPU();
+
+				odd = true;
+			}
+			
 	
 		}
 

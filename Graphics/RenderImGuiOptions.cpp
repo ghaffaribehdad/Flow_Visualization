@@ -61,6 +61,13 @@ void RenderImGuiOptions::drawSolverOptions()
 	}
 
 
+	if (ImGui::Checkbox("Compressed Data", &solverOptions->Compressed))
+	{
+
+
+	}
+
+
 
 	
 	if (ImGui::InputText("File Path", _strdup(solverOptions->filePath.c_str()), 100 * sizeof(char)))
@@ -1423,6 +1430,54 @@ void RenderImGuiOptions::drawDataset()
 				this->solverOptions->gridSize[1] = 251;
 				this->solverOptions->gridSize[2] = 1024;
 				this->solverOptions->dt = 0.001f;
+				this->solverOptions->periodic = true;
+
+				break;
+
+			}
+
+			case Dataset::Dataset::KIT3_COMPRESSED:
+			{
+				this->solverOptions->fileName = "FieldComp";
+				this->solverOptions->filePath = "G:\\KIT3Compressed\\Compressed\\";
+				this->solverOptions->gridDiameter[0] = 0.4f;
+				this->solverOptions->gridDiameter[1] = 2.0f;
+				this->solverOptions->gridDiameter[2] = 7.0f;
+
+				this->solverOptions->seedBox[0] = 0.4f;
+				this->solverOptions->seedBox[1] = 2.0f;
+				this->solverOptions->seedBox[2] = 7.0f;
+
+				this->solverOptions->gridSize[0] = 64;
+				this->solverOptions->gridSize[1] = 503;
+				this->solverOptions->gridSize[2] = 2048;
+				this->solverOptions->dt = 0.001f;
+				this->solverOptions->periodic = true;
+				this->solverOptions->Compressed = true;
+
+				break;
+
+			}
+
+			case Dataset::Dataset::KIT2_COMPRESSED_REF:
+			{
+				this->solverOptions->fileName = "FieldComp";
+				this->solverOptions->filePath = "G:\\KIT2Padded\\Reference\\Compressed\\";
+				this->solverOptions->gridDiameter[0] = 7.854f;
+				this->solverOptions->gridDiameter[1] = 2.0f;
+				this->solverOptions->gridDiameter[2] = 3.1415f;
+
+				this->solverOptions->seedBox[0] = 7.854f;
+				this->solverOptions->seedBox[1] = 2.0f;
+				this->solverOptions->seedBox[2] = 3.1415f;
+
+				this->solverOptions->gridSize[0] = 192;
+				this->solverOptions->gridSize[1] = 192;
+				this->solverOptions->gridSize[2] = 192;
+				this->solverOptions->dt = 0.001f;
+				this->solverOptions->firstIdx = 1;
+				this->solverOptions->lastIdx = 1000;
+				this->solverOptions->Compressed = true;
 				this->solverOptions->periodic = true;
 
 				break;

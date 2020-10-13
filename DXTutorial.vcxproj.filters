@@ -592,6 +592,9 @@
     <ClInclude Include="cudaCompress\include\cudaCompress\util\YCoCg.h">
       <Filter>cudaCompress\util</Filter>
     </ClInclude>
+    <ClInclude Include="VolumeIO\Compression.h">
+      <Filter>Header Files\VolumeIO</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\geometryshaderLineTube.hlsl">
@@ -721,6 +724,9 @@
     <CudaCompile Include="cudaCompress\src\cudaCompress\util\YCoCg.cu">
       <Filter>cudaCompress\util</Filter>
     </CudaCompile>
+    <CudaCompile Include="VolumeIO\Compression.cu">
+      <Filter>Source Files\VolumeIO</Filter>
+    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\geometryShaderSphere.hlsl.vsspell" />
@@ -778,5 +784,6 @@
     <None Include="cudaCompress\src\cudaCompress\util\QuantizeKernels.cui">
       <Filter>cudaCompress\util</Filter>
     </None>
+    <None Include="VolumeIO\Compress.cu.vsspell" />
   </ItemGroup>
 </Project>

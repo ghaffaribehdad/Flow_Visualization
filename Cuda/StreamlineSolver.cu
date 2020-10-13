@@ -18,27 +18,40 @@ __host__ bool StreamlineSolver::solve()
 {
 	if (solverOptions->fileChanged)
 	{
-		// Read Dataset
-		this->volume_IO.Initialize(this->solverOptions);
-		this->volume_IO.readVolume(this->solverOptions->currentIdx);
-
-		this->h_VelocityField = this->volume_IO.getField_float();
 
 		// Release the texture
 		if (solverOptions->fileLoaded)
 		{
 			this->volumeTexture.release();
 		}
-		
+
+		if (solverOptions->Compressed)
+		{
+			// Read Dataset
+			this->volume_IO.Initialize(this->solverOptions);
+			this->volume_IO.readVolume(this->solverOptions->currentIdx, this->solverOptions);
+
+			// Copy data to the texture memory
+			this->h_VelocityField = this->volume_IO.getField_float_GPU();
+			this->volumeTexture.setField(h_VelocityField);
+			this->volumeTexture.initialize_devicePointer(Array2Int3(solverOptions->gridSize));
+			volume_IO.releaseGPU();
+		}
+		else
+		{
+			// Read Dataset
+			this->volume_IO.Initialize(this->solverOptions);
+			this->volume_IO.readVolume(this->solverOptions->currentIdx);
+
+			// Copy data to the texture memory
+			this->h_VelocityField = this->volume_IO.getField_float();
+			this->volumeTexture.setField(h_VelocityField);
+			this->volumeTexture.initialize(Array2Int3(solverOptions->gridSize));
+			volume_IO.release();
+		}
 
 
-		// Copy data to the texture memory
-		this->volumeTexture.setField(h_VelocityField);
-		this->volumeTexture.initialize(Array2Int3(solverOptions->gridSize));
 
-
-		// Release it from Host
-		volume_IO.release();
 		solverOptions->fileChanged = false;
 		solverOptions->fileLoaded = true;
 	}

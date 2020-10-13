@@ -34,6 +34,16 @@ public:
 		cudaTextureFilterMode _cudaTextureFilterMode = cudaFilterModeLinear
 		);
 
+	bool initialize_devicePointer
+	(
+		const int3 & dimension,
+		bool normalizedCoords = false,
+		cudaTextureAddressMode addressMode_x = cudaAddressModeWrap,
+		cudaTextureAddressMode addressMode_y = cudaAddressModeBorder,
+		cudaTextureAddressMode addressMode_z = cudaAddressModeWrap,
+		cudaTextureFilterMode _cudaTextureFilterMode = cudaFilterModeLinear
+	);
+
 	// If the cuda array has been set directly 
 	bool initialize_array
 	(

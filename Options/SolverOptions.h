@@ -81,6 +81,7 @@ public:
 	int projection = Projection::NO_PROJECTION;
 	bool periodic = false;
 
+	bool Compressed = false;
 
 
 

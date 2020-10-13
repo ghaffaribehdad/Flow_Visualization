@@ -7,6 +7,9 @@
 #include "../Options/SolverOptions.h"
 #include "../Options/RaycastingOptions.h"
 
+
+typedef unsigned int uint;
+
 namespace VolumeIO
 {
 	enum readPlaneMode
@@ -25,10 +28,14 @@ namespace VolumeIO
 		std::string m_filePath = "";
 		std::string fullName = "";
 
-		int3 size = { 0,0,0 };
 		std::vector<unsigned int> index;
 		std::vector<char> buffer;
-		float* field = nullptr;
+		float* p_field = nullptr;
+
+		// Stores a pointer to the field on the GPU (device)
+		float * dp_field = nullptr;
+
+
 		float* planeBuffer = nullptr;
 		SolverOptions* m_solverOptions = nullptr;
 
@@ -48,11 +55,11 @@ namespace VolumeIO
 
 		void setFileName(std::string _fileName);
 		void setFilePath(std::string _filePath);
-		void setSize(int * gridSize)
 		bool isEmpty();
 
 
 		bool readVolume(unsigned int idx);	// Generic: Read binary file with a certain index
+		bool readVolume(unsigned int idx, SolverOptions * solverOptions);	// Generic: Read binary file with a certain index
 		bool readVolume();					// Read binary file without index
 
 		bool compressVolume();
@@ -64,6 +71,7 @@ namespace VolumeIO
 
 		// Return a pointer to array of floats
 		float* getField_float();
+		float* getField_float_GPU();
 
 		std::vector<char>::iterator getBegin()
 		{
@@ -82,8 +90,11 @@ namespace VolumeIO
 
 		// Clear the vector
 		void release();
+		void releaseGPU();
 		bool Read();
+		bool Read_Compressed(SolverOptions * solverOptions);
 
 	};
 
 }
+

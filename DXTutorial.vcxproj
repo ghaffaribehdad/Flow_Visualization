@@ -24,7 +24,7 @@
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>DXTutorial</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
-    <CudaToolkitCustomDir>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1</CudaToolkitCustomDir>
+    <CudaToolkitCustomDir>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.2</CudaToolkitCustomDir>
     <ProjectName>Flow_Visualization</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -81,7 +81,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>D:\git_projects\Flow_Visualization\cudaCompress\src;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\include;D:\git_projects\Flow_Visualization\Includes;D:\git_projects\Flow_Visualization\cudaCompress;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\lib\x64;$(SolutionDir)Libs\x64\Debug;$(LibraryPath)</LibraryPath>
+    <LibraryPath>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.2\lib\x64;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\lib\x64;$(SolutionDir)Libs\x64\Debug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -91,7 +91,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>D:\git_projects\Flow_Visualization\cudaCompress\src;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\include;D:\git_projects\Flow_Visualization\Includes;D:\git_projects\Flow_Visualization\cudaCompress;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)Libs\x64\Release;$(LibraryPath)</LibraryPath>
+    <LibraryPath>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.2\lib\x64;$(SolutionDir)Libs\x64\Release;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -293,6 +293,7 @@
     <ClInclude Include="TurbulentMixing\TurbulentMixing.h" />
     <ClInclude Include="TurbulentMixing\TurbulentMixingHelper.h" />
     <ClInclude Include="VolumeIO\BinaryWriter.h" />
+    <ClInclude Include="VolumeIO\Compression.h" />
     <ClInclude Include="VolumeIO\Volume_IO.h" />
     <ClInclude Include="VolumeIO\Volume_IO_X_Major.h" />
     <ClInclude Include="VolumeIO\Volume_IO_Z_Major.h" />
@@ -358,6 +359,7 @@
     <ClInclude Include="Raycaster\IsosurfaceHelperFunctions.h" />
     <ClInclude Include="Raycaster\Raycasting.h" />
     <ClInclude Include="Raycaster\Raycasting_Helper.h" />
+    <None Include="VolumeIO\Compress.cu.vsspell" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Raycaster\BoundingBox.h" />
@@ -378,6 +380,7 @@
     <CudaCompile Include="Cuda\cudaSurface.cu" />
     <CudaCompile Include="TurbulentMixing\TurbulentMixing.cu" />
     <CudaCompile Include="TurbulentMixing\TurbulentMixingHelper.cu" />
+    <CudaCompile Include="VolumeIO\Compression.cu" />
     <CudaCompile Include="VolumeTexture\VolumeTexture.cu" />
     <ClInclude Include="Graphics\RenderImGuiOptions.h" />
     <ClInclude Include="Graphics\Graphics.h" />

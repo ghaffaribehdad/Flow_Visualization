@@ -43,10 +43,10 @@ public:
 					this->Read(offset, sizeof(float) * m_solverOptions->channels);
 					offset += interval_y;
 
-					planeBuffer[index] = field[0];
-					planeBuffer[index + (size_t)1] = field[1];
-					planeBuffer[index + (size_t)2] = field[2];
-					planeBuffer[index + (size_t)3] = field[3];
+					planeBuffer[index] = p_field[0];
+					planeBuffer[index + (size_t)1] = p_field[1];
+					planeBuffer[index + (size_t)2] = p_field[2];
+					planeBuffer[index + (size_t)3] = p_field[3];
 
 					index += m_solverOptions->channels;
 
@@ -77,10 +77,10 @@ public:
 					this->Read(offset, sizeof(float) * m_solverOptions->channels);
 					offset += interval_x;
 
-					planeBuffer[index + (size_t)0] = field[0];
-					planeBuffer[index + (size_t)1] = field[1];
-					planeBuffer[index + (size_t)2] = field[2];
-					planeBuffer[index + (size_t)3] = field[3];
+					planeBuffer[index + (size_t)0] = p_field[0];
+					planeBuffer[index + (size_t)1] = p_field[1];
+					planeBuffer[index + (size_t)2] = p_field[2];
+					planeBuffer[index + (size_t)3] = p_field[3];
 
 					index += m_solverOptions->channels;
 				}
@@ -101,7 +101,7 @@ public:
 			size_t offset = plane * planeSize_byte;
 
 			this->Read(offset, planeSize_byte);
-			planeBuffer = field;
+			planeBuffer = p_field;
 			break;
 		}
 
