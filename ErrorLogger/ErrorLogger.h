@@ -7,7 +7,7 @@
 #include <cuda_runtime.h>
 #include <cuda_runtime_api.h>
 #include <cuda_d3d11_interop.h>
-
+#define RELEASE
 
 // Create Error Logging for GPU
 #define gpuErrchk(ans) ErrorLogger::Log((ans), __FILE__, __LINE__);

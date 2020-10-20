@@ -26,6 +26,7 @@ namespace DrawMode
 		STATIONARY = 0,
 		ADVECTION,
 		CURRENT,
+		REALTIME,
 		COUNT
 	};
 
@@ -33,7 +34,8 @@ namespace DrawMode
 	{
 		"Stationary",
 		"Advection",
-		"Current"
+		"Current",
+		"Realtime"
 	};
 
 }
@@ -57,7 +59,7 @@ struct RenderingOptions
 		1.0f 
 	};
 	int renderingMode = RenderingMode::RenderingMode::TUBES;
-	int drawMode = DrawMode::DrawMode::STATIONARY;
+	int drawMode = DrawMode::DrawMode::REALTIME;
 
 	float maxMeasure = 10.0f;
 	float minMeasure = 0.0f;

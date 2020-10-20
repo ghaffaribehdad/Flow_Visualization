@@ -19,14 +19,16 @@ class StreaklineSolver : public CUDASolver
 public:
 
 	__host__ bool solve();
+	__host__ bool solveRealtime();
 	__host__ void release();
+	__host__ bool initializeRealtime();
 
 private:
 
 
 	Particle* d_particles;
 
-
+	uint timeSteps = 0;
 	float* h_VelocityField;
 	float* d_VelocityField;
 

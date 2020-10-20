@@ -122,6 +122,17 @@ __global__ void TracingStreak
 );
 
 
+__global__ void TracingStreakRealTime
+(
+	cudaTextureObject_t t_VelocityField_0,
+	cudaTextureObject_t t_VelocityField_1,
+	SolverOptions solverOptions,
+	Vertex* p_VertexBuffer,
+	bool odd,
+	int step
+);
+
+
 __global__ void TracingStream
 (
 	Particle* d_particles,

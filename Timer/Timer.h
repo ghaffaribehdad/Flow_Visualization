@@ -1,6 +1,27 @@
 #pragma once
 #include <chrono>
 
+//comment the below line to remove time lapse
+//#define CHECK_TIME
+
+#ifdef CHECK_TIME
+
+#define TIMELAPSE(function,string) \
+	timer.Start();\
+	function;\
+	timer.Stop();\
+	std::printf(  "%s takes %f ms \n", string,timer.GetMilisecondsElapsed());\
+	timer.Restart();
+
+#endif
+#ifndef CHECK_TIME
+
+#define TIMELAPSE(function,string) function;
+	
+#endif
+
+
+
 class Timer
 {
 public:

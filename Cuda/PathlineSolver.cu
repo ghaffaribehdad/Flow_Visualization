@@ -37,221 +37,175 @@ __host__ bool PathlineSolver::solve()
 
 	// we go through each time step and solve RK4 for even time steps the first texture is updated,
 	// while the second texture is updated for odd time steps
+
+
+
 	for (int step = 0; step < timeSteps; step++)
 	{
 		// First Step
-		if (step == 0)
-		{
-			if (!solverOptions->Compressed)
-			{
-				// Read current volume
-				this->volume_IO.readVolume(solverOptions->currentIdx);
-				// Return a pointer to volume
-				this->h_VelocityField = this->volume_IO.getField_float();
-				// set the pointer to the volume texture
-				this->volumeTexture_0.setField(h_VelocityField);
-				// initialize the volume texture
-				this->volumeTexture_0.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
-				// release host memory
-				volume_IO.release();
 
-
-
-				// same procedure for the second field
-				this->volume_IO.readVolume(solverOptions->currentIdx + 1);
-				this->h_VelocityField = this->volume_IO.getField_float();
-				this->volumeTexture_1.setField(h_VelocityField);
-				this->volumeTexture_1.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
-
-				volume_IO.release();
-			}
-			else
-			{
-				// Read current volume
-				this->volume_IO.readVolume(solverOptions->currentIdx,solverOptions);
-				// Return a pointer to volume
-				this->h_VelocityField = this->volume_IO.getField_float_GPU();
-				// set the pointer to the volume texture
-				this->volumeTexture_0.setField(h_VelocityField);
-				// initialize the volume texture
-				this->volumeTexture_0.initialize_devicePointer(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
-				// release host memory
-				volume_IO.releaseGPU();
-
-
-
-				// same procedure for the second field
-				this->volume_IO.readVolume(solverOptions->currentIdx + 1,solverOptions);
-				this->h_VelocityField = this->volume_IO.getField_float_GPU();
-				this->volumeTexture_1.setField(h_VelocityField);
-				this->volumeTexture_1.initialize_devicePointer(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
-
-				volume_IO.releaseGPU();
-			}
-
-
-		}
-
-		else if (step %2 == 0) // => EVEN
+		switch (solverOptions->Compressed)
 		{
 
-
-			if (!solverOptions->Compressed)
+			case true: // Compressed Data
 			{
-				this->volumeTexture_1.release();
-				timer.Start();
-				this->volume_IO.readVolume(solverOptions->currentIdx + step + 1);
+				if (step == 0)
+				{
+					initializeTextureCompressed(solverOptions, volumeTexture_0, solverOptions->currentIdx);
+					initializeTextureCompressed(solverOptions, volumeTexture_1, solverOptions->currentIdx + 1);
+				}
+				else if (step % 2 == 0) // => EVEN
+				{
+					this->volumeTexture_1.release();
+					initializeTextureCompressed(solverOptions, volumeTexture_1, solverOptions->currentIdx + step + 1);
+					odd = false;
+				}
+				else if (step % 2 != 0) // => ODD
+				{
+					this->volumeTexture_0.release();
+					initializeTextureCompressed(solverOptions, volumeTexture_0, solverOptions->currentIdx + step + 1);
+					odd = true;
 
-				timer.Stop();
-				std::printf("Reading time %f ms \n", timer.GetMilisecondsElapsed());
-				timer.Restart();
+				}
 
-
-				this->h_VelocityField = this->volume_IO.getField_float();
-
-				
-				this->volumeTexture_1.setField(h_VelocityField);
-
-				timer.Start();
-				this->volumeTexture_1.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
-
-				timer.Stop();
-				std::printf("Copying to GPU in %f ms \n", timer.GetMilisecondsElapsed());
-				timer.Restart();
-
-
-				volume_IO.release();
-
-
-				odd = false;
+				break;
 			}
-			else
+
+			case false: // Uncompressed Data
 			{
-				this->volumeTexture_1.release();
-				timer.Start();
-				this->volume_IO.readVolume(solverOptions->currentIdx + step + 1,solverOptions);
+				if (step == 0)
+				{
+					initializeTexture(solverOptions, volumeTexture_0, solverOptions->currentIdx);
+					initializeTexture(solverOptions, volumeTexture_1, solverOptions->currentIdx + 1);
+				}
+				else if (step % 2 == 0) // => EVEN
+				{
+					this->volumeTexture_1.release();
+					initializeTexture(solverOptions, volumeTexture_1, solverOptions->currentIdx + step + 1);
+					odd = false;
 
-				timer.Stop();
-				std::printf("Reading time %f ms \n", timer.GetMilisecondsElapsed());
-				timer.Restart();
-
-
-				this->h_VelocityField = this->volume_IO.getField_float_GPU();
-
-				
-				this->volumeTexture_1.setField(h_VelocityField);
-
-				timer.Start();
-				this->volumeTexture_1.initialize_devicePointer(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
-
-				timer.Stop();
-				std::printf("Copying to GPU in %f ms \n", timer.GetMilisecondsElapsed());
-				timer.Restart();
-
-
-				volume_IO.releaseGPU();
-
-
-				odd = false;
+				}
+				else if (step % 2 != 0) // => ODD
+				{
+					this->volumeTexture_0.release();
+					initializeTexture(solverOptions, volumeTexture_0, solverOptions->currentIdx + step + 1);
+					odd = true;
+				}
+				break;
 			}
 
 		}
-
-		else if (step % 2 != 0) // => ODD
-		{
-			if (!solverOptions->Compressed)
-			{
-				this->volumeTexture_0.release();
-				timer.Start();
-
-				this->volume_IO.readVolume(solverOptions->currentIdx + step + 1);
-
-				timer.Stop();
-				std::printf("Reading time %f ms \n", timer.GetMilisecondsElapsed());
-				timer.Restart();
-
-
-				this->h_VelocityField = this->volume_IO.getField_float();
-				
-				this->volumeTexture_0.setField(h_VelocityField);
-
-
-				timer.Start();
-
-				this->volumeTexture_0.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
-
-				timer.Stop();
-				std::printf("Copying to GPU in %f ms \n", timer.GetMilisecondsElapsed());
-				timer.Restart();
-
-
-				volume_IO.release();
-
-				odd = true;
-			}
-			else
-			{
-				this->volumeTexture_0.release();
-				timer.Start();
-
-				this->volume_IO.readVolume(solverOptions->currentIdx + step + 1,solverOptions);
-
-				timer.Stop();
-				std::printf("Reading time %f ms \n", timer.GetMilisecondsElapsed());
-				timer.Restart();
-
-
-				this->h_VelocityField = this->volume_IO.getField_float_GPU();
-				
-				this->volumeTexture_0.setField(h_VelocityField);
-
-
-				timer.Start();
-
-				this->volumeTexture_0.initialize_devicePointer(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
-
-				timer.Stop();
-				std::printf("Copying to GPU in %f ms \n", timer.GetMilisecondsElapsed());
-				timer.Restart();
-
-
-				volume_IO.releaseGPU();
-
-				odd = true;
-			}
-			
 	
-		}
+		int numofBlock = 0;
+		//cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numofBlock, TracingPath, blockDim, 0);
+		//std::printf("Optimized number of blocks are  %d \n", numofBlock);	
 
-		timer.Start();
-
-		int numofBlock;
-		cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numofBlock, TracingPath, blockDim, 0);
-		std::printf("Optimized number of blocks are  %d \n", numofBlock);	
-
-
-		TracingPath << <blockDim, thread >> > 
-			(
-				this->d_Particles,
-				volumeTexture_0.getTexture(),
-				volumeTexture_1.getTexture(),
-				*solverOptions,
-				reinterpret_cast<Vertex*>(this->p_VertexBuffer),
-				odd,
-				step
-			);
-
-		timer.Stop();
-		std::printf("Kernel Execution time %f ms \n", timer.GetMilisecondsElapsed());	
-		timer.Restart();
-
-
-
-
+		TracingPath << <blockDim, thread >> > (this->d_Particles, volumeTexture_0.getTexture(), volumeTexture_1.getTexture(), *solverOptions, reinterpret_cast<Vertex*>(this->p_VertexBuffer), odd, step);
+		std::printf("\n\n");
 	}  	
+
+
 	this->release();
 	return true;
 }
 
+__host__ bool PathlineSolver::initializeRealtime()
+{
+	//At least two timesteps is needed
+	this->timeSteps = solverOptions->lastIdx - solverOptions->firstIdx;
+
+	// Initialize Volume IO (Save file path and file names)
+	this->volume_IO.InitializeRealTime(this->solverOptions);
+
+	// Initialize Particles and upload it to GPU
+	this->InitializeParticles(this->solverOptions->seedingPattern);
+
+	solverOptions->lineLength = timeSteps;
+
+	return true;
+}
+
+__host__ bool PathlineSolver::solveRealtime()
+{
+	int blockDim = 256;
+	int thread = (this->solverOptions->lines_count / blockDim) + 1;
+	
+	bool odd = false;
+
+
+	// First Step
+
+	switch (solverOptions->Compressed)
+	{
+
+	case true: // Compressed Data
+	{
+		if (solverOptions->counter == 0)
+		{
+			initializeTextureCompressed(solverOptions, volumeTexture_0, solverOptions->currentIdx);
+			initializeTextureCompressed(solverOptions, volumeTexture_1, solverOptions->currentIdx + 1);
+		}
+		else if (this->solverOptions->counter % 2 == 0) // => EVEN
+		{
+			this->volumeTexture_1.release();
+			initializeTextureCompressed(solverOptions, volumeTexture_1, solverOptions->currentIdx + solverOptions->counter + 1);
+			odd = false;
+		}
+		else if (this->solverOptions->counter % 2 != 0) // => ODD
+		{
+			this->volumeTexture_0.release();
+			initializeTextureCompressed(solverOptions, volumeTexture_0, solverOptions->currentIdx + solverOptions->counter + 1);
+			odd = true;
+
+		}
+
+		break;
+	}
+
+	case false: // Uncompressed Data
+	{
+		if (solverOptions->counter == 0)
+		{
+			initializeTexture(solverOptions, volumeTexture_0, solverOptions->currentIdx);
+			initializeTexture(solverOptions, volumeTexture_1, solverOptions->currentIdx + 1);
+		}
+		else if (solverOptions->counter % 2 == 0) // => EVEN
+		{
+			this->volumeTexture_1.release();
+			initializeTexture(solverOptions, volumeTexture_1, solverOptions->currentIdx + solverOptions->counter + 1);
+			odd = false;
+
+		}
+		else if (solverOptions->counter % 2 != 0) // => ODD
+		{
+			this->volumeTexture_0.release();
+			initializeTexture(solverOptions, volumeTexture_0, solverOptions->currentIdx + solverOptions->counter + 1);
+			odd = true;
+		}
+		break;
+	}
+
+	}
+
+	//int numofBlock = 0;
+	//cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numofBlock, TracingPath, blockDim, 0);
+	//std::printf("Optimized number of blocks are  %d \n", numofBlock);	
+
+	TracingPath << <blockDim, thread >> > (this->d_Particles, volumeTexture_0.getTexture(), volumeTexture_1.getTexture(), *solverOptions, reinterpret_cast<Vertex*>(this->p_VertexBuffer), odd, solverOptions->counter);
+	std::printf("\n\n");
+	
+	if (solverOptions->counter == timeSteps)
+	{
+		solverOptions->drawComplete = true;
+		this->release();
+	}
+	else
+	{
+		solverOptions->counter++;
+	}
+
+	
+	return true;
+}
 
 

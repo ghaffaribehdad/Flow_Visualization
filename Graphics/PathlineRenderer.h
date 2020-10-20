@@ -18,12 +18,32 @@ public:
 	{
 		if (renderImGuiOptions->showPathlines)
 		{
-			if (renderImGuiOptions->updatePathlines)
+			switch (renderingOptions->drawMode)
 			{
-				this->updateScene();
-				renderImGuiOptions->updatePathlines = false;
+			case(DrawMode::DrawMode::REALTIME):
+			{
+
+				if (!solverOptions->drawComplete)
+				{
+					this->updateDraw();
+				}
+				break;
+			}
+			default:
+			{
+
+				if (renderImGuiOptions->updatePathlines)
+				{
+					this->updateScene();
+					renderImGuiOptions->updatePathlines = false;
+				}
+
+				break;
+			}
+
 			}
 		}
+
 	}
 
 
@@ -45,9 +65,38 @@ public:
 
 	}
 
+
+	bool updateDraw()
+	{
+
+
+		if (solverOptions->counter == 0)
+		{
+			this->vertexBuffer.Get()->Release();
+			HRESULT hr = this->vertexBuffer.Initialize(this->device, NULL, solverOptions->lineLength * solverOptions->lines_count);
+			if (FAILED(hr))
+			{
+				ErrorLogger::Log(hr, "Failed to Create Vertex Buffer.");
+				return false;
+			}
+
+			this->solverOptions->p_vertexBuffer = this->vertexBuffer.Get();
+			this->pathlinesolver.Initialize(solverOptions);
+			this->pathlinesolver.initializeRealtime();
+		}
+		else
+		{
+			this->pathlinesolver.Reinitialize();
+		}
+		this->pathlinesolver.solveRealtime();
+		this->pathlinesolver.FinalizeCUDA();
+
+		return true;
+	}
+
 	void updateBuffers() override
 	{
-		solverOptions->p_vertexBuffer = this->vertexBuffer.Get();
+		//solverOptions->p_vertexBuffer = this->vertexBuffer.Get();
 
 		this->pathlinesolver.Initialize(solverOptions);
 		this->pathlinesolver.solve();
@@ -65,6 +114,11 @@ public:
 		switch (renderingOptions->drawMode)
 		{
 		case DrawMode::DrawMode::STATIONARY:
+		{
+			this->deviceContext->Draw(llInt(solverOptions->lineLength) * llInt(solverOptions->lines_count), 0);
+			break;
+		}
+		case DrawMode::DrawMode::REALTIME:
 		{
 			this->deviceContext->Draw(llInt(solverOptions->lineLength) * llInt(solverOptions->lines_count), 0);
 			break;

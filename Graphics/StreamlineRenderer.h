@@ -40,6 +40,8 @@ public:
 
 	bool updateScene(bool WriteToFile = false)
 	{
+
+		// IT HAS MOMORY LEAK WHY WHY ???
 		this->vertexBuffer.Get()->Release();
 		HRESULT hr = this->vertexBuffer.Initialize(this->device, NULL, solverOptions->lineLength * solverOptions->lines_count);
 		if (FAILED(hr))

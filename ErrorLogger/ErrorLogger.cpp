@@ -34,8 +34,12 @@ bool ErrorLogger::Log(cudaError_t code, const char* file, int line, bool abort)
 		error_message += file;
 		error_message += ", ";
 		error_message += std::to_string(line);
+#ifdef RELEASE
+		std::printf("%s\n", error_message.c_str());
+#endif // RELEASE
+#ifdef DEBUG
 		MessageBoxW(NULL, StringConverter::StringToWide(error_message).c_str(), L"Error", MB_ICONERROR);
-
+#endif
 		return false;
 	}
 	else

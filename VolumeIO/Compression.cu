@@ -33,13 +33,13 @@ using namespace cudaCompress;
 #include "../cudaCompress/src/examples/CompressHeightfield.h"
 #include "../cudaCompress/src/examples/CompressVolume.h"
 
+#include "../Timer/Timer.h"
 
 
-float * decompress(int3 size, std::vector<uint> & h_data, const float & Quant_step)
+
+float * decompress(int3 size, uint * h_data, const float & Quant_step, GPUResources::Config & config, GPUResources & shared, CompressVolumeResources & res, size_t & bufferSize)
 {
 
-
-	std::vector<uint> bitStream(h_data.begin(), h_data.end());
 	// Size of the compress file
 	const unsigned int elemCountTotal = size.x*size.y*size.z;
 
@@ -47,30 +47,19 @@ float * decompress(int3 size, std::vector<uint> & h_data, const float & Quant_st
 
 	// Allocate GPU Memory
 	gpuErrchk(cudaMalloc(&dp_field, elemCountTotal * sizeof(float)));
-	// Set it to zeros
-	gpuErrchk(cudaMemset(dp_field, 0, elemCountTotal * sizeof(float)));
+
 
 	const bool doRLEOnlyOnLvl0 = true;
 
+	//gpuErrchk(cudaHostRegister(bitStream.data(), bitStream.size() * sizeof(uint), cudaHostRegisterDefault));
+	gpuErrchk(cudaHostRegister(h_data, bufferSize, cudaHostRegisterDefault));
 
-	uint huffmanBits = 0;
+	Timer timer;
 
+	TIMELAPSE(decompressVolumeFloat(shared, res, dp_field, size.x, size.y, size.z, 2, h_data, bufferSize*8, 0.01f,doRLEOnlyOnLvl0), "Decompression Function");
 
-	GPUResources::Config config = CompressVolumeResources::getRequiredResources(size.x, size.y, size.z, 1, huffmanBits);
-	GPUResources shared;
+	gpuErrchk(cudaHostUnregister(h_data));
 
-	shared.create(config);
-	CompressVolumeResources res;
-	res.create(shared.getConfig());
-
-	cudaSafeCall(cudaHostRegister(bitStream.data(), bitStream.size() * sizeof(uint), cudaHostRegisterDefault));
-
-
-	decompressVolumeFloat(shared, res, dp_field, size.x, size.y, size.z, 2, bitStream, 0.01f, doRLEOnlyOnLvl0);
-	cudaSafeCall(cudaHostUnregister(bitStream.data()));
-	cudaSafeCall(cudaFreeHost(bitStream.data()));
-	res.destroy();
-	shared.destroy();
 
 	return dp_field;
 }
@@ -78,4 +67,18 @@ float * decompress(int3 size, std::vector<uint> & h_data, const float & Quant_st
 void releaseGPUResources(float * dp_field)
 {
 	cudaFree(dp_field);
+}
+
+
+void DecompressResources::initializeDecompressResources(int3 size)
+{
+	this->config = CompressVolumeResources::getRequiredResources(size.x, size.y, size.z, 1, huffmanBits);
+	this->shared.create(config);
+	this->res.create(shared.getConfig());
+}
+
+void DecompressResources::releaseDecompressResources()
+{
+	res.destroy();
+	shared.destroy();
 }

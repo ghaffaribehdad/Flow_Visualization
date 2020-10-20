@@ -2,7 +2,8 @@
 #include "..//Cuda/CudaHelperFunctions.h"
 #include "..//ErrorLogger/ErrorLogger.h"
 #include "../Particle/ParticleHelperFunctions.h"
-
+#include "..//VolumeTexture/VolumeTexture.h"
+#include "../Timer/Timer.h"
 CUDASolver::CUDASolver()
 {
 	//std::printf("A solver is created!\n");
@@ -13,9 +14,18 @@ bool CUDASolver::Initialize(SolverOptions * _solverOptions)
 {
 	this->solverOptions = _solverOptions;
 	this->InitializeCUDA();
+	this->volume_IO.Initialize(_solverOptions);
 	
 	return true;
 }
+
+bool CUDASolver::Reinitialize()
+{
+	this->InitializeCUDA();
+
+	return true;
+}
+
 
 
 bool SeedFiled(SeedingPattern, DirectX::XMFLOAT3 dimenions, DirectX::XMFLOAT3 seedbox)
@@ -26,21 +36,21 @@ bool SeedFiled(SeedingPattern, DirectX::XMFLOAT3 dimenions, DirectX::XMFLOAT3 se
 
 bool CUDASolver::FinalizeCUDA()
 {
-	gpuErrchk(cudaGraphicsUnmapResources(1,	&this->cudaGraphics	));
+	gpuErrchk(cudaGraphicsUnmapResources(1, &this->cudaGraphics));
 
 	gpuErrchk(cudaGraphicsUnregisterResource(this->cudaGraphics));
-
+	
 	return true;
 }
 
 bool CUDASolver::InitializeCUDA()
 {
-	// Get number of CUDA-Enable devices
-	int device;
-	gpuErrchk(cudaD3D11GetDevice(&device,solverOptions->p_Adapter));
+	//// Get number of CUDA-Enable devices
+	//int device;
+	//gpuErrchk(cudaD3D11GetDevice(&device,solverOptions->p_Adapter));
 
-	// Get properties of the Best(usually at slot 0) card
-	gpuErrchk(cudaGetDeviceProperties(&this->cuda_device_prop, 0));
+	//// Get properties of the Best(usually at slot 0) card
+	//gpuErrchk(cudaGetDeviceProperties(&this->cuda_device_prop, 0));
 
 	// Register Vertex Buffer to map it
 	gpuErrchk(cudaGraphicsD3D11RegisterResource(
@@ -65,6 +75,8 @@ bool CUDASolver::InitializeCUDA()
 
 	return true;
 }
+
+
 
 
 
@@ -130,3 +142,51 @@ void CUDASolver::InitializeParticles(SeedingPattern seedingPattern)
 	delete[] this->h_Particles;
 }
 
+void CUDASolver::initializeTexture
+(
+	SolverOptions * solverOptions,
+	VolumeTexture3D & volumeTexture,
+	const int & idx,
+	cudaTextureAddressMode addressModeX ,
+	cudaTextureAddressMode addressModeY ,
+	cudaTextureAddressMode addressModeZ 
+)
+{
+	// Read current volume
+	this->volume_IO.readVolume(idx);
+	// Return a pointer to volume
+	float * h_VelocityField = this->volume_IO.getField_float();
+	// set the pointer to the volume texture
+	volumeTexture.setField(h_VelocityField);
+	// initialize the volume texture
+	volumeTexture.initialize(Array2Int3(solverOptions->gridSize), false, addressModeX, addressModeY, addressModeZ);
+	// release host memory
+	volume_IO.release();
+}
+
+
+void CUDASolver::initializeTextureCompressed
+(
+	SolverOptions * solverOptions,
+	VolumeTexture3D & volumeTexture,
+	const int & idx,
+	cudaTextureAddressMode addressModeX,
+	cudaTextureAddressMode addressModeY,
+	cudaTextureAddressMode addressModeZ
+)
+{
+
+	Timer timer;
+
+	// Read current volume
+	this->volume_IO.readVolume(idx, solverOptions);
+	// Return a pointer to volume
+	float * h_VelocityField = this->volume_IO.getField_float_GPU();
+	// set the pointer to the volume texture
+	volumeTexture.setField(h_VelocityField);
+	// initialize the volume texture
+	TIMELAPSE(volumeTexture.initialize_devicePointer(Array2Int3(solverOptions->gridSize), false, addressModeX, addressModeY, addressModeZ),"Initialize Texture including DDCopy");
+	// release host memory
+	volume_IO.release();
+	cudaFree(h_VelocityField);
+}

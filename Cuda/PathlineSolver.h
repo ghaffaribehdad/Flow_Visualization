@@ -20,16 +20,18 @@ class PathlineSolver : public CUDASolver
 public:
 
 	__host__ bool solve();
+	__host__ bool solveRealtime();
+	__host__ bool initializeRealtime();
 	__host__ void release();
 
 private:
 
 	Timer timer;
-	Particle* d_particles;
+	uint timeSteps = 0;
+	Particle* d_particles = nullptr;
 
-
-	float* h_VelocityField;
-	float* d_VelocityField;
+	float* h_VelocityField = nullptr;
+	float* d_VelocityField = nullptr;
 
 	VolumeTexture3D volumeTexture_0;
 	VolumeTexture3D volumeTexture_1;
@@ -38,8 +40,7 @@ private:
 	// Reference to Velocity Field as a Texture 
 	// we need three timesteps for RK4
 
-
-
+	
 
 	float3* result;
 

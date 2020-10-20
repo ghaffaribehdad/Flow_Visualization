@@ -71,6 +71,7 @@ public:
 
 	//virtual void show(RenderImGuiOptions* renderImGuiOptions) = 0;
 	virtual void updateBuffers() {};						// Virutal function to implement Main Routine of the LineRenderer
+	virtual bool updateDraw() { return true; };
 	virtual void draw(Camera& camera, D3D11_PRIMITIVE_TOPOLOGY Toplogy) {}		// Draw results to the backbuffer
 	virtual bool initializeBuffers() { return true; }		// initilize vertex, constant and index buffer
 	virtual void cleanPipeline();							// Deactivates the Geometry Shader prevent conflict with other pipelines

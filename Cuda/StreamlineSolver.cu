@@ -10,7 +10,6 @@
 __host__ void StreamlineSolver::release()
 {
 	cudaFree(this->d_Particles);
-	//cudaFree(this->d_VelocityField);
 	
 }
 
@@ -18,40 +17,39 @@ __host__ bool StreamlineSolver::solve()
 {
 	if (solverOptions->fileChanged)
 	{
+		
 
-		// Release the texture
-		if (solverOptions->fileLoaded)
+		switch (solverOptions->Compressed)
 		{
-			this->volumeTexture.release();
-		}
-
-		if (solverOptions->Compressed)
+		case true: // Compressed
 		{
-			// Read Dataset
-			this->volume_IO.Initialize(this->solverOptions);
-			this->volume_IO.readVolume(this->solverOptions->currentIdx, this->solverOptions);
 
-			// Copy data to the texture memory
-			this->h_VelocityField = this->volume_IO.getField_float_GPU();
-			this->volumeTexture.setField(h_VelocityField);
-			this->volumeTexture.initialize_devicePointer(Array2Int3(solverOptions->gridSize));
-			volume_IO.releaseGPU();
+			if (solverOptions->fileLoaded)
+			{
+				this->volumeTexture.release();
+				this->volume_IO.releaseDecompressionResources();
+			}
+
+			this->volume_IO.Initialize(solverOptions);
+			// Initialize Volume IO (Save file path and file names)
+			this->volume_IO.InitializeRealTime(this->solverOptions);
+			initializeTextureCompressed(solverOptions, volumeTexture, solverOptions->currentIdx);
+		
+			break;
 		}
-		else
+		case false: // Uncompressed
 		{
-			// Read Dataset
-			this->volume_IO.Initialize(this->solverOptions);
-			this->volume_IO.readVolume(this->solverOptions->currentIdx);
 
-			// Copy data to the texture memory
-			this->h_VelocityField = this->volume_IO.getField_float();
-			this->volumeTexture.setField(h_VelocityField);
-			this->volumeTexture.initialize(Array2Int3(solverOptions->gridSize));
-			volume_IO.release();
+			if (solverOptions->fileLoaded)
+			{
+				this->volumeTexture.release();
+			}
+			this->volume_IO.Initialize(solverOptions);
+			this->initializeTexture(solverOptions, volumeTexture, solverOptions->currentIdx);
+
+			break;
 		}
-
-
-
+		}
 		solverOptions->fileChanged = false;
 		solverOptions->fileLoaded = true;
 	}

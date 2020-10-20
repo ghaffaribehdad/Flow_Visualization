@@ -18,11 +18,27 @@ public:
 	{
 		if (renderImGuiOptions->showStreaklines)
 		{
-			if (renderImGuiOptions->updateStreaklines)
+			
+			switch (renderingOptions->drawMode)
 			{
-				this->updateScene();
-				renderImGuiOptions->updateStreaklines = false;
+			case(DrawMode::DrawMode::REALTIME):
+			{
+				if (!solverOptions->drawComplete)
+				{
+					this->updateDraw();
+				}
+				break;
 			}
+			default:
+				if (renderImGuiOptions->updateStreaklines)
+				{
+					this->updateScene();
+					renderImGuiOptions->updateStreaklines = false;
+				}
+				break;
+			}
+
+
 		}
 	}
 
@@ -56,6 +72,40 @@ public:
 
 	}
 
+
+	bool updateDraw()
+	{
+
+
+		if (solverOptions->counter == 0)
+		{
+			this->vertexBuffer.Get()->Release();
+			HRESULT hr = this->vertexBuffer.Initialize(this->device, NULL, solverOptions->lineLength * solverOptions->lines_count);
+			if (FAILED(hr))
+			{
+				ErrorLogger::Log(hr, "Failed to Create Vertex Buffer.");
+				return false;
+			}
+
+			this->solverOptions->p_vertexBuffer = this->vertexBuffer.Get();
+			this->streaklineSolver.Initialize(solverOptions);
+			this->streaklineSolver.initializeRealtime();
+		}
+		else
+		{
+			this->streaklineSolver.Reinitialize();
+		}
+		this->streaklineSolver.solveRealtime();
+		this->streaklineSolver.FinalizeCUDA();
+
+		return true;
+	}
+
+
+
+
+
+
 	void draw(Camera& camera, D3D11_PRIMITIVE_TOPOLOGY Topology) override
 	{
 		initializeRasterizer();
@@ -67,6 +117,12 @@ public:
 		switch (renderingOptions->drawMode)
 		{
 		case DrawMode::DrawMode::STATIONARY:
+		{
+			this->deviceContext->Draw(llInt(solverOptions->lineLength) * llInt(solverOptions->lines_count), 0);
+			break;
+		}
+
+		case DrawMode::DrawMode::REALTIME:
 		{
 			this->deviceContext->Draw(llInt(solverOptions->lineLength) * llInt(solverOptions->lines_count), 0);
 			break;

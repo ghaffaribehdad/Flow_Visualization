@@ -3,10 +3,10 @@
 #include <vector>
 #include <string>
 #include <fstream>
-
+#include "../Timer/Timer.h"
 #include "../Options/SolverOptions.h"
 #include "../Options/RaycastingOptions.h"
-
+#include "Compression.h"
 
 typedef unsigned int uint;
 
@@ -34,35 +34,39 @@ namespace VolumeIO
 
 		// Stores a pointer to the field on the GPU (device)
 		float * dp_field = nullptr;
-
-
+		size_t buffer_size = 0;
+		size_t bufferSize = 0;
 		float* planeBuffer = nullptr;
 		SolverOptions* m_solverOptions = nullptr;
 
 		bool Read(std::streampos begin, size_t size);
-
+		
+		DecompressResources decompressResources;
 
 		
 
 	public:
 
-
+		Timer timer;
 		// Setter and getter functions
 
 		void Initialize(SolverOptions* _solverOptions);
 		void Initialize(RaycastingOptions* _raycastingOptions);
 		void Initialize(std::string _fileName, std::string _filePath);
+		void InitializeRealTime(SolverOptions* _solverOptions);
 
 		void setFileName(std::string _fileName);
 		void setFilePath(std::string _filePath);
 		bool isEmpty();
+
+		
 
 
 		bool readVolume(unsigned int idx);	// Generic: Read binary file with a certain index
 		bool readVolume(unsigned int idx, SolverOptions * solverOptions);	// Generic: Read binary file with a certain index
 		bool readVolume();					// Read binary file without index
 
-		bool compressVolume();
+
 		// Read a single plane of a volumetric file in binary
 		virtual bool readVolumePlane(unsigned int idx, readPlaneMode planeMode, size_t plane) = 0;
 
@@ -82,7 +86,10 @@ namespace VolumeIO
 		{
 			return buffer.end();
 		}
-
+		const size_t & getBufferSize()
+		{
+			return buffer_size;
+		}
 		void setSolverOptions(SolverOptions * _solverOptions)
 		{
 			this->m_solverOptions = _solverOptions;
@@ -90,7 +97,7 @@ namespace VolumeIO
 
 		// Clear the vector
 		void release();
-		void releaseGPU();
+		void releaseDecompressionResources();
 		bool Read();
 		bool Read_Compressed(SolverOptions * solverOptions);
 

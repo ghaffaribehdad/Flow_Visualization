@@ -7,6 +7,7 @@
 #include "../Options/SolverOptions.h"
 #include "../Graphics/Vertex.h"
 #include "../VolumeIO/Volume_IO_Z_Major.h"
+#include "../VolumeTexture/VolumeTexture.h"
 
 
 
@@ -19,7 +20,7 @@ public:
 
 	bool Initialize(SolverOptions * _solverOptions);
 
-	
+	bool Reinitialize();
 
 	// Solve must be defined in the derived classes
 	virtual bool solve()
@@ -54,4 +55,25 @@ protected:
 	virtual void release(){}
 
 	void* p_VertexBuffer = NULL;
+
+	void initializeTexture
+	(
+		SolverOptions * solverOptions,
+		VolumeTexture3D & volumeTexture,
+		const int & idx,
+		cudaTextureAddressMode addressModeX = cudaAddressModeWrap,
+		cudaTextureAddressMode addressModeY = cudaAddressModeBorder,
+		cudaTextureAddressMode addressModeZ = cudaAddressModeWrap
+	);
+
+
+	void initializeTextureCompressed
+	(
+		SolverOptions * solverOptions,
+		VolumeTexture3D & volumeTexture,
+		const int & idx,
+		cudaTextureAddressMode addressModeX = cudaAddressModeWrap,
+		cudaTextureAddressMode addressModeY = cudaAddressModeBorder,
+		cudaTextureAddressMode addressModeZ = cudaAddressModeWrap
+	);
 };

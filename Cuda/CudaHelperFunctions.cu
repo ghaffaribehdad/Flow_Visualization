@@ -81,24 +81,32 @@ __global__ void TracingStreak(cudaTextureObject_t t_VelocityField_0, cudaTexture
 
 		for (int i = 0; i <= step; i++)
 		{
+			float3 oldPos = { 0,0,0 };
 			Particle tempPar;
+
+			oldPos = make_float3
+			(
+				p_VertexBuffer[line_index + i].pos.x + (gridDiameter.x / 2.0),
+				p_VertexBuffer[line_index + i].pos.y + (gridDiameter.y / 2.0),
+				p_VertexBuffer[line_index + i].pos.z + (gridDiameter.z / 2.0)
+			);
+	
+
 			if (odd)
 			{
-				float3 oldPos = make_float3(p_VertexBuffer[line_index + i].pos.x, p_VertexBuffer[line_index + i].pos.y, p_VertexBuffer[line_index + i].pos.z);
 				tempPar = RK4Streak(t_VelocityField_1, t_VelocityField_0, oldPos, gridDiameter, gridSize, solverOptions.dt, solverOptions.periodic, Array2Float3(solverOptions.velocityScalingFactor));
-				p_VertexBuffer[line_index + i].pos.x = tempPar.m_position.x;
-				p_VertexBuffer[line_index + i].pos.y = tempPar.m_position.y;
-				p_VertexBuffer[line_index + i].pos.z = tempPar.m_position.z;
+
 			}
 			else //Even
 			{
 
-				float3 oldPos = make_float3(p_VertexBuffer[line_index + i].pos.x, p_VertexBuffer[line_index + i].pos.y, p_VertexBuffer[line_index + i].pos.z);
 				tempPar = RK4Streak(t_VelocityField_0, t_VelocityField_1, oldPos, gridDiameter, gridSize, solverOptions.dt, solverOptions.periodic, Array2Float3(solverOptions.velocityScalingFactor));
-				p_VertexBuffer[line_index + i].pos.x = tempPar.m_position.x;
-				p_VertexBuffer[line_index + i].pos.y = tempPar.m_position.y;
-				p_VertexBuffer[line_index + i].pos.z = tempPar.m_position.z;
+
 			}
+
+			p_VertexBuffer[line_index + i].pos.x = tempPar.m_position.x - (gridDiameter.x / 2.0);
+			p_VertexBuffer[line_index + i].pos.y = tempPar.m_position.y - (gridDiameter.y / 2.0);
+			p_VertexBuffer[line_index + i].pos.z = tempPar.m_position.z - (gridDiameter.z / 2.0);
 
 
 			// use the up vector as normal
@@ -215,6 +223,8 @@ __global__ void TracingStreak(cudaTextureObject_t t_VelocityField_0, cudaTexture
 }
 
 
+
+
 __global__ void InitializeVertexBufferStreaklines
 (
 	Particle* d_particles,
@@ -230,9 +240,9 @@ __global__ void InitializeVertexBufferStreaklines
 		// Write into the Vertex BUffer
 		for (int i = 0; i < solverOptions.lineLength; i++)
 		{
-			p_VertexBuffer[line_index + i].pos.x = d_particles[index].getPosition()->x;
-			p_VertexBuffer[line_index + i].pos.y = d_particles[index].getPosition()->y;
-			p_VertexBuffer[line_index + i].pos.z = d_particles[index].getPosition()->z;
+			p_VertexBuffer[line_index + i].pos.x = d_particles[index].getPosition()->x - (solverOptions.gridDiameter[0] / 2.0);
+			p_VertexBuffer[line_index + i].pos.y = d_particles[index].getPosition()->y - (solverOptions.gridDiameter[1] / 2.0);
+			p_VertexBuffer[line_index + i].pos.z = d_particles[index].getPosition()->z - (solverOptions.gridDiameter[2] / 2.0);;
 		}
 
 	}

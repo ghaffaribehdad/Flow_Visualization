@@ -187,8 +187,9 @@ bool VolumeTexture3D::initialize_array
 
 void VolumeTexture3D::release()
 {
-	gpuErrchk(cudaFreeArray(this->cuArray_velocity));
 	gpuErrchk(cudaDestroyTextureObject(this->t_field));
+	gpuErrchk(cudaFreeArray(this->cuArray_velocity));
+
 }
 
 

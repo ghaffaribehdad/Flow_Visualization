@@ -62,7 +62,7 @@ public:
 	int currentIdx =1;
 	int timeSteps = lastIdx - firstIdx + 1;
 
-	int lineRenderingMode = 0;
+	int lineRenderingMode = LineRenderingMode::lineRenderingMode::PATHLINES;
 	int colorMode = 0;
 	SeedingPattern seedingPattern = SeedingPattern::SEED_RANDOM;
 
@@ -83,6 +83,7 @@ public:
 
 	bool Compressed = false;
 
+	bool drawComplete = false;
 
-
+	size_t maxSize = 64000000;
 };
