@@ -20,9 +20,10 @@ public:
 
 	char filePath_out[100] = "D:\\copy\\bf\\Binary_z_Major\\Padded\\";
 	char fileName_out[100] = "Lineset";
-	int counter = 0;
+	int counter;
+	int fileCounter = 0;
 	int fileToSave = 1000;
-	
+	unsigned int randomSeed = 1;
 	int channels = 4;
 	int gridSize[3] = { 64,503,2048 };						//KIT3
 	//int gridSize[3] = { 100,503,500 };					//KIT3 timespace short spanwise
@@ -73,12 +74,13 @@ public:
 
 	bool idChange = false;
 	bool fileChanged = false;
+	bool loadNewfile = false;
 	bool fileLoaded = false;
 	bool shutdown = false;
 
 	SolverOptions() {};
 
-	int projection = Projection::NO_PROJECTION;
+	int projection = Projection::Projection::NO_PROJECTION;
 	bool periodic = false;
 
 	bool Compressed = false;

@@ -64,18 +64,19 @@ protected:
 	virtual void setBuffers();					// set vertex and index and constant buffer
 	virtual bool initilizeIndexBuffer() { return true; }
 
-
+	virtual void resetRealtime() {};
 public:
 
 	virtual void addBox(float* edges, float* pos, DirectX::XMFLOAT4 color) {};			// Adds static scenes
-
+	virtual bool release() = 0;
 	//virtual void show(RenderImGuiOptions* renderImGuiOptions) = 0;
 	virtual void updateBuffers() {};						// Virutal function to implement Main Routine of the LineRenderer
 	virtual bool updateDraw() { return true; };
 	virtual void draw(Camera& camera, D3D11_PRIMITIVE_TOPOLOGY Toplogy) {}		// Draw results to the backbuffer
 	virtual bool initializeBuffers() { return true; }		// initilize vertex, constant and index buffer
 	virtual void cleanPipeline();							// Deactivates the Geometry Shader prevent conflict with other pipelines
-	
+	bool releaseScene();
+
 															// need to be called at the initilization of this object 
 	//=> To Do: Move it to the constructor
 	void setResources(RenderingOptions& _renderingOptions, SolverOptions& _solverOptions, ID3D11DeviceContext* _deviceContext, ID3D11Device* _device, IDXGIAdapter* pAdapter);

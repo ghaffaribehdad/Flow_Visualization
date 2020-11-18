@@ -5,7 +5,7 @@ struct RaycastingOptions
 {
 public:
 
-	float samplingRate_0 = 0.005f;
+	float samplingRate_0 = 0.001f;
 	float tolerance_0 = 0.001f;
 	float isoValue_0 = 10.0f;
 

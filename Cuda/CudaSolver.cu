@@ -26,6 +26,10 @@ bool CUDASolver::Reinitialize()
 	return true;
 }
 
+void CUDASolver::releaseVolumeIO()
+{
+	this->volume_IO.release();
+}
 
 
 bool SeedFiled(SeedingPattern, DirectX::XMFLOAT3 dimenions, DirectX::XMFLOAT3 seedbox)
@@ -45,12 +49,6 @@ bool CUDASolver::FinalizeCUDA()
 
 bool CUDASolver::InitializeCUDA()
 {
-	//// Get number of CUDA-Enable devices
-	//int device;
-	//gpuErrchk(cudaD3D11GetDevice(&device,solverOptions->p_Adapter));
-
-	//// Get properties of the Best(usually at slot 0) card
-	//gpuErrchk(cudaGetDeviceProperties(&this->cuda_device_prop, 0));
 
 	// Register Vertex Buffer to map it
 	gpuErrchk(cudaGraphicsD3D11RegisterResource(
@@ -97,7 +95,6 @@ void CUDASolver::InitializeParticles(SeedingPattern seedingPattern)
 			// Seed Particles Randomly according to the grid diameters
 			for (int i = 0; i < solverOptions->lines_count; i++)
 			{
-				//this->h_Particles[i].seedParticle(solverOptions->gridDiameter,solverOptions->seedBox, solverOptions->seedBoxPos);
 				seedParticleRandom(h_Particles, solverOptions);
 			}
 			break;
@@ -142,7 +139,7 @@ void CUDASolver::InitializeParticles(SeedingPattern seedingPattern)
 	delete[] this->h_Particles;
 }
 
-void CUDASolver::initializeTexture
+void CUDASolver::loadTexture
 (
 	SolverOptions * solverOptions,
 	VolumeTexture3D & volumeTexture,
@@ -159,13 +156,13 @@ void CUDASolver::initializeTexture
 	// set the pointer to the volume texture
 	volumeTexture.setField(h_VelocityField);
 	// initialize the volume texture
-	volumeTexture.initialize(Array2Int3(solverOptions->gridSize), false, addressModeX, addressModeY, addressModeZ);
+	volumeTexture.initialize(Array2Int3(solverOptions->gridSize), true, addressModeX, addressModeY, addressModeZ);
 	// release host memory
 	volume_IO.release();
 }
 
 
-void CUDASolver::initializeTextureCompressed
+void CUDASolver::loadTextureCompressed
 (
 	SolverOptions * solverOptions,
 	VolumeTexture3D & volumeTexture,
@@ -185,8 +182,8 @@ void CUDASolver::initializeTextureCompressed
 	// set the pointer to the volume texture
 	volumeTexture.setField(h_VelocityField);
 	// initialize the volume texture
-	TIMELAPSE(volumeTexture.initialize_devicePointer(Array2Int3(solverOptions->gridSize), false, addressModeX, addressModeY, addressModeZ),"Initialize Texture including DDCopy");
+	TIMELAPSE(volumeTexture.initialize_devicePointer(Array2Int3(solverOptions->gridSize), true, addressModeX, addressModeY, addressModeZ),"Initialize Texture including DDCopy");
 	// release host memory
-	volume_IO.release();
+	//volume_IO.release();
 	cudaFree(h_VelocityField);
 }

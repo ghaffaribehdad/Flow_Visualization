@@ -48,14 +48,14 @@ __global__ void  traceDispersion3D_path_FTLE
 		case RK4STEP::EVEN:
 			for (int i = 0; i < FTLE_NEIGHBOR; i++)
 			{
-				RK4Path(velocityField_0, velocityField_1, &particle[index * FTLE_NEIGHBOR + i], gridDiameter, gridSize, dispersionOptions.dt, true);
+				RK4Path(velocityField_0, velocityField_1, &particle[index * FTLE_NEIGHBOR + i], gridDiameter, gridSize, dispersionOptions.dt);
 			}
 			break;
 
 		case RK4STEP::ODD:
 			for (int i = 0; i < FTLE_NEIGHBOR; i++)
 			{
-				RK4Path(velocityField_1, velocityField_0, &particle[index * FTLE_NEIGHBOR + i], gridDiameter, gridSize, dispersionOptions.dt, true);
+				RK4Path(velocityField_1, velocityField_0, &particle[index * FTLE_NEIGHBOR + i], gridDiameter, gridSize, dispersionOptions.dt);
 			}
 			break;
 		}
@@ -134,14 +134,14 @@ __global__ void  traceDispersion3D_path_FSLE
 		case RK4STEP::EVEN:
 			for (int i = 0; i < FTLE_NEIGHBOR; i++)
 			{
-				RK4Path(velocityField_0, velocityField_1, &particle[index * FTLE_NEIGHBOR + i], gridDiameter, gridSize, dispersionOptions.dt, true);
+				RK4Path(velocityField_0, velocityField_1, &particle[index * FTLE_NEIGHBOR + i], gridDiameter, gridSize, dispersionOptions.dt);
 			}
 			break;
 
 		case RK4STEP::ODD:
 			for (int i = 0; i < FTLE_NEIGHBOR; i++)
 			{
-				RK4Path(velocityField_1, velocityField_0, &particle[index * FTLE_NEIGHBOR + i], gridDiameter, gridSize, dispersionOptions.dt, true);
+				RK4Path(velocityField_1, velocityField_0, &particle[index * FTLE_NEIGHBOR + i], gridDiameter, gridSize, dispersionOptions.dt);
 			}
 			break;
 		}
@@ -211,7 +211,7 @@ __device__ float FTLE3D(Particle* particles,const float & distance)
 	// Find the Delta Tensor
 	dMat3X3 td_Flowmap = transpose(d_Flowmap);
 	dMat3X3 delta = mult(d_Flowmap, td_Flowmap);
-	float3 eigen = { 0.0f,0.0f,0.0f };
+	//float3 eigen = { 0.0f,0.0f,0.0f };
 	
 	// Calculate and sort the eigenvalues
 	//eigensolveHasan(delta, eigen);

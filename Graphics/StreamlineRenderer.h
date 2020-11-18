@@ -17,31 +17,20 @@ public:
 	{
 		if (renderImGuiOptions->showStreamlines)
 		{
-			if (renderImGuiOptions->updateStreamlines && renderImGuiOptions->streamlineGenerating)
-			{
-				this->updateScene(true);
-				if (solverOptions->counter < solverOptions->fileToSave)
-				{
-					solverOptions->counter++;
-				}
-				else
-				{
-					renderImGuiOptions->updateStreamlines = false;
-				}
-			}
-			else if (renderImGuiOptions->updateStreamlines)
+			if (renderImGuiOptions->updateStreamlines)
 			{
 				this->updateScene();
 				renderImGuiOptions->updateStreamlines = false;
-
 			}
 		}
+
 	}
+
+
 
 	bool updateScene(bool WriteToFile = false)
 	{
-
-		// IT HAS MOMORY LEAK WHY WHY ???
+	
 		this->vertexBuffer.Get()->Release();
 		HRESULT hr = this->vertexBuffer.Initialize(this->device, NULL, solverOptions->lineLength * solverOptions->lines_count);
 		if (FAILED(hr))
@@ -52,50 +41,59 @@ public:
 
 		this->solverOptions->p_vertexBuffer = this->vertexBuffer.Get();
 
-		//if (WriteToFile)
-		//{
-		//	this->updateBuffersAndWriteToFile();
-		//}
-		//else
-		//{
-		//	this->updateBuffers();
-		//}
 
 		this->updateBuffers();
 		return true;
 	}
 
+
+
+
 	void updateBuffers() override
 	{
 		
-		this->streamlineSolver.Initialize(solverOptions);
+		switch (solverOptions->loadNewfile)
+		{
+			case true: // need to load a new file
+			{
+				if (solverOptions->fileLoaded)
+				{
+					this->streamlineSolver.releaseVolumeIO();
+					this->streamlineSolver.releaseVolumeTexture();
+
+				}
+				this->streamlineSolver.Initialize(solverOptions);
+				this->streamlineSolver.loadVolumeTexture();
+
+				solverOptions->fileLoaded = true;
+				solverOptions->loadNewfile = false;
+				break;
+
+			}
+			case false: // do not load a new file
+			{
+				this->streamlineSolver.Reinitialize();
+				break;
+			}
+		}
+
 		this->streamlineSolver.solve();
 		this->streamlineSolver.FinalizeCUDA();
+
+		this->streamlineSolver.releaseVolumeIO();
+
 		
 	}
 
 
-	//void updateBuffersAndWriteToFile() 
-	//{
-
-	//	this->streamlineSolver.Initialize(solverOptions);
-	//	this->streamlineSolver.solveAndWrite();
-	//	this->streamlineSolver.FinalizeCUDA();
-
-	//}
 
 	void draw(Camera& camera, D3D11_PRIMITIVE_TOPOLOGY Topology) override
 	{
-
 
 		initializeRasterizer();
 		setShaders(Topology);
 		updateConstantBuffer(camera);
 		setBuffers();
-
-
-		
-
 
 		switch (renderingOptions->drawMode)
 		{
@@ -119,6 +117,11 @@ public:
 				counter = 0;
 			}
 
+			break;
+		}
+		default:
+		{
+			this->deviceContext->Draw(llInt(solverOptions->lineLength) * llInt(solverOptions->lines_count), 0);
 			break;
 		}
 
@@ -213,7 +216,11 @@ public:
 		GS_constantBuffer.data.eyePos = camera.GetPositionFloat3();
 		GS_constantBuffer.data.tubeRadius = renderingOptions->tubeRadius;
 		GS_constantBuffer.data.viewDir = camera.GetViewVector();
-
+		GS_constantBuffer.data.projection = solverOptions->projection;
+		GS_constantBuffer.data.gridDiameter.x = solverOptions->gridDiameter[0];
+		GS_constantBuffer.data.gridDiameter.y = solverOptions->gridDiameter[1];
+		GS_constantBuffer.data.gridDiameter.z = solverOptions->gridDiameter[2];
+		GS_constantBuffer.data.periodicity = solverOptions->periodic;
 
 		PS_constantBuffer.data.minMeasure = renderingOptions->minMeasure;
 		PS_constantBuffer.data.maxMeasure = renderingOptions->maxMeasure;
@@ -228,5 +235,14 @@ public:
 		PS_constantBuffer.ApplyChanges();
 	}
 
+	virtual bool release() override
+	{
+		if (!this->releaseScene())
+			return false;
+		if (!this->streamlineSolver.release())
+			return false;
 
+		return true;
+
+	}
 };

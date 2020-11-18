@@ -20,39 +20,9 @@ void RenderImGuiOptions::drawSolverOptions()
 
 	if (ImGui::Combo("Line Rendering Mode", &solverOptions->lineRenderingMode, LineRenderingMode::lineRenderingModeList, LineRenderingMode::lineRenderingMode::COUNT))
 	{
-		switch (solverOptions->lineRenderingMode)
-		{
-		case LineRenderingMode::lineRenderingMode::STREAMLINES:
-		{
-			this->pathlineRendering = !this->streamlineRendering;
-			this->streamlineGenerating = !this->streamlineRendering;
-			break;
-		}
-		case LineRenderingMode::lineRenderingMode::PATHLINES:
-		{
-			this->streamlineGenerating = !this->pathlineRendering;
-			this->streamlineRendering = !this->pathlineRendering;
-			solverOptions->lineLength = solverOptions->lastIdx - solverOptions->firstIdx;
-			break;
-		}
-		case LineRenderingMode::lineRenderingMode::STREAKLINES:
-		{
-			solverOptions->lineLength = solverOptions->lastIdx - solverOptions->firstIdx;
-			break;
-		}
-		}
-
-
 	}
 
-	//if (ImGui::Checkbox("Streamline Gen.", &this->streamlineGenerating))
-	//{
-	//	this->streamlineRendering = !this->streamlineGenerating;
-	//	this->pathlineRendering = !this->streamlineGenerating;
-	//	this->solverOptions->lines_count = 1000;
-	//	this->solverOptions->lineLength = 1000;
 
-	//}
 
 	if (ImGui::Checkbox("Save Screenshot", &this->saveScreenshot))
 	{
@@ -78,16 +48,14 @@ void RenderImGuiOptions::drawSolverOptions()
 	{
 	}
 
-	if (ImGui::Combo("Projection", &solverOptions->projection, ProjectionList, 4))
+	if (ImGui::Combo("Projection", &solverOptions->projection, Projection::ProjectionList, Projection::Projection::COUNT))
 	{
-		this->updateStreamlines = true;
-		this->updatePathlines = true;
+		
 	}
 
 	if (ImGui::Checkbox("Periodic", &solverOptions->periodic))
 	{
-		this->updateStreamlines = true;
-		this->updatePathlines = true;
+
 	}
 
 
@@ -96,6 +64,7 @@ void RenderImGuiOptions::drawSolverOptions()
 		this->updateSeedBox = true;
 		this->updateStreamlines = true;
 		this->updatePathlines = true;
+		this->updateStreaklines = true;
 	}
 	if (ImGui::InputFloat3("Grid Diameter", solverOptions->gridDiameter, sizeof(solverOptions->gridDiameter)))
 	{
@@ -111,6 +80,8 @@ void RenderImGuiOptions::drawSolverOptions()
 		this->updateRaycasting = true;
 		this->updateStreamlines = true;
 		this->updatePathlines = true;
+		this->updateStreaklines = true;
+
 	}
 	if (ImGui::Button("Optical Flow"))
 	{
@@ -135,6 +106,8 @@ void RenderImGuiOptions::drawSolverOptions()
 	{
 		this->updateStreamlines = true;
 		this->updatePathlines = true;
+		this->updateStreaklines = true;
+
 
 		if (solverOptions->seedingPattern == (int)SeedingPattern::SEED_GRIDPOINTS)
 			solverOptions->lines_count = solverOptions->seedGrid[0] * solverOptions->seedGrid[1] * solverOptions->seedGrid[2];
@@ -146,6 +119,8 @@ void RenderImGuiOptions::drawSolverOptions()
 		{
 			this->updateStreamlines = true;
 			this->updatePathlines = true;
+			this->updateStreaklines = true;
+
 		}
 		solverOptions->lines_count = solverOptions->seedGrid[0] * solverOptions->seedGrid[1] * solverOptions->seedGrid[2];
 	}
@@ -156,6 +131,8 @@ void RenderImGuiOptions::drawSolverOptions()
 		{
 			this->updateStreamlines = true;
 			this->updatePathlines = true;
+			this->updateStreaklines = true;
+
 		}
 
 		if (ImGui::DragFloat("Wall-normal Distance", &solverOptions->seedWallNormalDist, 0.001f, 0.0, solverOptions->gridDiameter[1], "%4f"))
@@ -183,6 +160,8 @@ void RenderImGuiOptions::drawSolverOptions()
 		this->updateSeedBox = true;
 		this->updateStreamlines = true;
 		this->updatePathlines = true;
+		this->updateStreaklines = true;
+
 	}
 	
 	if (ImGui::DragFloat3("Seed Box Position", solverOptions->seedBoxPos, 0.01f))
@@ -190,6 +169,8 @@ void RenderImGuiOptions::drawSolverOptions()
 		this->updateSeedBox = true;
 		this->updateStreamlines = true;
 		this->updatePathlines = true;
+		this->updateStreaklines = true;
+
 	}
 
 
@@ -207,15 +188,13 @@ void RenderImGuiOptions::drawSolverOptions()
 			solverOptions->currentIdx = solverOptions->firstIdx;
 			this->updateStreamlines = true;
 
-
 		}
 
+	}
 
-		if (solverOptions->lineRenderingMode == LineRenderingMode::lineRenderingMode::STREAKLINES || solverOptions->lineRenderingMode == LineRenderingMode::lineRenderingMode::STREAKLINES)
-		{
-			solverOptions->lineLength = solverOptions->lastIdx - solverOptions->firstIdx;
-		}
-
+	if (solverOptions->lineRenderingMode == LineRenderingMode::lineRenderingMode::STREAKLINES || solverOptions->lineRenderingMode == LineRenderingMode::lineRenderingMode::PATHLINES)
+	{
+		solverOptions->lineLength = solverOptions->lastIdx - solverOptions->firstIdx;
 	}
 
 	ImGui::SameLine();
@@ -223,10 +202,8 @@ void RenderImGuiOptions::drawSolverOptions()
 	if (ImGui::InputInt("Last Index", &(solverOptions->lastIdx)))
 	{
 		this->updatePathlines = true;
-		if (solverOptions->lineRenderingMode == LineRenderingMode::lineRenderingMode::STREAKLINES || solverOptions->lineRenderingMode == LineRenderingMode::lineRenderingMode::STREAKLINES)
-		{
-			solverOptions->lineLength = solverOptions->lastIdx - solverOptions->firstIdx;
-		}
+		this->updateStreaklines = true;
+
 	}
 
 	if (ImGui::InputInt("Current Index", &(solverOptions->currentIdx),1,2))
@@ -242,7 +219,8 @@ void RenderImGuiOptions::drawSolverOptions()
 		}
 
 		this->updateStreamlines = true;
-		this->updatePathlines = true;
+		solverOptions->loadNewfile = true;
+
 		this->crossSectionOptions->updateTime = true;
 		this->solverOptions->fileChanged = true;
 		this->updateCrossSection = true;
@@ -257,6 +235,8 @@ void RenderImGuiOptions::drawSolverOptions()
 		
 		this->updateStreamlines = true;
 		this->updatePathlines = true;
+		this->updateStreaklines = true;
+
 		
 	}
 
@@ -268,6 +248,8 @@ void RenderImGuiOptions::drawSolverOptions()
 		}
 		this->updateStreamlines = true;
 		this->updatePathlines = true;
+		this->updateStreaklines = true;
+
 	}
 
 	// length of the line is fixed for the pathlines
@@ -294,6 +276,8 @@ void RenderImGuiOptions::drawSolverOptions()
 	{
 		this->updateStreamlines = true;
 		this->updatePathlines = true;
+		this->updateStreaklines = true;
+
 
 	}
 
@@ -310,6 +294,34 @@ void RenderImGuiOptions::drawSolverOptions()
 	//	{
 	//	}
 	//}
+	
+	switch (pauseRendering)
+	{
+	case(true):
+	{
+		if (ImGui::Button("Resume", ImVec2(80, 25)))
+		{
+			pauseRendering = !pauseRendering;
+		}
+		break;
+	}
+	case(false):
+	{
+		if (ImGui::Button("Pause", ImVec2(80, 25)))
+		{
+			pauseRendering = !pauseRendering;
+		}
+		break;
+	}
+	}
+
+
+	ImGui::SameLine();
+	if (ImGui::Button("reset", ImVec2(80, 25)))
+	{
+		this->updatePathlines = true;
+		this->updateStreaklines = true;
+	}
 
 	switch (solverOptions->lineRenderingMode)
 	{
@@ -321,13 +333,17 @@ void RenderImGuiOptions::drawSolverOptions()
 			if (ImGui::Checkbox("Render Streamlines", &this->showStreamlines))
 			{
 				this->updateStreamlines = true;
-				this->solverOptions->fileChanged = true;
+				this->solverOptions->loadNewfile = true;
+
+
+				if (!this->showStreamlines)
+				{
+					this->releaseStreamlines = true;
+					this->solverOptions->loadNewfile = false;
+				}
 			}
 
-			if (this->showStreamlines)
-			{
 
-			}
 		}
 		break;
 	}
@@ -340,7 +356,13 @@ void RenderImGuiOptions::drawSolverOptions()
 			{
 				this->updatePathlines = true;
 
+				if (!this->showPathlines)
+				{
+					this->releasePathlines = true;
+				}
 			}
+
+
 		}
 		break;
 	}
@@ -354,7 +376,12 @@ void RenderImGuiOptions::drawSolverOptions()
 			{
 				this->updateStreaklines = true;
 
+				if (!this->showStreaklines)
+				{
+					this->releaseStreaklines = true;
+				}
 			}
+
 		}
 		break;
 	}
@@ -507,8 +534,12 @@ void RenderImGuiOptions::drawLog()
 	ImGui::InputFloat3("eye Position", this->eyePos, 2);
 	ImGui::InputFloat3("View Dirrection", this->viewDir, 2);
 	ImGui::InputFloat3("Up Vector", this->upDir, 2);
+	
 
+	if (ImGui::InputInt("Realtime time step", &solverOptions->counter))
+	{
 
+	}
 
 	ImGui::End();
 }
@@ -542,7 +573,7 @@ void RenderImGuiOptions::drawLineRenderingOptions()
 	{
 	}
 
-	if(ImGui::SliderFloat("Box Radius", &renderingOptions->boxRadius, 0.0f, 1.00f, "%.4f"))
+	if(ImGui::SliderFloat("Box Radius", &renderingOptions->boxRadius, 0.0f, 0.05f, "%.4f"))
 	{
 	}
 
@@ -677,6 +708,23 @@ void RenderImGuiOptions::drawRaycastingOptions()
 		this->updateDispersion = true;
 	}
 
+	if (ImGui::ColorEdit4("Min Color", (float*)&raycastingOptions->minColor))
+	{
+		this->updateRaycasting = true;
+		this->updateDispersion = true;
+		this->updateFTLE = true;
+
+	}
+	if (ImGui::ColorEdit4("Max Color", (float*)&raycastingOptions->maxColor))
+	{
+		this->updateRaycasting = true;
+		this->updateDispersion = true;
+		this->updateFTLE = true;
+
+	}
+
+
+
 	if (this->raycastingOptions->fileLoaded)
 	{
 		ImGui::Text("File is loaded!");
@@ -688,13 +736,13 @@ void RenderImGuiOptions::drawRaycastingOptions()
 
 	if (raycastingOptions->isoMeasure_0 == IsoMeasure::Velocity_X_Plane)
 	{
-		if (ImGui::InputFloat("Min Value", (float*)&raycastingOptions->minVal, 1.0f))
+		if (ImGui::InputFloat("Min Value", (float*)&raycastingOptions->minVal, 0.001f,0.1f))
 		{
 			this->updateRaycasting = true;
 
 		}
 
-		if (ImGui::InputFloat("max Value", (float*)&raycastingOptions->maxVal, 1.0f))
+		if (ImGui::InputFloat("max Value", (float*)&raycastingOptions->maxVal, 0.001f, 0.1f))
 		{
 			this->updateRaycasting = true;
 
@@ -1189,26 +1237,11 @@ void RenderImGuiOptions::drawDataset()
 		this->solverOptions->fileChanged = true;
 		switch (dataset)
 		{
-			case Dataset::Dataset::MOTIONFIELD_KIT3:
-			{
 
-				this->solverOptions->fileName = "of_streamwise";
-				this->solverOptions->filePath = "F:\\Dataset\\KIT3\\binary_fluc_z_major\\OpticalFlowPaddedStreamwise\\";
-				this->solverOptions->gridDiameter[0] = 0.4f;
-				this->solverOptions->gridDiameter[1] = 2.0f;
-				this->solverOptions->gridDiameter[2] = 7.0f;
-				this->solverOptions->gridSize[0] = 64;
-				this->solverOptions->gridSize[1] = 503;
-				this->solverOptions->gridSize[2] = 2048;
-				this->solverOptions->dt = 0.001f;
-				this->solverOptions->periodic = true;
-
-				break;
-			}
-			case Dataset::Dataset::KIT2REF:
+			case Dataset::Dataset::KIT2REF_COMP:
 			{
-				this->solverOptions->fileName = "FieldP";
-				this->solverOptions->filePath = "G:\\KIT2Padded\\Reference\\Padded\\";
+				this->solverOptions->fileName = "FieldComp";
+				this->solverOptions->filePath = "G:\\KIT2Padded\\OscillatingWall\\Compressed\\";
 				this->solverOptions->gridDiameter[0] = 7.854f;
 				this->solverOptions->gridDiameter[1] = 2.0f;
 				this->solverOptions->gridDiameter[2] = 3.1415f;
@@ -1222,76 +1255,11 @@ void RenderImGuiOptions::drawDataset()
 				this->solverOptions->gridSize[2] = 192;
 				this->solverOptions->dt = 0.001f;
 				this->solverOptions->firstIdx = 1;
-				this->solverOptions->lastIdx = 1000;
+				this->solverOptions->lastIdx = 900;
+				this->solverOptions->Compressed = true;
 				break;			
 			}
-			case Dataset::Dataset::KIT2REF_OF_TRUNC:
-			{
-				this->solverOptions->fileName = "OF_m_stream";
-				this->solverOptions->filePath = "G:\\KIT2Padded\\Reference\\OpticalFlowTrunc\\";
-				this->solverOptions->gridDiameter[0] = 7.854f;
-				this->solverOptions->gridDiameter[1] = 2.0f;
-				this->solverOptions->gridDiameter[2] = 3.1415f;
 
-				this->solverOptions->seedBox[0] = 7.854f;
-				this->solverOptions->seedBox[1] = 2.0f;
-				this->solverOptions->seedBox[2] = 3.1415f;
-
-				this->solverOptions->gridSize[0] = 182;
-				this->solverOptions->gridSize[1] = 192;
-				this->solverOptions->gridSize[2] = 192;
-				this->solverOptions->dt = 0.001f;
-				this->solverOptions->firstIdx = 1;
-				this->solverOptions->lastIdx = 1000;
-				this->solverOptions->periodic = true;
-
-				break;
-			}
-			case Dataset::Dataset::KIT2REF_OF_FLUC_TRUNC:
-			{
-				this->solverOptions->fileName = "OF_m_stream";
-				this->solverOptions->filePath = "G:\\KIT2Padded\\Reference\\opticalFlowFluc\\";
-				this->solverOptions->gridDiameter[0] = 7.854f;
-				this->solverOptions->gridDiameter[1] = 2.0f;
-				this->solverOptions->gridDiameter[2] = 3.1415f;
-
-				this->solverOptions->seedBox[0] = 7.854f;
-				this->solverOptions->seedBox[1] = 2.0f;
-				this->solverOptions->seedBox[2] = 3.1415f;
-
-				this->solverOptions->gridSize[0] = 182;
-				this->solverOptions->gridSize[1] = 192;
-				this->solverOptions->gridSize[2] = 192;
-				this->solverOptions->dt = 0.001f;
-				this->solverOptions->firstIdx = 1;
-				this->solverOptions->lastIdx = 1000;
-				this->solverOptions->periodic = true;
-
-				break;
-			}
-
-			case Dataset::Dataset::KIT2REF_OF_PERIODIC:
-			{
-				this->solverOptions->fileName = "OF_m_stream";
-				this->solverOptions->filePath = "G:\\KIT2Padded\\Reference\\OpticalFlowTruncPeriodic\\";
-				this->solverOptions->gridDiameter[0] = 7.854f;
-				this->solverOptions->gridDiameter[1] = 2.0f;
-				this->solverOptions->gridDiameter[2] = 3.1415f;
-
-				this->solverOptions->seedBox[0] = 7.854f;
-				this->solverOptions->seedBox[1] = 2.0f;
-				this->solverOptions->seedBox[2] = 3.1415f;
-
-				this->solverOptions->gridSize[0] = 192;
-				this->solverOptions->gridSize[1] = 192;
-				this->solverOptions->gridSize[2] = 192;
-				this->solverOptions->dt = 0.001f;
-				this->solverOptions->firstIdx = 1;
-				this->solverOptions->lastIdx = 1000;
-				this->solverOptions->periodic = true;
-
-				break;
-			}
 			case Dataset::Dataset::KIT2OW:
 			{
 				this->solverOptions->fileName = "FieldP";
@@ -1310,7 +1278,8 @@ void RenderImGuiOptions::drawDataset()
 				this->solverOptions->dt = 0.001f;
 				this->solverOptions->firstIdx = 1;
 				this->solverOptions->lastIdx = 1000;
-				break;			}
+				break;			
+			}
 			case Dataset::Dataset::KIT2BF:
 			{
 				this->solverOptions->fileName = "FieldP";
@@ -1329,8 +1298,9 @@ void RenderImGuiOptions::drawDataset()
 				this->solverOptions->dt = 0.001f;
 				this->solverOptions->firstIdx = 1;
 				this->solverOptions->lastIdx = 1000;
-				break;			}
-			case Dataset::Dataset::KIT3:
+				break;			
+			}
+			case Dataset::Dataset::KIT3_FLUC:
 			{
 				this->solverOptions->fileName = "FieldP";
 				this->solverOptions->filePath = "F:\\Dataset\\KIT3\\binary_fluc_z_major\\Padded\\";
@@ -1350,96 +1320,10 @@ void RenderImGuiOptions::drawDataset()
 
 			}
 
-			case Dataset::Dataset::KIT3FAST:
-			{
-				this->solverOptions->fileName = "FieldP";
-				this->solverOptions->filePath = "G:\\MinimalStreamwise\\Fluc_Z_major_Padded\\";
-				this->solverOptions->gridDiameter[0] = 0.4f;
-				this->solverOptions->gridDiameter[1] = 2.0f;
-				this->solverOptions->gridDiameter[2] = 7.0f;
-
-				this->solverOptions->seedBox[0] = 0.4f;
-				this->solverOptions->seedBox[1] = 2.0f;
-				this->solverOptions->seedBox[2] = 7.0f;
-
-				this->solverOptions->gridSize[0] = 64;
-				this->solverOptions->gridSize[1] = 503;
-				this->solverOptions->gridSize[2] = 2048;
-				this->solverOptions->dt = 0.001f;
-				break;
-
-			}
-
-			case Dataset::Dataset::KIT3_MIPMAP:
-			{
-				this->solverOptions->fileName = "FieldP";
-				this->solverOptions->filePath = "G:\\KIT3_ZMajor_MipMapL1_Padded\\Padded\\";
-				this->solverOptions->gridDiameter[0] = 0.4f;
-				this->solverOptions->gridDiameter[1] = 2.0f;
-				this->solverOptions->gridDiameter[2] = 7.0f;
-				this->solverOptions->gridSize[0] = 32;
-				this->solverOptions->gridSize[1] = 251;
-				this->solverOptions->gridSize[2] = 1024;
-				this->solverOptions->dt = 0.001f;
-				break;
-
-			}
-
-			case Dataset::Dataset::KIT3_OF_MIPMAP:
-			{
-				this->solverOptions->fileName = "OF_m_stream";
-				this->solverOptions->filePath = "G:\\KIT3_ZMajor_MipMapL1_Padded\\opticalFlow\\";
-				this->solverOptions->gridDiameter[0] = 0.4f;
-				this->solverOptions->gridDiameter[1] = 2.0f;
-				this->solverOptions->gridDiameter[2] = 7.0f;
-				this->solverOptions->gridSize[0] = 32;
-				this->solverOptions->gridSize[1] = 251;
-				this->solverOptions->gridSize[2] = 1024;
-				this->solverOptions->dt = 0.001f;
-				this->solverOptions->periodic = true;
-
-				break;
-
-			}
-
-			case Dataset::Dataset::MOTIONFIELD_KIT3_PERIODIC:
-			{
-				this->solverOptions->fileName = "OF_m_stream";
-				this->solverOptions->filePath = "G:\\KIT3_ZMajor_MipMapL1_Padded\\OpticalFlowPeriodic\\";
-				this->solverOptions->gridDiameter[0] = 0.4f;
-				this->solverOptions->gridDiameter[1] = 2.0f;
-				this->solverOptions->gridDiameter[2] = 7.0f;
-				this->solverOptions->gridSize[0] = 32;
-				this->solverOptions->gridSize[1] = 251;
-				this->solverOptions->gridSize[2] = 1024;
-				this->solverOptions->dt = 1.0f;
-				this->solverOptions->periodic = true;
-
-				break;
-
-			}
-
-			case Dataset::Dataset::ENSTROPHY_OF_KIT3:
-			{
-				this->solverOptions->fileName = "OF_m_stream";
-				this->solverOptions->filePath = "G:\\KIT3_ZMajor_MipMapL1_Padded\\EnstophyOF\\";
-				this->solverOptions->gridDiameter[0] = 0.4f;
-				this->solverOptions->gridDiameter[1] = 2.0f;
-				this->solverOptions->gridDiameter[2] = 7.0f;
-				this->solverOptions->gridSize[0] = 32;
-				this->solverOptions->gridSize[1] = 251;
-				this->solverOptions->gridSize[2] = 1024;
-				this->solverOptions->dt = 0.001f;
-				this->solverOptions->periodic = true;
-
-				break;
-
-			}
-
 			case Dataset::Dataset::KIT3_COMPRESSED:
 			{
 				this->solverOptions->fileName = "FieldComp";
-				this->solverOptions->filePath = "G:\\KIT3Compressed\\Compressed\\";
+				this->solverOptions->filePath = "G:\\KIT3FluctuationCompressed\\Compressed\\";
 				this->solverOptions->gridDiameter[0] = 0.4f;
 				this->solverOptions->gridDiameter[1] = 2.0f;
 				this->solverOptions->gridDiameter[2] = 7.0f;
@@ -1454,15 +1338,179 @@ void RenderImGuiOptions::drawDataset()
 				this->solverOptions->dt = 0.001f;
 				this->solverOptions->periodic = true;
 				this->solverOptions->Compressed = true;
+				this->solverOptions->maxSize = 64000000;
+				break;
+
+			}
+
+			case Dataset::Dataset::KIT3_INITIAL_COMPRESSED:
+			{
+				this->solverOptions->fileName = "FieldComp";
+				this->solverOptions->filePath = "G:\\KIT3InitialCompressed\\";
+				this->solverOptions->gridDiameter[0] = 0.4f;
+				this->solverOptions->gridDiameter[1] = 2.0f;
+				this->solverOptions->gridDiameter[2] = 7.0f;
+
+				this->solverOptions->seedBox[0] = 0.4f;
+				this->solverOptions->seedBox[1] = 2.0f;
+				this->solverOptions->seedBox[2] = 7.0f;
+
+				this->solverOptions->gridSize[0] = 64;
+				this->solverOptions->gridSize[1] = 503;
+				this->solverOptions->gridSize[2] = 2048;
+				this->solverOptions->dt = 0.001f;
+				this->solverOptions->periodic = true;
+				this->solverOptions->Compressed = true;
+				this->solverOptions->maxSize = 96000000;
 
 				break;
 
 			}
 
-			case Dataset::Dataset::KIT2_COMPRESSED_REF:
+			case Dataset::Dataset::KIT3_OF_COMPRESSED:
 			{
 				this->solverOptions->fileName = "FieldComp";
-				this->solverOptions->filePath = "G:\\KIT2Padded\\Reference\\Compressed\\";
+				this->solverOptions->filePath = "G:\\KIT3Initial_OF_Compressed\\";
+				this->solverOptions->gridDiameter[0] = 0.4f;
+				this->solverOptions->gridDiameter[1] = 2.0f;
+				this->solverOptions->gridDiameter[2] = 7.0f;
+
+				this->solverOptions->seedBox[0] = 0.4f;
+				this->solverOptions->seedBox[1] = 2.0f;
+				this->solverOptions->seedBox[2] = 7.0f;
+
+				this->solverOptions->gridSize[0] = 64;
+				this->solverOptions->gridSize[1] = 503;
+				this->solverOptions->gridSize[2] = 2048;
+				this->solverOptions->dt = 0.001f;
+				this->solverOptions->periodic = true;
+				this->solverOptions->Compressed = true;
+				this->solverOptions->maxSize = 96000000;
+
+				break;
+
+			}
+
+			case Dataset::Dataset::RBC:
+			{
+				this->solverOptions->fileName = "Field";
+				this->solverOptions->filePath = "E:\\TUI_RBC_Small\\tui_ra1e5\\";
+				this->solverOptions->gridDiameter[0] = 5.0f;
+				this->solverOptions->gridDiameter[1] = 1.0f;
+				this->solverOptions->gridDiameter[2] = 5.0f;
+
+				this->solverOptions->seedBox[0] = 5.0f;
+				this->solverOptions->seedBox[1] = 1.0f;
+				this->solverOptions->seedBox[2] = 5.0f;
+
+				this->solverOptions->gridSize[0] = 1024;
+				this->solverOptions->gridSize[1] = 32;
+				this->solverOptions->gridSize[2] = 1024;
+				this->solverOptions->dt = 0.01f;
+				this->solverOptions->periodic = false;
+				this->solverOptions->Compressed = false;
+
+				break;
+
+			}
+
+
+			case Dataset::Dataset::RBC_AVG:
+			{
+				this->solverOptions->fileName = "Field_AVG";
+				this->solverOptions->filePath = "E:\\TUI_RBC_Small\\timeAVG\\";
+				this->solverOptions->gridDiameter[0] = 5.0f;
+				this->solverOptions->gridDiameter[1] = 1.0f;
+				this->solverOptions->gridDiameter[2] = 5.0f;
+
+				this->solverOptions->seedBox[0] = 5.0f;
+				this->solverOptions->seedBox[1] = 1.0f;
+				this->solverOptions->seedBox[2] = 5.0f;
+
+				this->solverOptions->gridSize[0] = 1024;
+				this->solverOptions->gridSize[1] = 32;
+				this->solverOptions->gridSize[2] = 1024;
+				this->solverOptions->dt = 0.01f;
+				this->solverOptions->periodic = false;
+				this->solverOptions->Compressed = false;
+
+				break;
+
+			}
+
+			case Dataset::Dataset::RBC_OF:
+			{
+				this->solverOptions->fileName = "OF_temperature";
+				this->solverOptions->filePath = "E:\\TUI_RBC_Small\\OF\\";
+				this->solverOptions->gridDiameter[0] = 5.0f;
+				this->solverOptions->gridDiameter[1] = 1.0f;
+				this->solverOptions->gridDiameter[2] = 5.0f;
+
+				this->solverOptions->seedBox[0] = 5.0f;
+				this->solverOptions->seedBox[1] = 1.0f;
+				this->solverOptions->seedBox[2] = 5.0f;
+
+				this->solverOptions->gridSize[0] = 1024;
+				this->solverOptions->gridSize[1] = 32;
+				this->solverOptions->gridSize[2] = 1024;
+				this->solverOptions->dt = 0.01f;
+				this->solverOptions->periodic = false;
+				this->solverOptions->Compressed = false;
+
+				break;
+
+			}
+
+
+			case Dataset::Dataset::RBC_AVG_OF_600:
+			{
+				this->solverOptions->fileName = "Field_OF_AVG600_";
+				this->solverOptions->filePath = "E:\\TUI_RBC_Small\\timeAVG\\";
+				this->solverOptions->gridDiameter[0] = 5.0f;
+				this->solverOptions->gridDiameter[1] = 1.0f;
+				this->solverOptions->gridDiameter[2] = 5.0f;
+
+				this->solverOptions->seedBox[0] = 5.0f;
+				this->solverOptions->seedBox[1] = 1.0f;
+				this->solverOptions->seedBox[2] = 5.0f;
+
+				this->solverOptions->gridSize[0] = 1024;
+				this->solverOptions->gridSize[1] = 32;
+				this->solverOptions->gridSize[2] = 1024;
+				this->solverOptions->dt = 0.01f;
+				this->solverOptions->periodic = false;
+				this->solverOptions->Compressed = false;
+
+				break;
+
+			}
+
+			case Dataset::Dataset::RBC_AVG500:
+			{
+				this->solverOptions->fileName = "Field_AVG500_";
+				this->solverOptions->filePath = "E:\\TUI_RBC_Small\\timeAVG\\";
+				this->solverOptions->gridDiameter[0] = 5.0f;
+				this->solverOptions->gridDiameter[1] = 1.0f;
+				this->solverOptions->gridDiameter[2] = 5.0f;
+
+				this->solverOptions->seedBox[0] = 5.0f;
+				this->solverOptions->seedBox[1] = 1.0f;
+				this->solverOptions->seedBox[2] = 5.0f;
+
+				this->solverOptions->gridSize[0] = 1024;
+				this->solverOptions->gridSize[1] = 32;
+				this->solverOptions->gridSize[2] = 1024;
+				this->solverOptions->dt = 0.01f;
+				this->solverOptions->periodic = false;
+				this->solverOptions->Compressed = false;
+
+				break;
+
+			}
+			case Dataset::Dataset::TEST_FIELD:
+			{
+				this->solverOptions->fileName = "Field";
+				this->solverOptions->filePath = "D:\\VelocityFieldGen\\";
 				this->solverOptions->gridDiameter[0] = 7.854f;
 				this->solverOptions->gridDiameter[1] = 2.0f;
 				this->solverOptions->gridDiameter[2] = 3.1415f;
@@ -1471,18 +1519,17 @@ void RenderImGuiOptions::drawDataset()
 				this->solverOptions->seedBox[1] = 2.0f;
 				this->solverOptions->seedBox[2] = 3.1415f;
 
-				this->solverOptions->gridSize[0] = 192;
-				this->solverOptions->gridSize[1] = 192;
-				this->solverOptions->gridSize[2] = 192;
+				this->solverOptions->gridSize[0] = 64;
+				this->solverOptions->gridSize[1] = 503;
+				this->solverOptions->gridSize[2] = 2048;
 				this->solverOptions->dt = 0.001f;
-				this->solverOptions->firstIdx = 1;
-				this->solverOptions->lastIdx = 1000;
-				this->solverOptions->Compressed = true;
 				this->solverOptions->periodic = true;
+				this->solverOptions->Compressed = false;
 
 				break;
 
 			}
+
 
 		}
 	}

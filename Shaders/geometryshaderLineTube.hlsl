@@ -6,8 +6,9 @@ cbuffer GS_CBuffer
 	float3 viewDir;
 	float tubeRadius;
 	float3 eyePos;
-	float size;
-
+	int projection;
+	float3 gridDiameter;
+	bool periodicity;
 };
 
 
@@ -20,7 +21,9 @@ struct GS_INPUT
 	unsigned int inLineID : LINEID;
 	float inMeasure : MEASURE;
 	float3 inNormal : NORMAL;
+	float3 inInitial : INITIALPOS;
 };
+
 struct GS_OUTPUT
 {
 
@@ -33,11 +36,67 @@ struct GS_OUTPUT
 
 
 
-
 // The plane is to calculate vertices and then transform them in the camera coordinate
 [maxvertexcount(18)]
 void main(lineadj GS_INPUT input[4], inout TriangleStream<GS_OUTPUT> output)
 {
+
+
+	float3 pos0 = input[0].inPosition - (gridDiameter /2);
+	float3 pos1 = input[1].inPosition - (gridDiameter / 2);
+	float3 pos2 = input[2].inPosition - (gridDiameter / 2);
+	float3 pos3 = input[3].inPosition - (gridDiameter / 2);
+
+	switch (projection)
+	{
+	case(1):
+	{
+		 pos0.x = input[0].inInitial.x - (gridDiameter.x / 2);
+		 pos1.x = input[1].inInitial.x - (gridDiameter.x / 2);
+		 pos2.x = input[2].inInitial.x - (gridDiameter.x / 2);
+		 pos3.x = input[3].inInitial.x - (gridDiameter.x / 2);
+	
+		break;
+	}
+	case(2):
+	{
+		pos0.y = input[1].inInitial.y - (gridDiameter.y / 2);
+		pos1.y = input[1].inInitial.y - (gridDiameter.y / 2);
+		pos2.y = input[1].inInitial.y - (gridDiameter.y / 2);
+		pos3.y = input[1].inInitial.y - (gridDiameter.y / 2);
+		break;
+	}
+	case(3):
+	{
+		pos0.z = input[1].inInitial.z - (gridDiameter.z / 2);
+		pos1.z = input[1].inInitial.z - (gridDiameter.z / 2);
+		pos2.z = input[1].inInitial.z - (gridDiameter.z / 2);
+		pos3.z = input[1].inInitial.z - (gridDiameter.z / 2);
+		break;
+	}
+	default:
+		break;
+	}
+
+
+	// Filter periodicity
+	switch (periodicity)
+	{
+	case(false): // not periodic
+	{
+		if(abs(pos2.x) > gridDiameter.x /2 || abs(pos2.y) > gridDiameter.y / 2 || abs(pos2.z) > gridDiameter.z / 2)
+		{
+			pos1 = pos0;
+			pos2 = pos0;
+		}
+
+		break;
+	}
+	case(true): // periodic
+	{
+		break;
+	}
+	}
 
 
 	if (input[1].inLineID == input[2].inLineID)
@@ -67,21 +126,21 @@ void main(lineadj GS_INPUT input[4], inout TriangleStream<GS_OUTPUT> output)
 		// for the first line segment (the line ID is different for the first two)
 		if (input[0].inLineID != input[1].inLineID)
 		{
-			tangent0 = normalize(input[2].inPosition - input[1].inPosition);
-			tangent1 = normalize(normalize(input[2].inPosition - input[1].inPosition) + normalize(input[3].inPosition - input[2].inPosition));
+			tangent0 = normalize(pos2 - pos1);
+			tangent1 = normalize(normalize(pos2 - pos1) + normalize(pos3 - pos2));
 		}
 
 		// for the last line segment (the line ID is different for the third and fourth vertex)
-		else if(input[3].inLineID != input[2].inLineID)
+		else if (input[3].inLineID != input[2].inLineID)
 		{
-			tangent0 = normalize(normalize(input[1].inPosition - input[0].inPosition) + normalize(input[2].inPosition - input[1].inPosition));
-			tangent1 = normalize(normalize(input[2].inPosition - input[1].inPosition));
+			tangent0 = normalize(normalize(pos1 - pos0) + normalize(pos2 - pos1));
+			tangent1 = normalize(normalize(pos2 - pos1));
 		}
 		else
 		{
-			tangent0 = normalize(normalize(input[1].inPosition - input[0].inPosition) + normalize(input[2].inPosition - input[1].inPosition));
-			tangent1 = normalize(normalize(input[2].inPosition - input[1].inPosition) + normalize(input[3].inPosition - input[2].inPosition));		
-	
+			tangent0 = normalize(normalize(pos1 - pos0) + normalize(pos2 - pos1));
+			tangent1 = normalize(normalize(pos2 - pos1) + normalize(pos3 - pos2));
+
 		}
 
 		float3 tangent = normalize(tangent0 + tangent1);
@@ -100,8 +159,8 @@ void main(lineadj GS_INPUT input[4], inout TriangleStream<GS_OUTPUT> output)
 			orient1_rotated = orient1_rotated * cosine + cross(tangent1, orient1_rotated) * sine;
 
 
-			float3 position0 = input[1].inPosition + orient0_rotated * tubeRad;
-			float3 position1 = input[2].inPosition + orient1_rotated * tubeRad;
+			float3 position0 = pos1 + orient0_rotated * tubeRad;
+			float3 position1 = pos2 + orient1_rotated * tubeRad;
 
 			// SV_POSITION
 			// SV_POSITION
@@ -116,7 +175,7 @@ void main(lineadj GS_INPUT input[4], inout TriangleStream<GS_OUTPUT> output)
 			// Normals
 			vertex0.outNormal = -orient0_rotated;
 			vertex1.outNormal = -orient1_rotated;
-			
+
 			// Colors
 			vertex0.outMeasure = input[1].inMeasure;
 			vertex1.outMeasure = input[2].inMeasure;
@@ -135,7 +194,8 @@ void main(lineadj GS_INPUT input[4], inout TriangleStream<GS_OUTPUT> output)
 		}
 
 		output.RestartStrip();
-	}		
+	}
+
 }
 
 

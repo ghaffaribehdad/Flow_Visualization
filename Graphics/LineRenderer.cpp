@@ -11,7 +11,7 @@ bool LineRenderer::setShaders(D3D11_PRIMITIVE_TOPOLOGY Topology)
 	this->deviceContext->VSSetShader(vertexshader.GetShader(), NULL, 0);			// set vertex shader
 	this->deviceContext->PSSetShader(pixelshader.GetShader(), NULL, 0);		
 	this->deviceContext->GSSetShader(geometryshader.GetShader(), NULL, 0);
-	this->deviceContext->OMSetBlendState(this->blendState.Get(), NULL, 0xFFFFFFFF);
+	//this->deviceContext->OMSetBlendState(this->blendState.Get(), NULL, 0xFFFFFFFF);
 
 
 	return true;
@@ -92,9 +92,10 @@ bool LineRenderer::initializeShaders()
 		D3D11_INPUT_CLASSIFICATION::D3D11_INPUT_PER_VERTEX_DATA,0},
 		{"MEASURE",0,DXGI_FORMAT::DXGI_FORMAT_R32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,
 		D3D11_INPUT_CLASSIFICATION::D3D11_INPUT_PER_VERTEX_DATA,0},
-		{"Normal",0,DXGI_FORMAT::DXGI_FORMAT_R32G32B32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,\
+		{"NORMAL",0,DXGI_FORMAT::DXGI_FORMAT_R32G32B32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,
+		D3D11_INPUT_CLASSIFICATION::D3D11_INPUT_PER_VERTEX_DATA,0},
+		{"INITIALPOS",0,DXGI_FORMAT::DXGI_FORMAT_R32G32B32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,
 		D3D11_INPUT_CLASSIFICATION::D3D11_INPUT_PER_VERTEX_DATA,0}
-
 	};
 	UINT numElements = ARRAYSIZE(layout);
 
@@ -151,6 +152,11 @@ void LineRenderer::cleanPipeline()
 	this->deviceContext->GSSetShader(NULL, NULL, 0);
 }
 
+bool LineRenderer::releaseScene()
+{
+	this->vertexBuffer.Get()->Release();
+	return true;
+}
 
 
 

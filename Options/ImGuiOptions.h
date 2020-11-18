@@ -37,42 +37,38 @@ namespace Dataset
 	enum Dataset
 	{
 		NONE = 0,
-		KIT2REF,
-		KIT2REF_OF_TRUNC,
-		KIT2REF_OF_FLUC_TRUNC,
-		KIT2REF_OF_PERIODIC,
-		KIT2BF,
+		KIT2REF_COMP,
 		KIT2OW,
-		KIT3,
+		KIT2BF,
+		KIT3_FLUC,
 		KIT3_COMPRESSED,
-		KIT2_COMPRESSED_REF,
-		KIT3FAST,
-		KIT3_MIPMAP,
-		KIT3_OF_MIPMAP,
-		MOTIONFIELD_KIT3,
-		MOTIONFIELD_KIT3_PERIODIC,
-		ENSTROPHY_OF_KIT3,
+		KIT3_INITIAL_COMPRESSED,
+		KIT3_OF_COMPRESSED,
+		RBC,
+		RBC_AVG,
+		RBC_OF,
+		RBC_AVG_OF_600,
+		RBC_AVG500,
+		TEST_FIELD,
 		COUNT
 	};
 
 	static const char* datasetList[]
 	{
 		"None",
-		"KIT2 Ref",
-		"KIT2 Ref OF Trunc",
-		"KIT2 Ref OF Fluc Trunc",
-		"KIT2 Ref OF  PRIODIC",
-		"KIT2 Virtual Body",
+		"KIT2 Ref Compressed",
 		"KIT2 Oscillating Wall",
-		"KIT3",
-		"KIT3 Compressed",
-		"KIT2 Compressed Ref",
-		"KIT3 Fast",
-		"KIT3 MipmapL1",
-		"KIT3 Mipmap_of",
-		"Motion Field KIT3",
-		"Motion Field KIT3 Periodic",
-		"Enstrophy OF"
+		"KIT2 Virtual Body",
+		"KIT3 Fluctuation",
+		"KIT3 Fluc. Comp.",
+		"KIT3 Initial Comp.",
+		"KIT3 OF Comp.",
+		"RBC",
+		"RBC_AVG",
+		"RBC OF",
+		"RBC_AVG_OF_600",
+		"RBC_AVG500",
+		"Test Field"
 	};
 
 }
@@ -176,13 +172,7 @@ static const char* const SeedPatternList[] =
 	"Tilted Plane"
 };
 
-static const char* const ProjectionList[] = 
-{ 
-	"None",
-	"ZY-Plane",
-	"XZ-Plane", 
-	"XY-Plane"
-};
+
 
 
 
@@ -200,11 +190,22 @@ static const char* const heightMode[] =
 };
 
 
-
-enum Projection
+namespace Projection
 {
-	NO_PROJECTION =0,
-	ZY_PROJECTION,
-	XZ_PROJECTION,
-	XY_PROJECTION
-};
+	static const char* const ProjectionList[] =
+	{
+		"None",
+		"ZY-Plane",
+		"XZ-Plane",
+		"XY-Plane",
+	};
+
+	enum Projection
+	{
+		NO_PROJECTION = 0,
+		ZY_PROJECTION,
+		XZ_PROJECTION,
+		XY_PROJECTION,
+		COUNT
+	};
+}

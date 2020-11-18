@@ -945,10 +945,34 @@ inline __host__ __device__ float3 floor(const float3 v)
 }
 
 
-__device__ __host__ inline float3 world2Tex(const float3& position, const float3& dimension, const int3& size)
+__device__ __host__ inline float3 world2Tex(const float3& position, const float3& dimension, const int3& size, bool noormalized = false)
 {
-	return (position / dimension) * size;
+
+	// BUG(?): the periodic (wrap) address mode does not work propertly with unnormalized coordinate 
+	//float3 pos = {
+	//fmodf(position.x, dimension.x),
+	//fmodf(position.y, dimension.x),
+	//fmodf(position.z, dimension.z)
+	//};
+	//if (position.x < 0)
+	//{
+	//	pos.x += dimension.x;
+	//}
+	//if (position.y < 0)
+	//{
+	//	pos.y += dimension.y;
+	//}
+	//if (position.z < 0)
+	//{
+	//	pos.z += dimension.z;
+	//}
+
+	if (noormalized)
+		return (position / dimension);
+
+	return (position / dimension) *size;
 }
+
 
 __device__ __host__ inline float3 saturateRGB(const float3 & rgb, const float & saturate)
 {
@@ -1020,8 +1044,9 @@ inline __device__ float4 cubicTex3DSimple(cudaTextureObject_t tex, float3 coord)
 			{
 				float bsplineXYZ = bspline(x - fraction.x) * bsplineYZ;
 				float u = index.x + x;
+		
 				result = result + bsplineXYZ * tex3D<float4>(tex, u, v, w);
-				
+
 			}
 		}
 	}

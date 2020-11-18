@@ -11,8 +11,24 @@ class StreaklineRenderer :public LineRenderer
 private:
 
 	StreaklineSolver streaklineSolver;
+	int streakCounter = 0;
 
 public:
+
+	virtual bool release() override
+	{
+
+
+		if (!this->releaseScene())
+			return false;
+		if (!this->streaklineSolver.release())
+			return false;
+		streakCounter = 0;
+		return true;
+
+
+	}
+
 
 	virtual void show(RenderImGuiOptions* renderImGuiOptions)
 	{
@@ -23,9 +39,15 @@ public:
 			{
 			case(DrawMode::DrawMode::REALTIME):
 			{
+
 				if (!solverOptions->drawComplete)
 				{
-					this->updateDraw();
+					this->updateSceneRealtime();
+				}
+				if (renderImGuiOptions->updateStreaklines)
+				{
+					this->resetRealtime();
+					renderImGuiOptions->updateStreaklines = false;
 				}
 				break;
 			}
@@ -42,6 +64,12 @@ public:
 		}
 	}
 
+
+	void resetRealtime() override
+	{
+		streakCounter = 0;
+		this->streaklineSolver.resetRealtime();
+	}
 
 	bool updateScene()
 	{
@@ -73,35 +101,46 @@ public:
 	}
 
 
-	bool updateDraw()
+	bool updateSceneRealtime()
 	{
 
 
-		if (solverOptions->counter == 0)
+		if (streakCounter == 0)
 		{
-			this->vertexBuffer.Get()->Release();
-			HRESULT hr = this->vertexBuffer.Initialize(this->device, NULL, solverOptions->lineLength * solverOptions->lines_count);
-			if (FAILED(hr))
-			{
-				ErrorLogger::Log(hr, "Failed to Create Vertex Buffer.");
-				return false;
-			}
 
-			this->solverOptions->p_vertexBuffer = this->vertexBuffer.Get();
-			this->streaklineSolver.Initialize(solverOptions);
-			this->streaklineSolver.initializeRealtime();
+			this->initializeRealtime();
 		}
 		else
 		{
 			this->streaklineSolver.Reinitialize();
 		}
-		this->streaklineSolver.solveRealtime();
+		this->streaklineSolver.solveRealtime(streakCounter);
 		this->streaklineSolver.FinalizeCUDA();
 
 		return true;
 	}
 
 
+
+	bool initializeRealtime()
+	{
+		this->vertexBuffer.Get()->Release();
+		HRESULT hr = this->vertexBuffer.Initialize(this->device, NULL, solverOptions->lineLength * solverOptions->lines_count);
+		if (FAILED(hr))
+		{
+			ErrorLogger::Log(hr, "Failed to Create Vertex Buffer.");
+			return false;
+		}
+
+		this->solverOptions->p_vertexBuffer = this->vertexBuffer.Get();
+
+		if (!this->streaklineSolver.initializeRealtime(solverOptions))
+		{
+			return false;
+		}
+
+		return true;
+	}
 
 
 
@@ -137,9 +176,9 @@ public:
 
 			this->counter++;
 
-			if (counter == solverOptions->lineLength)
+			if (streakCounter == solverOptions->lineLength)
 			{
-				counter = 0;
+				resetRealtime();
 			}
 
 			break;
@@ -155,9 +194,9 @@ public:
 
 			this->counter++;
 
-			if (counter == solverOptions->lineLength - renderingOptions->lineLength)
+			if (streakCounter == solverOptions->lineLength - renderingOptions->lineLength)
 			{
-				counter = 0;
+				streakCounter = 0;
 			}
 
 
@@ -212,7 +251,11 @@ public:
 		GS_constantBuffer.data.eyePos = camera.GetPositionFloat3();
 		GS_constantBuffer.data.tubeRadius = renderingOptions->tubeRadius;
 		GS_constantBuffer.data.viewDir = camera.GetViewVector();
-
+		GS_constantBuffer.data.projection = solverOptions->projection;
+		GS_constantBuffer.data.gridDiameter.x = solverOptions->gridDiameter[0];
+		GS_constantBuffer.data.gridDiameter.y = solverOptions->gridDiameter[1];
+		GS_constantBuffer.data.gridDiameter.z = solverOptions->gridDiameter[2];
+		GS_constantBuffer.data.periodicity = solverOptions->periodic;
 
 		PS_constantBuffer.data.minMeasure = renderingOptions->minMeasure;
 		PS_constantBuffer.data.maxMeasure = renderingOptions->maxMeasure;

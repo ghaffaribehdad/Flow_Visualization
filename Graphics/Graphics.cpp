@@ -75,7 +75,10 @@ void Graphics::RenderFrame()
 	this->deviceContext->ClearDepthStencilView(this->depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);// Clear the depth stencil view
 	this->deviceContext->OMSetDepthStencilState(this->depthStencilState.Get(), 0);	// add depth  stencil state to rendering routin
 
-	/*
+
+
+
+		/*
 
 	##############################################################
 	##															##
@@ -84,17 +87,44 @@ void Graphics::RenderFrame()
 	##############################################################
 
 	*/
-	volumeBox				.show(&renderImGuiOptions,solverOptions.gridDiameter);		// Show Volume Box
-	seedBox					.show(&renderImGuiOptions,solverOptions.seedBox,solverOptions.seedBoxPos);		// Show Seed Box
-	streamlineRenderer		.show(&renderImGuiOptions);		// Streamline rendering
-	streaklineRenderer		.show(&renderImGuiOptions);		// Streakline rendering
-	pathlineRenderer		.show(&renderImGuiOptions);		// Pathline rendering
-	raycasting				.show(&renderImGuiOptions);		// Raycasting 
-	dispersionTracer		.show(&renderImGuiOptions); 	// Heightfield Rendering
-	crossSection			.show(&renderImGuiOptions);		// Cross Section rendering
-	heightfieldFTLE			.show(&renderImGuiOptions);		// Heightfield Rendering FTLE
-	fluctuationHeightfield	.show(&renderImGuiOptions);		// Fluctuation Heightfield
-	timeSpacefield			.show(&renderImGuiOptions);		// Time Space raycasting
+
+
+	volumeBox.show(&renderImGuiOptions, solverOptions.gridDiameter);		// Show Volume Box
+	seedBox.show(&renderImGuiOptions, solverOptions.seedBox, solverOptions.seedBoxPos);		// Show Seed Box
+
+
+
+
+
+	if (!renderImGuiOptions.pauseRendering)
+	{
+		raycasting.show(&renderImGuiOptions);				// Raycasting 
+		streamlineRenderer.show(&renderImGuiOptions);		// Streamline rendering
+		streaklineRenderer.show(&renderImGuiOptions);		// Streakline rendering
+		pathlineRenderer.show(&renderImGuiOptions);			// Pathline rendering
+		dispersionTracer.show(&renderImGuiOptions); 		// Heightfield Rendering
+		crossSection.show(&renderImGuiOptions);				// Cross Section rendering
+		heightfieldFTLE.show(&renderImGuiOptions);			// Heightfield Rendering FTLE
+		fluctuationHeightfield.show(&renderImGuiOptions);	// Fluctuation Heightfield
+		timeSpacefield.show(&renderImGuiOptions);			// Time Space raycasting
+	}
+
+	/*
+	##############################################################
+	##															##
+	##						Take Screenshots					##
+	##															##
+	##############################################################
+
+	*/
+
+	if (renderImGuiOptions.saveScreenshot && !renderImGuiOptions.saved)
+	{
+		std::string fullName = dispersionOptions.filePath + dispersionOptions.fileName + std::to_string(solverOptions.currentIdx) + std::string(".jpg");
+		this->saveTextureJPEG(getBackBuffer(), fullName);
+		renderImGuiOptions.saved = true;
+	}
+
 
 	/*
 
@@ -115,27 +145,6 @@ void Graphics::RenderFrame()
 		this->seedBox.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_LINELIST);
 
 	}
-
-	/*
-	##############################################################
-	##															##
-	##						Take Screenshots					##
-	##															##
-	##############################################################
-
-	*/
-
-	if (renderImGuiOptions.saveScreenshot && !renderImGuiOptions.saved)
-	{
-		std::string fullName = dispersionOptions.filePath + dispersionOptions.fileName + std::to_string(solverOptions.currentIdx) + std::string(".jpg");
-		this->saveTextureJPEG(getBackBuffer(), fullName);
-		renderImGuiOptions.saved = true;
-	}
-
-	//#############################################################
-
-
-
 	if (this->renderImGuiOptions.showStreamlines)
 	{	
 		switch (renderingOptions.renderingMode)
@@ -166,20 +175,56 @@ void Graphics::RenderFrame()
 		this->pathlineRenderer.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ);
 	}
 
-
-
 	/*
-	##############################################################
-	##															##
-	##						Dear ImGui							##
-	##															##
-	##############################################################
-	*/
+
+##############################################################
+##															##
+##							Release 						##
+##															##
+##############################################################
+
+*/
+
+	if (!renderImGuiOptions.pauseRendering)
+	{
+		if (this->renderImGuiOptions.releaseStreamlines)
+		{
+			streamlineRenderer.release();
+			this->renderImGuiOptions.releaseStreamlines = false;
+			this->solverOptions.fileLoaded = false;
+		}
+
+		if (this->renderImGuiOptions.releasePathlines)
+		{
+			pathlineRenderer.release();
+			this->renderImGuiOptions.releasePathlines = false;
+
+		}
+
+		if (this->renderImGuiOptions.releaseStreaklines)
+		{
+			streaklineRenderer.release();
+			this->renderImGuiOptions.releaseStreaklines = false;
+		}
+	}
+	/*
+##############################################################
+##															##
+##						Dear ImGui							##
+##															##
+##############################################################
+*/
 
 	renderImGuiOptions.drawOptionWindows();		// Draw Options
-	renderImGuiOptions.render();				// Render ImGui 
-
+	if (!renderImGuiOptions.hideOptions)
+	{
+		renderImGuiOptions.render();				// Render ImGui 
+	}
 	//#############################################################
+
+
+
+
 
 
 	// Present the backbuffer

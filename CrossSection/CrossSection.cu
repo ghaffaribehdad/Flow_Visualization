@@ -47,7 +47,7 @@ void CrossSection::retraceCrossSectionField()
 	this->t_volumeTexture.release();
 	this->volume_IO.readVolume(solverOptions->currentIdx);		// Read a velocity volume
 	t_volumeTexture.setField(volume_IO.getField_float());	// Pass a pointer to the Cuda volume texture
-	t_volumeTexture.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);					// Initilize the Cuda texture
+	t_volumeTexture.initialize(Array2Int3(solverOptions->gridSize), true, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);					// Initilize the Cuda texture
 
 	volume_IO.release();										// Release velocity volume from host memory
 }
@@ -163,7 +163,7 @@ template <> void CrossSection::traceCrossSectionField< CrossSectionOptionsMode::
 	this->volume_IO.readVolume(solverOptions->currentIdx);		// Read a velocity volume
 	t_volumeTexture.setField(volume_IO.getField_float());	// Pass a pointer to the Cuda volume texture
 	
-	t_volumeTexture.initialize(ARRAYTOINT3(solverOptions->gridSize), false, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);								// Initilize the Cuda texture
+	t_volumeTexture.initialize(ARRAYTOINT3(solverOptions->gridSize), true, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);								// Initilize the Cuda texture
 
 	volume_IO.release();
 
@@ -209,7 +209,7 @@ template <> void CrossSection::traceCrossSectionField< CrossSectionOptionsMode::
 
 	if (crossSectionOptions->filterMinMax)
 	{
-		t_volumeTexture.initialize(m_dimension,false,cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder,cudaFilterModePoint);
+		t_volumeTexture.initialize(m_dimension,true,cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder,cudaFilterModePoint);
 		
 		initializedFilterSurface();
 		filterExtermum();
@@ -218,13 +218,13 @@ template <> void CrossSection::traceCrossSectionField< CrossSectionOptionsMode::
 		t_volumeGradient.initialize_array(false, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
 
 		cudaDestroyTextureObject(t_volumeTexture.getTexture());
-		t_volumeTexture.initialize(m_dimension,false, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
+		t_volumeTexture.initialize(m_dimension, true, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
 
 		delete[] h_velocity;
 	}
 	else
 	{
-		t_volumeTexture.initialize(m_dimension, false, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
+		t_volumeTexture.initialize(m_dimension, true, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
 		delete[] h_velocity;
 	}
 	

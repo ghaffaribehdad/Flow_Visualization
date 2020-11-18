@@ -1,5 +1,8 @@
 #pragma once
 #include <DirectXMath.h>
+#include "../Options/ImGuiOptions.h"
+
+
 
 struct CB_VS_vertexshader
 {
@@ -9,7 +12,6 @@ struct CB_VS_vertexshader
 // 8 Bytes
 
 
-
 struct Tube_geometryShader
 {
 	DirectX::XMMATRIX View;
@@ -17,6 +19,9 @@ struct Tube_geometryShader
 	DirectX::XMFLOAT3 viewDir;
 	float tubeRadius;
 	DirectX::XMFLOAT3 eyePos;
+	int projection;
+	DirectX::XMFLOAT3 gridDiameter;
+	bool periodicity;
 };
 
 

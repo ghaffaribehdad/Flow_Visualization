@@ -102,6 +102,27 @@ protected:
 		cudaTextureAddressMode addressMode_Z = cudaAddressModeBorder
 	);
 
+
+	void loadTexture
+	(
+		SolverOptions * solverOptions,
+		VolumeTexture3D & volumeTexture,
+		const int & idx,
+		cudaTextureAddressMode addressModeX,
+		cudaTextureAddressMode addressModeY,
+		cudaTextureAddressMode addressModeZ
+	);
+
+	void loadTextureCompressed
+	(
+		SolverOptions * solverOptions,
+		VolumeTexture3D & volumeTexture,
+		const int & idx,
+		cudaTextureAddressMode addressModeX,
+		cudaTextureAddressMode addressModeY,
+		cudaTextureAddressMode addressModeZ
+	);
+	
 public:
 
 	__host__ virtual bool initialize

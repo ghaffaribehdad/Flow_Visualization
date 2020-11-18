@@ -2,7 +2,7 @@
 #include <chrono>
 
 //comment the below line to remove time lapse
-//#define CHECK_TIME
+#define CHECK_TIME
 
 #ifdef CHECK_TIME
 

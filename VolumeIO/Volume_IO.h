@@ -27,21 +27,23 @@ namespace VolumeIO
 		std::string m_fileName = "";
 		std::string m_filePath = "";
 		std::string fullName = "";
-
+		bool m_compressed = false;
+		DecompressResources decompressResources;
 		std::vector<unsigned int> index;
 		std::vector<char> buffer;
-		float* p_field = nullptr;
-
-		// Stores a pointer to the field on the GPU (device)
-		float * dp_field = nullptr;
-		size_t buffer_size = 0;
-		size_t bufferSize = 0;
+		float* p_field = nullptr;	// Stores a pointer to the field on the Hose 
+		float * dp_field = nullptr; 	// Stores a pointer to the field on the Device
 		float* planeBuffer = nullptr;
+
+
+
+		size_t buffer_size = 0;
 		SolverOptions* m_solverOptions = nullptr;
 
+
+
+
 		bool Read(std::streampos begin, size_t size);
-		
-		DecompressResources decompressResources;
 
 		
 
@@ -52,16 +54,13 @@ namespace VolumeIO
 
 		void Initialize(SolverOptions* _solverOptions);
 		void Initialize(RaycastingOptions* _raycastingOptions);
-		void Initialize(std::string _fileName, std::string _filePath);
-		void InitializeRealTime(SolverOptions* _solverOptions);
+		void InitializeBufferRealTime(SolverOptions* _solverOptions);
 
 		void setFileName(std::string _fileName);
 		void setFilePath(std::string _filePath);
-		bool isEmpty();
+		//bool isEmpty();
 
 		
-
-
 		bool readVolume(unsigned int idx);	// Generic: Read binary file with a certain index
 		bool readVolume(unsigned int idx, SolverOptions * solverOptions);	// Generic: Read binary file with a certain index
 		bool readVolume();					// Read binary file without index
@@ -97,7 +96,6 @@ namespace VolumeIO
 
 		// Clear the vector
 		void release();
-		void releaseDecompressionResources();
 		bool Read();
 		bool Read_Compressed(SolverOptions * solverOptions);
 

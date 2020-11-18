@@ -27,7 +27,8 @@ public:
 	{
 		return true;
 	}
-
+	__host__ virtual bool initializeRealtime(SolverOptions * p_solverOptions) { return true; };
+	__host__ virtual bool resetRealtime() { return true; };
 	bool FinalizeCUDA();
 
 	// Solver Parameters
@@ -35,6 +36,7 @@ public:
 
 protected:
 	
+	void releaseVolumeIO();
 	__host__ void InitializeParticles(SeedingPattern seedingPattern);
 
 	cudaGraphicsResource* cudaGraphics = NULL;
@@ -52,11 +54,11 @@ protected:
 	Particle* d_Particles = nullptr;
 	Particle* h_Particles = nullptr;
 
-	virtual void release(){}
+	virtual bool release() = 0;
 
 	void* p_VertexBuffer = NULL;
 
-	void initializeTexture
+	void loadTexture
 	(
 		SolverOptions * solverOptions,
 		VolumeTexture3D & volumeTexture,
@@ -67,7 +69,7 @@ protected:
 	);
 
 
-	void initializeTextureCompressed
+	void loadTextureCompressed
 	(
 		SolverOptions * solverOptions,
 		VolumeTexture3D & volumeTexture,

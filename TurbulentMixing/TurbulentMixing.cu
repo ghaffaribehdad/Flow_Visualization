@@ -146,11 +146,11 @@ void TurbulentMixing::create()
 
 void TurbulentMixing::advect()
 {
-	unsigned int blocks = 0;
-	dim3 thread = { maxBlockDim,maxBlockDim,1 };
+	//unsigned int blocks = 0;
+	//dim3 thread = { maxBlockDim,maxBlockDim,1 };
 
-	size_t meshSize = this->solverOptions->gridSize[1] * this->solverOptions->gridSize[2];
-	blocks = BLOCK_THREAD(meshSize);
+	//size_t meshSize = this->solverOptions->gridSize[1] * this->solverOptions->gridSize[2];
+	//blocks = BLOCK_THREAD(meshSize);
 
 	//advectTKE << < blocks, thread >> >
 	//	(

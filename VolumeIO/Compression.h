@@ -16,8 +16,8 @@ struct DecompressResources
 	GPUResources shared;
 	CompressVolumeResources res;
 	uint huffmanBits = 0;
-	void initializeDecompressResources(int3 size);
-	void releaseDecompressResources();
+	void initializeDecompressionResources(int3 size);
+	void releaseDecompressionResources();
 
 
 };

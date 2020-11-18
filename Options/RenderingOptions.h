@@ -66,12 +66,12 @@ struct RenderingOptions
 
 
 	bool isRaycasting = false;
-	float bgColor[4] = { 1.0f,1.0f,1.0f,0.0f };
+	float bgColor[4] = { 1.0f,1.0f,1.0f,1.0f };
 
 	bool showSeedBox = true;
 	bool showVolumeBox = true;
 
-	float boxRadius = 0.01f;
+	float boxRadius = 0.005f;
 	int lineLength = 5;
 
 };

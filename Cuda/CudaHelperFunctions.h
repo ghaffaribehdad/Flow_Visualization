@@ -7,7 +7,16 @@
 #include "..//Raycaster/IsosurfaceHelperFunctions.h"
 #include "cuda_runtime.h"
 
-
+__device__ float3 RK4
+(
+	cudaTextureObject_t t_VelocityField_0,
+	cudaTextureObject_t t_VelocityField_1,
+	const float3 & position,
+	const float3 & gridDiameter,
+	const int3 & gridSize,
+	const float & dt,
+	const float3 & velocityScale = { 1.0f,1.0f,1.0f }
+);
 
 __device__ void	RK4Path
 (
@@ -17,7 +26,6 @@ __device__ void	RK4Path
 	float3 gridDiameter,
 	int3 gridSize,
 	float dt,
-	bool periodicity,
 	float3 velocityScale = { 1.0f,1.0f,1.0f }
 );
 
@@ -42,7 +50,6 @@ __device__ Particle RK4Streak
 	float3 gridDiameter,
 	int3 gridSize,
 	float dt,
-	bool periodicity,
 	float3 velocityScale = { 1.0f,1.0f,1.0f }
 );
 
@@ -120,6 +127,8 @@ __global__ void TracingStreak
 	bool odd,
 	int step
 );
+
+
 
 
 __global__ void TracingStreakRealTime

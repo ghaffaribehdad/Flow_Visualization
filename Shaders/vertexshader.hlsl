@@ -11,6 +11,7 @@ struct VS_INPUT
 	unsigned int inLineID : LINEID;
 	float inMeasure : MEASURE;
 	float3 inNormal : NORMAL;
+	float3 inInitialPos : INITIALPOS;
 };
 
 
@@ -21,6 +22,7 @@ struct VS_OUTPUT
 	unsigned int outLineID : LINEID;
 	float outMeasure : MEASURE;
 	float3 outNormal : NORMAL;
+	float3 outInitialPos : INITIALPOS;
 };
 
 
@@ -35,6 +37,7 @@ VS_OUTPUT main(VS_INPUT input)
 	output.outLineID = input.inLineID;
 	output.outMeasure = input.inMeasure;
 	output.outNormal = input.inNormal;
+	output.outInitialPos = input.inInitialPos;
 
     return output;
 }

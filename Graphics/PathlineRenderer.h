@@ -11,8 +11,19 @@ class PathlineRenderer :public LineRenderer
 private:
 
 	PathlineSolver pathlinesolver;
+	int pathCounter = 0;
 
 public:
+
+	virtual bool release() override
+	{
+		if (!this->releaseScene())
+			return false;
+		if (!this->pathlinesolver.release())
+			return false;
+		pathCounter = 0;
+		return true;
+	}
 
 	virtual void show(RenderImGuiOptions* renderImGuiOptions) 
 	{
@@ -25,9 +36,16 @@ public:
 
 				if (!solverOptions->drawComplete)
 				{
-					this->updateDraw();
+					this->updateSceneRealtime();
+				}
+
+				if (renderImGuiOptions->updatePathlines)
+				{
+					this->resetRealtime();
+					renderImGuiOptions->updatePathlines = false;
 				}
 				break;
+
 			}
 			default:
 			{
@@ -65,33 +83,50 @@ public:
 
 	}
 
-
-	bool updateDraw()
+	bool initializeRealtime()
 	{
-
-
-		if (solverOptions->counter == 0)
+		this->vertexBuffer.Get()->Release();
+		HRESULT hr = this->vertexBuffer.Initialize(this->device, NULL, solverOptions->lineLength * solverOptions->lines_count);
+		if (FAILED(hr))
 		{
-			this->vertexBuffer.Get()->Release();
-			HRESULT hr = this->vertexBuffer.Initialize(this->device, NULL, solverOptions->lineLength * solverOptions->lines_count);
-			if (FAILED(hr))
-			{
-				ErrorLogger::Log(hr, "Failed to Create Vertex Buffer.");
-				return false;
-			}
+			ErrorLogger::Log(hr, "Failed to Create Vertex Buffer.");
+			return false;
+		}
 
-			this->solverOptions->p_vertexBuffer = this->vertexBuffer.Get();
-			this->pathlinesolver.Initialize(solverOptions);
-			this->pathlinesolver.initializeRealtime();
+		this->solverOptions->p_vertexBuffer = this->vertexBuffer.Get();
+
+		if (!this->pathlinesolver.initializeRealtime(solverOptions))
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+
+	bool updateSceneRealtime()
+	{
+		if (pathCounter == 0)
+		{
+			this->initializeRealtime ();
 		}
 		else
 		{
 			this->pathlinesolver.Reinitialize();
 		}
-		this->pathlinesolver.solveRealtime();
+		this->pathlinesolver.solveRealtime(pathCounter);
 		this->pathlinesolver.FinalizeCUDA();
 
 		return true;
+	}
+
+
+	void resetRealtime() override
+	{
+
+		pathCounter = 0;
+		this->pathlinesolver.resetRealtime();
+
 	}
 
 	void updateBuffers() override
@@ -127,15 +162,8 @@ public:
 		{
 			for (int i = 0; i < solverOptions->lines_count; i++)
 			{
-				this->deviceContext->Draw(counter, i * solverOptions->lineLength);
+				this->deviceContext->Draw(pathCounter, i * solverOptions->lineLength);
 
-			}
-
-			this->counter++;
-
-			if (counter == solverOptions->lineLength)
-			{
-				counter = 0;
 			}
 
 			break;
@@ -207,6 +235,11 @@ public:
 		GS_constantBuffer.data.eyePos = camera.GetPositionFloat3();
 		GS_constantBuffer.data.tubeRadius = renderingOptions->tubeRadius;
 		GS_constantBuffer.data.viewDir = camera.GetViewVector();
+		GS_constantBuffer.data.projection = solverOptions->projection;
+		GS_constantBuffer.data.gridDiameter.x = solverOptions->gridDiameter[0];
+		GS_constantBuffer.data.gridDiameter.y = solverOptions->gridDiameter[1];
+		GS_constantBuffer.data.gridDiameter.z = solverOptions->gridDiameter[2];
+		GS_constantBuffer.data.periodicity = solverOptions->periodic;
 
 
 		PS_constantBuffer.data.minMeasure = renderingOptions->minMeasure;

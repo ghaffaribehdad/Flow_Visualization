@@ -3,14 +3,16 @@
 
 
 
-void PathlineSolver::release()
+bool PathlineSolver::release()
 {
+	this->volume_IO.release();
 	cudaFree(this->d_Particles);
-	cudaFree(this->d_VelocityField);
 
 
 	this->volumeTexture_0.release();
 	this->volumeTexture_1.release();
+
+	return true;
 }
 
 
@@ -51,19 +53,19 @@ __host__ bool PathlineSolver::solve()
 			{
 				if (step == 0)
 				{
-					initializeTextureCompressed(solverOptions, volumeTexture_0, solverOptions->currentIdx);
-					initializeTextureCompressed(solverOptions, volumeTexture_1, solverOptions->currentIdx + 1);
+					loadTextureCompressed(solverOptions, volumeTexture_0, solverOptions->currentIdx);
+					loadTextureCompressed(solverOptions, volumeTexture_1, solverOptions->currentIdx + 1);
 				}
 				else if (step % 2 == 0) // => EVEN
 				{
 					this->volumeTexture_1.release();
-					initializeTextureCompressed(solverOptions, volumeTexture_1, solverOptions->currentIdx + step + 1);
+					loadTextureCompressed(solverOptions, volumeTexture_1, solverOptions->currentIdx + step + 1);
 					odd = false;
 				}
 				else if (step % 2 != 0) // => ODD
 				{
 					this->volumeTexture_0.release();
-					initializeTextureCompressed(solverOptions, volumeTexture_0, solverOptions->currentIdx + step + 1);
+					loadTextureCompressed(solverOptions, volumeTexture_0, solverOptions->currentIdx + step + 1);
 					odd = true;
 
 				}
@@ -75,20 +77,20 @@ __host__ bool PathlineSolver::solve()
 			{
 				if (step == 0)
 				{
-					initializeTexture(solverOptions, volumeTexture_0, solverOptions->currentIdx);
-					initializeTexture(solverOptions, volumeTexture_1, solverOptions->currentIdx + 1);
+					loadTexture(solverOptions, volumeTexture_0, solverOptions->currentIdx);
+					loadTexture(solverOptions, volumeTexture_1, solverOptions->currentIdx + 1);
 				}
 				else if (step % 2 == 0) // => EVEN
 				{
 					this->volumeTexture_1.release();
-					initializeTexture(solverOptions, volumeTexture_1, solverOptions->currentIdx + step + 1);
+					loadTexture(solverOptions, volumeTexture_1, solverOptions->currentIdx + step + 1);
 					odd = false;
 
 				}
 				else if (step % 2 != 0) // => ODD
 				{
 					this->volumeTexture_0.release();
-					initializeTexture(solverOptions, volumeTexture_0, solverOptions->currentIdx + step + 1);
+					loadTexture(solverOptions, volumeTexture_0, solverOptions->currentIdx + step + 1);
 					odd = true;
 				}
 				break;
@@ -96,7 +98,7 @@ __host__ bool PathlineSolver::solve()
 
 		}
 	
-		int numofBlock = 0;
+		//int numofBlock = 0;
 		//cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numofBlock, TracingPath, blockDim, 0);
 		//std::printf("Optimized number of blocks are  %d \n", numofBlock);	
 
@@ -109,23 +111,27 @@ __host__ bool PathlineSolver::solve()
 	return true;
 }
 
-__host__ bool PathlineSolver::initializeRealtime()
+__host__ bool PathlineSolver::initializeRealtime(SolverOptions * p_solverOptions)
 {
-	//At least two timesteps is needed
-	this->timeSteps = solverOptions->lastIdx - solverOptions->firstIdx;
 
-	// Initialize Volume IO (Save file path and file names)
-	this->volume_IO.InitializeRealTime(this->solverOptions);
-
-	// Initialize Particles and upload it to GPU
+	this->solverOptions = p_solverOptions;
+	this->InitializeCUDA();
+	this->volume_IO.Initialize(p_solverOptions);
 	this->InitializeParticles(this->solverOptions->seedingPattern);
-
-	solverOptions->lineLength = timeSteps;
-
+	
 	return true;
 }
 
-__host__ bool PathlineSolver::solveRealtime()
+
+__host__ bool PathlineSolver::resetRealtime()
+{
+
+	this->release();
+	
+	return true;
+}
+
+__host__ bool PathlineSolver::solveRealtime(int & pathCounter)
 {
 	int blockDim = 256;
 	int thread = (this->solverOptions->lines_count / blockDim) + 1;
@@ -140,21 +146,21 @@ __host__ bool PathlineSolver::solveRealtime()
 
 	case true: // Compressed Data
 	{
-		if (solverOptions->counter == 0)
+		if (pathCounter == 0)
 		{
-			initializeTextureCompressed(solverOptions, volumeTexture_0, solverOptions->currentIdx);
-			initializeTextureCompressed(solverOptions, volumeTexture_1, solverOptions->currentIdx + 1);
+			loadTextureCompressed(solverOptions, volumeTexture_0, solverOptions->currentIdx);
+			loadTextureCompressed(solverOptions, volumeTexture_1, solverOptions->currentIdx + 1);
 		}
-		else if (this->solverOptions->counter % 2 == 0) // => EVEN
+		else if (pathCounter % 2 == 0) // => EVEN
 		{
 			this->volumeTexture_1.release();
-			initializeTextureCompressed(solverOptions, volumeTexture_1, solverOptions->currentIdx + solverOptions->counter + 1);
+			loadTextureCompressed(solverOptions, volumeTexture_1, solverOptions->currentIdx + pathCounter + 1);
 			odd = false;
 		}
-		else if (this->solverOptions->counter % 2 != 0) // => ODD
+		else if (pathCounter % 2 != 0) // => ODD
 		{
 			this->volumeTexture_0.release();
-			initializeTextureCompressed(solverOptions, volumeTexture_0, solverOptions->currentIdx + solverOptions->counter + 1);
+			loadTextureCompressed(solverOptions, volumeTexture_0, solverOptions->currentIdx + pathCounter + 1);
 			odd = true;
 
 		}
@@ -164,22 +170,22 @@ __host__ bool PathlineSolver::solveRealtime()
 
 	case false: // Uncompressed Data
 	{
-		if (solverOptions->counter == 0)
+		if (pathCounter == 0)
 		{
-			initializeTexture(solverOptions, volumeTexture_0, solverOptions->currentIdx);
-			initializeTexture(solverOptions, volumeTexture_1, solverOptions->currentIdx + 1);
+			loadTexture(solverOptions, volumeTexture_0, solverOptions->currentIdx);
+			loadTexture(solverOptions, volumeTexture_1, solverOptions->currentIdx + 1);
 		}
-		else if (solverOptions->counter % 2 == 0) // => EVEN
+		else if (pathCounter % 2 == 0) // => EVEN
 		{
 			this->volumeTexture_1.release();
-			initializeTexture(solverOptions, volumeTexture_1, solverOptions->currentIdx + solverOptions->counter + 1);
+			loadTexture(solverOptions, volumeTexture_1, solverOptions->currentIdx + pathCounter + 1);
 			odd = false;
 
 		}
-		else if (solverOptions->counter % 2 != 0) // => ODD
+		else if (pathCounter % 2 != 0) // => ODD
 		{
 			this->volumeTexture_0.release();
-			initializeTexture(solverOptions, volumeTexture_0, solverOptions->currentIdx + solverOptions->counter + 1);
+			loadTexture(solverOptions, volumeTexture_0, solverOptions->currentIdx + pathCounter + 1);
 			odd = true;
 		}
 		break;
@@ -187,23 +193,20 @@ __host__ bool PathlineSolver::solveRealtime()
 
 	}
 
-	//int numofBlock = 0;
-	//cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numofBlock, TracingPath, blockDim, 0);
-	//std::printf("Optimized number of blocks are  %d \n", numofBlock);	
-
-	TracingPath << <blockDim, thread >> > (this->d_Particles, volumeTexture_0.getTexture(), volumeTexture_1.getTexture(), *solverOptions, reinterpret_cast<Vertex*>(this->p_VertexBuffer), odd, solverOptions->counter);
-	std::printf("\n\n");
-	
-	if (solverOptions->counter == timeSteps)
+	if (pathCounter == solverOptions->lineLength)
 	{
-		solverOptions->drawComplete = true;
-		this->release();
+		resetRealtime();
+		pathCounter = 0;
+
 	}
 	else
 	{
-		solverOptions->counter++;
+		TracingPath << <blockDim, thread >> > (this->d_Particles, volumeTexture_0.getTexture(), volumeTexture_1.getTexture(), *solverOptions, reinterpret_cast<Vertex*>(this->p_VertexBuffer), odd, pathCounter);
+		std::printf("\n\n");
+		pathCounter++;
 	}
-
+	
+	solverOptions->counter = pathCounter;
 	
 	return true;
 }

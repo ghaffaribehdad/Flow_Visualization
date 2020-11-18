@@ -66,6 +66,28 @@ void Engine::Update()
 		this->gfx.viewChanged();
 	}
 
+	if (keyboard.KeyIsPressed('U'))
+	{
+		this->gfx.camera.AdjustRotation((float)1 * 0.005f, 0, 0);
+		this->gfx.viewChanged();
+	}
+	if (keyboard.KeyIsPressed('J'))
+	{
+		this->gfx.camera.AdjustRotation((float)-1 * 0.005f, 0, 0);
+		this->gfx.viewChanged();
+	}
+
+	if (keyboard.KeyIsPressed('K'))
+	{
+		this->gfx.camera.AdjustRotation(0,(float)1 * 0.005f, 0);
+		this->gfx.viewChanged();
+	}
+
+	if (keyboard.KeyIsPressed('H'))
+	{
+		this->gfx.camera.AdjustRotation(0, (float)-1 * 0.005f, 0);
+		this->gfx.viewChanged();
+	}
 
 	if (keyboard.KeyIsPressed('S'))
 	{
@@ -79,6 +101,13 @@ void Engine::Update()
 		this->gfx.viewChanged();
 
 	}
+
+	if (keyboard.KeyIsPressed((char)191))
+	{
+		this->gfx.renderImGuiOptions.hideOptions = !this->gfx.renderImGuiOptions.hideOptions;
+
+	}
+
 	if (keyboard.KeyIsPressed('D'))
 	{
 		this->gfx.camera.AdjustPosition(this->gfx.camera.GetRightVector() * cameraSpeed * dt);

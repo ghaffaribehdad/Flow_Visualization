@@ -19,18 +19,17 @@ class StreaklineSolver : public CUDASolver
 public:
 
 	__host__ bool solve();
-	__host__ bool solveRealtime();
-	__host__ void release();
-	__host__ bool initializeRealtime();
+	__host__ bool solveRealtime(int & streakCounter);
+	__host__ bool release() override;
+	__host__ bool initializeRealtime(SolverOptions * p_solverOptions);
+	__host__ virtual bool resetRealtime() override;
 
 private:
 
 
 	Particle* d_particles;
 
-	uint timeSteps = 0;
 	float* h_VelocityField;
-	float* d_VelocityField;
 
 	VolumeTexture3D volumeTexture_0;
 	VolumeTexture3D volumeTexture_1;

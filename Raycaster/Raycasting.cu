@@ -48,6 +48,55 @@ __host__ bool Raycasting::updateScene()
 
 }
 
+void Raycasting::loadTexture
+(
+	SolverOptions * solverOptions,
+	VolumeTexture3D & volumeTexture,
+	const int & idx,
+	cudaTextureAddressMode addressModeX,
+	cudaTextureAddressMode addressModeY,
+	cudaTextureAddressMode addressModeZ
+)
+{
+	// Read current volume
+	this->volume_IO.readVolume(idx);
+	// Return a pointer to volume
+	float * h_VelocityField = this->volume_IO.getField_float();
+	// set the pointer to the volume texture
+	volumeTexture.setField(h_VelocityField);
+	// initialize the volume texture
+	volumeTexture.initialize(Array2Int3(solverOptions->gridSize), false, addressModeX, addressModeY, addressModeZ);
+	// release host memory
+	volume_IO.release();
+}
+
+
+void Raycasting::loadTextureCompressed
+(
+	SolverOptions * solverOptions,
+	VolumeTexture3D & volumeTexture,
+	const int & idx,
+	cudaTextureAddressMode addressModeX,
+	cudaTextureAddressMode addressModeY,
+	cudaTextureAddressMode addressModeZ
+)
+{
+
+	Timer timer;
+
+	// Read current volume
+	this->volume_IO.readVolume(idx, solverOptions);
+	// Return a pointer to volume
+	float * h_VelocityField = this->volume_IO.getField_float_GPU();
+	// set the pointer to the volume texture
+	volumeTexture.setField(h_VelocityField);
+	// initialize the volume texture
+	TIMELAPSE(volumeTexture.initialize_devicePointer(Array2Int3(solverOptions->gridSize), false, addressModeX, addressModeY, addressModeZ), "Initialize Texture including DDCopy");
+	// release host memory
+	//volume_IO.release();
+	cudaFree(h_VelocityField);
+}
+
 __host__ bool Raycasting::resize()
 {
 	this->raycastingTexture->Release();
@@ -87,19 +136,32 @@ __host__ bool Raycasting::initialize
 	if (raycastingOptions->identicalDataset)
 	{
 		this->volume_IO.Initialize(this->solverOptions);
-		this->volume_IO.readVolume(this->solverOptions->currentIdx);
 	}
 	else
 	{
-
 		this->volume_IO.Initialize(this->raycastingOptions);
-		this->volume_IO.readVolume(this->raycastingOptions->timestep);
+	}
+
+
+	switch (solverOptions->Compressed)
+	{
+
+	case true: // Compressed Data
+	{
+		loadTextureCompressed(solverOptions, this->volumeTexture, solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
+
+		break;
+	}
+
+	case false: // Uncompressed Data
+	{
+		loadTexture(solverOptions, this->volumeTexture, solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
+		break;
+	}
 
 	}
-	float * field = volume_IO.getField_float();
-	this->volumeTexture.setField(field);
-	this->volumeTexture.initialize(Array2Int3(solverOptions->gridSize), false, addressMode_X, addressMode_Y, addressMode_Z);
-	this->volume_IO.release();
+
+	
 	this->raycastingOptions->fileLoaded = true;
 	
 
@@ -127,10 +189,24 @@ void Raycasting::updateFile
 {
 	this->volumeTexture.release();
 
-	this->volume_IO.readVolume(solverOptions->currentIdx);
-	float * field = volume_IO.getField_float();
-	this->volumeTexture.setField(field);
-	this->volumeTexture.initialize(Array2Int3(solverOptions->gridSize), false, addressMode_X, addressMode_Y, addressMode_Z);
+	switch (solverOptions->Compressed)
+	{
+
+	case true: // Compressed Data
+	{
+		loadTextureCompressed(solverOptions, this->volumeTexture, solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
+
+		break;
+	}
+
+	case false: // Uncompressed Data
+	{
+		loadTexture(solverOptions, this->volumeTexture, solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
+		break;
+	}
+
+	}
+
 
 	this->raycastingOptions->fileChanged = false;
 }
@@ -810,18 +886,36 @@ __global__ void CudaIsoSurfacRenderer_float_PlaneColor
 
 					float y_saturated = 0.0f;
 					float3 rgb = { 0,0,0 };
-					if (velocity > 0)
+					float3 rgb_complement = { 0,0,0 };
+
+
+					y_saturated = (velocity - raycastingOptions.minVal) / (raycastingOptions.maxVal - raycastingOptions.minVal);
+					y_saturated = saturate(y_saturated);
+
+					if (y_saturated > 0.5f)
 					{
-						float3 rgb_min_complement = make_float3(1, 1, 1) - rgb_min;
-						y_saturated = saturate(velocity / raycastingOptions.maxVal);
-						rgb = rgb_min_complement * (1 - y_saturated) + rgb_min;
+						rgb_complement = make_float3(1, 1, 1) - rgb_max;
+						rgb = rgb_complement * (1 - 2 *(y_saturated- 0.5)) + rgb_max;
 					}
 					else
 					{
-						float3 rgb_max_complement = make_float3(1, 1, 1) - rgb_max;
-						y_saturated = saturate(fabs(velocity / raycastingOptions.minVal));
-						rgb = rgb_max_complement * (1 - y_saturated) + rgb_max;
+						rgb_complement = make_float3(1, 1, 1) - rgb_min;
+						rgb = rgb_complement * (2 * y_saturated) + rgb_min;
 					}
+
+					
+					//if (velocity > 0)
+					//{
+					//	
+					//	y_saturated = saturate(velocity / raycastingOptions.maxVal);
+					//	rgb = rgb_min_complement * (1 - y_saturated) + rgb_min;
+					//}
+					//else
+					//{
+					//	float3 rgb_max_complement = make_float3(1, 1, 1) - rgb_max;
+					//	y_saturated = saturate(fabs(velocity / raycastingOptions.minVal));
+					//	rgb = rgb_max_complement * (1 - y_saturated) + rgb_max;
+					//}
 
 					float4 rgba = { rgb.x, rgb.y, rgb.z, depth };
 
@@ -1677,30 +1771,30 @@ bool Raycasting::initializeRasterizer()
 
 
 
-		//Create the blend state
-		D3D11_BLEND_DESC blendDesc;
-		ZeroMemory(&blendDesc, sizeof(blendDesc));
+		////Create the blend state
+		//D3D11_BLEND_DESC blendDesc;
+		//ZeroMemory(&blendDesc, sizeof(blendDesc));
 
-		D3D11_RENDER_TARGET_BLEND_DESC rtbd;
-		ZeroMemory(&rtbd, sizeof(rtbd));
+		//D3D11_RENDER_TARGET_BLEND_DESC rtbd;
+		//ZeroMemory(&rtbd, sizeof(rtbd));
 
-		rtbd.BlendEnable = true;
-		rtbd.SrcBlend = D3D11_BLEND::D3D11_BLEND_SRC_ALPHA;
-		rtbd.DestBlend = D3D11_BLEND::D3D11_BLEND_INV_SRC_ALPHA;
-		rtbd.BlendOp = D3D11_BLEND_OP::D3D11_BLEND_OP_ADD;
-		rtbd.SrcBlendAlpha = D3D11_BLEND::D3D11_BLEND_ONE;
-		rtbd.DestBlendAlpha = D3D11_BLEND::D3D11_BLEND_ZERO;
-		rtbd.BlendOpAlpha = D3D11_BLEND_OP::D3D11_BLEND_OP_ADD;
-		rtbd.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE::D3D11_COLOR_WRITE_ENABLE_ALL;
+		//rtbd.BlendEnable = true;
+		//rtbd.SrcBlend = D3D11_BLEND::D3D11_BLEND_SRC_ALPHA;
+		//rtbd.DestBlend = D3D11_BLEND::D3D11_BLEND_INV_SRC_ALPHA;
+		//rtbd.BlendOp = D3D11_BLEND_OP::D3D11_BLEND_OP_ADD;
+		//rtbd.SrcBlendAlpha = D3D11_BLEND::D3D11_BLEND_ONE;
+		//rtbd.DestBlendAlpha = D3D11_BLEND::D3D11_BLEND_ZERO;
+		//rtbd.BlendOpAlpha = D3D11_BLEND_OP::D3D11_BLEND_OP_ADD;
+		//rtbd.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE::D3D11_COLOR_WRITE_ENABLE_ALL;
 
-		blendDesc.RenderTarget[0] = rtbd;
+		//blendDesc.RenderTarget[0] = rtbd;
 
-		hr = this->device->CreateBlendState(&blendDesc, this->blendState.GetAddressOf());
-		if (FAILED(hr))
-		{
-			ErrorLogger::Log(hr, "Failed to create blend state.");
-			return false;
-		}
+		//hr = this->device->CreateBlendState(&blendDesc, this->blendState.GetAddressOf());
+		//if (FAILED(hr))
+		//{
+		//	ErrorLogger::Log(hr, "Failed to create blend state.");
+		//	return false;
+		//}
 
 	}
 

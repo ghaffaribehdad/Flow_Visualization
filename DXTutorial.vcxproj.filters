@@ -618,9 +618,6 @@
     <FxCompile Include="Shaders\vertexshaderTexture.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\pixelshaderTextureSampler_Double.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
     <FxCompile Include="Shaders\geometryShaderSphere.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>

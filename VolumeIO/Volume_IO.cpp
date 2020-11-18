@@ -57,19 +57,17 @@ float* VolumeIO::Volume_IO::getField_float_GPU()
 
 void VolumeIO::Volume_IO::release()
 {
-	this->p_field = nullptr;
-
-}
-
-
-void VolumeIO::Volume_IO::releaseDecompressionResources()
-{
-	cudaFree(dp_field);
-	this->decompressResources.releaseDecompressResources();
+	if (m_compressed)
+	{
+		cudaFree(dp_field);
+		this->decompressResources.releaseDecompressionResources();
+	}
 	this->buffer.clear();
 	this->p_field = nullptr;
-
+	this->m_compressed = false;
 }
+
+
 
 
 bool VolumeIO::Volume_IO::Read(std::streampos _begin, size_t size)
@@ -188,7 +186,7 @@ bool VolumeIO::Volume_IO::Read_Compressed(SolverOptions * solverOptions)
 	}
 	else
 	{
-		//std::printf(std::string("Successfully Open File: " + fullName + "\n").c_str());
+		std::printf(std::string("Successfully Open File: " + fullName + "\n").c_str());
 	}
 	// get the starting position
 	std::streampos start = myFile.tellg();
@@ -205,9 +203,6 @@ bool VolumeIO::Volume_IO::Read_Compressed(SolverOptions * solverOptions)
 	// size of the buffer
 	this->buffer_size = static_cast<size_t>(end - start);
 
-	// resize it to fit the dataset
-	//TIMELAPSE((this->buffer).resize(buffer_size), "Resizing Buffer");
-
 
 	//read file and store it into buffer 
 	TIMELAPSE(myFile.read(&(buffer.at(0)), buffer_size), "Reading from Disk");
@@ -215,10 +210,6 @@ bool VolumeIO::Volume_IO::Read_Compressed(SolverOptions * solverOptions)
 
 	// close the file
 	myFile.close();
-
-	// Copy the data into bitStream
-	//std::vector<uint> bitStream(buffer_size / 4);
-	//TIMELAPSE(memcpy(&bitStream[0], &buffer.at(0), buffer_size), "Converting to Uint");
 
 	int3 gridSize = { solverOptions->gridSize[0] * 4,solverOptions->gridSize[1],solverOptions->gridSize[2] };
 
@@ -241,10 +232,12 @@ void VolumeIO::Volume_IO::Initialize(SolverOptions* _solverOptions)
 {
 	m_fileName = _solverOptions->fileName;
 	m_filePath = _solverOptions->filePath;
+	m_compressed = _solverOptions->Compressed;
 
-	if (_solverOptions->Compressed)
+	if (m_compressed)
 	{
-		this->decompressResources.initializeDecompressResources({ _solverOptions->gridSize[0] * 4,_solverOptions->gridSize[1],_solverOptions->gridSize[2] });
+		this->decompressResources.initializeDecompressionResources({ _solverOptions->gridSize[0] * 4,_solverOptions->gridSize[1],_solverOptions->gridSize[2] });
+		TIMELAPSE((this->buffer).resize(_solverOptions->maxSize), "Resizing Buffer");
 	};
 
 
@@ -260,26 +253,11 @@ void VolumeIO::Volume_IO::Initialize(RaycastingOptions* _raycastingOptions)
 }
 
 
-void VolumeIO::Volume_IO::Initialize(std::string _fileName, std::string _filePath)
+void VolumeIO::Volume_IO::InitializeBufferRealTime(SolverOptions * solverOptions)
 {
-	m_fileName = _fileName;
-	m_filePath = _filePath;
+	
 
 }
 
-void VolumeIO::Volume_IO::InitializeRealTime(SolverOptions * solverOptions)
-{
-	TIMELAPSE((this->buffer).resize(solverOptions->maxSize), "Resizing Buffer");
-
-}
-
-
-
-bool VolumeIO::Volume_IO::isEmpty()
-{
-	if (p_field == nullptr)
-		return true;
-	return false;
-}
 
 

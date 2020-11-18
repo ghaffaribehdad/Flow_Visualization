@@ -99,13 +99,13 @@ __global__ void  traceDispersion3D_path
 		{
 		case EVEN: // => EVEN
 
-			RK4Path(velocityField_0, velocityField_1, &particle[index], gridDiameter, gridSize, dispersionOptions.dt,true);
+			RK4Path(velocityField_0, velocityField_1, &particle[index], gridDiameter, gridSize, dispersionOptions.dt);
 
 			break;
 
 		case ODD: // => ODD
 
-			RK4Path(velocityField_1, velocityField_0, &particle[index], gridDiameter, gridSize, dispersionOptions.dt,true);
+			RK4Path(velocityField_1, velocityField_0, &particle[index], gridDiameter, gridSize, dispersionOptions.dt);
 
 			break;
 		}

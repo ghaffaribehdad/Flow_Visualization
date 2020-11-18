@@ -88,8 +88,10 @@ public:
 	bool updateTimeSpaceField	= false;
 	bool updateShaders = false;
 
+	bool hideOptions = false;
 
-	
+
+	bool pauseRendering = false;
 	
 	bool showStreamlines				= false;
 	bool showStreaklines				= false;
@@ -101,6 +103,11 @@ public:
 	bool showTurbulentMixing			= false;
 	bool showFluctuationHeightfield		= false;
 	bool showTimeSpaceField				= false;
+
+
+	bool releaseStreamlines = false;
+	bool releaseStreaklines = false;
+	bool releasePathlines = false;
 
 
 	bool releaseTurbulentMixing = false;

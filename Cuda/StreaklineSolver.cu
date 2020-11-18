@@ -3,25 +3,24 @@
 
 
 
-void StreaklineSolver::release()
+bool StreaklineSolver::release()
 {
+	this->volume_IO.release();
 	cudaFree(this->d_Particles);
-	cudaFree(this->d_VelocityField);
-
 
 	this->volumeTexture_0.release();
 	this->volumeTexture_1.release();
+
+	return true;
 }
 
-__host__ bool StreaklineSolver::initializeRealtime()
+__host__ bool StreaklineSolver::initializeRealtime(SolverOptions * p_solverOptions)
 {
-	//At least two timesteps is needed
-	this->timeSteps = solverOptions->lastIdx - solverOptions->firstIdx;
 
-	// Initialize Volume IO (Save file path and file names)
-	this->volume_IO.InitializeRealTime(this->solverOptions);
+	this->solverOptions = p_solverOptions;
+	this->InitializeCUDA();
+	this->volume_IO.Initialize(p_solverOptions);
 
-	// Initialize Particles and upload it to GPU
 	this->InitializeParticles(this->solverOptions->seedingPattern);
 
 	int blockDim = 256;
@@ -33,9 +32,7 @@ __host__ bool StreaklineSolver::initializeRealtime()
 			*solverOptions,
 			reinterpret_cast<Vertex*>(this->p_VertexBuffer)
 			);
-
-	solverOptions->lineLength = timeSteps;
-
+	
 	return true;
 }
 
@@ -79,7 +76,7 @@ __host__ bool StreaklineSolver::solve()
 			// set the pointer to the volume texture
 			this->volumeTexture_0.setField(h_VelocityField);
 			// initialize the volume texture
-			this->volumeTexture_0.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
+			this->volumeTexture_0.initialize(Array2Int3(solverOptions->gridSize), true, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
 			// release host memory
 			volume_IO.release();
 
@@ -89,7 +86,7 @@ __host__ bool StreaklineSolver::solve()
 			this->volume_IO.readVolume(solverOptions->currentIdx + 1);
 			this->h_VelocityField = this->volume_IO.getField_float();
 			this->volumeTexture_1.setField(h_VelocityField);
-			this->volumeTexture_1.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
+			this->volumeTexture_1.initialize(Array2Int3(solverOptions->gridSize), true, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
 
 			volume_IO.release();
 
@@ -102,7 +99,7 @@ __host__ bool StreaklineSolver::solve()
 
 			this->volumeTexture_1.release();
 			this->volumeTexture_1.setField(h_VelocityField);
-			this->volumeTexture_1.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
+			this->volumeTexture_1.initialize(Array2Int3(solverOptions->gridSize), true, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
 
 			volume_IO.release();
 
@@ -118,7 +115,7 @@ __host__ bool StreaklineSolver::solve()
 
 			this->volumeTexture_0.release();
 			this->volumeTexture_0.setField(h_VelocityField);
-			this->volumeTexture_0.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
+			this->volumeTexture_0.initialize(Array2Int3(solverOptions->gridSize), true, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
 
 			volume_IO.release();
 
@@ -147,7 +144,7 @@ __host__ bool StreaklineSolver::solve()
 }
 
 
-__host__ bool StreaklineSolver::solveRealtime()
+__host__ bool StreaklineSolver::solveRealtime(int & streakCounter)
 {
 	int blockDim = 256;
 	int thread = (this->solverOptions->lines_count / blockDim) + 1;
@@ -162,21 +159,21 @@ __host__ bool StreaklineSolver::solveRealtime()
 
 	case true: // Compressed Data
 	{
-		if (solverOptions->counter == 0)
+		if (streakCounter == 0)
 		{
-			initializeTextureCompressed(solverOptions, volumeTexture_0, solverOptions->currentIdx);
-			initializeTextureCompressed(solverOptions, volumeTexture_1, solverOptions->currentIdx + 1);
+			loadTextureCompressed(solverOptions, volumeTexture_0, solverOptions->currentIdx);
+			loadTextureCompressed(solverOptions, volumeTexture_1, solverOptions->currentIdx + 1);
 		}
-		else if (this->solverOptions->counter % 2 == 0) // => EVEN
+		else if (streakCounter % 2 == 0) // => EVEN
 		{
 			this->volumeTexture_1.release();
-			initializeTextureCompressed(solverOptions, volumeTexture_1, solverOptions->currentIdx + solverOptions->counter + 1);
+			loadTextureCompressed(solverOptions, volumeTexture_1, solverOptions->currentIdx + streakCounter + 1);
 			odd = false;
 		}
-		else if (this->solverOptions->counter % 2 != 0) // => ODD
+		else if (streakCounter % 2 != 0) // => ODD
 		{
 			this->volumeTexture_0.release();
-			initializeTextureCompressed(solverOptions, volumeTexture_0, solverOptions->currentIdx + solverOptions->counter + 1);
+			loadTextureCompressed(solverOptions, volumeTexture_0, solverOptions->currentIdx + streakCounter + 1);
 			odd = true;
 
 		}
@@ -186,22 +183,22 @@ __host__ bool StreaklineSolver::solveRealtime()
 
 	case false: // Uncompressed Data
 	{
-		if (solverOptions->counter == 0)
+		if (streakCounter == 0)
 		{
-			initializeTexture(solverOptions, volumeTexture_0, solverOptions->currentIdx);
-			initializeTexture(solverOptions, volumeTexture_1, solverOptions->currentIdx + 1);
+			loadTexture(solverOptions, volumeTexture_0, solverOptions->currentIdx);
+			loadTexture(solverOptions, volumeTexture_1, solverOptions->currentIdx + 1);
 		}
-		else if (solverOptions->counter % 2 == 0) // => EVEN
+		else if (streakCounter % 2 == 0) // => EVEN
 		{
 			this->volumeTexture_1.release();
-			initializeTexture(solverOptions, volumeTexture_1, solverOptions->currentIdx + solverOptions->counter + 1);
+			loadTexture(solverOptions, volumeTexture_1, solverOptions->currentIdx + streakCounter + 1);
 			odd = false;
 
 		}
-		else if (solverOptions->counter % 2 != 0) // => ODD
+		else if (streakCounter % 2 != 0) // => ODD
 		{
 			this->volumeTexture_0.release();
-			initializeTexture(solverOptions, volumeTexture_0, solverOptions->currentIdx + solverOptions->counter + 1);
+			loadTexture(solverOptions, volumeTexture_0, solverOptions->currentIdx + streakCounter + 1);
 			odd = true;
 		}
 		break;
@@ -209,26 +206,36 @@ __host__ bool StreaklineSolver::solveRealtime()
 
 	}
 
-	//int numofBlock = 0;
-	//cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numofBlock, TracingPath, blockDim, 0);
-	//std::printf("Optimized number of blocks are  %d \n", numofBlock);	
 
-	TracingStreak << <blockDim, thread >> > (volumeTexture_0.getTexture(), volumeTexture_1.getTexture(), *solverOptions, reinterpret_cast<Vertex*>(this->p_VertexBuffer), odd, solverOptions->counter);
-	std::printf("\n\n");
 
-	if (solverOptions->counter == timeSteps)
+
+
+	if (streakCounter == solverOptions->lineLength)
 	{
-		solverOptions->drawComplete = true;
-		this->release();
+
+		resetRealtime();
+		streakCounter = 0;
+
 	}
 	else
 	{
-		solverOptions->counter++;
-	}
+		
+	
+	TracingStreak << <blockDim, thread >> > (volumeTexture_0.getTexture(), volumeTexture_1.getTexture(), *solverOptions, reinterpret_cast<Vertex*>(this->p_VertexBuffer), odd, streakCounter);
+	std::printf("\n\n");
+	streakCounter++;
 
+	}
+	solverOptions->counter = streakCounter;
 
 	return true;
 }
 
 
+__host__ bool StreaklineSolver::resetRealtime()
+{
 
+	this->release();
+
+	return true;
+}

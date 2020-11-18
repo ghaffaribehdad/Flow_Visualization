@@ -51,16 +51,18 @@ float * decompress(int3 size, uint * h_data, const float & Quant_step, GPUResour
 
 	const bool doRLEOnlyOnLvl0 = true;
 
-	//gpuErrchk(cudaHostRegister(bitStream.data(), bitStream.size() * sizeof(uint), cudaHostRegisterDefault));
+	// Pin memory for the copy operation
 	gpuErrchk(cudaHostRegister(h_data, bufferSize, cudaHostRegisterDefault));
 
 	Timer timer;
 
+	// Decompress the field
 	TIMELAPSE(decompressVolumeFloat(shared, res, dp_field, size.x, size.y, size.z, 2, h_data, bufferSize*8, 0.01f,doRLEOnlyOnLvl0), "Decompression Function");
 
+	// unpin host memory
 	gpuErrchk(cudaHostUnregister(h_data));
 
-
+	// return device pointer to the decompressed field 
 	return dp_field;
 }
 
@@ -70,14 +72,14 @@ void releaseGPUResources(float * dp_field)
 }
 
 
-void DecompressResources::initializeDecompressResources(int3 size)
+void DecompressResources::initializeDecompressionResources(int3 size)
 {
 	this->config = CompressVolumeResources::getRequiredResources(size.x, size.y, size.z, 1, huffmanBits);
 	this->shared.create(config);
 	this->res.create(shared.getConfig());
 }
 
-void DecompressResources::releaseDecompressResources()
+void DecompressResources::releaseDecompressionResources()
 {
 	res.destroy();
 	shared.destroy();

@@ -5,8 +5,9 @@ cbuffer GS_CBuffer
 	float3 viewDir;
 	float tubeRadius;
 	float3 eyePos;
-	float size;
-
+	int projection;
+	float3 gridDiameter;
+	bool periodicity;
 };
 
 
@@ -19,7 +20,11 @@ struct GS_INPUT
 	unsigned int inLineID : LINEID;
 	float inMeasure : MEASURE;
 	float3 inNormal : NORMAL;
+	float3 inInitial : INITIALPOS;
 };
+
+
+
 struct GS_OUTPUT
 {
 
@@ -39,6 +44,55 @@ struct GS_OUTPUT
 [maxvertexcount(18)]
 void main(point GS_INPUT input[1], inout TriangleStream<GS_OUTPUT> output)
 {
+
+
+	float3 pos0 = input[0].inPosition - (gridDiameter / 2);
+
+
+	switch (projection)
+	{
+	case(1):
+	{
+		pos0.x = input[0].inInitial.x - (gridDiameter.x / 2);
+
+		break;
+	}
+	case(2):
+	{
+		pos0.y = input[0].inInitial.y - (gridDiameter.y / 2);
+
+		break;
+	}
+	case(3):
+	{
+		pos0.z = input[0].inInitial.z - (gridDiameter.z / 2);
+
+		break;
+	}
+	default:
+		break;
+	}
+
+
+	switch (periodicity)
+	{
+	case(false): // not periodic
+	{
+		if (abs(pos0.x) > gridDiameter.x / 2 || abs(pos0.y) > gridDiameter.y / 2 || abs(pos0.z) > gridDiameter.z / 2)
+		{
+			output.RestartStrip();
+		}
+
+		break;
+	}
+	case(true): // periodic
+	{
+
+		break;
+	}
+	}
+
+
 	GS_OUTPUT vertex0;
 
 	float3 tangent0 = input[0].inTangent;
@@ -47,7 +101,7 @@ void main(point GS_INPUT input[1], inout TriangleStream<GS_OUTPUT> output)
 
 
 
-	vertex0.outCenter = input[0].inPosition;
+	vertex0.outCenter = pos0;
 
 	vertex0.outLightDir = viewDir;
 	vertex0.outNormal = viewDir;
@@ -55,36 +109,36 @@ void main(point GS_INPUT input[1], inout TriangleStream<GS_OUTPUT> output)
 
 	vertex0.radius = tubeRadius;
 
-	vertex0.outPosition = mul(View, float4(input[0].inPosition + tubeRadius * inPlaneVec, 1.0f));
+	vertex0.outPosition = mul(View, float4(pos0  + tubeRadius * inPlaneVec, 1.0f));
 	vertex0.outPosition = mul(Proj, vertex0.outPosition);
-	vertex0.outViewPos = input[0].inPosition + tubeRadius * inPlaneVec;
+	vertex0.outViewPos = pos0 + tubeRadius * inPlaneVec;
 	output.Append(vertex0);
 
 
-	vertex0.outPosition = mul(View, float4(input[0].inPosition + tubeRadius * inPlaneVecPer, 1.0f));
+	vertex0.outPosition = mul(View, float4(pos0 + tubeRadius * inPlaneVecPer, 1.0f));
 	vertex0.outPosition = mul(Proj, vertex0.outPosition);
-	vertex0.outViewPos = input[0].inPosition + tubeRadius * inPlaneVecPer;
+	vertex0.outViewPos = pos0 + tubeRadius * inPlaneVecPer;
 	output.Append(vertex0);
 
-	vertex0.outPosition = mul(View, float4(input[0].inPosition - tubeRadius * inPlaneVec, 1.0f));
+	vertex0.outPosition = mul(View, float4(pos0 - tubeRadius * inPlaneVec, 1.0f));
 	vertex0.outPosition = mul(Proj, vertex0.outPosition);
-	vertex0.outViewPos = input[0].inPosition - tubeRadius * inPlaneVec;
-	output.Append(vertex0);
-
-
-	vertex0.outPosition = mul(View, float4(input[0].inPosition - tubeRadius * inPlaneVecPer, 1.0f));
-	vertex0.outPosition = mul(Proj, vertex0.outPosition);
-	vertex0.outViewPos = input[0].inPosition - tubeRadius * inPlaneVecPer;
+	vertex0.outViewPos = pos0 - tubeRadius * inPlaneVec;
 	output.Append(vertex0);
 
 
-	vertex0.outPosition = mul(View, float4(input[0].inPosition + tubeRadius * inPlaneVec, 1.0f));
+	vertex0.outPosition = mul(View, float4(pos0 - tubeRadius * inPlaneVecPer, 1.0f));
 	vertex0.outPosition = mul(Proj, vertex0.outPosition);
-	vertex0.outViewPos = input[0].inPosition + tubeRadius * inPlaneVec;
+	vertex0.outViewPos = pos0 - tubeRadius * inPlaneVecPer;
 	output.Append(vertex0);
 
 
-	
+	vertex0.outPosition = mul(View, float4(pos0 + tubeRadius * inPlaneVec, 1.0f));
+	vertex0.outPosition = mul(Proj, vertex0.outPosition);
+	vertex0.outViewPos = pos0 + tubeRadius * inPlaneVec;
+	output.Append(vertex0);
+
+
+
 	
 	output.RestartStrip();
 }
