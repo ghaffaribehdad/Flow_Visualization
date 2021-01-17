@@ -120,9 +120,6 @@
     <Filter Include="Source Files\FSLE">
       <UniqueIdentifier>{a61e3d10-ae8b-44ff-99b6-3c638378845a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Interpolation">
-      <UniqueIdentifier>{69143a17-65e7-4d75-8bbe-561824b99148}</UniqueIdentifier>
-    </Filter>
     <Filter Include="cudaCompress">
       <UniqueIdentifier>{ff7c36ff-7bb2-4674-88d5-ed82f72b589d}</UniqueIdentifier>
     </Filter>
@@ -480,9 +477,6 @@
     </ClInclude>
     <ClInclude Include="Raycaster\FieldGenerator3D.h">
       <Filter>Header Files\Raycasting</Filter>
-    </ClInclude>
-    <ClInclude Include="Interpolation\Interpolation.h">
-      <Filter>Header Files\Interpolation</Filter>
     </ClInclude>
     <ClInclude Include="Heightfield\DispersionHelper.h">
       <Filter>Header Files\Heightfield</Filter>

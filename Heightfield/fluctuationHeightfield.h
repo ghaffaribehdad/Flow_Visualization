@@ -104,7 +104,6 @@ private:
 
 
 	virtual bool InitializeHeightSurface3D() override;
-	Volume_IO_X_Major volume_IO_X_Major;
 
 
 };

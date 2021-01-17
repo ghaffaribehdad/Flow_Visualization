@@ -43,8 +43,17 @@ private:
 	TimeSpace3DOptions*				timeSpace3DOptions;
 
 	Dataset::Dataset dataset = Dataset::Dataset::NONE;
+	Dataset::Dataset raycastyingDataset = Dataset::Dataset::NONE;
 
 public:
+
+	template<typename T>
+	void static setArray(T* source ,const T  &x, const T &y, const T &z)
+	{
+		source[0] = x;
+		source[1] = y;
+		source[2] = z;
+	}
 
 	void setResources
 	(
@@ -89,6 +98,7 @@ public:
 	bool updateShaders = false;
 
 	bool hideOptions = false;
+	bool fileChanged = false;
 
 
 	bool pauseRendering = false;

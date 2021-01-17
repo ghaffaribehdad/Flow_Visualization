@@ -29,37 +29,51 @@ public:
 	{
 		if (renderImGuiOptions->showPathlines)
 		{
-			switch (renderingOptions->drawMode)
-			{
-			case(DrawMode::DrawMode::REALTIME):
-			{
 
-				if (!solverOptions->drawComplete)
+			if (!pathlinesolver.checkFile(solverOptions))
+			{
+				ErrorLogger::Log("Cannot locate the file!");
+				renderImGuiOptions->showPathlines = false;
+			}
+			else
+			{
+				switch (renderingOptions->drawMode)
 				{
-					this->updateSceneRealtime();
+				case(DrawMode::DrawMode::REALTIME):
+				{
+
+					if (!solverOptions->drawComplete)
+					{
+						this->updateSceneRealtime();
+						renderImGuiOptions->updateRaycasting = true;
+						renderImGuiOptions->fileChanged = true;
+					}
+
+					if (renderImGuiOptions->updatePathlines)
+					{
+						this->resetRealtime();
+						renderImGuiOptions->updatePathlines = false;
+					}
+					break;
+
+				}
+				default:
+				{
+
+					if (renderImGuiOptions->updatePathlines)
+					{
+						this->updateScene();
+						renderImGuiOptions->updatePathlines = false;
+					}
+
+					break;
 				}
 
-				if (renderImGuiOptions->updatePathlines)
-				{
-					this->resetRealtime();
-					renderImGuiOptions->updatePathlines = false;
 				}
-				break;
-
-			}
-			default:
-			{
-
-				if (renderImGuiOptions->updatePathlines)
-				{
-					this->updateScene();
-					renderImGuiOptions->updatePathlines = false;
-				}
-
-				break;
 			}
 
-			}
+
+			
 		}
 
 	}
@@ -116,7 +130,7 @@ public:
 		}
 		this->pathlinesolver.solveRealtime(pathCounter);
 		this->pathlinesolver.FinalizeCUDA();
-
+		this->solverOptions->currentIdx = solverOptions->firstIdx + pathCounter;
 		return true;
 	}
 

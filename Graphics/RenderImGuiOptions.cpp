@@ -20,24 +20,37 @@ void RenderImGuiOptions::drawSolverOptions()
 
 	if (ImGui::Combo("Line Rendering Mode", &solverOptions->lineRenderingMode, LineRenderingMode::lineRenderingModeList, LineRenderingMode::lineRenderingMode::COUNT))
 	{
+		if (this->showStreamlines)
+		{
+			this->showStreamlines = false;
+			this->releaseStreamlines = true;
+			this->solverOptions->loadNewfile = false;
+		}
+		if (this->showStreaklines)
+		{
+			this->showStreaklines = false;
+			this->releaseStreaklines = true;
+		}
+		if (this->showPathlines)
+		{
+			this->showPathlines = false;
+			this->releasePathlines = true;
+		}
 	}
-
-
-
-	if (ImGui::Checkbox("Save Screenshot", &this->saveScreenshot))
-	{
-		
-
-	}
-
 
 	if (ImGui::Checkbox("Compressed Data", &solverOptions->Compressed))
 	{
 
 
 	}
-
-
+	if (ImGui::InputText("Name", _strdup(solverOptions->outputFileName.c_str()), 100 * sizeof(char)))
+	{
+	}
+	
+	if (ImGui::Button("Screenshot"))
+	{
+		this->saveScreenshot = true;
+	}
 
 	
 	if (ImGui::InputText("File Path", _strdup(solverOptions->filePath.c_str()), 100 * sizeof(char)))
@@ -57,6 +70,8 @@ void RenderImGuiOptions::drawSolverOptions()
 	{
 
 	}
+
+
 
 
 	if (ImGui::InputInt3("Grid Size", solverOptions->gridSize, sizeof(solverOptions->gridSize)))
@@ -220,11 +235,14 @@ void RenderImGuiOptions::drawSolverOptions()
 
 		this->updateStreamlines = true;
 		solverOptions->loadNewfile = true;
-
-		this->crossSectionOptions->updateTime = true;
 		this->solverOptions->fileChanged = true;
-		this->updateCrossSection = true;
+
+
 		this->raycastingOptions->fileChanged = true;
+		this->crossSectionOptions->updateTime = true;
+
+		this->updateCrossSection = true;
+		
 		this->saved = false;
 	}
 
@@ -394,8 +412,8 @@ void RenderImGuiOptions::drawSolverOptions()
 
 	if (ImGui::Button("Reset View", ImVec2(80, 25)))
 	{
-		this->camera->SetPosition(0, 5, -10);
-		this->camera->SetLookAtPos({ 0, 0, 0 });
+		this->camera->SetPosition(-3.91f, 0.05f,-4.94f);
+		this->camera->SetLookAtPos({ 0.54f, -0.02f, 0.84f });
 
 		this->updateRaycasting = true;
 		this->updateDispersion = true;
@@ -407,7 +425,7 @@ void RenderImGuiOptions::drawSolverOptions()
 
 	if (ImGui::Button("Edge View", ImVec2(80, 25)))
 	{
-		this->camera->SetPosition(-10.7f, 4.0f, -5.37f);
+		this->camera->SetPosition(-10.7f, 4.0f, -6.93f);
 		this->camera->SetLookAtPos({ 0.75f,-0.35f,0.55f });
 
 		this->updateRaycasting = true;
@@ -573,6 +591,11 @@ void RenderImGuiOptions::drawLineRenderingOptions()
 	{
 	}
 
+	if (ImGui::Checkbox("Show Clip Box", &renderingOptions->showClipBox))
+	{
+	}
+
+
 	if(ImGui::SliderFloat("Box Radius", &renderingOptions->boxRadius, 0.0f, 0.05f, "%.4f"))
 	{
 	}
@@ -668,6 +691,11 @@ void RenderImGuiOptions::drawRaycastingOptions()
 
 	}
 
+	if (ImGui::Button("okay"))
+	{
+
+	}
+
 
 	if (ImGui::DragFloat("Sampling Rate 0", &raycastingOptions->samplingRate_0, 0.00001f,0.0001f,1.0f,"%.5f"))
 	{
@@ -682,6 +710,25 @@ void RenderImGuiOptions::drawRaycastingOptions()
 
 
 	}
+
+
+
+	if (ImGui::DragFloat3("Clip Box", raycastingOptions->clipBox, 0.01f))
+	{
+
+		this->updateRaycasting = true;
+		this->updateTimeSpaceField = true;
+
+	}
+
+	if (ImGui::DragFloat3("Clip Box Center", raycastingOptions->clipBoxCenter, 0.01f))
+	{
+
+		this->updateRaycasting = true;
+		this->updateTimeSpaceField = true;
+
+	}
+
 
 	if (ImGui::DragFloat("Isovalue 0", &raycastingOptions->isoValue_0, 0.001f))
 	{
@@ -734,7 +781,9 @@ void RenderImGuiOptions::drawRaycastingOptions()
 		ImGui::Text("File is not loaded yet!");
 	}
 
-	if (raycastingOptions->isoMeasure_0 == IsoMeasure::Velocity_X_Plane)
+	if (raycastingOptions->isoMeasure_0 == IsoMeasure::Velocity_X_Plane ||
+		raycastingOptions->isoMeasure_0 == IsoMeasure::Velocity_Y_Plane ||
+		raycastingOptions->isoMeasure_0 == IsoMeasure::Velocity_Z_Plane)
 	{
 		if (ImGui::InputFloat("Min Value", (float*)&raycastingOptions->minVal, 0.001f,0.1f))
 		{
@@ -1230,29 +1279,46 @@ void RenderImGuiOptions::drawDataset()
 
 	ImGui::Begin("Datasets");
 
+	if (!raycastingOptions->identicalDataset)
+	{
+
+		if (ImGui::Combo("RaycastingDataset", reinterpret_cast<int*>(&this->raycastyingDataset), Dataset::datasetList, Dataset::Dataset::COUNT))
+		{
+			//switch (raycastyingDataset)
+			//{
+
+			//}
+	
+		}
+	}
 
 	if (ImGui::Combo("Dataset", reinterpret_cast<int*>(&this->dataset),Dataset::datasetList, Dataset::Dataset::COUNT))
 	{
 		this->updateStreamlines = true;
+		this->updatePathlines = true;
+		this->updateStreaklines = true;
+		this->updateRaycasting = true;
+
 		this->solverOptions->fileChanged = true;
+		solverOptions->loadNewfile = true;
+		this->solverOptions->fileChanged = true;
+
+
 		switch (dataset)
 		{
 
 			case Dataset::Dataset::KIT2REF_COMP:
 			{
+
+				
 				this->solverOptions->fileName = "FieldComp";
 				this->solverOptions->filePath = "G:\\KIT2Padded\\OscillatingWall\\Compressed\\";
-				this->solverOptions->gridDiameter[0] = 7.854f;
-				this->solverOptions->gridDiameter[1] = 2.0f;
-				this->solverOptions->gridDiameter[2] = 3.1415f;
 
-				this->solverOptions->seedBox[0] = 7.854f;
-				this->solverOptions->seedBox[1] = 2.0f;
-				this->solverOptions->seedBox[2] = 3.1415f;
+				setArray<float>(&this->solverOptions->gridDiameter[0], 7.854f, 2.0f, 3.1415f);
+				setArray<float>(&this->solverOptions->seedBox[0], 7.854f, 2.0f, 3.1415f);
+				setArray<float>(&this->raycastingOptions->clipBox[0], 7.854f, 2.0f, 3.1415f);
+				setArray<int>(&this->solverOptions->gridSize[0], 192, 192, 192);
 
-				this->solverOptions->gridSize[0] = 192;
-				this->solverOptions->gridSize[1] = 192;
-				this->solverOptions->gridSize[2] = 192;
 				this->solverOptions->dt = 0.001f;
 				this->solverOptions->firstIdx = 1;
 				this->solverOptions->lastIdx = 900;
@@ -1264,16 +1330,11 @@ void RenderImGuiOptions::drawDataset()
 			{
 				this->solverOptions->fileName = "FieldP";
 				this->solverOptions->filePath = "G:\\KIT2Padded\\OscillatingWall\\Padded\\";
-				this->solverOptions->gridDiameter[0] = 7.854f;
-				this->solverOptions->gridDiameter[1] = 2.0f;
-				this->solverOptions->gridDiameter[2] = 3.1415f;
-				this->solverOptions->gridSize[0] = 192;
-				this->solverOptions->gridSize[1] = 192;
-				this->solverOptions->gridSize[2] = 192;
-
-				this->solverOptions->seedBox[0] = 7.854f;
-				this->solverOptions->seedBox[1] = 2.0f;
-				this->solverOptions->seedBox[2] = 3.1415f;
+				
+				setArray<float>(&this->solverOptions->gridDiameter[0], 7.854f, 2.0f, 3.1415f);
+				setArray<float>(&this->solverOptions->seedBox[0], 7.854f, 2.0f, 3.1415f);
+				setArray<float>(&this->raycastingOptions->clipBox[0], 7.854f, 2.0f, 3.1415f);
+				setArray<int>(&this->solverOptions->gridSize[0], 192, 192, 192);
 
 				this->solverOptions->dt = 0.001f;
 				this->solverOptions->firstIdx = 1;
@@ -1284,17 +1345,12 @@ void RenderImGuiOptions::drawDataset()
 			{
 				this->solverOptions->fileName = "FieldP";
 				this->solverOptions->filePath = "G:\\KIT2Padded\\VirtualBody\\Padded\\";
-				this->solverOptions->gridDiameter[0] = 7.854f;
-				this->solverOptions->gridDiameter[1] = 2.0f;
-				this->solverOptions->gridDiameter[2] = 3.1415f;
 
-				this->solverOptions->seedBox[0] = 7.854f;
-				this->solverOptions->seedBox[1] = 2.0f;
-				this->solverOptions->seedBox[2] = 3.1415f;
+				setArray<float>(&this->solverOptions->gridDiameter[0], 7.854f, 2.0f, 3.1415f);
+				setArray<float>(&this->solverOptions->seedBox[0], 7.854f, 2.0f, 3.1415f);
+				setArray<float>(&this->raycastingOptions->clipBox[0], 7.854f, 2.0f, 3.1415f);
+				setArray<int>(&this->solverOptions->gridSize[0], 192, 192, 192);
 
-				this->solverOptions->gridSize[0] = 192;
-				this->solverOptions->gridSize[1] = 192;
-				this->solverOptions->gridSize[2] = 192;
 				this->solverOptions->dt = 0.001f;
 				this->solverOptions->firstIdx = 1;
 				this->solverOptions->lastIdx = 1000;
@@ -1304,17 +1360,15 @@ void RenderImGuiOptions::drawDataset()
 			{
 				this->solverOptions->fileName = "FieldP";
 				this->solverOptions->filePath = "F:\\Dataset\\KIT3\\binary_fluc_z_major\\Padded\\";
-				this->solverOptions->gridDiameter[0] = 0.4f;
-				this->solverOptions->gridDiameter[1] = 2.0f;
-				this->solverOptions->gridDiameter[2] = 7.0f;
 
-				this->solverOptions->seedBox[0] = 0.4f;
-				this->solverOptions->seedBox[1] = 2.0f;
-				this->solverOptions->seedBox[2] = 7.0f;
 
-				this->solverOptions->gridSize[0] = 64;
-				this->solverOptions->gridSize[1] = 503;
-				this->solverOptions->gridSize[2] = 2048;
+				setArray<float>(&this->solverOptions->gridDiameter[0], 0.4f, 2.0f, 7.0f);
+				setArray<float>(&this->solverOptions->seedBox[0], 0.4f, 2.0f, 7.0f);
+				setArray<float>(&this->raycastingOptions->clipBox[0], 0.4f, 2.0f, 7.0f);
+				setArray<int>(&this->solverOptions->gridSize[0], 64,503,2048);
+
+
+
 				this->solverOptions->dt = 0.001f;
 				break;
 
@@ -1322,19 +1376,18 @@ void RenderImGuiOptions::drawDataset()
 
 			case Dataset::Dataset::KIT3_COMPRESSED:
 			{
-				this->solverOptions->fileName = "FieldComp";
-				this->solverOptions->filePath = "G:\\KIT3FluctuationCompressed\\Compressed\\";
-				this->solverOptions->gridDiameter[0] = 0.4f;
-				this->solverOptions->gridDiameter[1] = 2.0f;
-				this->solverOptions->gridDiameter[2] = 7.0f;
+				this->solverOptions->fileName = "Fluc_Comp_";
+				this->solverOptions->filePath = "G:\\Comp_Fluc\\";
 
-				this->solverOptions->seedBox[0] = 0.4f;
-				this->solverOptions->seedBox[1] = 2.0f;
-				this->solverOptions->seedBox[2] = 7.0f;
 
-				this->solverOptions->gridSize[0] = 64;
-				this->solverOptions->gridSize[1] = 503;
-				this->solverOptions->gridSize[2] = 2048;
+				setArray<float>(&this->solverOptions->gridDiameter[0], 0.4f, 2.0f, 7.0f);
+				setArray<float>(&this->solverOptions->seedBox[0], 0.4f, 2.0f, 7.0f);
+				setArray<float>(&this->raycastingOptions->clipBox[0], 0.4f, 2.0f, 7.0f);
+				setArray<int>(&this->solverOptions->gridSize[0], 64, 503, 2048);
+
+				this->solverOptions->firstIdx = 500;
+				this->solverOptions->lastIdx = 1000;
+				this->solverOptions->currentIdx = 500;
 				this->solverOptions->dt = 0.001f;
 				this->solverOptions->periodic = true;
 				this->solverOptions->Compressed = true;
@@ -1347,17 +1400,14 @@ void RenderImGuiOptions::drawDataset()
 			{
 				this->solverOptions->fileName = "FieldComp";
 				this->solverOptions->filePath = "G:\\KIT3InitialCompressed\\";
-				this->solverOptions->gridDiameter[0] = 0.4f;
-				this->solverOptions->gridDiameter[1] = 2.0f;
-				this->solverOptions->gridDiameter[2] = 7.0f;
+			
 
-				this->solverOptions->seedBox[0] = 0.4f;
-				this->solverOptions->seedBox[1] = 2.0f;
-				this->solverOptions->seedBox[2] = 7.0f;
+				setArray<float>(&this->solverOptions->gridDiameter[0], 0.4f, 2.0f, 7.0f);
+				setArray<float>(&this->solverOptions->seedBox[0], 0.4f, 2.0f, 7.0f);
+				setArray<float>(&this->raycastingOptions->clipBox[0], 0.4f, 2.0f, 7.0f);
+				setArray<int>(&this->solverOptions->gridSize[0], 64, 503, 2048);
 
-				this->solverOptions->gridSize[0] = 64;
-				this->solverOptions->gridSize[1] = 503;
-				this->solverOptions->gridSize[2] = 2048;
+
 				this->solverOptions->dt = 0.001f;
 				this->solverOptions->periodic = true;
 				this->solverOptions->Compressed = true;
@@ -1369,19 +1419,16 @@ void RenderImGuiOptions::drawDataset()
 
 			case Dataset::Dataset::KIT3_OF_COMPRESSED:
 			{
-				this->solverOptions->fileName = "FieldComp";
-				this->solverOptions->filePath = "G:\\KIT3Initial_OF_Compressed\\";
-				this->solverOptions->gridDiameter[0] = 0.4f;
-				this->solverOptions->gridDiameter[1] = 2.0f;
-				this->solverOptions->gridDiameter[2] = 7.0f;
+				this->solverOptions->fileName = "OF_AVG_COMP_50_";
+				this->solverOptions->filePath = "G:\\OF_AVG50_Comp\\";
 
-				this->solverOptions->seedBox[0] = 0.4f;
-				this->solverOptions->seedBox[1] = 2.0f;
-				this->solverOptions->seedBox[2] = 7.0f;
 
-				this->solverOptions->gridSize[0] = 64;
-				this->solverOptions->gridSize[1] = 503;
-				this->solverOptions->gridSize[2] = 2048;
+				setArray<float>(&this->solverOptions->gridDiameter[0], 0.4f, 2.0f, 7.0f);
+				setArray<float>(&this->solverOptions->seedBox[0], 0.4f, 2.0f, 7.0f);
+				setArray<float>(&this->raycastingOptions->clipBox[0], 0.4f, 2.0f, 7.0f);
+				setArray<int>(&this->solverOptions->gridSize[0], 64, 503, 2048);
+
+
 				this->solverOptions->dt = 0.001f;
 				this->solverOptions->periodic = true;
 				this->solverOptions->Compressed = true;
@@ -1391,21 +1438,155 @@ void RenderImGuiOptions::drawDataset()
 
 			}
 
+
+			case Dataset::Dataset::KIT3_AVG_COMPRESSED_10:
+			{
+				this->solverOptions->fileName = "FieldTimeAVG_";
+				this->solverOptions->filePath = "G:\\KIT3TimeAvg10\\";
+
+
+				setArray<float>(&this->solverOptions->gridDiameter[0], 0.4f, 2.0f, 7.0f);
+				setArray<float>(&this->solverOptions->seedBox[0], 0.4f, 2.0f, 7.0f);
+				setArray<float>(&this->raycastingOptions->clipBox[0], 0.4f, 2.0f, 7.0f);
+				setArray<int>(&this->solverOptions->gridSize[0], 64, 503, 2048);
+
+				this->solverOptions->firstIdx = 500;
+				this->solverOptions->lastIdx = 900;
+				this->solverOptions->currentIdx = 500;
+				this->solverOptions->dt = 0.001f;
+				this->solverOptions->periodic = true;
+				this->solverOptions->Compressed = true;
+				this->solverOptions->maxSize = 70000000;
+
+				break;
+
+			}
+
+			case Dataset::Dataset::KIT3_AVG_COMPRESSED_50:
+			{
+				this->solverOptions->fileName = "Field_AVG_Comp_";
+				this->solverOptions->filePath = "G:\\KIT3\\Comp_TimeAVG50\\";
+
+
+				setArray<float>(&this->solverOptions->gridDiameter[0], 0.4f, 2.0f, 7.0f);
+				setArray<float>(&this->solverOptions->seedBox[0], 0.4f, 2.0f, 7.0f);
+				setArray<float>(&this->raycastingOptions->clipBox[0], 0.4f, 2.0f, 7.0f);
+				setArray<int>(&this->solverOptions->gridSize[0], 64, 503, 2048);
+
+				this->solverOptions->firstIdx = 500;
+				this->solverOptions->lastIdx = 900;
+				this->solverOptions->currentIdx = 500;
+				this->solverOptions->dt = 0.001f;
+				this->solverOptions->periodic = true;
+				this->solverOptions->Compressed = true;
+				this->solverOptions->maxSize = 70000000;
+
+				break;
+
+			}
+
+			case Dataset::Dataset::KIT3_SECONDARY_COMPRESSED:
+			{
+				this->solverOptions->fileName = "FieldSecondary";
+				this->solverOptions->filePath = "G:\\KIT3Secondary\\";
+
+
+				setArray<float>(&this->solverOptions->gridDiameter[0], 0.4f, 2.0f, 7.0f);
+				setArray<float>(&this->solverOptions->seedBox[0], 0.4f, 2.0f, 7.0f);
+				setArray<float>(&this->raycastingOptions->clipBox[0], 0.4f, 2.0f, 7.0f);
+				setArray<int>(&this->solverOptions->gridSize[0], 64, 503, 2048);
+
+				this->solverOptions->firstIdx = 500;
+				this->solverOptions->lastIdx = 900;
+				this->solverOptions->currentIdx = 500;
+				this->solverOptions->dt = 0.001f;
+				this->solverOptions->periodic = true;
+				this->solverOptions->Compressed = true;
+				this->solverOptions->maxSize = 70000000;
+
+				break;
+
+			}
+
+			case Dataset::Dataset::KIT3_OF:
+			{
+				this->solverOptions->fileName = "OF_m_stream";
+				this->solverOptions->filePath = "F:\\KIT3OpticalFlowPeriodic\\";
+
+
+				setArray<float>(&this->solverOptions->gridDiameter[0], 0.4f, 2.0f, 7.0f);
+				setArray<float>(&this->solverOptions->seedBox[0], 0.4f, 2.0f, 7.0f);
+				setArray<float>(&this->raycastingOptions->clipBox[0], 0.4f, 2.0f, 7.0f);
+				setArray<int>(&this->solverOptions->gridSize[0], 64, 503, 2048);
+							   
+				this->solverOptions->dt = 0.001f;
+				this->solverOptions->periodic = true;
+
+
+				break;
+
+			}
+
+
+
+			case Dataset::Dataset::KIT3_TIME_SPACE_1000_TZY:
+			{
+				this->solverOptions->fileName = "streak_3D_fluc_spanTime_1000_tzy_part_";
+				this->solverOptions->filePath = "G:\\KIT3TimeSpaceStreak\\";
+
+
+
+				setArray<float>(&this->solverOptions->gridDiameter[0], 5.0f, 2.0f, 1.0f);
+				setArray<float>(&this->solverOptions->seedBox[0], 5.0f, 2.0f, 1.0f);
+				setArray<float>(&this->raycastingOptions->clipBox[0], 5.0f, 2.0f, 1.0f);
+				setArray<int>(&this->solverOptions->gridSize[0], 1000, 1024, 250);
+
+
+
+				this->solverOptions->dt = 0.001f;
+				this->solverOptions->periodic = true;
+				this->solverOptions->Compressed = false;
+
+				break;
+
+			}
+
+			case Dataset::Dataset::KIT3_TIME_SPACE_1000_TYX:
+			{
+				this->solverOptions->fileName = "streak_fluctuation_spanTime_1000_TYX";
+				this->solverOptions->filePath = "G:\\KIT3TimeSpaceStreak\\";
+
+
+
+				setArray<float>(&this->solverOptions->gridDiameter[0], 5.0f, 2.0f, 1.0f);
+				setArray<float>(&this->solverOptions->seedBox[0], 5.0f, 2.0f, 1.0f);
+				setArray<float>(&this->raycastingOptions->clipBox[0], 5.0f, 2.0f, 1.0f);
+				setArray<int>(&this->solverOptions->gridSize[0], 1000, 503, 64);
+
+
+
+				this->solverOptions->dt = 0.001f;
+				this->solverOptions->periodic = true;
+				this->solverOptions->Compressed = false;
+
+				break;
+
+			}
+
 			case Dataset::Dataset::RBC:
 			{
 				this->solverOptions->fileName = "Field";
 				this->solverOptions->filePath = "E:\\TUI_RBC_Small\\tui_ra1e5\\";
-				this->solverOptions->gridDiameter[0] = 5.0f;
-				this->solverOptions->gridDiameter[1] = 1.0f;
-				this->solverOptions->gridDiameter[2] = 5.0f;
 
-				this->solverOptions->seedBox[0] = 5.0f;
-				this->solverOptions->seedBox[1] = 1.0f;
-				this->solverOptions->seedBox[2] = 5.0f;
 
-				this->solverOptions->gridSize[0] = 1024;
-				this->solverOptions->gridSize[1] = 32;
-				this->solverOptions->gridSize[2] = 1024;
+
+				setArray<float>(&this->solverOptions->gridDiameter[0], 5.0f, 1.0f, 5.0f);
+				setArray<float>(&this->solverOptions->seedBox[0], 5.0f, 1.0f, 5.0f);
+				setArray<float>(&this->raycastingOptions->clipBox[0], 5.0f, 1.0f, 5.0f);
+				setArray<int>(&this->solverOptions->gridSize[0], 1024, 32, 1024);
+
+
+
 				this->solverOptions->dt = 0.01f;
 				this->solverOptions->periodic = false;
 				this->solverOptions->Compressed = false;
@@ -1419,17 +1600,14 @@ void RenderImGuiOptions::drawDataset()
 			{
 				this->solverOptions->fileName = "Field_AVG";
 				this->solverOptions->filePath = "E:\\TUI_RBC_Small\\timeAVG\\";
-				this->solverOptions->gridDiameter[0] = 5.0f;
-				this->solverOptions->gridDiameter[1] = 1.0f;
-				this->solverOptions->gridDiameter[2] = 5.0f;
 
-				this->solverOptions->seedBox[0] = 5.0f;
-				this->solverOptions->seedBox[1] = 1.0f;
-				this->solverOptions->seedBox[2] = 5.0f;
 
-				this->solverOptions->gridSize[0] = 1024;
-				this->solverOptions->gridSize[1] = 32;
-				this->solverOptions->gridSize[2] = 1024;
+				setArray<float>(&this->solverOptions->gridDiameter[0], 5.0f, 1.0f, 5.0f);
+				setArray<float>(&this->solverOptions->seedBox[0], 5.0f, 1.0f, 5.0f);
+				setArray<float>(&this->raycastingOptions->clipBox[0], 5.0f, 1.0f, 5.0f);
+				setArray<int>(&this->solverOptions->gridSize[0], 1024, 32, 1024);
+
+
 				this->solverOptions->dt = 0.01f;
 				this->solverOptions->periodic = false;
 				this->solverOptions->Compressed = false;
@@ -1442,17 +1620,14 @@ void RenderImGuiOptions::drawDataset()
 			{
 				this->solverOptions->fileName = "OF_temperature";
 				this->solverOptions->filePath = "E:\\TUI_RBC_Small\\OF\\";
-				this->solverOptions->gridDiameter[0] = 5.0f;
-				this->solverOptions->gridDiameter[1] = 1.0f;
-				this->solverOptions->gridDiameter[2] = 5.0f;
 
-				this->solverOptions->seedBox[0] = 5.0f;
-				this->solverOptions->seedBox[1] = 1.0f;
-				this->solverOptions->seedBox[2] = 5.0f;
 
-				this->solverOptions->gridSize[0] = 1024;
-				this->solverOptions->gridSize[1] = 32;
-				this->solverOptions->gridSize[2] = 1024;
+				setArray<float>(&this->solverOptions->gridDiameter[0], 5.0f, 1.0f, 5.0f);
+				setArray<float>(&this->solverOptions->seedBox[0], 5.0f, 1.0f, 5.0f);
+				setArray<float>(&this->raycastingOptions->clipBox[0], 5.0f, 1.0f, 5.0f);
+				setArray<int>(&this->solverOptions->gridSize[0], 1024, 32, 1024);
+
+
 				this->solverOptions->dt = 0.01f;
 				this->solverOptions->periodic = false;
 				this->solverOptions->Compressed = false;
@@ -1466,17 +1641,14 @@ void RenderImGuiOptions::drawDataset()
 			{
 				this->solverOptions->fileName = "Field_OF_AVG600_";
 				this->solverOptions->filePath = "E:\\TUI_RBC_Small\\timeAVG\\";
-				this->solverOptions->gridDiameter[0] = 5.0f;
-				this->solverOptions->gridDiameter[1] = 1.0f;
-				this->solverOptions->gridDiameter[2] = 5.0f;
 
-				this->solverOptions->seedBox[0] = 5.0f;
-				this->solverOptions->seedBox[1] = 1.0f;
-				this->solverOptions->seedBox[2] = 5.0f;
 
-				this->solverOptions->gridSize[0] = 1024;
-				this->solverOptions->gridSize[1] = 32;
-				this->solverOptions->gridSize[2] = 1024;
+				setArray<float>(&this->solverOptions->gridDiameter[0], 5.0f, 1.0f, 5.0f);
+				setArray<float>(&this->solverOptions->seedBox[0], 5.0f, 1.0f, 5.0f);
+				setArray<float>(&this->raycastingOptions->clipBox[0], 5.0f, 1.0f, 5.0f);
+				setArray<int>(&this->solverOptions->gridSize[0], 1024, 32, 1024);
+
+
 				this->solverOptions->dt = 0.01f;
 				this->solverOptions->periodic = false;
 				this->solverOptions->Compressed = false;
@@ -1489,17 +1661,14 @@ void RenderImGuiOptions::drawDataset()
 			{
 				this->solverOptions->fileName = "Field_AVG500_";
 				this->solverOptions->filePath = "E:\\TUI_RBC_Small\\timeAVG\\";
-				this->solverOptions->gridDiameter[0] = 5.0f;
-				this->solverOptions->gridDiameter[1] = 1.0f;
-				this->solverOptions->gridDiameter[2] = 5.0f;
 
-				this->solverOptions->seedBox[0] = 5.0f;
-				this->solverOptions->seedBox[1] = 1.0f;
-				this->solverOptions->seedBox[2] = 5.0f;
 
-				this->solverOptions->gridSize[0] = 1024;
-				this->solverOptions->gridSize[1] = 32;
-				this->solverOptions->gridSize[2] = 1024;
+				setArray<float>(&this->solverOptions->gridDiameter[0], 5.0f, 1.0f, 5.0f);
+				setArray<float>(&this->solverOptions->seedBox[0], 5.0f, 1.0f, 5.0f);
+				setArray<float>(&this->raycastingOptions->clipBox[0], 5.0f, 1.0f, 5.0f);
+				setArray<int>(&this->solverOptions->gridSize[0], 1024, 32, 1024);
+
+
 				this->solverOptions->dt = 0.01f;
 				this->solverOptions->periodic = false;
 				this->solverOptions->Compressed = false;

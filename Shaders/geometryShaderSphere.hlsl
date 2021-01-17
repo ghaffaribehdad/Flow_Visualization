@@ -103,8 +103,8 @@ void main(point GS_INPUT input[1], inout TriangleStream<GS_OUTPUT> output)
 
 	vertex0.outCenter = pos0;
 
-	vertex0.outLightDir = viewDir;
-	vertex0.outNormal = viewDir;
+	vertex0.outLightDir = normalize(-tangent0);
+	vertex0.outNormal = normalize(-tangent0);;
 	vertex0.outMeasure = input[0].inMeasure;
 
 	vertex0.radius = tubeRadius;

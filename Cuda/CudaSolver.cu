@@ -183,7 +183,6 @@ void CUDASolver::loadTextureCompressed
 	volumeTexture.setField(h_VelocityField);
 	// initialize the volume texture
 	TIMELAPSE(volumeTexture.initialize_devicePointer(Array2Int3(solverOptions->gridSize), true, addressModeX, addressModeY, addressModeZ),"Initialize Texture including DDCopy");
-	// release host memory
-	//volume_IO.release();
+	// release device memory
 	cudaFree(h_VelocityField);
 }

@@ -277,7 +277,6 @@
     <ClInclude Include="Heightfield\ftleHelperFunctions.h" />
     <ClInclude Include="Heightfield\HightfieldFTLE.h" />
     <ClInclude Include="FSLE\FSLE.h" />
-    <ClInclude Include="Interpolation\Interpolation.h" />
     <ClInclude Include="Options\CrossSectionOptions.h" />
     <ClInclude Include="Options\DispresionOptions.h" />
     <ClInclude Include="Options\fluctuationheightfieldOptions.h" />

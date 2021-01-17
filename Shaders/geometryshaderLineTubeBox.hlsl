@@ -85,8 +85,8 @@ void main(line GS_INPUT input[2], inout TriangleStream<GS_OUTPUT> output)
 
 			if (input[0].inLineID == 1) // Vertical Line
 			{
-				position0.y += .01;
-				position1.y -= .01;
+				position0.y += .001;
+				position1.y -= .001;
 			}
 
 

@@ -4,6 +4,7 @@
 #include "..//ErrorLogger/ErrorLogger.h"
 #include "..//Cuda/Cuda_helper_math_host.h"
 #include "..//Raycaster/IsosurfaceHelperFunctions.h"
+#include "..//Cuda/CudaHelperFunctions.h"
 
 extern __constant__  BoundingBox d_boundingBox;
 extern __constant__ float3 d_raycastingColor;
@@ -35,20 +36,19 @@ bool FluctuationHeightfield::initialize
 	this->rays = (*this->width) * (*this->height);				// Set number of rays based on the number of pixels
 
 	// initialize volume Input Output
-	this->volume_IO_X_Major.Initialize(this->solverOptions);
+	this->volume_IO.Initialize(this->solverOptions);
 
 
 	// Initialize Height Field as an empty CUDA array 3D
 	if (!a_HeightSurface_Primary.initialize(m_gridSize3D.x, m_gridSize3D.y, m_gridSize3D.z))
 		return false;
 
-
-	// Trace the fluctuation field
-	this->traceFluctuationfield3D();
-
 	// Bind the array of heights to the CUDA surface
 	if (!this->InitializeHeightSurface3D())
 		return false;
+
+	// Trace the fluctuation field
+	this->traceFluctuationfield3D();
 
 	//this->gradientFluctuationfield();
 
@@ -65,44 +65,46 @@ bool FluctuationHeightfield::initialize
 
 void  FluctuationHeightfield::traceFluctuationfield3D()
 {
-	float* h_velocityField = new float[m_gridSize3D.x * m_gridSize3D.y * m_gridSize3D.z * (size_t)4];
 
-	size_t counter = 0;
+	unsigned int blocks;
+	dim3 thread = { maxBlockDim,maxBlockDim,1 };
+	int nMesh_y = (int)m_gridSize3D.y; // mesh size in spanwise direction
 
-	for (int t = 0; t < m_gridSize3D.z; t++)
+	blocks = static_cast<unsigned int>((nMesh_y % (thread.x * thread.y) == 0 ?
+		nMesh_y / (thread.x * thread.y) : nMesh_y / (thread.x * thread.y) + 1));
+
+
+	for (int t = solverOptions->currentIdx; t <= solverOptions->lastIdx; t++)
 	{
-		this->volume_IO_X_Major.readVolumePlane(t + fluctuationheightfieldOptions->firstIdx, VolumeIO::readPlaneMode::YZ, fluctuationheightfieldOptions->spanwisePos);
-		float* p_temp = volume_IO_X_Major.getField_float();
+		// First Read the Compressed file and move it to GPU
+		this->volume_IO.readVolume(t,solverOptions);
 
-		size_t counter_t = 0;
+		// Copy the device pointer
+		float * h_VelocityField = this->volume_IO.getField_float_GPU();
 
+		// Bind and copy device pointer to texture
+		volumeTexture.setField(h_VelocityField);
 
-		for (int wall = 0; wall < m_gridSize3D.y; wall++)
-		{
+		volumeTexture.initialize_devicePointer(Array2Int3(solverOptions->gridSize), false, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
+		
+		// Release the device pointer
+		cudaFree(h_VelocityField);
 
-			for (int span = 0; span < m_gridSize3D.x; span++)
-			{
-				for (int d = 0; d < 4; d++)
-				{
+		// Copy from texture to surface
+		copyTextureToSurface << < blocks, thread >> >
+			(
+				10, //		Streamwise Pos
+				t, //		Timestep
+				solverOptions,	
+				volumeTexture.getTexture(),
+				s_HeightSurface_Primary.getSurfaceObjectRef()
+			);
 
-					h_velocityField[counter] = p_temp[counter_t];
-					counter++;
-					counter_t++;
-
-				}
-
-			}
-		}
-
-		volume_IO_X_Major.release();
+		// Release the volume texture
+		volumeTexture.release();
+		
 	}
-
-
-	
-	this->a_HeightSurface_Primary.memoryCopy(h_velocityField);
-
-	delete[] h_velocityField;
-	
+	volume_IO.release();
 }
 
 
@@ -163,7 +165,8 @@ __host__ bool FluctuationHeightfield::initializeBoundingBox()
 	BoundingBox* h_boundingBox = new BoundingBox;
 
 	h_boundingBox->gridSize = make_int3((int)this->m_gridSize3D.x, (int)this->m_gridSize3D.y, (int)this->m_gridSize3D.z); // Use the heightfield dimension instead of velocity volume
-	h_boundingBox->updateBoxFaces(ArrayFloat3ToFloat3(solverOptions->gridDiameter)); 
+	h_boundingBox->updateBoxFaces(ArrayFloat3ToFloat3(raycastingOptions->clipBox), ArrayFloat3ToFloat3(raycastingOptions->clipBoxCenter));
+	h_boundingBox->m_dimensions = ArrayFloat3ToFloat3(solverOptions->gridDiameter);
 	h_boundingBox->updateAspectRatio(*width, *height);						
 	h_boundingBox->constructEyeCoordinates
 	(

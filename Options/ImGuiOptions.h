@@ -28,6 +28,8 @@ enum IsoMeasure
 	ShearStress,
 	TURBULENT_DIFFUSIVITY,
 	Velocity_X_Plane,
+	Velocity_Y_Plane,
+	Velocity_Z_Plane,
 	COUNT
 };
 
@@ -44,6 +46,12 @@ namespace Dataset
 		KIT3_COMPRESSED,
 		KIT3_INITIAL_COMPRESSED,
 		KIT3_OF_COMPRESSED,
+		KIT3_AVG_COMPRESSED_10,
+		KIT3_AVG_COMPRESSED_50,
+		KIT3_SECONDARY_COMPRESSED,
+		KIT3_OF,
+		KIT3_TIME_SPACE_1000_TZY,
+		KIT3_TIME_SPACE_1000_TYX,
 		RBC,
 		RBC_AVG,
 		RBC_OF,
@@ -63,6 +71,12 @@ namespace Dataset
 		"KIT3 Fluc. Comp.",
 		"KIT3 Initial Comp.",
 		"KIT3 OF Comp.",
+		"KIT3 AVG Comp. 10",
+		"KIT3 AVG Comp. 50",
+		"KIT3 Secondary Comp.",
+		"KIT3 OF ",
+		"KIT3 Time-Space TZY",
+		"KIT3 Time-Space TYX",
 		"RBC",
 		"RBC_AVG",
 		"RBC OF",
@@ -79,12 +93,13 @@ static const char* const IsoMeasureModes[] =
 { 
 	"Velocity Magnitude",
 	"Velocity X",
-
 	"Velocity Y",
 	"Velocity Z",
 	"Shear Stress",
 	"Turbulent Diffusivity",
-	"Velocity X Planar"
+	"Velocity X Planar",
+	"Velocity Y Planar",
+	"Velocity Z Planar"
 };
 
 namespace ColorMode

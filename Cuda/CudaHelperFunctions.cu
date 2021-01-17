@@ -218,6 +218,18 @@ __global__ void InitializeVertexBufferStreaklines
 }
 
 
+__global__ void copyTextureToSurface
+(
+	int streamwisePos,
+	int time,
+	SolverOptions * solverOptions,
+	cudaTextureObject_t t_velocityField,
+	cudaSurfaceObject_t	s_velocityField
+)
+{
+
+}
+
 __global__ void AddOffsetVertexBufferStreaklines
 (
 	SolverOptions solverOptions,

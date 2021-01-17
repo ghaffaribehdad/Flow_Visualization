@@ -161,19 +161,19 @@ __host__ bool StreaklineSolver::solveRealtime(int & streakCounter)
 	{
 		if (streakCounter == 0)
 		{
-			loadTextureCompressed(solverOptions, volumeTexture_0, solverOptions->currentIdx);
-			loadTextureCompressed(solverOptions, volumeTexture_1, solverOptions->currentIdx + 1);
+			loadTextureCompressed(solverOptions, volumeTexture_0, solverOptions->firstIdx);
+			loadTextureCompressed(solverOptions, volumeTexture_1, solverOptions->firstIdx + 1);
 		}
 		else if (streakCounter % 2 == 0) // => EVEN
 		{
 			this->volumeTexture_1.release();
-			loadTextureCompressed(solverOptions, volumeTexture_1, solverOptions->currentIdx + streakCounter + 1);
+			loadTextureCompressed(solverOptions, volumeTexture_1, solverOptions->firstIdx + streakCounter + 1);
 			odd = false;
 		}
 		else if (streakCounter % 2 != 0) // => ODD
 		{
 			this->volumeTexture_0.release();
-			loadTextureCompressed(solverOptions, volumeTexture_0, solverOptions->currentIdx + streakCounter + 1);
+			loadTextureCompressed(solverOptions, volumeTexture_0, solverOptions->firstIdx + streakCounter + 1);
 			odd = true;
 
 		}
@@ -185,20 +185,20 @@ __host__ bool StreaklineSolver::solveRealtime(int & streakCounter)
 	{
 		if (streakCounter == 0)
 		{
-			loadTexture(solverOptions, volumeTexture_0, solverOptions->currentIdx);
-			loadTexture(solverOptions, volumeTexture_1, solverOptions->currentIdx + 1);
+			loadTexture(solverOptions, volumeTexture_0, solverOptions->firstIdx);
+			loadTexture(solverOptions, volumeTexture_1, solverOptions->firstIdx + 1);
 		}
 		else if (streakCounter % 2 == 0) // => EVEN
 		{
 			this->volumeTexture_1.release();
-			loadTexture(solverOptions, volumeTexture_1, solverOptions->currentIdx + streakCounter + 1);
+			loadTexture(solverOptions, volumeTexture_1, solverOptions->firstIdx + streakCounter + 1);
 			odd = false;
 
 		}
 		else if (streakCounter % 2 != 0) // => ODD
 		{
 			this->volumeTexture_0.release();
-			loadTexture(solverOptions, volumeTexture_0, solverOptions->currentIdx + streakCounter + 1);
+			loadTexture(solverOptions, volumeTexture_0, solverOptions->firstIdx + streakCounter + 1);
 			odd = true;
 		}
 		break;

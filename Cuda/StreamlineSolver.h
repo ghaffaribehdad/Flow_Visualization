@@ -26,6 +26,7 @@ public:
 	__host__ bool releaseVolumeIO();
 	__host__ bool releaseVolumeTexture();
 	__host__ bool release();
+	
 
 private:
 

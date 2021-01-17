@@ -948,27 +948,11 @@ inline __host__ __device__ float3 floor(const float3 v)
 __device__ __host__ inline float3 world2Tex(const float3& position, const float3& dimension, const int3& size, bool noormalized = false)
 {
 
-	// BUG(?): the periodic (wrap) address mode does not work propertly with unnormalized coordinate 
-	//float3 pos = {
-	//fmodf(position.x, dimension.x),
-	//fmodf(position.y, dimension.x),
-	//fmodf(position.z, dimension.z)
-	//};
-	//if (position.x < 0)
-	//{
-	//	pos.x += dimension.x;
-	//}
-	//if (position.y < 0)
-	//{
-	//	pos.y += dimension.y;
-	//}
-	//if (position.z < 0)
-	//{
-	//	pos.z += dimension.z;
-	//}
 
 	if (noormalized)
+	{
 		return (position / dimension);
+	}
 
 	return (position / dimension) *size;
 }

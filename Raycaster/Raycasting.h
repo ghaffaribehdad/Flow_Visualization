@@ -179,10 +179,11 @@ public:
 				renderImGuiOptions->updateRaycasting = false;
 
 			}
-			if (raycastingOptions->fileChanged)
+			if (raycastingOptions->fileChanged || renderImGuiOptions->fileChanged)
 			{
 				this->updateFile();
 				this->updateScene();
+				renderImGuiOptions->fileChanged = false;
 			}
 
 			
@@ -200,9 +201,7 @@ __global__ void CudaIsoSurfacRenderer
 	cudaSurfaceObject_t raycastingSurface,
 	cudaTextureObject_t field1,
 	int rays,
-	float isoValue,
-	float samplingRate,
-	float IsosurfaceTolerance
+	RaycastingOptions raycastingOptions
 );
 
 __global__ void CudaIsoSurfacRenderer_float

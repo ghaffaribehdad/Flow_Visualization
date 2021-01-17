@@ -22,17 +22,17 @@ __device__ __host__ void BoundingBox::constructEyeCoordinates(const float3& eyeP
 }
 
 
-__host__ __device__ void BoundingBox::updateBoxFaces(const float3 & dimensions)
+__host__ __device__ void BoundingBox::updateBoxFaces(const float3 & dimensions, const float3 & center)
 {
-	m_dimensions = dimensions;
-	this->boxFaces[0] = dimensions.x / -2.0f;
-	this->boxFaces[1] = dimensions.x / 2.0f;
 
-	this->boxFaces[2] = dimensions.y / -2.0f;
-	this->boxFaces[3] = dimensions.y / 2.0f;
+	this->boxFaces[0] = center.x + dimensions.x / -2.0f;
+	this->boxFaces[1] = center.x + dimensions.x / 2.0f;
 
-	this->boxFaces[4] = dimensions.z / -2.0f;
-	this->boxFaces[5] = dimensions.z / 2.0f;
+	this->boxFaces[2] = center.y + dimensions.y / -2.0f;
+	this->boxFaces[3] = center.y + dimensions.y / 2.0f;
+
+	this->boxFaces[4] = center.z + dimensions.z / -2.0f;
+	this->boxFaces[5] = center.z + dimensions.z / 2.0f;
 
 
 }

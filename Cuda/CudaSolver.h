@@ -31,6 +31,10 @@ public:
 	__host__ virtual bool resetRealtime() { return true; };
 	bool FinalizeCUDA();
 
+	__host__ bool checkFile(SolverOptions * p_solverOptions)
+	{
+		return volume_IO.file_check(p_solverOptions->filePath + p_solverOptions->fileName + std::to_string(p_solverOptions->currentIdx) + ".bin");
+	}
 	// Solver Parameters
 	SolverOptions * solverOptions;
 

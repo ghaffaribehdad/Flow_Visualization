@@ -34,31 +34,46 @@ public:
 	{
 		if (renderImGuiOptions->showStreaklines)
 		{
-			
-			switch (renderingOptions->drawMode)
+
+			if (!streaklineSolver.checkFile(solverOptions))
 			{
-			case(DrawMode::DrawMode::REALTIME):
+				ErrorLogger::Log("Cannot locate the file!");
+				renderImGuiOptions->showStreaklines = false;
+			}
+			else
 			{
 
-				if (!solverOptions->drawComplete)
+
+				switch (renderingOptions->drawMode)
 				{
-					this->updateSceneRealtime();
-				}
-				if (renderImGuiOptions->updateStreaklines)
+				case(DrawMode::DrawMode::REALTIME):
 				{
-					this->resetRealtime();
-					renderImGuiOptions->updateStreaklines = false;
+
+					if (!solverOptions->drawComplete)
+					{
+						this->updateSceneRealtime();
+						renderImGuiOptions->updateRaycasting = true;
+						renderImGuiOptions->fileChanged = true;
+					}
+					if (renderImGuiOptions->updateStreaklines)
+					{
+						this->resetRealtime();
+						renderImGuiOptions->updateStreaklines = false;
+					}
+					break;
 				}
-				break;
+				default:
+					if (renderImGuiOptions->updateStreaklines)
+					{
+						this->updateScene();
+						renderImGuiOptions->updateStreaklines = false;
+					}
+					break;
+				}
+
 			}
-			default:
-				if (renderImGuiOptions->updateStreaklines)
-				{
-					this->updateScene();
-					renderImGuiOptions->updateStreaklines = false;
-				}
-				break;
-			}
+			
+			
 
 
 		}
@@ -109,6 +124,7 @@ public:
 		{
 
 			this->initializeRealtime();
+
 		}
 		else
 		{
@@ -116,7 +132,7 @@ public:
 		}
 		this->streaklineSolver.solveRealtime(streakCounter);
 		this->streaklineSolver.FinalizeCUDA();
-
+		this->solverOptions->currentIdx = solverOptions->firstIdx + streakCounter;
 		return true;
 	}
 

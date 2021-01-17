@@ -20,10 +20,12 @@ public:
 	int isoMeasure_1 = IsoMeasure::VelocityMagnitude;
 	int isoMeasure_2 = IsoMeasure::VelocityMagnitude;
 
+	float clipBox[3] = { 1.0f,1.0f,1.0f };
+	float clipBoxCenter[3] = { 0.0f,0.0f,0.0f };
 
 	float wallNormalClipping = 0.5f;
 
-	float color_0[3] = { 0.8f,0.8f,0.8f};
+	float color_0[3] = { 127 / 255.0f,201 / 255.0f,127 / 255.0f };
 
 	float minColor[4] = { 5 / 255.0f,113 / 255.0f,176 / 255.0f };
 	float maxColor[4] = { 202 / 255.0f,0 / 255.0f,32 / 255.0f };

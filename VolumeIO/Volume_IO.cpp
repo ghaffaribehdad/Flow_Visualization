@@ -150,7 +150,7 @@ bool VolumeIO::Volume_IO::Read()
 	myFile.seekg(0, std::ios::beg);
 
 	// size of the buffer
-	const int buffer_size = static_cast<int>(end - start);
+	const size_t buffer_size = static_cast<size_t>(end - start);
 
 	// resize it to fit the dataset
 	(this->buffer).resize(buffer_size);

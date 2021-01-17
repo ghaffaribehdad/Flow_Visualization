@@ -329,11 +329,11 @@ __device__  float3 GradientAtGrid_X(cudaTextureObject_t tex, float3 position, in
 
 __device__ float FetchTextureSurface::ShearStress::ValueAtXYZ_Tex(cudaTextureObject_t tex, const float3 & position)
 {
-	float4 dV_dY = tex3D<float4>(tex, position.x, position.y + 0.001 / 2.0f, position.z);
+	float4 dV_dY = tex3D<float4>(tex, position.x, position.y + 1, position.z);
 	
-	dV_dY -= tex3D<float4>(tex, position.x, position.y - 0.001 / 2.0f, position.z);
+	dV_dY -= tex3D<float4>(tex, position.x, position.y - 1, position.z);
 
-	float2 ShearStress =make_float2(dV_dY.x / 0.001f, dV_dY.z / 0.001f);
+	float2 ShearStress =make_float2(dV_dY.x / 2.0f, dV_dY.z / 2.0f);
 
 	return fabsf(sqrtf(dot(ShearStress, ShearStress)));
 }

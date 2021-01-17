@@ -51,13 +51,19 @@ struct RenderingOptions
 		119.0f / 255.0f,
 		1.0f
 	};
-	float maxColor[4] = 
+	float maxColor[4] =
 	{
-		217.0f / 255.0f,
-		95.0f / 255.0f,
-		2.0f / 255.0f,
-		1.0f 
+	27.0f / 255.0f,
+	158.0f / 255.0f,
+	119.0f / 255.0f,
+	1.0f
 	};
+	//{
+	//	217.0f / 255.0f,
+	//	95.0f / 255.0f,
+	//	2.0f / 255.0f,
+	//	1.0f 
+	//};
 	int renderingMode = RenderingMode::RenderingMode::TUBES;
 	int drawMode = DrawMode::DrawMode::REALTIME;
 
@@ -70,6 +76,7 @@ struct RenderingOptions
 
 	bool showSeedBox = true;
 	bool showVolumeBox = true;
+	bool showClipBox = true;
 
 	float boxRadius = 0.005f;
 	int lineLength = 5;

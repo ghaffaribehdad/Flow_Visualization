@@ -17,8 +17,16 @@ private:
 	UINT bufferSize = 0;
 
 public:
-	VertexBuffer(){}
-	
+	VertexBuffer() {}
+
+	bool initialized()
+	{
+		if (bufferSize == 0)
+			return false;
+		else
+			return true;
+	}
+
 	ID3D11Buffer* Get() const
 	{
 		return buffer.Get();

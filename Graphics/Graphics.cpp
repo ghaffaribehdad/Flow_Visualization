@@ -91,14 +91,17 @@ void Graphics::RenderFrame()
 
 	volumeBox.show(&renderImGuiOptions, solverOptions.gridDiameter);		// Show Volume Box
 	seedBox.show(&renderImGuiOptions, solverOptions.seedBox, solverOptions.seedBoxPos);		// Show Seed Box
+	clipBox.show(&renderImGuiOptions, raycastingOptions.clipBox, raycastingOptions.clipBoxCenter);		// Show Seed Box
 
 
 
 
+
+
+	raycasting.show(&renderImGuiOptions);				// Raycasting 
 
 	if (!renderImGuiOptions.pauseRendering)
 	{
-		raycasting.show(&renderImGuiOptions);				// Raycasting 
 		streamlineRenderer.show(&renderImGuiOptions);		// Streamline rendering
 		streaklineRenderer.show(&renderImGuiOptions);		// Streakline rendering
 		pathlineRenderer.show(&renderImGuiOptions);			// Pathline rendering
@@ -118,12 +121,13 @@ void Graphics::RenderFrame()
 
 	*/
 
-	if (renderImGuiOptions.saveScreenshot && !renderImGuiOptions.saved)
-	{
-		std::string fullName = dispersionOptions.filePath + dispersionOptions.fileName + std::to_string(solverOptions.currentIdx) + std::string(".jpg");
-		this->saveTextureJPEG(getBackBuffer(), fullName);
-		renderImGuiOptions.saved = true;
-	}
+	//if (renderImGuiOptions.saveScreenshot && !renderImGuiOptions.saved)
+	//{
+	//	std::string fullName = dispersionOptions.filePath + dispersionOptions.fileName + std::to_string(solverOptions.currentIdx) + std::string(".jpg");
+	//	this->saveTextureJPEG(getBackBuffer(), fullName);
+	//	renderImGuiOptions.saved = true;
+	//}
+
 
 
 	/*
@@ -145,6 +149,15 @@ void Graphics::RenderFrame()
 		this->seedBox.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_LINELIST);
 
 	}
+
+
+	if (renderingOptions.showClipBox)
+	{
+		this->clipBox.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_LINELIST);
+
+	}
+
+
 	if (this->renderImGuiOptions.showStreamlines)
 	{	
 		switch (renderingOptions.renderingMode)
@@ -207,6 +220,16 @@ void Graphics::RenderFrame()
 			this->renderImGuiOptions.releaseStreaklines = false;
 		}
 	}
+
+
+	if (renderImGuiOptions.saveScreenshot)
+	{
+		std::string fullName = dispersionOptions.filePath + solverOptions.outputFileName + std::to_string(solverOptions.currentIdx) + std::string(".jpg");
+		this->saveTextureJPEG(getBackBuffer(), fullName);
+		renderImGuiOptions.saveScreenshot = false;
+	}
+
+
 	/*
 ##############################################################
 ##															##
@@ -386,6 +409,15 @@ bool Graphics::InitializeResources()
 		this->adapter
 	);
 
+	clipBox.setResources
+	(
+		this->renderingOptions,
+		this->solverOptions,
+		this->deviceContext.Get(),
+		this->device.Get(),
+		this->adapter
+	);
+
 	raycasting.setResources
 	(
 		&this->camera,
@@ -503,7 +535,8 @@ bool Graphics::InitializeResources()
 	if (!seedBox.initializeBuffers())
 		return false;
 
-
+	if (!clipBox.initializeBuffers())
+		return false;
 
 	return true;
 }
@@ -599,6 +632,8 @@ bool Graphics::InitializeShaders()
 	if (!this->seedBox.initializeShaders())
 		return false;
 
+	if (!this->clipBox.initializeShaders())
+		return false;
 
 	return true;
 }
@@ -612,9 +647,11 @@ bool Graphics::InitializeScene()
 	float center[3] = { 0,0,0 };
 	DirectX::XMFLOAT4 redColor = { 1,0,0,1.0f};
 	DirectX::XMFLOAT4 greenColor = { 0,1,0,1.0f };
+	DirectX::XMFLOAT4 blueColor = { 0,0,1,1.0f };
 
 	volumeBox.addBox(this->solverOptions.gridDiameter, center, greenColor);
 	seedBox.addBox( this->solverOptions.seedBox, this->solverOptions.seedBoxPos, redColor);
+	clipBox.addBox(this->raycastingOptions.clipBox, this->raycastingOptions.clipBoxCenter, blueColor);
 	
 	return true;
 }

@@ -49,6 +49,24 @@ namespace VolumeIO
 
 	public:
 
+
+		static bool file_check(std::string file)
+		{
+			std::ifstream myFile = std::ifstream(file.c_str(), std::ios::binary);
+
+			// check whether it can open the file
+			if (!myFile.is_open())
+			{
+				return false;
+			}
+			else
+			{
+				myFile.close();
+				return true;
+			}
+		}
+
+
 		Timer timer;
 		// Setter and getter functions
 

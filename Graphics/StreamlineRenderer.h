@@ -17,11 +17,21 @@ public:
 	{
 		if (renderImGuiOptions->showStreamlines)
 		{
-			if (renderImGuiOptions->updateStreamlines)
+
+			if (!streamlineSolver.checkFile(solverOptions))
 			{
-				this->updateScene();
-				renderImGuiOptions->updateStreamlines = false;
+				ErrorLogger::Log("Cannot locate the file!");
+				renderImGuiOptions->showStreamlines = false;
 			}
+			else
+			{
+				if (renderImGuiOptions->updateStreamlines)
+				{
+					this->updateScene();
+					renderImGuiOptions->updateStreamlines = false;
+				}
+			}
+
 		}
 
 	}
@@ -31,7 +41,11 @@ public:
 	bool updateScene(bool WriteToFile = false)
 	{
 	
-		this->vertexBuffer.Get()->Release();
+		if (vertexBuffer.initialized())
+		{
+			this->vertexBuffer.Get()->Release();
+		}
+
 		HRESULT hr = this->vertexBuffer.Initialize(this->device, NULL, solverOptions->lineLength * solverOptions->lines_count);
 		if (FAILED(hr))
 		{
@@ -187,17 +201,6 @@ public:
 			return false;
 		}
 
-
-
-		//Dummy Vertex Buffer which will be expand to the desired size in UpdateScene
-		hr = this->vertexBuffer.Initialize(this->device, NULL, 1);
-		if (FAILED(hr))
-		{
-			ErrorLogger::Log(hr, "Failed to Create Vertex Buffer.");
-			return false;
-		}
-
-		this->solverOptions->p_vertexBuffer = this->vertexBuffer.Get();
 
 		return true;
 

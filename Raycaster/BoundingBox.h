@@ -21,6 +21,7 @@ public:
 	float aspectRatio;
 	int3 gridSize;
 	float3 m_dimensions;
+	float3 m_clipBox;
 	float boxFaces[6];
 
 	int m_width;
@@ -28,6 +29,6 @@ public:
 
 
 	__host__ __device__ void constructEyeCoordinates(const float3& eyePos, const float3& viewDir, const float3& upVec);
-	__host__ __device__ void updateBoxFaces(const float3 & dimensions);
+	__host__ __device__ void updateBoxFaces(const float3 & dimensions, const float3 & center);
 	__host__ __device__ void updateAspectRatio(const int & width, const int & height);
 };

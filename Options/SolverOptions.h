@@ -8,15 +8,15 @@ struct SolverOptions
 public:
 
 
-	std::string fileName ="FieldP";
-	
-	// KIT3 Optical Flow on Streamwise timespace field
-	std::string  filePath= "G:\\KIT3MipMapL1\\";
+	std::string  fileName ="FieldP";
+	std::string  filePath = "G:\\KIT3MipMapL1\\";
 
 
 
 	float seedWallNormalDist = 0.1f;
 	float tilt_deg = 15.0f;
+
+	std::string  outputFileName= "screen";
 
 	char filePath_out[100] = "D:\\copy\\bf\\Binary_z_Major\\Padded\\";
 	char fileName_out[100] = "Lineset";

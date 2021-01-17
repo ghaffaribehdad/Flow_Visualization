@@ -63,13 +63,11 @@ protected:
 	bool initializeRasterizer();			// Create Rasterizer state
 	virtual void setBuffers();					// set vertex and index and constant buffer
 	virtual bool initilizeIndexBuffer() { return true; }
-
 	virtual void resetRealtime() {};
 public:
 
 	virtual void addBox(float* edges, float* pos, DirectX::XMFLOAT4 color) {};			// Adds static scenes
 	virtual bool release() = 0;
-	//virtual void show(RenderImGuiOptions* renderImGuiOptions) = 0;
 	virtual void updateBuffers() {};						// Virutal function to implement Main Routine of the LineRenderer
 	virtual bool updateDraw() { return true; };
 	virtual void draw(Camera& camera, D3D11_PRIMITIVE_TOPOLOGY Toplogy) {}		// Draw results to the backbuffer
