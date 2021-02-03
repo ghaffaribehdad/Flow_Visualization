@@ -34,7 +34,7 @@ public:
 		IDXGIAdapter* _pAdapter,
 		ID3D11DeviceContext* _deviceContext,
 		DispersionOptions* _dispersionOptions,
-		FluctuationheightfieldOptions* _fluctuationheightfieldOptions
+		TimeSpaceRenderingOptions* timeSpaceRenderingOptions
 	)
 	{
 		this->camera = _camera;
@@ -50,7 +50,7 @@ public:
 		this->pAdapter = _pAdapter;
 		this->deviceContext = _deviceContext;
 		this->dispersionOptions = _dispersionOptions;
-		this->fluctuationheightfieldOptions = _fluctuationheightfieldOptions;
+		this->timeSpaceRenderingOptions = timeSpaceRenderingOptions;
 	}
 
 	virtual void show(RenderImGuiOptions* renderImGuiOptions) override
@@ -62,11 +62,11 @@ public:
 			//	this->fluctuationHeightfield.retrace();
 			//	this->fluctuationheightfieldOptions .retrace = false;
 			//}
-			if (!this->fluctuationheightfieldOptions->initialized)
+			if (!this->timeSpaceRenderingOptions->initialized)
 			{
 
 				this->initialize(cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
-				this->fluctuationheightfieldOptions->initialized = true;
+				this->timeSpaceRenderingOptions->initialized = true;
 			}
 			// Overrided draw
 			this->draw();
@@ -81,23 +81,26 @@ public:
 		}
 		else
 		{
-			if (fluctuationheightfieldOptions->released)
-			{
-				this->release();
-				fluctuationheightfieldOptions->released = false;
-			}
+			//if (fluctuationheightfieldOptions->released)
+			//{
+			//	this->release();
+			//	fluctuationheightfieldOptions->released = false;
+			//}
 		}
 	}
-	void traceFluctuationfield3D();
-	void gradientFluctuationfield();
+
+	void generateTimeSpaceField3D(TimeSpaceRenderingOptions * timeSpaceOptions);
+	
+
+	void gaussianFilter();
 	virtual void rendering() override;
 	__host__ bool initializeBoundingBox() override;
 
 
-	FluctuationheightfieldOptions* fluctuationheightfieldOptions;
+	TimeSpaceRenderingOptions* timeSpaceRenderingOptions;
 private:
 
-	size_t3 m_gridSize3D = { 0,0,0 };
+	int3 m_gridSize3D = { 0,0,0 };
 	int2 m_gridSize2D = { 0,0 };
 	CudaArray_2D<float> heightArray2D;
 	cudaTextureObject_t heightFieldTexture2D;

@@ -18,9 +18,9 @@ bool FluctuationHeightfield::initialize
 {
 	this->m_gridSize3D =
 	{
-		(size_t)solverOptions->gridSize[2],
-		(size_t)fluctuationheightfieldOptions->wallNormalgridSize,
-		(size_t)1 + (size_t)fluctuationheightfieldOptions->lastIdx - (size_t)fluctuationheightfieldOptions->firstIdx
+		solverOptions->gridSize[2],
+		solverOptions->gridSize[1],
+		1 + solverOptions->lastIdx - solverOptions->firstIdx
 
 	};
 
@@ -40,44 +40,68 @@ bool FluctuationHeightfield::initialize
 
 
 	// Initialize Height Field as an empty CUDA array 3D
-	if (!a_HeightSurface_Primary.initialize(m_gridSize3D.x, m_gridSize3D.y, m_gridSize3D.z))
+	if (!a_HeightArray3D.initialize(m_gridSize3D.x, m_gridSize3D.y, m_gridSize3D.z))
 		return false;
+
 
 	// Bind the array of heights to the CUDA surface
 	if (!this->InitializeHeightSurface3D())
 		return false;
 
 	// Trace the fluctuation field
-	this->traceFluctuationfield3D();
+	this->generateTimeSpaceField3D(timeSpaceRenderingOptions);
 
-	//this->gradientFluctuationfield();
 
-	this->s_HeightSurface_Primary.destroySurface();
+	// Destroy the surface
+	this->s_HeightSurface.destroySurface();
 
-	this->volumeTexture3D_height.setArray(a_HeightSurface_Primary.getArrayRef());
-	this->volumeTexture3D_height_extra.setArray(a_HeightSurface_Primary_Extra.getArrayRef());
+	//// Initilize volume texture to do filtering
+	this->volumeTexture3D_height.setArray(a_HeightArray3D.getArrayRef());
+	this->volumeTexture3D_height.initialize_array(false, addressMode_X, addressMode_Y, addressMode_Z);
 
-	this->volumeTexture3D_height.initialize_array();
-	this->volumeTexture3D_height.initialize_array();
+
+	// Allocate new 3D Array
+	if (!a_HeightArray3D_Copy.initialize(m_gridSize3D.x, m_gridSize3D.y, m_gridSize3D.z))
+		return false;
+
+
+	// Bind the new array 3D to cuda surface and initilize it
+	cudaArray_t pCudaArray = a_HeightArray3D_Copy.getArray();
+	this->s_HeightSurface.setInputArray(pCudaArray);
+	if (!this->s_HeightSurface.initializeSurface())
+		return false;
+
+	
+	// Now we can Apply the filter
+	this->gaussianFilter();
+
+	
+
+	this->volumeTexture3D_height.release();
+	this->s_HeightSurface.destroySurface();
+
+	volumeTexture3D_height.setArray(a_HeightArray3D_Copy.getArrayRef());
+
+	this->volumeTexture3D_height.initialize_array(false, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
+
 
 	return true;
 }
 
-void  FluctuationHeightfield::traceFluctuationfield3D()
+
+void  FluctuationHeightfield::generateTimeSpaceField3D(TimeSpaceRenderingOptions * timeSpaceOptions)
 {
 
 	unsigned int blocks;
 	dim3 thread = { maxBlockDim,maxBlockDim,1 };
-	int nMesh_y = (int)m_gridSize3D.y; // mesh size in spanwise direction
 
-	blocks = static_cast<unsigned int>((nMesh_y % (thread.x * thread.y) == 0 ?
-		nMesh_y / (thread.x * thread.y) : nMesh_y / (thread.x * thread.y) + 1));
+	blocks = BLOCK_THREAD(m_gridSize3D.x); // Kernel calls are based on the Spanwise gridSize
 
-
-	for (int t = solverOptions->currentIdx; t <= solverOptions->lastIdx; t++)
+	
+	for (int t = 0; t < m_gridSize3D.z; t++)
 	{
 		// First Read the Compressed file and move it to GPU
-		this->volume_IO.readVolume(t,solverOptions);
+		this->volume_IO.readVolume(t+solverOptions->firstIdx,solverOptions);
 
 		// Copy the device pointer
 		float * h_VelocityField = this->volume_IO.getField_float_GPU();
@@ -91,13 +115,13 @@ void  FluctuationHeightfield::traceFluctuationfield3D()
 		cudaFree(h_VelocityField);
 
 		// Copy from texture to surface
-		copyTextureToSurface << < blocks, thread >> >
+		copyTextureToSurface<FetchTextureSurface::Channel_X, FetchTextureSurface::Channel_Y, FetchTextureSurface::Channel_Z, FetchTextureSurface::Channel_W> << < blocks, thread >> >
 			(
 				10, //		Streamwise Pos
 				t, //		Timestep
-				solverOptions,	
+				*solverOptions,	
 				volumeTexture.getTexture(),
-				s_HeightSurface_Primary.getSurfaceObjectRef()
+				s_HeightSurface.getSurfaceObject()
 			);
 
 		// Release the volume texture
@@ -109,27 +133,24 @@ void  FluctuationHeightfield::traceFluctuationfield3D()
 
 
 
-void FluctuationHeightfield::gradientFluctuationfield()
+void FluctuationHeightfield::gaussianFilter()
 {
 	// Calculates the block and grid sizes
 	unsigned int blocks;
 	dim3 thread = { maxBlockDim,maxBlockDim,1 };
-	int nMesh_y = (int)m_gridSize3D.y; // mesh size in spanwise direction
 
-	blocks = static_cast<unsigned int>((nMesh_y % (thread.x * thread.y) == 0 ?
-		nMesh_y / (thread.x * thread.y) : nMesh_y / (thread.x * thread.y) + 1));
+	blocks = BLOCK_THREAD((int)m_gridSize3D.y);
 
-	// After this step the heightSurface is populated with the height of each particle
+	applyGaussianFilter << < blocks, thread >> > 
+	(
+		9,
+		{ m_gridSize3D.x,m_gridSize3D.y,m_gridSize3D.z},
+		this->volumeTexture3D_height.getTexture(),
+		this->s_HeightSurface.getSurfaceObject()
+	);
 
-	fluctuationfieldGradient3D<FetchTextureSurface::Channel_X> << < blocks, thread >> >
-		(
-			s_HeightSurface_Primary.getSurfaceObject(),
-			*this->solverOptions,
-			*this->fluctuationheightfieldOptions
-		);
+
 }
-
-
 
 __host__ void FluctuationHeightfield::rendering()
 {
@@ -146,15 +167,17 @@ __host__ void FluctuationHeightfield::rendering()
 	blocks = static_cast<unsigned int>((this->rays % (thread.x * thread.y) == 0 ? rays / (thread.x * thread.y) : rays / (thread.x * thread.y) + 1));
 
 
+
+
+
 	CudaTerrainRenderer_extra_fluctuation<FetchTextureSurface::Channel_X> << < blocks, thread >> >
 		(
 			this->raycastingSurface.getSurfaceObject(),
 			this->volumeTexture3D_height.getTexture(),
-			this->volumeTexture3D_height_extra.getTexture(),
 			int(this->rays),
-			this->fluctuationheightfieldOptions->samplingRate_0,
+			this->timeSpaceRenderingOptions->samplingRate_0,
 			this->raycastingOptions->tolerance_0,
-			*fluctuationheightfieldOptions
+			*timeSpaceRenderingOptions
 			);
 
 }
@@ -166,7 +189,7 @@ __host__ bool FluctuationHeightfield::initializeBoundingBox()
 
 	h_boundingBox->gridSize = make_int3((int)this->m_gridSize3D.x, (int)this->m_gridSize3D.y, (int)this->m_gridSize3D.z); // Use the heightfield dimension instead of velocity volume
 	h_boundingBox->updateBoxFaces(ArrayFloat3ToFloat3(raycastingOptions->clipBox), ArrayFloat3ToFloat3(raycastingOptions->clipBoxCenter));
-	h_boundingBox->m_dimensions = ArrayFloat3ToFloat3(solverOptions->gridDiameter);
+	h_boundingBox->m_dimensions = ArrayFloat3ToFloat3(timeSpaceRenderingOptions->gridDiameter);
 	h_boundingBox->updateAspectRatio(*width, *height);						
 	h_boundingBox->constructEyeCoordinates
 	(
@@ -193,13 +216,10 @@ __host__ bool FluctuationHeightfield::InitializeHeightSurface3D()
 {
 	// Assign the hightArray to the hightSurface and initialize the surface
 	cudaArray_t pCudaArray = NULL;
-
-	pCudaArray = a_HeightSurface_Primary.getArray();
-
-	this->s_HeightSurface_Primary.setInputArray(pCudaArray);
-	if (!this->s_HeightSurface_Primary.initializeSurface())
+	pCudaArray = a_HeightArray3D.getArray();
+	this->s_HeightSurface.setInputArray(pCudaArray);
+	if (!this->s_HeightSurface.initializeSurface())
 		return false;
-
 
 	return true;
 }

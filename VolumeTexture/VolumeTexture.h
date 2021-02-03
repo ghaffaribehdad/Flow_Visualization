@@ -56,7 +56,10 @@ public:
 	);
 
 	void release();
-
+	void destroyTexture()
+	{
+		gpuErrchk(cudaDestroyTextureObject(this->t_field));
+	}
 	cudaTextureObject_t getTexture()
 	{
 		return this->t_field;

@@ -15,10 +15,15 @@ namespace FetchTextureSurface
 	struct Measure
 	{
 		//Return the texel at XYZ of the Texture (Boundaries are controlled by the cudaTextureAddressMode
-		__device__	virtual	float		ValueAtXYZ_Tex(cudaTextureObject_t tex, const float3 & position) { return 0; };
+		__device__	virtual	float 		ValueAtXYZ_Tex(cudaTextureObject_t tex, const float3 & position) { return 0; };
+		__device__	virtual	float		ValueAtXYZ_Tex_GradientBase(cudaTextureObject_t tex, const float3 & position, const float3 & gridDiamter, const int3 & gridSize) { return 1; };
+
+
+
 		__device__	virtual	float		ValueAtXYZ_Surf(cudaSurfaceObject_t surf, const int3 & position) { return 0; };
 		__device__  virtual	float3		GradientAtXYZ_Surf(cudaSurfaceObject_t surf, const int3 & position, const float3 & gridDiameter, const int3 & gridSize);
 		__device__			float3		GradientAtXYZ_Tex(cudaTextureObject_t tex, const float3 & position, const float3 & gridDiameter, const int3 & gridSize);
+		__device__			float3		GradientAtXYZ_Tex_GradientBase(cudaTextureObject_t tex, const float3 & position, const float3 & gridDiameter, const int3 & gridSize);
 
 		__device__	static	float3		ValueAtXYZ_XYZ_Tex(cudaTextureObject_t tex, const float3 & position);
 		__device__	static	float2		ValueAtXYZ_XY_Tex(cudaTextureObject_t tex, const float3 & position);
@@ -69,6 +74,7 @@ namespace FetchTextureSurface
 
 	};
 
+
 	struct ShearStress : public Measure
 	{
 		// calculates the value of the field at position XYZ
@@ -76,6 +82,17 @@ namespace FetchTextureSurface
 
 
 	};
+
+
+	struct Lambda2 : public Measure
+	{
+		// calculates the value of the field at position XYZ
+		__device__	virtual	float ValueAtXYZ_Tex_GradientBase(cudaTextureObject_t tex, const float3 & position, const float3 & gridDiamter, const int3 & gridSize) override;
+
+
+	};
+
+
 
 
 	struct TurbulentDiffusivity : public Measure
@@ -94,6 +111,8 @@ namespace FetchTextureSurface
 			int maxIteration
 		);
 	};
+
+	 
 
 
 

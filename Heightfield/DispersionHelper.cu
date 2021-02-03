@@ -14,10 +14,15 @@ template __global__ void fluctuationfieldGradient3D<struct FetchTextureSurface::
 (\
 	cudaSurfaceObject_t heightFieldSurface3D,
 	SolverOptions solverOptions,
-	FluctuationheightfieldOptions fluctuationOptions
+	TimeSpaceRenderingOptions fluctuationOptions
 );
 
-
+template __global__ void fluctuationfieldGradient3D<struct FetchTextureSurface::Channel_Y>\
+(\
+	cudaSurfaceObject_t heightFieldSurface3D,
+	SolverOptions solverOptions,
+	TimeSpaceRenderingOptions fluctuationOptions
+	);
 
 
 __global__ void traceDispersion
@@ -274,38 +279,40 @@ __global__ void fluctuationfieldGradient3D
 (
 	cudaSurfaceObject_t heightFieldSurface3D,
 	SolverOptions solverOptions,
-	FluctuationheightfieldOptions fluctuationOptions
+	TimeSpaceRenderingOptions fluctuationOptions
 )
 {
 
 	Observable observable;
-	int index = CUDA_INDEX;
+	int index = CUDA_INDEX; //Span-wise or X direction
 	
 	int timeDim = 1 + solverOptions.lastIdx - solverOptions.firstIdx;
 
-	int3 gridSize = { solverOptions.gridSize[2],static_cast<int>(fluctuationOptions.wallNormalgridSize), timeDim };
+	int3 gridSize = { solverOptions.gridSize[2],static_cast<int>(solverOptions.gridSize[1]), timeDim };
 
 	// index in this case it the wall-normal position ( second index)
-	if (index < gridSize.y)
+	if (index < gridSize.x)
 	{
 		// is the first index 
-		for (int z = 0; z < solverOptions.gridDiameter[2] ; z++)
+		for (int y = 0; y < gridSize.y; y++)
 		{
 			// t is the third index
-			for (int t = 0; t < timeDim; t++)
+			for (int t = 0; t < gridSize.z; t++)
 			{
 				float3 gradient = { 0.0f,0.0f,0.0f };
 
+				float4 texel = ValueAtXYZ_Surface_float4(heightFieldSurface3D, make_int3(index, y, t));
 
-				gradient = observable.GradientAtXYZ_Surf(heightFieldSurface3D, make_int3(z,index, t), ARRAYTOFLOAT3(solverOptions.gridDiameter), gridSize);
-				float3 gradient3D = normalize(make_float3(1.0, gradient.x, gradient.z));
+				gradient = observable.GradientAtXYZ_Surf(heightFieldSurface3D, make_int3(index,y, t), ARRAYTOFLOAT3(fluctuationOptions.gridDiameter), gridSize);
+				float sum = sqrt((gradient.x * gradient.x) + (gradient.z * gradient.z));
+				gradient = gradient / sum;
 
-				float4 texel = ValueAtXYZ_Surface_float4(heightFieldSurface3D, make_int3(z, index, t));
+				
 
-				texel.z = gradient3D.y;
-				texel.w = gradient3D.z;
+				texel.z = gradient.x;
+				texel.w = gradient.z;
 
-				surf3Dwrite(texel, heightFieldSurface3D, sizeof(float4) * z, index, t);
+				surf3Dwrite(texel, heightFieldSurface3D, sizeof(float4) * index, y, t);
 
 
 			}

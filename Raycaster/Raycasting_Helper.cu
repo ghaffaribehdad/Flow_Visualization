@@ -94,7 +94,90 @@ __device__ float2 findIntersections(const float3 pixelPos, const BoundingBox bou
 }
 
 
+// return the far and near intersection with bounding box
+__device__ float2 findEnterExit(const float3 & pixelPos, const float3  & dir, float boxFaces[6])
+{
 
+	bool hit = true;
+
+
+	float arrayPixelPos[3] = { pixelPos.x, pixelPos.y, pixelPos.z };
+
+	float tNear = -10000000;
+	float tFar = +10000000;
+
+	float D[3] = { dir.x,dir.y,dir.z };
+
+	// iterates over x,y,z planes
+	for (int i = 0; i < 3; i++)
+	{
+		float plane1 = boxFaces[2 * i];
+		float plane2 = boxFaces[2 * i + 1];
+		float t1 = 0;
+		float t2 = 0;
+
+
+		// check if ray and axis are aligned
+		if (D[i] == 0)
+		{
+			if (arrayPixelPos[i] < plane1 || arrayPixelPos[i] > plane2)
+			{
+				hit = false;
+				break;
+			}
+		}
+		else
+		{
+			t1 = (plane1 - arrayPixelPos[i]) / D[i];
+			float tTemp = (plane2 - arrayPixelPos[i]) / D[i];
+
+			// Sort t1 and t2
+			if (t1 <= tTemp)
+			{
+				t2 = tTemp;
+			}
+			else
+			{
+				t2 = t1;
+				t1 = tTemp;
+			}
+
+
+			if (t1 > tNear)
+				tNear = t1;
+			if (t2 < tFar)
+				tFar = t2;
+			if (tNear > tFar)
+			{
+				hit = false;
+				break;
+			}
+			if (tFar < 0)
+			{
+				hit = false;
+				break;
+			}
+		}
+
+	}
+
+	if (hit)
+	{
+		if (tNear < 0)
+		{
+			return { 0,tFar };
+		}
+		else
+		{
+			return { tNear,tFar };
+		}
+	}
+	else
+	{
+		return { -1,-1 };
+	}
+
+}
 
 
 
@@ -135,6 +218,62 @@ __device__ float findExitPoint(const float2& entery, const float2& dir, const fl
 	// take the minimum value of ray parameter
 	return fmax(fmin(t_x, t_y), 0.00001f);
 }
+
+
+__device__ float findExitPoint3D(const float3& entery, const float3& dir, const float3 & cellSize)
+{
+
+	float3 step = entery / cellSize;
+	float3 edge = { 0,0,0 };
+
+	
+
+	if (dir.x < 0)
+	{
+		edge.x = (ceil(step.x) - 1) * cellSize.x;
+	}
+	else
+	{
+		edge.x = (floor(step.x) + 1) * cellSize.x;
+	}
+
+	if (dir.y < 0)
+	{
+		edge.y = (ceil(step.y) - 1) * cellSize.y;
+	}
+	else
+	{
+		edge.y = (floor(step.y) + 1) * cellSize.y;
+	}
+
+	if (dir.z < 0)
+	{
+		edge.z = (ceil(step.z) - 1) * cellSize.z;
+	}
+	else
+	{
+		edge.z = (floor(step.z) + 1) * cellSize.z;
+	}
+
+	float t_x = 0;
+	float t_y = 0;
+	float t_z = 0;
+
+
+	t_x = (edge.x - entery.x) / dir.x;
+	t_y = (edge.y - entery.y) / dir.y;
+	t_z = (edge.z - entery.z) / dir.z;
+
+	float t_min = t_x;
+	if (t_y < t_min)
+		t_min = t_y;
+	if (t_z < t_min)
+		t_min = t_z;
+	// take the minimum value of ray parameter
+	return fmax(t_min, 0.000001f);
+}
+
+
 
 
 

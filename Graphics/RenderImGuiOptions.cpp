@@ -52,7 +52,11 @@ void RenderImGuiOptions::drawSolverOptions()
 		this->saveScreenshot = true;
 	}
 
-	
+	if (ImGui::InputInt("Range",&this->screenshotRange,1,10))
+	{
+	}
+
+
 	if (ImGui::InputText("File Path", _strdup(solverOptions->filePath.c_str()), 100 * sizeof(char)))
 	{
 	}
@@ -783,7 +787,9 @@ void RenderImGuiOptions::drawRaycastingOptions()
 
 	if (raycastingOptions->isoMeasure_0 == IsoMeasure::Velocity_X_Plane ||
 		raycastingOptions->isoMeasure_0 == IsoMeasure::Velocity_Y_Plane ||
-		raycastingOptions->isoMeasure_0 == IsoMeasure::Velocity_Z_Plane)
+		raycastingOptions->isoMeasure_0 == IsoMeasure::Velocity_Z_Plane	||
+		raycastingOptions->isoMeasure_0 == IsoMeasure::LAMBDA2
+		)
 	{
 		if (ImGui::InputFloat("Min Value", (float*)&raycastingOptions->minVal, 0.001f,0.1f))
 		{
@@ -999,9 +1005,9 @@ void RenderImGuiOptions::drawDispersionOptions()
 
 
 
-void RenderImGuiOptions::drawFluctuationHeightfieldOptions()
+void RenderImGuiOptions::drawTimeSpaceOptions()
 {
-	ImGui::Begin("Fluctuation Height-field");
+	ImGui::Begin("Time-Space Rendering");
 
 	if (solverOptions->lastIdx - solverOptions->firstIdx > 0)
 	{
@@ -1026,7 +1032,10 @@ void RenderImGuiOptions::drawFluctuationHeightfieldOptions()
 
 	}
 
-
+	if (ImGui::InputInt("Number of Slices", &fluctuationOptions->streamwiseSlice, 1, 1))
+	{
+		this->updatefluctuation = true;
+	}
 
 	if (ImGui::DragFloat("Height Tolerance", &fluctuationOptions->hegiht_tolerance, 0.0001f, 0.0001f, 1, "%8f"))
 	{
@@ -1377,7 +1386,7 @@ void RenderImGuiOptions::drawDataset()
 			case Dataset::Dataset::KIT3_COMPRESSED:
 			{
 				this->solverOptions->fileName = "Fluc_Comp_";
-				this->solverOptions->filePath = "G:\\Comp_Fluc\\";
+				this->solverOptions->filePath = "G:\\KIT3\\Comp_Fluc\\";
 
 
 				setArray<float>(&this->solverOptions->gridDiameter[0], 0.4f, 2.0f, 7.0f);
@@ -1396,32 +1405,16 @@ void RenderImGuiOptions::drawDataset()
 
 			}
 
-			case Dataset::Dataset::KIT3_INITIAL_COMPRESSED:
-			{
-				this->solverOptions->fileName = "FieldComp";
-				this->solverOptions->filePath = "G:\\KIT3InitialCompressed\\";
-			
 
-				setArray<float>(&this->solverOptions->gridDiameter[0], 0.4f, 2.0f, 7.0f);
-				setArray<float>(&this->solverOptions->seedBox[0], 0.4f, 2.0f, 7.0f);
-				setArray<float>(&this->raycastingOptions->clipBox[0], 0.4f, 2.0f, 7.0f);
-				setArray<int>(&this->solverOptions->gridSize[0], 64, 503, 2048);
-
-
-				this->solverOptions->dt = 0.001f;
-				this->solverOptions->periodic = true;
-				this->solverOptions->Compressed = true;
-				this->solverOptions->maxSize = 96000000;
-
-				break;
-
-			}
-
-			case Dataset::Dataset::KIT3_OF_COMPRESSED:
+			case Dataset::Dataset::KIT3_OF_AVG50_COMPRESSED:
 			{
 				this->solverOptions->fileName = "OF_AVG_COMP_50_";
-				this->solverOptions->filePath = "G:\\OF_AVG50_Comp\\";
+				this->solverOptions->filePath = "G:\\KIT3\\Comp_OF_AVG50\\";
 
+
+				this->solverOptions->firstIdx = 551;
+				this->solverOptions->lastIdx = 949;
+				this->solverOptions->currentIdx = 551;
 
 				setArray<float>(&this->solverOptions->gridDiameter[0], 0.4f, 2.0f, 7.0f);
 				setArray<float>(&this->solverOptions->seedBox[0], 0.4f, 2.0f, 7.0f);
@@ -1438,6 +1431,30 @@ void RenderImGuiOptions::drawDataset()
 
 			}
 
+			case Dataset::Dataset::KIT3_OF_COMPRESSED_FAST:
+			{
+				this->solverOptions->fileName = "OF_AVG_COMP_";
+				this->solverOptions->filePath = "G:\\KIT3\\Comp_OF_Fast\\";
+
+
+				this->solverOptions->firstIdx = 500;
+				this->solverOptions->lastIdx = 949;
+				this->solverOptions->currentIdx = 500;
+
+				setArray<float>(&this->solverOptions->gridDiameter[0], 0.4f, 2.0f, 7.0f);
+				setArray<float>(&this->solverOptions->seedBox[0], 0.4f, 2.0f, 7.0f);
+				setArray<float>(&this->raycastingOptions->clipBox[0], 0.4f, 2.0f, 7.0f);
+				setArray<int>(&this->solverOptions->gridSize[0], 64, 503, 2048);
+
+
+				this->solverOptions->dt = 0.001f;
+				this->solverOptions->periodic = true;
+				this->solverOptions->Compressed = true;
+				this->solverOptions->maxSize = 96000000;
+
+				break;
+
+			}
 
 			case Dataset::Dataset::KIT3_AVG_COMPRESSED_10:
 			{

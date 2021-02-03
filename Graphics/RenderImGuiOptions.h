@@ -31,6 +31,7 @@ private:
 
 	Camera*	camera;
 	Timer*	fpsTimer;
+	
 
 	// Pointers to the Option structures
 	SolverOptions*					solverOptions;
@@ -38,7 +39,7 @@ private:
 	RaycastingOptions*				raycastingOptions;
 	DispersionOptions*				dispersionOptions;
 	CrossSectionOptions*			crossSectionOptions;
-	FluctuationheightfieldOptions*	fluctuationOptions;
+	TimeSpaceRenderingOptions*	fluctuationOptions;
 	TurbulentMixingOptions*			turbulentMixingOptions;
 	TimeSpace3DOptions*				timeSpace3DOptions;
 
@@ -63,7 +64,7 @@ public:
 		SolverOptions * _solverOptions,
 		RaycastingOptions * _raycastingOptions,
 		DispersionOptions * _dispersionOptions,
-		FluctuationheightfieldOptions * _fluctuationheightfieldOptions,
+		TimeSpaceRenderingOptions * _fluctuationheightfieldOptions,
 		CrossSectionOptions * _crossSectionOptions,
 		TurbulentMixingOptions* _turbulentMixingOptions,
 		TimeSpace3DOptions * _timeSpace3DOptions
@@ -138,7 +139,7 @@ public:
 		this->drawLineRenderingOptions();			
 		this->drawRaycastingOptions();				
 		this->drawDispersionOptions();				
-		this->drawFluctuationHeightfieldOptions();	
+		this->drawTimeSpaceOptions();	
 		this->drawCrossSectionOptions();			
 		this->drawTurbulentMixingOptions();
 		this->drawTimeSpaceField();
@@ -154,7 +155,9 @@ public:
 	float viewDir[3] = { 0,0,0 };
 	float upDir[3] = { 0,0,0 };
 
-
+	// Screenshot Options
+	int screenshotRange = 1;
+	int screenshotCounter = 0;
 private:
 
 
@@ -163,7 +166,7 @@ private:
 	void drawLineRenderingOptions();			// draw options of stream/pathline rendering
 	void drawRaycastingOptions();				// draw options of isosurface rendering (raycasting)
 	void drawDispersionOptions();				// draw options of dispersion calculation
-	void drawFluctuationHeightfieldOptions();	// draw options of heightfield of fluctuation 
+	void drawTimeSpaceOptions();	// draw options of heightfield of fluctuation 
 	void drawCrossSectionOptions();				// draw options of CrossSection rendering
 	void drawTimeSpaceField();
 	void drawTurbulentMixingOptions();

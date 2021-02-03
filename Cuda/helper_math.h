@@ -4,6 +4,8 @@
 #define ARRAYTOINT3(X) {X[0],X[1],X[2]}
 #define I_3X3_F fMat3X3(1.0f,0,0,0,1.0f,0,0,0,1.0f)
 #define I_3X3_D dMat3X3(1.0,0,0,0,1.0,0,0,0,1.0)
+#define safeAcos(x) acos(fmax(-1.0, fmin(1.0, (x))))
+#define safeSqrt(x) sqrt(fmax(0.0, (x)))
 
 #include "cuda_runtime.h"
 #include <corecrt_math.h>
@@ -23,7 +25,24 @@
 
 #define BLOCK_THREAD(kernelCall) static_cast<unsigned int>((kernelCall % (thread.x* thread.y) == 0 ? kernelCall / (thread.x * thread.y) : kernelCall / (thread.x * thread.y) + 1))
 
+#define  EPS2 1e-2
+#define  EPS1 1e-5
 
+inline __host__ __device__ bool isZero(float x)
+{
+	if (x == 0)
+		return true;
+
+	return false;
+}
+
+inline __host__ __device__ float fsign(double v)
+{
+	return copysignf(1.0f, v);
+}
+
+
+static __host__ __device__ __inline__ double sign(double v) { return ::fsign(v); }
 
 
 // convert array to built-in cuda structures
@@ -629,6 +648,8 @@ __device__ __host__ inline fMat3X3 operator*(float & a, fMat3X3& b)
 
 
 
+
+
 __device__ __host__ inline fMat3X3 operator*(fMat3X3& b, float & a)
 {
 	return fMat3X3
@@ -651,6 +672,15 @@ __device__ __host__ inline fMat3X3 operator-(const fMat3X3& a, const fMat3X3& b)
 	);
 }
 
+__device__ __host__ inline fMat3X3 operator+(const fMat3X3& a, const fMat3X3& b)
+{
+	return fMat3X3
+	(
+		a.r1 + b.r1,
+		a.r2 + b.r2,
+		a.r3 + b.r3
+	);
+}
 
 
 __device__ __host__ inline fMat3X3 mult(fMat3X3& a, fMat3X3& b)
@@ -717,7 +747,22 @@ struct dMat3X3
 
 		return d1 - d2 + d3;
 	}
+
+
+
 };
+
+
+inline __host__ __device__ dMat3X3 transpose(dMat3X3 & mat)
+{
+
+	double3 r1t = { mat.r1.x,mat.r2.x,mat.r3.x };
+	double3 r2t = { mat.r1.y,mat.r2.y,mat.r3.y };
+	double3 r3t = { mat.r1.z,mat.r2.z,mat.r3.z };
+
+	return dMat3X3(r1t, r2t, r3t);
+
+}
 
 
 __device__ __host__ inline dMat3X3 operator*(double & a, dMat3X3& b)
@@ -729,15 +774,6 @@ __device__ __host__ inline dMat3X3 operator*(double & a, dMat3X3& b)
 	);
 }
 
-__device__ __host__ inline dMat3X3 transpose(dMat3X3& a)
-{
-	return dMat3X3
-	(
-		make_double3(a.r1.x, a.r2.x, a.r3.x),
-		make_double3(a.r1.y, a.r2.y, a.r3.y),
-		make_double3(a.r1.z, a.r2.z, a.r3.z)
-	);
-}
 
 
 
@@ -885,6 +921,48 @@ __device__ __host__ inline float eigenValueMax(fMat3X3 & J)
 }
 
 
+__device__ __host__ inline float eigenValue2(fMat3X3 & J)
+{
+	float3 eig = { 0.0f, 0.0f,0.0f };
+
+	float p1 = pow(J.r1.y, 2.0f) + pow(J.r1.z, 2.0f) + pow(J.r2.z, 2.0f);
+
+	if (p1 == 0)
+	{
+		eig.x = J.r1.x;
+		eig.y = J.r2.y;
+		eig.z = J.r3.z;
+	}
+	else
+	{
+		float q = (J.r1.x + J.r2.y + J.r3.z) / 3.0f;
+		float p2 = pow(J.r1.x - q, 2.0f) + pow(J.r2.y - q, 2.0f) + pow(J.r3.z - q, 2.0f) + 2 * p1;
+		float p = sqrtf(p2 / 6.0f);
+		fMat3X3 I = I_3X3_F;
+		fMat3X3 B = J - (q * I);// I is the identity matrix	
+		float p_ = (1.0f / p);
+		B = p_ * B;
+
+		float r = B.det() * 0.5f;
+		float phi = 0.0f;
+
+		if (r <= -1)
+			phi = CUDA_PI_F / 3.0f;
+		else if (r >= 1)
+			phi = 0;
+		else
+			phi = acos(r) / 3.0f;
+
+		// the eigenvalues satisfy eig3 <= eig2 <= eig1
+		eig.x = q + 2.0f * p * cos(phi);
+		eig.z = q + 2.0f * p * cos(phi + (2.0f * CUDA_PI_F / 3.0f));
+		eig.y = 3.0f * q - eig.x - eig.z; // % since trace(A) = eig1 + eig2 + eig3;
+
+	}
+
+	return eig.y;
+}
+
 
 __device__ __host__ inline double eigenValueMax(dMat3X3 & J)
 {
@@ -945,7 +1023,7 @@ inline __host__ __device__ float3 floor(const float3 v)
 }
 
 
-__device__ __host__ inline float3 world2Tex(const float3& position, const float3& dimension, const int3& size, bool noormalized = false)
+__device__ __host__ inline float3 world2Tex(const float3& position, const float3& dimension, int3 size, bool noormalized = false)
 {
 
 
@@ -954,7 +1032,7 @@ __device__ __host__ inline float3 world2Tex(const float3& position, const float3
 		return (position / dimension);
 	}
 
-	return (position / dimension) *size;
+	return (position / dimension) * size;
 }
 
 
@@ -1056,6 +1134,220 @@ inline __device__ dMat3X3 jacobian(cudaTextureObject_t t_VelocityField, const fl
 	dVy = dVy / h.y;
 	dVz = dVz / h.z;
 
+	jac =
+	{
+		dVx.x,dVx.y,dVx.z,
+		dVy.x,dVy.y,dVy.z,
+		dVz.x,dVz.y,dVz.z,
+	};
+
+
+
 	return jac;
 }
 
+
+
+inline __device__ fMat3X3 fjacobian(cudaTextureObject_t t_VelocityField, const float3& relativePos, const float3& h)
+{
+	fMat3X3 jac = { 0,0,0,0,0,0,0,0,0 };
+
+	float4 dVx = tex3D<float4>(t_VelocityField, relativePos.x + 1, relativePos.y, relativePos.z);
+	dVx -= tex3D<float4>(t_VelocityField, relativePos.x - 1, relativePos.y, relativePos.z);
+
+	float4 dVy = tex3D<float4>(t_VelocityField, relativePos.x, relativePos.y + 1, relativePos.z);
+	dVy -= tex3D<float4>(t_VelocityField, relativePos.x, relativePos.y - 1, relativePos.z);
+
+	float4 dVz = tex3D<float4>(t_VelocityField, relativePos.x, relativePos.y, relativePos.z + 1);
+	dVz -= tex3D<float4>(t_VelocityField, relativePos.x, relativePos.y, relativePos.z - 1);
+
+	// This would give us the Jacobian Matrix
+	dVx = 0.5 * dVx / h.x;
+	dVy = 0.5 * dVy / h.y;
+	dVz = 0.5 * dVz / h.z;
+
+
+	jac =
+	{
+		dVx.x,dVx.y,dVx.z,
+		dVy.x,dVy.y,dVy.z,
+		dVz.x,dVz.y,dVz.z,
+	};
+
+	return jac;
+}
+
+
+
+
+inline __device__  float lambda2(cudaTextureObject_t tex, const float3 & gridDiamter, const int3 & gridSize, const float3 & position)
+{
+	fMat3X3 f_s = fMat3X3(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);	// S Matrix
+	fMat3X3 f_omega = fMat3X3(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);	// S Matrix
+	fMat3X3 f_Jacobian(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);	// Jacobian Matrix
+
+	float3 h = gridDiamter / gridSize;
+	f_Jacobian = fjacobian(tex, position, h);
+
+	f_s =  f_Jacobian + transpose(f_Jacobian);
+	f_omega = f_Jacobian - transpose(f_Jacobian);
+	
+	float quarter = 0.25f;
+	f_s =		mult(f_s, f_s) ;
+	f_omega =	mult(f_omega, f_omega);
+	
+	f_s = quarter * f_s;
+	f_omega = quarter * f_omega;
+	// calculate the sum
+	f_s = f_omega + f_s;
+
+	return -eigenValue2(f_s);
+
+
+
+}
+
+
+/**
+		 * \param vals the eight corner values xyz=[(0,0,0), (1,0,0), (0,1,0), ..., (1,1,1)]
+		 * \param entry the entry point to the voxel in [0,voxelSize]^3
+		 * \param dir the direction within the voxel
+ */
+
+template <typename T>
+inline __host__ __device__ float4 getFactors(
+	const float vals[8], const float3& entry, const float3& dir)
+{
+	const T v0 = vals[0], v1 = vals[1], v2 = vals[2], v3 = vals[3];
+	const T v4 = vals[4], v5 = vals[5], v6 = vals[6], v7 = vals[7];
+	const T ex = entry.x, ey = entry.y, ez = entry.z;
+	const T dx = dir.x, dy = dir.y, dz = dir.z;
+
+#define GET_FACTOR_VERSION 3
+#if GET_FACTOR_VERSION==1
+	// expanded version
+	const T a = -dx * dy * dz * v0 + dx * dy * dz * v1 + dx * dy * dz * v2 - dx * dy * dz * v3 + dx * dy * dz * v4 - dx * dy * dz * v5 - dx * dy * dz * v6 + dx * dy * dz * v7;
+	const T b = -dx * dy * ez * v0 + dx * dy * ez * v1 + dx * dy * ez * v2 - dx * dy * ez * v3 + dx * dy * ez * v4 - dx * dy * ez * v5 - dx * dy * ez * v6 + dx * dy * ez * v7 + dx * dy * v0 - dx * dy * v1 - dx * dy * v2 + dx * dy * v3 - dx * dz * ey * v0 + dx * dz * ey * v1 + dx * dz * ey * v2 - dx * dz * ey * v3 + dx * dz * ey * v4 - dx * dz * ey * v5 - dx * dz * ey * v6 + dx * dz * ey * v7 + dx * dz * v0 - dx * dz * v1 - dx * dz * v4 + dx * dz * v5 - dy * dz * ex * v0 + dy * dz * ex * v1 + dy * dz * ex * v2 - dy * dz * ex * v3 + dy * dz * ex * v4 - dy * dz * ex * v5 - dy * dz * ex * v6 + dy * dz * ex * v7 + dy * dz * v0 - dy * dz * v2 - dy * dz * v4 + dy * dz * v6;
+	const T c = -dx * ey * ez * v0 + dx * ey * ez * v1 + dx * ey * ez * v2 - dx * ey * ez * v3 + dx * ey * ez * v4 - dx * ey * ez * v5 - dx * ey * ez * v6 + dx * ey * ez * v7 + dx * ey * v0 - dx * ey * v1 - dx * ey * v2 + dx * ey * v3 + dx * ez * v0 - dx * ez * v1 - dx * ez * v4 + dx * ez * v5 - dx * v0 + dx * v1 - dy * ex * ez * v0 + dy * ex * ez * v1 + dy * ex * ez * v2 - dy * ex * ez * v3 + dy * ex * ez * v4 - dy * ex * ez * v5 - dy * ex * ez * v6 + dy * ex * ez * v7 + dy * ex * v0 - dy * ex * v1 - dy * ex * v2 + dy * ex * v3 + dy * ez * v0 - dy * ez * v2 - dy * ez * v4 + dy * ez * v6 - dy * v0 + dy * v2 - dz * ex * ey * v0 + dz * ex * ey * v1 + dz * ex * ey * v2 - dz * ex * ey * v3 + dz * ex * ey * v4 - dz * ex * ey * v5 - dz * ex * ey * v6 + dz * ex * ey * v7 + dz * ex * v0 - dz * ex * v1 - dz * ex * v4 + dz * ex * v5 + dz * ey * v0 - dz * ey * v2 - dz * ey * v4 + dz * ey * v6 - dz * v0 + dz * v4;
+	const T d = -ex * ey * ez * v0 + ex * ey * ez * v1 + ex * ey * ez * v2 - ex * ey * ez * v3 + ex * ey * ez * v4 - ex * ey * ez * v5 - ex * ey * ez * v6 + ex * ey * ez * v7 + ex * ey * v0 - ex * ey * v1 - ex * ey * v2 + ex * ey * v3 + ex * ez * v0 - ex * ez * v1 - ex * ez * v4 + ex * ez * v5 - ex * v0 + ex * v1 + ey * ez * v0 - ey * ez * v2 - ey * ez * v4 + ey * ez * v6 - ey * v0 + ey * v2 - ez * v0 + ez * v4 + v0;
+#elif GET_FACTOR_VERSION==2
+	// factored version
+	// a bit faster, but more numerically unstable !?!
+	const T t1 = -v0 + v1 + v2 - v3 + v4 - v5 - v6 + v7;
+	const T t2 = v0 - v1 - v2 + v3;
+	const T t3 = v0 - v1 - v4 + v5;
+	const T t4 = v0 - v2 - v4 + v6;
+	const T a = (dx * dy * dz) * t1;
+	const T b = (dx * dy * ez) * t1 + (dx * dy) * t2 + (dx * dz * ey) * t1 + (dx * dz) * t3 + (dy * dz * ex) * t1 + (dy * dz) * t4;
+	const T c = (dx * ey * ez) * t1 + (dx * ey) * t2 + (dx * ez) * t3 + dx * (-v0 + v1) + (dy * ex * ez) * t1 + (dy * ex) * t2 + (dy * ez) * t4 + dy * (-v0 + v2) + (dz * ex * ey) * t1 + (dz * ex) * t3 + (dz * ey) * t4 + dz * (-v0 + v4);
+	const T d = (ex * ey * ez) * t1 + (ex * ey) * t2 + (ex * ez) * t3 + ex * (-v0 + v1) + (ey * ez) * t4 + ey * (-v0 + v2) + ez * (-v0 + v4) + v0;
+#elif GET_FACTOR_VERSION==3
+	//Based on "Interactive ray tracing for isosurface rendering"
+	//by Steven Parker et al., 1998
+
+	//reorder values, z first
+	const T values[8] = { v0, v4, v2, v6, v1, v5, v3, v7 };
+	//assemble basis functions
+	const T uA[2] = { 1 - ex, ex };
+	const T vA[2] = { 1 - ey, ey };
+	const T wA[2] = { 1 - ez, ez };
+	const T uB[2] = { -dx, dx };
+	const T vB[2] = { -dy, dy };
+	const T wB[2] = { -dz, dz };
+	//compute factors
+	T a = 0;
+	T b = 0;
+	T c = 0;
+	T d = 0; // -isovalue;
+	int valueIndex = 0;
+	for (int i = 0; i < 2; ++i) {
+		for (int j = 0; j < 2; ++j) {
+			for (int k = 0; k < 2; ++k) {
+				a += uB[i] * vB[j] * wB[k] * values[valueIndex];
+				b += (uA[i] * vB[j] * wB[k] + uB[i] * vA[j] * wB[k] + uB[i] * vB[j] * wA[k]) * values[valueIndex];
+				c += (uB[i] * vA[j] * wA[k] + uA[i] * vB[j] * wA[k] + uA[i] * vA[j] * wB[k]) * values[valueIndex];
+				d += uA[i] * vA[j] * wA[k] * values[valueIndex];
+				valueIndex++;
+			}
+		}
+	}
+#endif
+	return make_float4( a, b, c, d );
+};
+
+// returns the number of roots
+template <typename T>
+inline __host__ __device__ int rootsHyperbolic(const float4& factors, T roots[3])
+{
+	//extract factors
+	const T a = factors.x, b = factors.y, c = factors.z, d = factors.w;
+
+	if (fabs(a) <= EPS2)
+	{
+		if (isZero(b))
+		{
+			//linear equation
+			if (isZero(c)) return 0; //constant
+			roots[0] = -d / c;
+			return 1;
+		}
+		//quadratic equation
+		T discr = c * c - T(4) * b * d;
+		if (discr < 0) return 0;
+		if (isZero(discr))
+		{
+			roots[0] = -c / (T(2) * b);
+			return 1;
+		}
+		else {
+			discr = sqrt(discr);
+			//https://math.stackexchange.com/questions/866331/numerically-stable-algorithm-for-solving-the-quadratic-equation-when-a-is-very
+			roots[0] = (-c - sign(c) * discr) / (2 * b);
+			roots[1] = d / (b * roots[0]);
+			//roots[0] = (-c + discr) / (T(2) * b);
+			//roots[1] = (-c - discr) / (T(2) * b);
+			return 2;
+		}
+	}
+
+	//convert to depressed cubic t^3+pt+q=0
+	const T p = (T(3) * a * c - b * b) / (T(3) * a * a);
+	const T q = (T(2) * b * b * b - T(9) * a * b * c + T(27) * a * a * d) / (T(27) * a * a * a);
+
+#define t2x(t) ((t)-b/(3*a))
+
+	if (fabs(p) <= EPS1)
+	{
+		//there exists exactly one root
+		roots[0] = t2x(cbrt(-q));
+		return 1;
+	}
+	//formular of Francois Vite
+	//https://en.wikipedia.org/wiki/Cubic_equation#Trigonometric_solution_for_three_real_roots
+	const T Delta = T(4) * p * p * p + T(27) * q * q;
+	if (Delta > 0)
+	{
+		//one real root
+		T t0;
+		if (p < 0)
+			t0 = T(-2) * sign(q) * sqrt(-p / T(3)) * cosh(T(1) / T(3) * acosh(T(-3) * abs(q) / (T(2) * p) * sqrt(T(-3) / p)));
+		else
+			t0 = T(-2) * sqrt(p / T(3)) * sinh(T(1) / T(3) * asinh(T(3) * q / (T(2) * p) * sqrt(T(3) / p)));
+		roots[0] = t2x(t0);
+		return 1;
+	}
+	//TODO: handle double root if Delta>-EPS1:
+	// simple root at 3q/p
+	// double root at -3a/2p
+	else
+	{
+		//three real roots
+		const T f1 = T(2) * safeSqrt(-p / T(3));
+		const T f2 = T(1) / T(3) * safeAcos(T(3) * q / (T(2) * p) * safeSqrt(-T(3) / p));
+		for (int k = 0; k < 3; ++k)
+			roots[k] = t2x(f1 * cos(f2 - T(2) * T(CUDA_PI_F) * k / T(3)));
+		return 3;
+	}
+
+#undef t2x
+};

@@ -108,8 +108,8 @@ void HeightfieldFTLE::trace3D_path_Single()
 		traceDispersion3D_path_FTLE << < blocks, thread >> >
 			(
 				d_particle,
-				s_HeightSurface_Primary.getSurfaceObject(),
-				s_HeightSurface_Primary_Extra.getSurfaceObject(),
+				s_HeightSurface.getSurfaceObject(),
+				s_HeightSurface_Copy.getSurfaceObject(),
 				this->t_velocityField_0.getTexture(),
 				this->t_velocityField_1.getTexture(),
 				*solverOptions,
@@ -255,8 +255,8 @@ bool HeightfieldFTLE::singleSurfaceInitialization()
 	gridSize = { dispersionOptions->gridSize_2D[0],	dispersionOptions->gridSize_2D[1],	solverOptions->lastIdx - solverOptions->firstIdx };
 
 	// Initialize Height Field as an empty cuda array 3D
-	this->a_HeightSurface_Primary.initialize(gridSize.x, gridSize.y, gridSize.z);
-	this->a_HeightSurface_Primary_Extra.initialize(gridSize.x, gridSize.y, gridSize.z);
+	this->a_HeightArray3D.initialize(gridSize.x, gridSize.y, gridSize.z);
+	this->a_HeightArray3D_Copy.initialize(gridSize.x, gridSize.y, gridSize.z);
 
 
 	// Bind the array of heights to the cuda surface
@@ -271,22 +271,22 @@ bool HeightfieldFTLE::singleSurfaceInitialization()
 	{
 		case dispersionOptionsMode::HeightMode::Height:
 		{
-			this->gradient3D(s_HeightSurface_Primary.getSurfaceObject());
+			this->gradient3D(s_HeightSurface.getSurfaceObject());
 
 		}
 		case dispersionOptionsMode::HeightMode::FTLE:
 		{
-			this->gradient3D(s_HeightSurface_Primary_Extra.getSurfaceObject());
+			this->gradient3D(s_HeightSurface_Copy.getSurfaceObject());
 			break;
 		}
 	}
 
-	this->s_HeightSurface_Primary.destroySurface();
-	this->s_HeightSurface_Primary_Extra.destroySurface();
+	this->s_HeightSurface.destroySurface();
+	this->s_HeightSurface_Copy.destroySurface();
 		
 
-	this->volumeTexture3D_height.setArray(a_HeightSurface_Primary.getArrayRef());
-	this->volumeTexture3D_height_extra.setArray(a_HeightSurface_Primary_Extra.getArrayRef());
+	this->volumeTexture3D_height.setArray(a_HeightArray3D.getArrayRef());
+	this->volumeTexture3D_height_extra.setArray(a_HeightArray3D_Copy.getArrayRef());
 
 	this->volumeTexture3D_height.initialize_array(false,cudaAddressModeClamp, cudaAddressModeClamp, cudaAddressModeClamp);
 	this->volumeTexture3D_height_extra.initialize_array(false,cudaAddressModeClamp, cudaAddressModeClamp, cudaAddressModeClamp);

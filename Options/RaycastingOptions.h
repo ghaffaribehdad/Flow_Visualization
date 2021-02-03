@@ -1,6 +1,27 @@
 #pragma once
 #include "ImGuiOptions.h"
 
+
+namespace IsoMeasure
+
+{
+	enum IsoMeasureMode
+	{
+		VelocityMagnitude = 0,
+		Velocity_X,
+		Velocity_Y,
+		Velocity_Z,
+		ShearStress,
+		TURBULENT_DIFFUSIVITY,
+		LAMBDA2,
+		Velocity_X_Plane,
+		Velocity_Y_Plane,
+		Velocity_Z_Plane,
+		COUNT
+	};
+}
+
+
 struct RaycastingOptions
 {
 public:

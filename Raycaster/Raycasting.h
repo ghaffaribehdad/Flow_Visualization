@@ -204,6 +204,18 @@ __global__ void CudaIsoSurfacRenderer
 	RaycastingOptions raycastingOptions
 );
 
+
+
+template <typename Observable>
+__global__ void CudaIsoSurfacRenderer_GradientBase
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field1,
+	int rays,
+	RaycastingOptions raycastingOptions
+);
+
+
 __global__ void CudaIsoSurfacRenderer_float
 (
 	cudaSurfaceObject_t raycastingSurface,
@@ -306,7 +318,6 @@ __global__ void CudaTerrainRenderer_Marching_extra
 (
 	cudaSurfaceObject_t raycastingSurface,
 	cudaTextureObject_t heightField,
-	cudaTextureObject_t extraField,
 	int rays,
 	float samplingRate,
 	float IsosurfaceTolerance,
@@ -373,11 +384,10 @@ __global__ void CudaTerrainRenderer_extra_fluctuation
 (
 	cudaSurfaceObject_t raycastingSurface,
 	cudaTextureObject_t heightField,
-	cudaTextureObject_t extraField,
 	int rays,
 	float samplingRate,
 	float IsosurfaceTolerance,
-	FluctuationheightfieldOptions fluctuationOptions
+	TimeSpaceRenderingOptions fluctuationOptions
 );
 
 

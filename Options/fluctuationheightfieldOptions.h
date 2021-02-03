@@ -1,7 +1,10 @@
 #pragma once
+#include "RaycastingOptions.h"
 
-namespace fluctuationOptions
+namespace TimeSpaceRendering
 {
+
+
 	enum fluctuationColorCode
 	{
 		NONE = 0,
@@ -21,7 +24,7 @@ namespace fluctuationOptions
 
 
 
-struct FluctuationheightfieldOptions
+struct TimeSpaceRenderingOptions
 {
 
 	// Terrain Rendering Options
@@ -31,11 +34,11 @@ struct FluctuationheightfieldOptions
 	int wallNoramlPos = 0;
 	int wallNormalgridSize = 250;
 	float heightLimit = 0.5f;
-
+	float gridDiameter[3] = {5.0f, 5.0f, 5.0f };
 	int spanwisePos = 0;
 
 	// Color Coding
-	int colorCode = static_cast<int>(fluctuationOptions::fluctuationColorCode::NONE);
+	int colorCode = static_cast<int>(TimeSpaceRendering::fluctuationColorCode::NONE);
 	float max_val = 1.0f;
 	float min_val = 1.0f;
 	float height_scale = 1.0;
@@ -57,8 +60,7 @@ struct FluctuationheightfieldOptions
 	int		lastIdx = 120;
 	float	samplingRate_0 = 0.01f;
 	bool	usingAbsolute = true;
-	
-
+	int		streamwiseSlice = 1;
 
 
 

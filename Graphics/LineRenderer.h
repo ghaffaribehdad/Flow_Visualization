@@ -60,8 +60,8 @@ protected:
 
 	virtual void updateConstantBuffer(Camera& _camera);	// Update Constant buffer based on the camera positions and view 
 	bool setShaders(D3D11_PRIMITIVE_TOPOLOGY Topology);					// set shaders and rasterizer
-	bool initializeRasterizer();			// Create Rasterizer state
-	virtual void setBuffers();					// set vertex and index and constant buffer
+	bool initializeRasterizer();						// Create Rasterizer state
+	virtual void setBuffers();							// set vertex and index and constant buffer
 	virtual bool initilizeIndexBuffer() { return true; }
 	virtual void resetRealtime() {};
 public:

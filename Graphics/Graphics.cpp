@@ -70,10 +70,10 @@ void Graphics::RenderFrame()
 	}
 
 
-	// Clear Render Target
-	this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), renderingOptions.bgColor);// Clear the target view
-	this->deviceContext->ClearDepthStencilView(this->depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);// Clear the depth stencil view
-	this->deviceContext->OMSetDepthStencilState(this->depthStencilState.Get(), 0);	// add depth  stencil state to rendering routin
+
+	this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), renderingOptions.bgColor);
+	this->deviceContext->ClearDepthStencilView(this->depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	this->deviceContext->OMSetDepthStencilState(this->depthStencilState.Get(), 0);	
 
 
 
@@ -89,16 +89,16 @@ void Graphics::RenderFrame()
 	*/
 
 
-	volumeBox.show(&renderImGuiOptions, solverOptions.gridDiameter);		// Show Volume Box
-	seedBox.show(&renderImGuiOptions, solverOptions.seedBox, solverOptions.seedBoxPos);		// Show Seed Box
-	clipBox.show(&renderImGuiOptions, raycastingOptions.clipBox, raycastingOptions.clipBoxCenter);		// Show Seed Box
+	volumeBox.show(&renderImGuiOptions, solverOptions.gridDiameter);		
+	seedBox.show(&renderImGuiOptions, solverOptions.seedBox, solverOptions.seedBoxPos);	
+	clipBox.show(&renderImGuiOptions, raycastingOptions.clipBox, raycastingOptions.clipBoxCenter);		
 
 
 
 
 
 
-	raycasting.show(&renderImGuiOptions);				// Raycasting 
+	raycasting.show(&renderImGuiOptions);					// Raycasting 
 
 	if (!renderImGuiOptions.pauseRendering)
 	{
@@ -226,7 +226,22 @@ void Graphics::RenderFrame()
 	{
 		std::string fullName = dispersionOptions.filePath + solverOptions.outputFileName + std::to_string(solverOptions.currentIdx) + std::string(".jpg");
 		this->saveTextureJPEG(getBackBuffer(), fullName);
-		renderImGuiOptions.saveScreenshot = false;
+		renderImGuiOptions.screenshotCounter++;
+
+		if (renderImGuiOptions.screenshotRange == renderImGuiOptions.screenshotCounter)
+		{
+			renderImGuiOptions.saveScreenshot = false;
+			renderImGuiOptions.screenshotCounter = 0;
+		}
+		else
+		{
+			solverOptions.currentIdx++;
+			renderImGuiOptions.updateRaycasting = true;
+			renderImGuiOptions.updateStreamlines = true;
+			raycastingOptions.fileChanged = true;
+			solverOptions.fileChanged = true;
+			solverOptions.loadNewfile = true;
+		}
 	}
 
 

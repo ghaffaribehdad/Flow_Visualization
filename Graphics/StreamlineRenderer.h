@@ -160,28 +160,6 @@ public:
 		this->cleanPipeline();
 	}
 
-	//bool flushVerteBuffer()
-	//{
-
-	//	D3D11_MAPPED_SUBRESOURCE mappedResource;
-	//	ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));
-
-	//	HRESULT hr;
-	//	hr = this->deviceContext->Map(vertexBuffer.Get(), NULL, D3D11_MAP_READ_WRITE, NULL, &mappedResource);
-	//	if (FAILED(hr))
-	//	{
-	//		ErrorLogger::Log(hr, "Failed to Map Vertex Buffer");
-	//		return false;
-	//	}
-
-	//	VertexBuffer<Vertex>* p_buffer = new VertexBuffer<Vertex>[solverOptions->lineLength * solverOptions->lines_count];
-	//	memcpy(p_buffer, mappedResource.pData, sizeof(solverOptions->lineLength * solverOptions->lines_count * sizeof(VertexBuffer<Vertex>)));
-
-	//	this->deviceContext->Unmap(vertexBuffer.Get(), NULL);
-
-	//	delete[] p_buffer;
-
-	//}
 		
 
 	bool initializeBuffers() override

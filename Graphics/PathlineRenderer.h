@@ -145,7 +145,6 @@ public:
 
 	void updateBuffers() override
 	{
-		//solverOptions->p_vertexBuffer = this->vertexBuffer.Get();
 
 		this->pathlinesolver.Initialize(solverOptions);
 		this->pathlinesolver.solve();

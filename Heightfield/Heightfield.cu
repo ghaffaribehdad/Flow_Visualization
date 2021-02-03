@@ -12,8 +12,8 @@
 
 bool Heightfield::retrace()
 {
-	this->a_HeightSurface_Primary.release();
-	this->a_HeightSurface_Primary_Extra.release();
+	this->a_HeightArray3D.release();
+	this->a_HeightArray3D_Copy.release();
 
 	cudaDestroyTextureObject(this->volumeTexture3D_height.getTexture());
 	cudaDestroyTextureObject(this->volumeTexture3D_height_extra.getTexture());
@@ -104,12 +104,12 @@ __host__ bool Heightfield::InitializeParticles()
 __host__ bool Heightfield::InitializeHeightSurface3D()
 {
 	// Assign the hightArray to the hightSurface and initialize the surface
-	this->s_HeightSurface_Primary.setInputArray(a_HeightSurface_Primary.getArrayRef());
-	if (!this->s_HeightSurface_Primary.initializeSurface())
+	this->s_HeightSurface.setInputArray(a_HeightArray3D.getArrayRef());
+	if (!this->s_HeightSurface.initializeSurface())
 		return false;
 
-	this->s_HeightSurface_Primary_Extra.setInputArray(a_HeightSurface_Primary_Extra.getArrayRef());
-	if (!this->s_HeightSurface_Primary_Extra.initializeSurface())
+	this->s_HeightSurface_Copy.setInputArray(a_HeightArray3D_Copy.getArrayRef());
+	if (!this->s_HeightSurface_Copy.initializeSurface())
 		return false;
 
 	return true;
@@ -123,7 +123,7 @@ bool Heightfield::release()
 {
 	Raycasting::release();
 	cudaDestroyTextureObject(this->volumeTexture3D_height.getTexture());
-	this->a_HeightSurface_Primary.release();
+	this->a_HeightArray3D.release();
 
 	return true;
 }
@@ -192,8 +192,8 @@ void Heightfield::trace3D_path_Single()
 		traceDispersion3D_path << < blocks, thread >> >
 			(
 				d_particle,
-				s_HeightSurface_Primary.getSurfaceObject(),
-				s_HeightSurface_Primary_Extra.getSurfaceObject(),
+				s_HeightSurface.getSurfaceObject(),
+				s_HeightSurface_Copy.getSurfaceObject(),
 				this->t_velocityField_0.getTexture(),
 				this->t_velocityField_1.getTexture(),
 				*solverOptions,
@@ -235,7 +235,6 @@ __host__ void Heightfield::rendering()
 		(
 			this->raycastingSurface.getSurfaceObject(),
 			this->volumeTexture3D_height.getTexture(),
-			this->volumeTexture3D_height_extra.getTexture(),
 			int(this->rays),
 			this->raycastingOptions->samplingRate_0,
 			this->raycastingOptions->tolerance_0,
@@ -283,7 +282,7 @@ void Heightfield::gradient3D_Single()
 
 	heightFieldGradient3D<FetchTextureSurface::Channel_X> << < blocks, thread >> >
 		(
-			s_HeightSurface_Primary.getSurfaceObject(),
+			s_HeightSurface.getSurfaceObject(),
 			*dispersionOptions,
 			*solverOptions
 		);
@@ -300,12 +299,12 @@ bool Heightfield::singleSurfaceInitialization()
 
 
 	// initialize the 3D array
-	if (!a_HeightSurface_Primary.initialize(dispersionOptions->gridSize_2D[0],
+	if (!a_HeightArray3D.initialize(dispersionOptions->gridSize_2D[0],
 		dispersionOptions->gridSize_2D[1],
 		solverOptions->lastIdx - solverOptions->firstIdx)
 		)
 			return false;
-	if (!a_HeightSurface_Primary_Extra.initialize(
+	if (!a_HeightArray3D_Copy.initialize(
 		dispersionOptions->gridSize_2D[0],
 		dispersionOptions->gridSize_2D[1],
 		solverOptions->lastIdx - solverOptions->firstIdx)
@@ -328,13 +327,13 @@ bool Heightfield::singleSurfaceInitialization()
 	this->gradient3D_Single();
 
 
-	this->s_HeightSurface_Primary.destroySurface();
-	this->s_HeightSurface_Primary_Extra.destroySurface();
+	this->s_HeightSurface.destroySurface();
+	this->s_HeightSurface_Copy.destroySurface();
 
-	volumeTexture3D_height.setArray(a_HeightSurface_Primary.getArrayRef());
+	volumeTexture3D_height.setArray(a_HeightArray3D.getArrayRef());
 	volumeTexture3D_height.initialize_array(false,cudaAddressModeClamp, cudaAddressModeClamp, cudaAddressModeClamp);
 
-	volumeTexture3D_height_extra.setArray(a_HeightSurface_Primary_Extra.getArrayRef());
+	volumeTexture3D_height_extra.setArray(a_HeightArray3D_Copy.getArrayRef());
 	volumeTexture3D_height_extra.initialize_array(false, cudaAddressModeClamp, cudaAddressModeClamp, cudaAddressModeClamp);
 
 	return true;

@@ -19,19 +19,7 @@ static const char* const HeightfieldRenderingMode[] =
 };
 
 
-enum IsoMeasure
-{
-	VelocityMagnitude = 0,
-	Velocity_X,
-	Velocity_Y,
-	Velocity_Z,
-	ShearStress,
-	TURBULENT_DIFFUSIVITY,
-	Velocity_X_Plane,
-	Velocity_Y_Plane,
-	Velocity_Z_Plane,
-	COUNT
-};
+
 
 
 namespace Dataset
@@ -44,8 +32,8 @@ namespace Dataset
 		KIT2BF,
 		KIT3_FLUC,
 		KIT3_COMPRESSED,
-		KIT3_INITIAL_COMPRESSED,
-		KIT3_OF_COMPRESSED,
+		KIT3_OF_AVG50_COMPRESSED,
+		KIT3_OF_COMPRESSED_FAST,
 		KIT3_AVG_COMPRESSED_10,
 		KIT3_AVG_COMPRESSED_50,
 		KIT3_SECONDARY_COMPRESSED,
@@ -69,8 +57,8 @@ namespace Dataset
 		"KIT2 Virtual Body",
 		"KIT3 Fluctuation",
 		"KIT3 Fluc. Comp.",
-		"KIT3 Initial Comp.",
-		"KIT3 OF Comp.",
+		"KIT3 OF AVG50 Comp.",
+		"KIT3 OF Comp. Fast",
 		"KIT3 AVG Comp. 10",
 		"KIT3 AVG Comp. 50",
 		"KIT3 Secondary Comp.",
@@ -91,12 +79,27 @@ namespace Dataset
 
 static const char* const IsoMeasureModes[] = 
 { 
+
+	/*	VelocityMagnitude = 0,
+	Velocity_X,
+	Velocity_Y,
+	Velocity_Z,
+	ShearStress,
+	TURBULENT_DIFFUSIVITY,
+	LAMBDA2,
+	Velocity_X_Plane,
+	Velocity_Y_Plane,
+	Velocity_Z_Plane,
+	COUNT
+	*/
+
 	"Velocity Magnitude",
 	"Velocity X",
 	"Velocity Y",
 	"Velocity Z",
 	"Shear Stress",
 	"Turbulent Diffusivity",
+	"lambda2",
 	"Velocity X Planar",
 	"Velocity Y Planar",
 	"Velocity Z Planar"

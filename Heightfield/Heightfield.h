@@ -105,14 +105,14 @@ protected:
 	DispersionOptions* dispersionOptions;
 
 	// Primary Height Surface
-	CudaSurface s_HeightSurface_Primary;
-	CudaSurface s_HeightSurface_Primary_Extra;
+	CudaSurface s_HeightSurface;
+	CudaSurface s_HeightSurface_Copy;
 
 	VolumeTexture3D volumeTexture3D_height;
 	VolumeTexture3D volumeTexture3D_height_extra;
 
-	CudaArray_3D<float4> a_HeightSurface_Primary;
-	CudaArray_3D<float4> a_HeightSurface_Primary_Extra;		
+	CudaArray_3D<float4> a_HeightArray3D;
+	CudaArray_3D<float4> a_HeightArray3D_Copy;		
 
 };
 

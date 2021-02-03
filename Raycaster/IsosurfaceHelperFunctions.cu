@@ -161,6 +161,26 @@ __device__ float3 FetchTextureSurface::Measure::GradientAtXYZ_Tex(cudaTextureObj
 }
 
 
+__device__ float3 FetchTextureSurface::Measure::GradientAtXYZ_Tex_GradientBase(cudaTextureObject_t tex, const float3 & position, const float3 & gridDiamter, const int3 & gridSize)
+{
+	float3 h = gridDiamter / gridSize;
+	float3 gradient = { 0,0,0 };
+
+
+	gradient.x += ValueAtXYZ_Tex_GradientBase(tex, make_float3(position.x + 1, position.y, position.z), gridDiamter,gridSize);
+	gradient.y += ValueAtXYZ_Tex_GradientBase(tex, make_float3(position.x, position.y + 1, position.z), gridDiamter, gridSize);
+	gradient.z += ValueAtXYZ_Tex_GradientBase(tex, make_float3(position.x, position.y, position.z + 1), gridDiamter, gridSize);
+
+	gradient.x -= ValueAtXYZ_Tex_GradientBase(tex, make_float3(position.x - 1, position.y, position.z), gridDiamter, gridSize);
+	gradient.y -= ValueAtXYZ_Tex_GradientBase(tex, make_float3(position.x, position.y - 1, position.z), gridDiamter, gridSize);
+	gradient.z -= ValueAtXYZ_Tex_GradientBase(tex, make_float3(position.x, position.y, position.z - 1), gridDiamter, gridSize);
+
+
+	return  gradient / (2.0f * h.x);
+
+}
+
+
 
 __device__ float3 GradientAtXYZ_Tex_W(cudaTextureObject_t tex, const float3 & position, const float3 & gridDiamter, const int3 & gridSize)
 {
@@ -340,7 +360,10 @@ __device__ float FetchTextureSurface::ShearStress::ValueAtXYZ_Tex(cudaTextureObj
 
 
 
-
+__device__	float FetchTextureSurface::Lambda2::ValueAtXYZ_Tex_GradientBase(cudaTextureObject_t tex, const float3 & position, const float3 & gridDiamter, const int3 & gridSize)
+{
+	return lambda2(tex, gridDiamter, gridSize, position);
+}
 
 
 __device__  float4 ValueAtXYZ_Surface_float4(cudaSurfaceObject_t surf, int3 gridPos)

@@ -82,7 +82,6 @@ bool CUDASolver::InitializeCUDA()
 void CUDASolver::InitializeParticles(SeedingPattern seedingPattern)
 {
 
-
 	// Create an array of particles
 	this->h_Particles = new Particle[solverOptions->lines_count];
 

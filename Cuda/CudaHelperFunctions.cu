@@ -218,16 +218,25 @@ __global__ void InitializeVertexBufferStreaklines
 }
 
 
-__global__ void copyTextureToSurface
+__global__ void applyGaussianFilter
 (
-	int streamwisePos,
-	int time,
-	SolverOptions * solverOptions,
+	int filterSize,
+	int3 fieldSize,
 	cudaTextureObject_t t_velocityField,
 	cudaSurfaceObject_t	s_velocityField
 )
 {
+	int index = CUDA_INDEX;
 
+	if (index < fieldSize.y)
+	{
+
+
+			float * filter = gaussianFilter2D(filterSize, 1);
+			applyFilter2D(filter, filterSize, t_velocityField, s_velocityField, 2, index, fieldSize);
+			delete[] filter;
+
+	}
 }
 
 __global__ void AddOffsetVertexBufferStreaklines
@@ -720,3 +729,114 @@ __device__ float3 binarySearch_X
 	return position;
 
 };
+
+
+
+__device__ inline float* gaussianFilter2D(int size, float std)
+{
+
+	float * filter = new float[size*size];
+
+	// for now x and y must be odd
+
+
+	for (int i = 0; i < size ; i++)
+	{
+		for (int j = 0; j < size ; j++)
+		{
+			filter[i*size + j] = 0.5 * (1 / CUDA_PI_D) * (1.0 / powf(std, 2)) * exp(-1.0 * ((powf(i - size / 2, 2) + powf(j -size / 2, 2)) / (2 * std * std)));
+		}
+	}
+
+
+	return filter;
+}
+
+
+__device__ inline void applyFilter2D(float * filter, int filterSize, cudaTextureObject_t tex, cudaSurfaceObject_t surf, int direction, int plane, int3 gridSize)
+{
+
+
+
+
+	switch(direction)
+	{
+	case 0: //XY
+	{
+		for (int i = 0; i < gridSize.x; i++)
+		{
+			for (int j = 0; j < gridSize.y; j++)
+			{
+
+				float4 filteredValue = { 0,0,0,0 };
+				for (int ii = -filterSize / 2; ii <= filterSize / 2; ii++)
+				{
+					for (int jj = -filterSize / 2; jj <= filterSize / 2; jj++)
+					{
+						filteredValue = filter[ii*filterSize + jj] * tex3D<float4>(tex, i+ii, j+jj, plane);
+					}
+				}
+
+				surf3Dwrite(filteredValue, surf, sizeof(float4) * i, j, plane);
+				
+			}
+		}
+
+		break;
+	}
+
+	case 1: //YZ
+	{
+		for (int i = 0; i < gridSize.y; i++)
+		{
+			for (int j = 0; j < gridSize.z; j++)
+			{
+
+				float4 filteredValue = { 0,0,0,0 };
+
+				for (int ii = -filterSize / 2; ii <= filterSize / 2; ii++)
+				{
+					for (int jj = -filterSize / 2; jj <= filterSize / 2; jj++)
+					{
+						filteredValue = filter[ii*filterSize + jj] * tex3D<float4>(tex, plane, i + ii, j + jj);
+
+					}
+				}
+
+				surf3Dwrite(filteredValue, surf, sizeof(float4) * plane, i, j);
+
+
+
+			}
+		}
+
+		break;
+	}
+
+	case 2: //ZX
+	{
+		for (int i = 0; i < gridSize.z; i++)
+		{
+			for (int j = 0; j < gridSize.x; j++)
+			{
+
+				float4 filteredValue = { 0,0,0,0 };
+				for (int ii = 0; ii < filterSize ; ii++)
+				{
+					for (int jj = 0 ; jj < filterSize ; jj++)
+					{
+						filteredValue = filteredValue + filter[ii*filterSize + jj] * tex3D<float4>(tex, j + jj - filterSize/2, plane, i + ii - filterSize / 2);
+					}
+				}
+
+				surf3Dwrite(filteredValue, surf, sizeof(float4) * j, plane, i);
+
+
+			}
+		}
+
+		break;
+	}
+
+	}
+}

@@ -3,6 +3,7 @@
 #include <math.h>
 #include "../Particle/Particle.h"
 #include "../Options/SolverOptions.h"
+#include "../Options/fluctuationheightfieldOptions.h"
 #include "..//Graphics/Vertex.h"
 #include "..//Raycaster/IsosurfaceHelperFunctions.h"
 #include "cuda_runtime.h"
@@ -29,17 +30,6 @@ __device__ void	RK4Path
 	float3 velocityScale = { 1.0f,1.0f,1.0f }
 );
 
-__device__ void	PathEuler
-(
-	cudaTextureObject_t t_VelocityField_0,
-	cudaTextureObject_t t_VelocityField_1,
-	Particle* particle,
-	float3 gridDiameter,
-	int3 gridSize,
-	float dt,
-	bool periodicity,
-	float3 velocityScale = { 1.0f,1.0f,1.0f }
-);
 
 
 __device__ Particle RK4Streak
@@ -53,30 +43,6 @@ __device__ Particle RK4Streak
 	float3 velocityScale = { 1.0f,1.0f,1.0f }
 );
 
-
-// Switch the velocity texture for even and odd case
-__device__ void	RK4Path_linear
-(
-	cudaTextureObject_t t_VelocityField_0,
-	cudaTextureObject_t t_VelocityField_1,
-	Particle* particle,
-	float3 gridDiameter,
-	int3 gridSize,
-	float dt,
-	bool periodicity
-);
-
-
-
-//__device__ void	Euler_2D
-//(
-//	const int2& initialGridPosition,
-//	float2& finalGridPosition,
-//	const int2& gridSize,
-//	const float2& gridDiameter,
-//	const float& dt,
-//	cudaTextureObject_t t_VelocityField_0
-//);
 
 
 
@@ -112,11 +78,46 @@ __global__ void InitializeVertexBufferStreaklines
 	Vertex* p_VertexBuffer
 );
 
+template <typename T1, typename T2, typename T3, typename T4>
 __global__ void copyTextureToSurface
 (
 	int streamwisePos,
 	int time,
-	SolverOptions * solverOptions,
+	SolverOptions solverOptions,
+	cudaTextureObject_t t_velocityField,
+	cudaSurfaceObject_t	s_velocityField
+)
+{
+	int index = CUDA_INDEX;
+
+	if (index < solverOptions.gridSize[2])
+	{
+
+		for (int y = 0; y < solverOptions.gridSize[1]; y++)
+		{
+			T1 measure1;
+			T2 measure2;
+			T3 measure3;
+			T4 measure4;
+			float value1 = measure1.ValueAtXYZ_Tex(t_velocityField, make_float3(streamwisePos, y, index));
+			float value2 = measure2.ValueAtXYZ_Tex(t_velocityField, make_float3(streamwisePos, y, index));
+			float value3 = measure3.ValueAtXYZ_Tex(t_velocityField, make_float3(streamwisePos, y, index));
+			float value4 = measure4.ValueAtXYZ_Tex(t_velocityField, make_float3(streamwisePos, y, index));
+
+			float4 value = make_float4(value1, value2, value3, value4);
+
+			surf3Dwrite(value, s_velocityField, 4 * sizeof(float) * index, y, time);
+
+		}
+	}
+
+
+}
+
+__global__ void applyGaussianFilter
+(
+	int filterSize,
+	int3 FieldSize,
 	cudaTextureObject_t t_velocityField,
 	cudaSurfaceObject_t	s_velocityField
 );
@@ -328,6 +329,9 @@ __device__ inline float getTemperature(float* temp, float pos, int size, int off
 }
 
 
+__device__ inline float* gaussianFilter2D( int size, float std = 1);
+__device__ inline void applyFilter2D(float * filter, int size, cudaTextureObject_t tex, cudaSurfaceObject_t surf, int direction, int plane, int3 gridSize);
+__device__ inline void gaussianFilter3D(cudaTextureObject_t tex, cudaSurfaceObject_t surf, int3 size);
 
 
 
