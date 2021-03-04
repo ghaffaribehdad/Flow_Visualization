@@ -43,7 +43,7 @@ public:
 	
 		if (vertexBuffer.initialized())
 		{
-			this->vertexBuffer.Get()->Release();
+			this->vertexBuffer.reset();
 		}
 
 		HRESULT hr = this->vertexBuffer.Initialize(this->device, NULL, solverOptions->lineLength * solverOptions->lines_count);
@@ -66,30 +66,27 @@ public:
 	void updateBuffers() override
 	{
 		
-		switch (solverOptions->loadNewfile)
+		if (solverOptions->loadNewfile)
 		{
-			case true: // need to load a new file
+
+
+			if (solverOptions->fileLoaded)
 			{
-				if (solverOptions->fileLoaded)
-				{
-					this->streamlineSolver.releaseVolumeIO();
-					this->streamlineSolver.releaseVolumeTexture();
-
-				}
-				this->streamlineSolver.Initialize(solverOptions);
-				this->streamlineSolver.loadVolumeTexture();
-
-				solverOptions->fileLoaded = true;
-				solverOptions->loadNewfile = false;
-				break;
+				this->streamlineSolver.releaseVolumeIO();
+				this->streamlineSolver.releaseVolumeTexture();
 
 			}
-			case false: // do not load a new file
-			{
-				this->streamlineSolver.Reinitialize();
-				break;
-			}
+			this->streamlineSolver.Initialize(solverOptions);
+			this->streamlineSolver.loadVolumeTexture();
+
+			solverOptions->fileLoaded = true;
+			solverOptions->loadNewfile = false;
 		}
+		else // do not load a new file
+		{
+			this->streamlineSolver.Reinitialize();
+		}
+		
 
 		this->streamlineSolver.solve();
 		this->streamlineSolver.FinalizeCUDA();
@@ -111,17 +108,11 @@ public:
 
 		switch (renderingOptions->drawMode)
 		{
-		case DrawMode::DrawMode::STATIONARY:
-		{
-			this->deviceContext->Draw(llInt(solverOptions->lineLength) * llInt(solverOptions->lines_count),0);
-			break;
-		}
 		case DrawMode::DrawMode::ADVECTION:
 		{
 			for (int i = 0; i < solverOptions->lines_count; i++)
 			{
 				this->deviceContext->Draw(counter, i * solverOptions->lineLength);
-
 			}
 
 			this->counter++;
@@ -133,13 +124,7 @@ public:
 
 			break;
 		}
-		default:
-		{
-			this->deviceContext->Draw(llInt(solverOptions->lineLength) * llInt(solverOptions->lines_count), 0);
-			break;
-		}
-
-		case DrawMode::DrawMode::CURRENT:
+		case DrawMode::DrawMode::ADVECTION_FINAL:
 		{
 			for (int i = 0; i < solverOptions->lines_count; i++)
 			{
@@ -148,13 +133,21 @@ public:
 
 			this->counter++;
 
-			if (counter == solverOptions->lineLength- renderingOptions->lineLength)
+			if (counter == solverOptions->lineLength - renderingOptions->lineLength)
 			{
 				counter = 0;
 			}
 
 			break;
 		}
+		
+		default:
+		{
+			this->deviceContext->Draw(llInt(solverOptions->lineLength) * llInt(solverOptions->lines_count), 0);
+			break;
+		}
+
+		
 		}
 
 		this->cleanPipeline();
@@ -191,7 +184,6 @@ public:
 
 		DirectX::XMMATRIX world = DirectX::XMMatrixIdentity();
 
-		// Set attributes of constant buffer for geometry shader
 		GS_constantBuffer.data.View = world * camera.GetViewMatrix();
 		GS_constantBuffer.data.Proj = camera.GetProjectionMatrix();
 		GS_constantBuffer.data.eyePos = camera.GetPositionFloat3();
@@ -202,13 +194,18 @@ public:
 		GS_constantBuffer.data.gridDiameter.y = solverOptions->gridDiameter[1];
 		GS_constantBuffer.data.gridDiameter.z = solverOptions->gridDiameter[2];
 		GS_constantBuffer.data.periodicity = solverOptions->periodic;
+		GS_constantBuffer.data.particlePlanePos = streakProjectionPlane();
+		GS_constantBuffer.data.streakPos = solverOptions->projectPos * (solverOptions->gridDiameter[0] / solverOptions->gridSize[0]);
+		GS_constantBuffer.data.transparencyMode = solverOptions->transparencyMode;
+		GS_constantBuffer.data.timDim = solverOptions->lineLength;
+		GS_constantBuffer.data.currentTime = solverOptions->projectPos;
+
 
 		PS_constantBuffer.data.minMeasure = renderingOptions->minMeasure;
 		PS_constantBuffer.data.maxMeasure = renderingOptions->maxMeasure;
-
 		PS_constantBuffer.data.minColor = DirectX::XMFLOAT4(renderingOptions->minColor);
 		PS_constantBuffer.data.maxColor = DirectX::XMFLOAT4(renderingOptions->maxColor);
-		PS_constantBuffer.data.isRaycasting = renderingOptions->isRaycasting;
+		PS_constantBuffer.data.condition = solverOptions->usingTransparency;
 
 
 		// Update Constant Buffer

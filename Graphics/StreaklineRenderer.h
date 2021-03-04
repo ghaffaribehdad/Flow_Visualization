@@ -44,9 +44,9 @@ public:
 			{
 
 
-				switch (renderingOptions->drawMode)
+				switch (solverOptions->advectionMode)
 				{
-				case(DrawMode::DrawMode::REALTIME):
+				case(AdvectionMode::AdvectionMode::ONTHEFLY):
 				{
 
 					if (!solverOptions->drawComplete)
@@ -62,7 +62,7 @@ public:
 					}
 					break;
 				}
-				default:
+				case(AdvectionMode::AdvectionMode::PRECOMPUTATION):
 					if (renderImGuiOptions->updateStreaklines)
 					{
 						this->updateScene();
@@ -83,6 +83,7 @@ public:
 	void resetRealtime() override
 	{
 		streakCounter = 0;
+		counter = 0;
 		this->streaklineSolver.resetRealtime();
 	}
 
@@ -118,13 +119,9 @@ public:
 
 	bool updateSceneRealtime()
 	{
-
-
 		if (streakCounter == 0)
 		{
-
 			this->initializeRealtime();
-
 		}
 		else
 		{
@@ -171,53 +168,30 @@ public:
 
 		switch (renderingOptions->drawMode)
 		{
-		case DrawMode::DrawMode::STATIONARY:
-		{
-			this->deviceContext->Draw(llInt(solverOptions->lineLength) * llInt(solverOptions->lines_count), 0);
-			break;
-		}
+
 
 		case DrawMode::DrawMode::REALTIME:
 		{
 			this->deviceContext->Draw(llInt(solverOptions->lineLength) * llInt(solverOptions->lines_count), 0);
 			break;
 		}
-		case DrawMode::DrawMode::ADVECTION:
-		{
-			for (int i = 1; i <= solverOptions->lines_count; i++)
-			{
-				this->deviceContext->Draw(counter, i * solverOptions->lineLength - counter);
-
-			}
-
-			this->counter++;
-
-			if (streakCounter == solverOptions->lineLength)
-			{
-				resetRealtime();
-			}
-
-			break;
-		}
 
 		case DrawMode::DrawMode::CURRENT:
 		{
-			for (int i = 1; i <= solverOptions->lines_count; i++)
+			for (int i = 0; i < solverOptions->lines_count; i++)
 			{
-				this->deviceContext->Draw(renderingOptions->lineLength, i * solverOptions->lineLength - renderingOptions->lineLength - counter);
-
+				this->deviceContext->Draw(renderingOptions->lineLength, i * solverOptions->lineLength + (
+					solverOptions->currentIdx - solverOptions->firstIdx - renderingOptions->lineLength));
 			}
-
-			this->counter++;
-
-			if (streakCounter == solverOptions->lineLength - renderingOptions->lineLength)
-			{
-				streakCounter = 0;
-			}
-
-
 			break;
 		}
+
+		default:
+		{
+			this->deviceContext->Draw(llInt(solverOptions->lineLength) * llInt(solverOptions->lines_count), 0);
+			break;
+		}
+
 		}
 		this->cleanPipeline();
 	}
@@ -257,11 +231,8 @@ public:
 
 	void updateConstantBuffer(Camera& camera) override
 	{
-
-
 		DirectX::XMMATRIX world = DirectX::XMMatrixIdentity();
 
-		// Set attributes of constant buffer for geometry shader
 		GS_constantBuffer.data.View = world * camera.GetViewMatrix();
 		GS_constantBuffer.data.Proj = camera.GetProjectionMatrix();
 		GS_constantBuffer.data.eyePos = camera.GetPositionFloat3();
@@ -272,13 +243,15 @@ public:
 		GS_constantBuffer.data.gridDiameter.y = solverOptions->gridDiameter[1];
 		GS_constantBuffer.data.gridDiameter.z = solverOptions->gridDiameter[2];
 		GS_constantBuffer.data.periodicity = solverOptions->periodic;
+		GS_constantBuffer.data.particlePlanePos = streakProjectionPlane();
+		GS_constantBuffer.data.streakPos = (float)solverOptions->projectPos * (solverOptions->gridDiameter[0] / (float)solverOptions->gridSize[0]);
 
 		PS_constantBuffer.data.minMeasure = renderingOptions->minMeasure;
 		PS_constantBuffer.data.maxMeasure = renderingOptions->maxMeasure;
-
 		PS_constantBuffer.data.minColor = DirectX::XMFLOAT4(renderingOptions->minColor);
 		PS_constantBuffer.data.maxColor = DirectX::XMFLOAT4(renderingOptions->maxColor);
-		PS_constantBuffer.data.isRaycasting = renderingOptions->isRaycasting;
+		PS_constantBuffer.data.condition = solverOptions->usingTransparency;
+
 
 		// Update Constant Buffer
 		GS_constantBuffer.ApplyChanges();

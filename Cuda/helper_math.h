@@ -6,6 +6,7 @@
 #define I_3X3_D dMat3X3(1.0,0,0,0,1.0,0,0,0,1.0)
 #define safeAcos(x) acos(fmax(-1.0, fmin(1.0, (x))))
 #define safeSqrt(x) sqrt(fmax(0.0, (x)))
+#define maxBlockDim (uint)16
 
 #include "cuda_runtime.h"
 #include <corecrt_math.h>
@@ -36,13 +37,13 @@ inline __host__ __device__ bool isZero(float x)
 	return false;
 }
 
-inline __host__ __device__ float fsign(double v)
+inline __host__ __device__ float fsign(float v)
 {
 	return copysignf(1.0f, v);
 }
 
 
-static __host__ __device__ __inline__ double sign(double v) { return ::fsign(v); }
+static __host__ __device__ __inline__ double sign(float v) { return ::fsign(v); }
 
 
 // convert array to built-in cuda structures
@@ -1023,16 +1024,48 @@ inline __host__ __device__ float3 floor(const float3 v)
 }
 
 
-__device__ __host__ inline float3 world2Tex(const float3& position, const float3& dimension, int3 size, bool noormalized = false)
+inline __device__  float3 world2Tex(float3 position, float3 dimension, const int3 & size, bool noormalized = false, bool particleTracing = false)
 {
-
 
 	if (noormalized)
 	{
 		return (position / dimension);
 	}
+	float3 pos = (position / dimension) * make_int3(size.x - 1, size.y - 1, size.z - 1) + make_float3(0.5f, 0.5f, 0.5f);
 
-	return (position / dimension) * size;
+
+	if (particleTracing)
+	{
+		if (pos.x > 0)
+		{
+			pos.x = fmod(pos.x, (float)(size.x - 1));
+		}
+		else
+		{
+			pos.x = (float)(size.x - 1) + fmod(pos.x, (float)(size.x - 1));
+		}
+
+		if (pos.y > 0)
+		{
+			pos.y = fmod(pos.y, (float)(size.y - 1));
+		}
+		else
+		{
+			pos.y = (float)(size.y - 1) + fmod(pos.y, (float)(size.y - 1));
+		}
+
+
+		if (pos.z > 0)
+		{
+			pos.z = fmod(pos.z, (float)(size.z - 1));
+		}
+		else
+		{
+			pos.z = (float)(size.z - 1) + fmod(pos.z, (float)(size.z - 1));
+		}
+
+	}
+	return pos;
 }
 
 
@@ -1208,6 +1241,13 @@ inline __device__  float lambda2(cudaTextureObject_t tex, const float3 & gridDia
 }
 
 
+
+/**
+ * Returns the cubic polynomial factors for the ray r(t)=entry+t*dir
+ * traversing the voxel with corner values given by 'vals' and accessing the
+ * tri-linear interpolated values.
+ */
+
 /**
 		 * \param vals the eight corner values xyz=[(0,0,0), (1,0,0), (0,1,0), ..., (1,1,1)]
 		 * \param entry the entry point to the voxel in [0,voxelSize]^3
@@ -1351,3 +1391,44 @@ inline __host__ __device__ int rootsHyperbolic(const float4& factors, T roots[3]
 
 #undef t2x
 };
+
+
+
+
+__device__  inline float3 colorCode(const float* minColor, const float*maxColor, const float & value, const float & min_val, const float& max_val)
+{
+	float3 rgb_min =
+	{
+		minColor[0],
+		minColor[1],
+		minColor[2],
+	};
+
+	float3 rgb_max =
+	{
+		maxColor[0],
+		maxColor[1],
+		maxColor[2],
+	};
+
+	float3 rgb = { 0,0,0 };
+	float y_saturated = 0.0f;
+
+	if (value < 0)
+	{
+		float3 rgb_min_complement = make_float3(1, 1, 1) - rgb_min;
+		y_saturated = saturate(abs(value / min_val));
+		rgb = rgb_min_complement * (1 - y_saturated) + rgb_min;
+	}
+	else
+	{
+		float3 rgb_max_complement = make_float3(1, 1, 1) - rgb_max;
+		y_saturated = saturate(value / max_val);
+		rgb = rgb_max_complement * (1 - y_saturated) + rgb_max;
+	}
+
+	return rgb;
+}
+
+
+

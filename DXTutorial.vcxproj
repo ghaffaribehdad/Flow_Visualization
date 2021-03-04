@@ -192,6 +192,7 @@
     <CudaCompile Include="cudaCompress\src\cudaCompress\util\DWTInt.cu" />
     <CudaCompile Include="cudaCompress\src\cudaCompress\util\Quantize.cu" />
     <CudaCompile Include="cudaCompress\src\cudaCompress\util\YCoCg.cu" />
+    <CudaCompile Include="Cuda\ParticleTracingHelper.cu" />
     <CudaCompile Include="Cuda\StreaklineSolver.cu" />
     <CudaCompile Include="Heightfield\DispersionHelper.cu">
       <FileType>Document</FileType>
@@ -268,6 +269,7 @@
     <ClInclude Include="cudaCompress\src\examples\tthread\tinythread.h" />
     <ClInclude Include="Cuda\CudaArray.h" />
     <ClInclude Include="Cuda\Cuda_helper_math_host.h" />
+    <ClInclude Include="Cuda\ParticleTracingHelper.h" />
     <ClInclude Include="Cuda\StreaklineSolver.h" />
     <ClInclude Include="Graphics\StreaklineRenderer.h" />
     <ClInclude Include="Graphics\StreamlineRenderer.h" />
@@ -294,7 +296,6 @@
     <ClInclude Include="VolumeIO\BinaryWriter.h" />
     <ClInclude Include="VolumeIO\Compression.h" />
     <ClInclude Include="VolumeIO\Volume_IO.h" />
-    <ClInclude Include="VolumeIO\Volume_IO_X_Major.h" />
     <ClInclude Include="VolumeIO\Volume_IO_Z_Major.h" />
     <ClInclude Include="Window\RenderWindow.h" />
     <ClInclude Include="Window\WindowContainer.h" />

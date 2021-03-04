@@ -34,14 +34,8 @@ namespace VolumeIO
 		float* p_field = nullptr;	// Stores a pointer to the field on the Hose 
 		float * dp_field = nullptr; 	// Stores a pointer to the field on the Device
 		float* planeBuffer = nullptr;
-
-
-
 		size_t buffer_size = 0;
 		SolverOptions* m_solverOptions = nullptr;
-
-
-
 
 		bool Read(std::streampos begin, size_t size);
 
@@ -79,9 +73,8 @@ namespace VolumeIO
 		//bool isEmpty();
 
 		
-		bool readVolume(unsigned int idx);	// Generic: Read binary file with a certain index
-		bool readVolume(unsigned int idx, SolverOptions * solverOptions);	// Generic: Read binary file with a certain index
-		bool readVolume();					// Read binary file without index
+		bool readVolume(const unsigned int & idx);
+		bool readVolume_Compressed(const unsigned int & idx, const int3 & gridSize);	// Generic: Read binary file with a certain index
 
 
 		// Read a single plane of a volumetric file in binary
@@ -115,7 +108,7 @@ namespace VolumeIO
 		// Clear the vector
 		void release();
 		bool Read();
-		bool Read_Compressed(SolverOptions * solverOptions);
+		bool Read_Compressed(int3 _gridSize);
 
 	};
 

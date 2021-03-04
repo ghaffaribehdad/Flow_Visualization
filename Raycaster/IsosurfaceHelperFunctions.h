@@ -23,6 +23,7 @@ namespace FetchTextureSurface
 		__device__	virtual	float		ValueAtXYZ_Surf(cudaSurfaceObject_t surf, const int3 & position) { return 0; };
 		__device__  virtual	float3		GradientAtXYZ_Surf(cudaSurfaceObject_t surf, const int3 & position, const float3 & gridDiameter, const int3 & gridSize);
 		__device__			float3		GradientAtXYZ_Tex(cudaTextureObject_t tex, const float3 & position, const float3 & gridDiameter, const int3 & gridSize);
+		__device__			float3		GradientAtXYZ_Tex_Absolute(cudaTextureObject_t tex, const float3 & position, const float3 & gridDiameter, const int3 & gridSize);
 		__device__			float3		GradientAtXYZ_Tex_GradientBase(cudaTextureObject_t tex, const float3 & position, const float3 & gridDiameter, const int3 & gridSize);
 
 		__device__	static	float3		ValueAtXYZ_XYZ_Tex(cudaTextureObject_t tex, const float3 & position);

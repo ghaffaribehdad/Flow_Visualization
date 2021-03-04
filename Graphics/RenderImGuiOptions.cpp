@@ -5,565 +5,617 @@
 
 void RenderImGuiOptions::drawSolverOptions()
 {
-	ImGui_ImplDX11_NewFrame();
-	ImGui_ImplWin32_NewFrame();
-	ImGui::NewFrame();
-
-
-	// Solver Options
-	ImGui::Begin("Solver Options");
-
-	ImGui::Text("Mode: ");
-	ImGui::SameLine();
-
-
-
-	if (ImGui::Combo("Line Rendering Mode", &solverOptions->lineRenderingMode, LineRenderingMode::lineRenderingModeList, LineRenderingMode::lineRenderingMode::COUNT))
+	if (this->b_drawSolverOptions)
 	{
-		if (this->showStreamlines)
+
+
+
+
+
+		// Solver Options
+		ImGui::Begin("Solver Options");
+
+		ImGui::Text("Mode: ");
+		ImGui::SameLine();
+
+
+
+		if (ImGui::Combo("Line Rendering Mode", &solverOptions->lineRenderingMode, LineRenderingMode::lineRenderingModeList, LineRenderingMode::lineRenderingMode::COUNT))
 		{
-			this->showStreamlines = false;
-			this->releaseStreamlines = true;
-			this->solverOptions->loadNewfile = false;
+			if (this->showStreamlines)
+			{
+				this->showStreamlines = false;
+				this->releaseStreamlines = true;
+				this->solverOptions->loadNewfile = false;
+			}
+			if (this->showStreaklines)
+			{
+				this->showStreaklines = false;
+				this->releaseStreaklines = true;
+			}
+			if (this->showPathlines)
+			{
+				this->showPathlines = false;
+				this->releasePathlines = true;
+			}
 		}
-		if (this->showStreaklines)
+
+		if (solverOptions->lineRenderingMode == LineRenderingMode::lineRenderingMode::PATHLINES)
+			//|| solverOptions->lineRenderingMode == LineRenderingMode::lineRenderingMode::STREAKLINES)
 		{
-			this->showStreaklines = false;
-			this->releaseStreaklines = true;
+			if (ImGui::Combo("Advection Mode", &solverOptions->advectionMode, AdvectionMode::AdvectionModeList, AdvectionMode::AdvectionMode::COUNT))
+			{
+
+			}
 		}
-		if (this->showPathlines)
+
+
+		if (ImGui::Checkbox("Compressed Data", &solverOptions->Compressed))
 		{
-			this->showPathlines = false;
-			this->releasePathlines = true;
+
+
 		}
-	}
-
-	if (ImGui::Checkbox("Compressed Data", &solverOptions->Compressed))
-	{
-
-
-	}
-	if (ImGui::InputText("Name", _strdup(solverOptions->outputFileName.c_str()), 100 * sizeof(char)))
-	{
-	}
-	
-	if (ImGui::Button("Screenshot"))
-	{
-		this->saveScreenshot = true;
-	}
-
-	if (ImGui::InputInt("Range",&this->screenshotRange,1,10))
-	{
-	}
-
-
-	if (ImGui::InputText("File Path", _strdup(solverOptions->filePath.c_str()), 100 * sizeof(char)))
-	{
-	}
-
-	if (ImGui::InputText("File Name", _strdup(solverOptions->fileName.c_str()), 100*sizeof(char)))
-	{
-	}
-
-	if (ImGui::Combo("Projection", &solverOptions->projection, Projection::ProjectionList, Projection::Projection::COUNT))
-	{
-		
-	}
-
-	if (ImGui::Checkbox("Periodic", &solverOptions->periodic))
-	{
-
-	}
-
-
-
-
-	if (ImGui::InputInt3("Grid Size", solverOptions->gridSize, sizeof(solverOptions->gridSize)))
-	{
-		this->updateSeedBox = true;
-		this->updateStreamlines = true;
-		this->updatePathlines = true;
-		this->updateStreaklines = true;
-	}
-	if (ImGui::InputFloat3("Grid Diameter", solverOptions->gridDiameter, sizeof(solverOptions->gridDiameter)))
-	{
-		this->updateVolumeBox = true;
-		this->updateRaycasting = true;
-		this->updateStreamlines = true;
-		this->updatePathlines = true;
-	}
-
-	if (ImGui::DragFloat3("Velocity Scaling Factor", solverOptions->velocityScalingFactor,0.01f))
-	{
-		this->updateVolumeBox = true;
-		this->updateRaycasting = true;
-		this->updateStreamlines = true;
-		this->updatePathlines = true;
-		this->updateStreaklines = true;
-
-	}
-	if (ImGui::Button("Optical Flow"))
-	{
-		divideArrayFloat3Int3(solverOptions->velocityScalingFactor, solverOptions->gridDiameter, solverOptions->gridSize);
-		this->solverOptions->dt = 1.0f;
-		this->updatePathlines = true;
-		this->updateStreamlines = true;
-
-	}
-	ImGui::SameLine();
-	if (ImGui::Button("Reset Scaling Factor"))
-	{
-		solverOptions->velocityScalingFactor[0] = 1.0f;
-		solverOptions->velocityScalingFactor[1] = 1.0f;
-		solverOptions->velocityScalingFactor[2] = 1.0f;
-		this->updatePathlines = true;
-		this->updateStreamlines = true;
-
-	}
-
-	if (ImGui::Combo("Seeding Pattern", (int*)&solverOptions->seedingPattern, SeedPatternList, 3))
-	{
-		this->updateStreamlines = true;
-		this->updatePathlines = true;
-		this->updateStreaklines = true;
-
-
-		if (solverOptions->seedingPattern == (int)SeedingPattern::SEED_GRIDPOINTS)
-			solverOptions->lines_count = solverOptions->seedGrid[0] * solverOptions->seedGrid[1] * solverOptions->seedGrid[2];
-	}
-
-	if (solverOptions->seedingPattern == (int)SeedingPattern::SEED_GRIDPOINTS)
-	{
-		if (ImGui::DragInt3("Seed Grid", solverOptions->seedGrid,1,1,1024))
+		if (ImGui::InputText("Name", _strdup(solverOptions->outputFileName.c_str()), 100 * sizeof(char)))
 		{
+		}
+
+		if (ImGui::Button("Screenshot"))
+		{
+			this->saveScreenshot = true;
+		}
+
+		if (ImGui::InputInt("Range", &this->screenshotRange, 1, 10))
+		{
+		}
+
+
+		if (ImGui::InputText("File Path", _strdup(solverOptions->filePath.c_str()), 100 * sizeof(char)))
+		{
+		}
+
+		if (ImGui::InputText("File Name", _strdup(solverOptions->fileName.c_str()), 100 * sizeof(char)))
+		{
+		}
+
+		if (ImGui::Combo("Projection", &solverOptions->projection, Projection::ProjectionList, Projection::Projection::COUNT))
+		{
+
+		}
+
+		if (ImGui::InputFloat("Time Dim", &solverOptions->timeDim))
+		{
+
+		}
+
+		if (ImGui::InputInt("Projection Plane", &solverOptions->projectPos, 1, 5))
+		{
+			//this->updateStreamlines = true;
+			//this->updatePathlines = true;
+			//this->updateStreaklines = true;
+		}
+
+
+
+		if (ImGui::Checkbox("Periodic", &solverOptions->periodic))
+		{
+
+		}
+
+
+
+
+
+		if (ImGui::InputInt3("Grid Size", solverOptions->gridSize, sizeof(solverOptions->gridSize)))
+		{
+			this->updateSeedBox = true;
+			this->updateStreamlines = true;
+			this->updatePathlines = true;
+			this->updateStreaklines = true;
+		}
+		if (ImGui::InputFloat3("Grid Diameter", solverOptions->gridDiameter, sizeof(solverOptions->gridDiameter)))
+		{
+			this->updateVolumeBox = true;
+			this->updateRaycasting = true;
+			this->updateStreamlines = true;
+			this->updatePathlines = true;
+		}
+
+		if (ImGui::DragFloat3("Velocity Scaling Factor", solverOptions->velocityScalingFactor, 0.01f))
+		{
+			this->updateVolumeBox = true;
+			this->updateRaycasting = true;
 			this->updateStreamlines = true;
 			this->updatePathlines = true;
 			this->updateStreaklines = true;
 
 		}
-		solverOptions->lines_count = solverOptions->seedGrid[0] * solverOptions->seedGrid[1] * solverOptions->seedGrid[2];
-	}
+		if (ImGui::Button("Optical Flow"))
+		{
+			divideArrayFloat3Int3(solverOptions->velocityScalingFactor, solverOptions->gridDiameter, solverOptions->gridSize);
+			this->solverOptions->dt = 1.0f;
+			this->updatePathlines = true;
+			this->updateStreamlines = true;
 
-	if (solverOptions->seedingPattern == (int)SeedingPattern::SEED_TILTED_PLANE)
-	{
-		if (ImGui::DragInt2("Seed Grid", solverOptions->gridSize_2D, 1, 1, 1024))
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Reset Scaling Factor"))
+		{
+			solverOptions->velocityScalingFactor[0] = 1.0f;
+			solverOptions->velocityScalingFactor[1] = 1.0f;
+			solverOptions->velocityScalingFactor[2] = 1.0f;
+			this->updatePathlines = true;
+			this->updateStreamlines = true;
+
+		}
+
+
+		if (ImGui::Combo("Seeding Pattern", (int*)&solverOptions->seedingPattern, SeedPatternList, 3))
 		{
 			this->updateStreamlines = true;
 			this->updatePathlines = true;
 			this->updateStreaklines = true;
 
+
+			if (solverOptions->seedingPattern == (int)SeedingPattern::SEED_GRIDPOINTS)
+				solverOptions->lines_count = solverOptions->seedGrid[0] * solverOptions->seedGrid[1] * solverOptions->seedGrid[2];
 		}
-
-		if (ImGui::DragFloat("Wall-normal Distance", &solverOptions->seedWallNormalDist, 0.001f, 0.0, solverOptions->gridDiameter[1], "%4f"))
+		if (solverOptions->seedingPattern == (int)SeedingPattern::SEED_RANDOM)
 		{
-			this->updateStreamlines = true;
-			this->updatePathlines = true;
-
-		}
-
-		if (ImGui::DragFloat("Tilt Deg", &solverOptions->tilt_deg, 0.1f, 0.0, 45.0f))
-		{
-			this->updateStreamlines = true;
-			this->updatePathlines = true;
-
-		}
-
-
-		solverOptions->lines_count = solverOptions->gridSize_2D[0] * solverOptions->gridSize_2D[1];
-	}
-
-
-
-	if (ImGui::DragFloat3("Seed Box", solverOptions->seedBox, 0.01f))
-	{
-		this->updateSeedBox = true;
-		this->updateStreamlines = true;
-		this->updatePathlines = true;
-		this->updateStreaklines = true;
-
-	}
-	
-	if (ImGui::DragFloat3("Seed Box Position", solverOptions->seedBoxPos, 0.01f))
-	{
-		this->updateSeedBox = true;
-		this->updateStreamlines = true;
-		this->updatePathlines = true;
-		this->updateStreaklines = true;
-
-	}
-
-
-	ImGui::PushItemWidth(75);
-	if (ImGui::InputInt("First Index", &(solverOptions->firstIdx)))
-	{
-		if (solverOptions->lastIdx < solverOptions->firstIdx)
-		{
-			solverOptions->firstIdx = solverOptions->lastIdx;
-		}
-		this->updatePathlines = true;
-		
-		if (solverOptions->currentIdx < solverOptions->firstIdx)
-		{
-			solverOptions->currentIdx = solverOptions->firstIdx;
-			this->updateStreamlines = true;
-
-		}
-
-	}
-
-	if (solverOptions->lineRenderingMode == LineRenderingMode::lineRenderingMode::STREAKLINES || solverOptions->lineRenderingMode == LineRenderingMode::lineRenderingMode::PATHLINES)
-	{
-		solverOptions->lineLength = solverOptions->lastIdx - solverOptions->firstIdx;
-	}
-
-	ImGui::SameLine();
-
-	if (ImGui::InputInt("Last Index", &(solverOptions->lastIdx)))
-	{
-		this->updatePathlines = true;
-		this->updateStreaklines = true;
-
-	}
-
-	if (ImGui::InputInt("Current Index", &(solverOptions->currentIdx),1,2))
-	{
-		if (solverOptions->currentIdx < solverOptions->firstIdx)
-		{
-			solverOptions->currentIdx = solverOptions->firstIdx;
-		}
-
-		if (solverOptions->currentIdx > solverOptions->lastIdx)
-		{
-			solverOptions->currentIdx = solverOptions->lastIdx;
-		}
-
-		this->updateStreamlines = true;
-		solverOptions->loadNewfile = true;
-		this->solverOptions->fileChanged = true;
-
-
-		this->raycastingOptions->fileChanged = true;
-		this->crossSectionOptions->updateTime = true;
-
-		this->updateCrossSection = true;
-		
-		this->saved = false;
-	}
-
-	ImGui::PopItemWidth();
-
-	if (ImGui::DragFloat("dt", &(solverOptions->dt),0.0001f,0.001f,1.0f,"%.4f"))
-	{
-		
-		this->updateStreamlines = true;
-		this->updatePathlines = true;
-		this->updateStreaklines = true;
-
-		
-	}
-
-	if (ImGui::InputInt("Lines", &(solverOptions->lines_count)))
-	{
-		if (this->solverOptions->lines_count <= 0)
-		{
-			this->solverOptions->lines_count = 1;
-		}
-		this->updateStreamlines = true;
-		this->updatePathlines = true;
-		this->updateStreaklines = true;
-
-	}
-
-	// length of the line is fixed for the pathlines
-
-	if (solverOptions->lineRenderingMode == LineRenderingMode::lineRenderingMode::STREAMLINES)
-	{
-		if (ImGui::InputInt("Line Length", &(solverOptions->lineLength)))
-		{
-			this->updateStreamlines = true;
-		}
-		if (this->solverOptions->lineLength <= 0)
-		{
-			this->solverOptions->lineLength = 1;
-			this->updateStreamlines = true;
-
-		}
-	}
-
-
-
-
-
-	if (ImGui::Combo("Color Mode", &solverOptions->colorMode, ColorMode::ColorModeList, ColorMode::ColorMode::COUNT))
-	{
-		this->updateStreamlines = true;
-		this->updatePathlines = true;
-		this->updateStreaklines = true;
-
-
-	}
-
-
-
-
-	//if (this->streamlineGenerating)
-	//{
-	//	if (ImGui::InputText("File Path Out", solverOptions->filePath_out, sizeof(solverOptions->filePath_out)))
-	//	{
-	//	}
-
-	//	if (ImGui::InputText("File Name Out", solverOptions->fileName_out, sizeof(solverOptions->fileName_out)))
-	//	{
-	//	}
-	//}
-	
-	switch (pauseRendering)
-	{
-	case(true):
-	{
-		if (ImGui::Button("Resume", ImVec2(80, 25)))
-		{
-			pauseRendering = !pauseRendering;
-		}
-		break;
-	}
-	case(false):
-	{
-		if (ImGui::Button("Pause", ImVec2(80, 25)))
-		{
-			pauseRendering = !pauseRendering;
-		}
-		break;
-	}
-	}
-
-
-	ImGui::SameLine();
-	if (ImGui::Button("reset", ImVec2(80, 25)))
-	{
-		this->updatePathlines = true;
-		this->updateStreaklines = true;
-	}
-
-	switch (solverOptions->lineRenderingMode)
-	{
-	case LineRenderingMode::lineRenderingMode::STREAMLINES:
-	{
-		// Show Lines
-		if (this->streamlineRendering || this->streamlineGenerating)
-		{
-			if (ImGui::Checkbox("Render Streamlines", &this->showStreamlines))
+			if (ImGui::Checkbox("Random RNG", &solverOptions->randomSeed))
 			{
 				this->updateStreamlines = true;
-				this->solverOptions->loadNewfile = true;
-
-
-				if (!this->showStreamlines)
-				{
-					this->releaseStreamlines = true;
-					this->solverOptions->loadNewfile = false;
-				}
-			}
-
-
-		}
-		break;
-	}
-
-	case LineRenderingMode::lineRenderingMode::PATHLINES:
-	{
-		if (this->solverOptions->lastIdx - this->solverOptions->firstIdx >= 2)
-		{
-			if (ImGui::Checkbox("Render Pathlines", &this->showPathlines))
-			{
 				this->updatePathlines = true;
-
-				if (!this->showPathlines)
-				{
-					this->releasePathlines = true;
-				}
+				this->updateStreaklines = true;
 			}
 
-
 		}
-		break;
-	}
 
-
-	case LineRenderingMode::lineRenderingMode::STREAKLINES:
-	{
-		if (this->solverOptions->lastIdx - this->solverOptions->firstIdx >= 2)
+		if (solverOptions->seedingPattern == (int)SeedingPattern::SEED_GRIDPOINTS)
 		{
-			if (ImGui::Checkbox("Render Streaklines", &this->showStreaklines))
+			if (ImGui::DragInt3("Seed Grid", solverOptions->seedGrid, 1, 1, 1024))
 			{
+				this->updateStreamlines = true;
+				this->updatePathlines = true;
 				this->updateStreaklines = true;
 
-				if (!this->showStreaklines)
-				{
-					this->releaseStreaklines = true;
-				}
+			}
+			solverOptions->lines_count = solverOptions->seedGrid[0] * solverOptions->seedGrid[1] * solverOptions->seedGrid[2];
+		}
+
+		if (solverOptions->seedingPattern == (int)SeedingPattern::SEED_TILTED_PLANE)
+		{
+			if (ImGui::DragInt2("Seed Grid", solverOptions->gridSize_2D, 1, 1, 1024))
+			{
+				this->updateStreamlines = true;
+				this->updatePathlines = true;
+				this->updateStreaklines = true;
+
+			}
+
+			if (ImGui::DragFloat("Wall-normal Distance", &solverOptions->seedWallNormalDist, 0.001f, 0.0, solverOptions->gridDiameter[1], "%4f"))
+			{
+				this->updateStreamlines = true;
+				this->updatePathlines = true;
+
+			}
+
+			if (ImGui::DragFloat("Tilt Deg", &solverOptions->tilt_deg, 0.1f, 0.0, 45.0f))
+			{
+				this->updateStreamlines = true;
+				this->updatePathlines = true;
+
+			}
+
+
+			solverOptions->lines_count = solverOptions->gridSize_2D[0] * solverOptions->gridSize_2D[1];
+		}
+
+
+
+		if (ImGui::DragFloat3("Seed Box", solverOptions->seedBox, 0.01f))
+		{
+			this->updateSeedBox = true;
+			this->updateStreamlines = true;
+			this->updatePathlines = true;
+			this->updateStreaklines = true;
+
+		}
+
+		if (ImGui::DragFloat3("Seed Box Position", solverOptions->seedBoxPos, 0.01f))
+		{
+			this->updateSeedBox = true;
+			this->updateStreamlines = true;
+			this->updatePathlines = true;
+			this->updateStreaklines = true;
+
+		}
+
+
+		ImGui::PushItemWidth(75);
+		if (ImGui::InputInt("First Index", &(solverOptions->firstIdx)))
+		{
+			if (solverOptions->lastIdx < solverOptions->firstIdx)
+			{
+				solverOptions->firstIdx = solverOptions->lastIdx;
+			}
+			this->updatePathlines = true;
+
+			if (solverOptions->currentIdx < solverOptions->firstIdx)
+			{
+				solverOptions->currentIdx = solverOptions->firstIdx;
+				this->updateStreamlines = true;
+
 			}
 
 		}
-		break;
+
+		if (solverOptions->lineRenderingMode == LineRenderingMode::lineRenderingMode::STREAKLINES || solverOptions->lineRenderingMode == LineRenderingMode::lineRenderingMode::PATHLINES)
+		{
+			solverOptions->lineLength = solverOptions->lastIdx - solverOptions->firstIdx + 1;
+		}
+
+		ImGui::SameLine();
+
+		if (ImGui::InputInt("Last Index", &(solverOptions->lastIdx)))
+		{
+			this->updatePathlines = true;
+			this->updateStreaklines = true;
+
+		}
+
+		if (ImGui::InputInt("Current Index", &(solverOptions->currentIdx), 1, 2))
+		{
+			if (solverOptions->currentIdx < solverOptions->firstIdx)
+			{
+				solverOptions->currentIdx = solverOptions->firstIdx;
+			}
+
+			if (solverOptions->currentIdx > solverOptions->lastIdx)
+			{
+				solverOptions->currentIdx = solverOptions->lastIdx;
+			}
+
+			this->updateStreamlines = true;
+			solverOptions->loadNewfile = true;
+			this->solverOptions->fileChanged = true;
+
+
+			this->raycastingOptions->fileChanged = true;
+			this->crossSectionOptions->updateTime = true;
+			this->updatefluctuation = true;
+			this->updateCrossSection = true;
+
+			this->saved = false;
+		}
+
+		ImGui::PopItemWidth();
+
+		if (ImGui::DragFloat("dt", &(solverOptions->dt), 0.0001f, 0.001f, 1.0f, "%.4f"))
+		{
+
+			this->updateStreamlines = true;
+			this->updatePathlines = true;
+			this->updateStreaklines = true;
+
+
+		}
+
+		if (ImGui::InputInt("Lines", &(solverOptions->lines_count)))
+		{
+			if (this->solverOptions->lines_count <= 0)
+			{
+				this->solverOptions->lines_count = 1;
+			}
+			this->updateStreamlines = true;
+			this->updatePathlines = true;
+			this->updateStreaklines = true;
+
+		}
+
+		// length of the line is fixed for the pathlines
+
+		if (solverOptions->lineRenderingMode == LineRenderingMode::lineRenderingMode::STREAMLINES)
+		{
+			if (ImGui::InputInt("Line Length", &(solverOptions->lineLength)))
+			{
+				this->updateStreamlines = true;
+			}
+			if (this->solverOptions->lineLength <= 0)
+			{
+				this->solverOptions->lineLength = 1;
+				this->updateStreamlines = true;
+
+			}
+		}
+
+
+		if (ImGui::Checkbox("Using Transparency", &solverOptions->usingTransparency))
+		{
+			//this->updateStreamlines = true;
+			//this->updatePathlines = true;
+			//this->updateStreaklines = true;
+		}
+
+		if (ImGui::Combo("Transparency Mode", &solverOptions->transparencyMode, TransparencyMode::TransparencyModeList, TransparencyMode::TransparencyMode::COUNT))
+		{
+
+		}
+
+
+		if (ImGui::Combo("Color Mode", &solverOptions->colorMode, ColorMode::ColorModeList, ColorMode::ColorMode::COUNT))
+		{
+			this->updateStreamlines = true;
+			this->updatePathlines = true;
+			this->updateStreaklines = true;
+
+
+		}
+
+
+
+
+		//if (this->streamlineGenerating)
+		//{
+		//	if (ImGui::InputText("File Path Out", solverOptions->filePath_out, sizeof(solverOptions->filePath_out)))
+		//	{
+		//	}
+
+		//	if (ImGui::InputText("File Name Out", solverOptions->fileName_out, sizeof(solverOptions->fileName_out)))
+		//	{
+		//	}
+		//}
+
+		switch (pauseRendering)
+		{
+		case(true):
+		{
+			if (ImGui::Button("Resume", ImVec2(80, 25)))
+			{
+				pauseRendering = !pauseRendering;
+			}
+			break;
+		}
+		case(false):
+		{
+			if (ImGui::Button("Pause", ImVec2(80, 25)))
+			{
+				pauseRendering = !pauseRendering;
+			}
+			break;
+		}
+		}
+
+
+		ImGui::SameLine();
+		if (ImGui::Button("reset", ImVec2(80, 25)))
+		{
+			this->updatePathlines = true;
+			this->updateStreaklines = true;
+		}
+
+		switch (solverOptions->lineRenderingMode)
+		{
+		case LineRenderingMode::lineRenderingMode::STREAMLINES:
+		{
+			// Show Lines
+			if (this->streamlineRendering || this->streamlineGenerating)
+			{
+				if (ImGui::Checkbox("Render Streamlines", &this->showStreamlines))
+				{
+					this->updateStreamlines = true;
+					this->solverOptions->loadNewfile = true;
+
+
+					if (!this->showStreamlines)
+					{
+						this->releaseStreamlines = true;
+						this->solverOptions->loadNewfile = false;
+					}
+				}
+
+
+			}
+			break;
+		}
+
+		case LineRenderingMode::lineRenderingMode::PATHLINES:
+		{
+			if (this->solverOptions->lastIdx - this->solverOptions->firstIdx >= 1)
+			{
+				if (ImGui::Checkbox("Render Pathlines", &this->showPathlines))
+				{
+					this->updatePathlines = true;
+
+					if (!this->showPathlines)
+					{
+						this->releasePathlines = true;
+					}
+				}
+
+
+			}
+			break;
+		}
+
+
+		case LineRenderingMode::lineRenderingMode::STREAKLINES:
+		{
+			if (this->solverOptions->lastIdx - this->solverOptions->firstIdx >= 1)
+			{
+				if (ImGui::Checkbox("Render Streaklines", &this->showStreaklines))
+				{
+					this->updateStreaklines = true;
+
+					if (!this->showStreaklines)
+					{
+						this->releaseStreaklines = true;
+					}
+				}
+
+			}
+			break;
+		}
+
+
+		}
+
+
+
+
+		if (ImGui::Button("Reset View", ImVec2(80, 25)))
+		{
+			this->camera->SetPosition(-3.91f, 0.05f, -4.94f);
+			this->camera->SetLookAtPos({ 0.54f, -0.02f, 0.84f });
+
+			this->updateRaycasting = true;
+			this->updateDispersion = true;
+			this->updatefluctuation = true;
+			this->updateFTLE = true;
+		}
+
+		ImGui::SameLine();
+
+		if (ImGui::Button("Edge View", ImVec2(80, 25)))
+		{
+			this->camera->SetPosition(-10.7f, 4.0f, -6.93f);
+			this->camera->SetLookAtPos({ 0.75f,-0.35f,0.55f });
+
+			this->updateRaycasting = true;
+			this->updateDispersion = true;
+			this->updatefluctuation = true;
+			this->updateFTLE = true;
+
+		}
+		ImGui::SameLine();
+
+		if (ImGui::Button("Top", ImVec2(80, 25)))
+		{
+			this->camera->SetPosition(0, 0, +10);
+			this->camera->SetLookAtPos({ 0, 0, 0 });
+
+			this->updateRaycasting = true;
+			this->updateDispersion = true;
+			this->updatefluctuation = true;
+			this->updateFTLE = true;
+
+		}
+
+
+		if (ImGui::Button("Bottom", ImVec2(80, 25)))
+		{
+			this->camera->SetPosition(0, 0, -10);
+			this->camera->SetLookAtPos({ 0, 0, 0 });
+
+			this->updateRaycasting = true;
+			this->updateDispersion = true;
+			this->updatefluctuation = true;
+			this->updateFTLE = true;
+
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Side", ImVec2(80, 25)))
+		{
+			this->camera->SetPosition(5, 5, 10);
+			this->camera->SetLookAtPos({ 0, 0, 0 });
+
+			this->updateRaycasting = true;
+			this->updateDispersion = true;
+			this->updatefluctuation = true;
+			this->updateFTLE = true;
+
+		}
+
+		ImGui::SameLine();
+		if (ImGui::Button("b2f", ImVec2(80, 25)))
+		{
+			this->camera->SetPosition(-10.7f, 4.6f, -0.0001f);
+			this->camera->SetLookAtPos({ -0.9f, -0.33f, 0 });
+
+			this->updateRaycasting = true;
+			this->updateDispersion = true;
+			this->updatefluctuation = true;
+			this->updateFTLE = true;
+
+		}
+
+
+
+		ImGui::End();
 	}
-
-
-	}
-
-
-
-
-	if (ImGui::Button("Reset View", ImVec2(80, 25)))
-	{
-		this->camera->SetPosition(-3.91f, 0.05f,-4.94f);
-		this->camera->SetLookAtPos({ 0.54f, -0.02f, 0.84f });
-
-		this->updateRaycasting = true;
-		this->updateDispersion = true;
-		this->updatefluctuation = true;
-		this->updateFTLE = true;
-	}
-
-	ImGui::SameLine();
-
-	if (ImGui::Button("Edge View", ImVec2(80, 25)))
-	{
-		this->camera->SetPosition(-10.7f, 4.0f, -6.93f);
-		this->camera->SetLookAtPos({ 0.75f,-0.35f,0.55f });
-
-		this->updateRaycasting = true;
-		this->updateDispersion = true;
-		this->updatefluctuation = true;
-		this->updateFTLE = true;
-
-	}
-	ImGui::SameLine();
-
-	if (ImGui::Button("Top", ImVec2(80, 25)))
-	{
-		this->camera->SetPosition(0, 0, +10);
-		this->camera->SetLookAtPos({ 0, 0, 0 });
-
-		this->updateRaycasting = true;
-		this->updateDispersion = true;
-		this->updatefluctuation = true;
-		this->updateFTLE = true;
-
-	}
-
-
-	if (ImGui::Button("Bottom", ImVec2(80, 25)))
-	{
-		this->camera->SetPosition(0, 0, -10);
-		this->camera->SetLookAtPos({ 0, 0, 0 });
-
-		this->updateRaycasting = true;
-		this->updateDispersion = true;
-		this->updatefluctuation = true;
-		this->updateFTLE = true;
-
-	}
-	ImGui::SameLine();
-	if (ImGui::Button("Side", ImVec2(80, 25)))
-	{
-		this->camera->SetPosition(5, 5, 10);
-		this->camera->SetLookAtPos({ 0, 0, 0 });
-
-		this->updateRaycasting = true;
-		this->updateDispersion = true;
-		this->updatefluctuation = true;
-		this->updateFTLE = true;
-
-	}
-
-	ImGui::SameLine();
-	if (ImGui::Button("b2f", ImVec2(80, 25)))
-	{
-		this->camera->SetPosition(-10.7f, 4.6f, -0.0001f);
-		this->camera->SetLookAtPos({ -0.9f, -0.33f, 0 });
-
-		this->updateRaycasting = true;
-		this->updateDispersion = true;
-		this->updatefluctuation = true;
-		this->updateFTLE = true;
-
-	}
-
-
-
-	ImGui::End();
-
 }
 
 
 void RenderImGuiOptions::drawLog()
 {
-	ImGui::Begin("Log");
 
-
-
-	// calculatin FPS
-	static int fpsCounter = 0;
-	static std::string fpsString = "FPS : 0";
-	fpsCounter += 1;
-
-	static float fps_array[10];
-	static int fps_arrayCounter = 0;
-
-	if (fpsTimer->GetMilisecondsElapsed() > 100.0)
+	if (b_drawLog)
 	{
-		fpsString = "FPS: " + std::to_string(10 * fpsCounter);
+		ImGui::Begin("Log");
 
-		if (fps_arrayCounter < 10)
+
+
+		// calculatin FPS
+		static int fpsCounter = 0;
+		static std::string fpsString = "FPS : 0";
+		fpsCounter += 1;
+
+		static float fps_array[10];
+		static int fps_arrayCounter = 0;
+
+		if (fpsTimer->GetMilisecondsElapsed() > 100.0)
 		{
-			fps_array[fps_arrayCounter] = static_cast<float>(fpsCounter / 10.0f);
-			fps_arrayCounter++;
+			fpsString = "FPS: " + std::to_string(10 * fpsCounter);
+
+			if (fps_arrayCounter < 10)
+			{
+				fps_array[fps_arrayCounter] = static_cast<float>(fpsCounter / 10.0f);
+				fps_arrayCounter++;
+			}
+			else
+			{
+				fps_arrayCounter = 0;
+			}
+
+			fpsCounter = 0;
+			fpsTimer->Restart();
 		}
-		else
+
+		strcpy_s(this->log, sizeof(fpsString), fpsString.c_str());
+
+		ImGui::PlotLines("Frame Times", fps_array, IM_ARRAYSIZE(fps_array), 0, NULL, 0, 50, ImVec2(250, 80));
+
+		if (ImGui::InputTextMultiline("Frame per Second", this->log, 1000, ImVec2(100, 35)))
 		{
-			fps_arrayCounter = 0;
+
 		}
 
-		fpsCounter = 0;
-		fpsTimer->Restart();
+		eyePos[0] = XMFloat3ToFloat3(camera->GetPositionFloat3()).x;
+		eyePos[1] = XMFloat3ToFloat3(camera->GetPositionFloat3()).y;
+		eyePos[2] = XMFloat3ToFloat3(camera->GetPositionFloat3()).z;
+
+
+		viewDir[0] = XMFloat3ToFloat3(camera->GetViewVector()).x;
+		viewDir[1] = XMFloat3ToFloat3(camera->GetViewVector()).y;
+		viewDir[2] = XMFloat3ToFloat3(camera->GetViewVector()).z;
+
+		upDir[0] = XMFloat3ToFloat3(camera->GetUpVector()).x;
+		upDir[1] = XMFloat3ToFloat3(camera->GetUpVector()).y;
+		upDir[2] = XMFloat3ToFloat3(camera->GetUpVector()).z;
+
+
+
+		ImGui::InputFloat3("eye Position", this->eyePos, 2);
+		ImGui::InputFloat3("View Dirrection", this->viewDir, 2);
+		ImGui::InputFloat3("Up Vector", this->upDir, 2);
+
+
+		if (ImGui::InputInt("Realtime time step", &solverOptions->counter))
+		{
+
+		}
+
+		ImGui::End();
 	}
-
-	strcpy_s(this->log, sizeof(fpsString), fpsString.c_str());
-
-	ImGui::PlotLines("Frame Times", fps_array, IM_ARRAYSIZE(fps_array), 0, NULL, 0, 50, ImVec2(250, 80));
-
-	if (ImGui::InputTextMultiline("Frame per Second", this->log, 1000, ImVec2(100, 35)))
-	{
-
-	}
-
-	eyePos[0] = XMFloat3ToFloat3(camera->GetPositionFloat3()).x;
-	eyePos[1] = XMFloat3ToFloat3(camera->GetPositionFloat3()).y;
-	eyePos[2] = XMFloat3ToFloat3(camera->GetPositionFloat3()).z;
-
-
-	viewDir[0] = XMFloat3ToFloat3(camera->GetViewVector()).x;
-	viewDir[1] = XMFloat3ToFloat3(camera->GetViewVector()).y;
-	viewDir[2] = XMFloat3ToFloat3(camera->GetViewVector()).z;
-
-	upDir[0] = XMFloat3ToFloat3(camera->GetUpVector()).x;
-	upDir[1] = XMFloat3ToFloat3(camera->GetUpVector()).y;
-	upDir[2] = XMFloat3ToFloat3(camera->GetUpVector()).z;
-
-
-
-	ImGui::InputFloat3("eye Position", this->eyePos, 2);
-	ImGui::InputFloat3("View Dirrection", this->viewDir, 2);
-	ImGui::InputFloat3("Up Vector", this->upDir, 2);
-	
-
-	if (ImGui::InputInt("Realtime time step", &solverOptions->counter))
-	{
-
-	}
-
-	ImGui::End();
 }
 
 
@@ -584,249 +636,254 @@ void RenderImGuiOptions::render()
 
 void RenderImGuiOptions::drawLineRenderingOptions()
 {
-
-	ImGui::Begin("Rendering Options");
-
-
-	if(ImGui::Checkbox("Show Seed Box", &renderingOptions->showSeedBox))
-	{ }
-
-	if (ImGui::Checkbox("Show Volume Box", &renderingOptions->showVolumeBox))
+	if (b_drawLineRenderingOptions)
 	{
-	}
-
-	if (ImGui::Checkbox("Show Clip Box", &renderingOptions->showClipBox))
-	{
-	}
+		ImGui::Begin("Rendering Options");
 
 
-	if(ImGui::SliderFloat("Box Radius", &renderingOptions->boxRadius, 0.0f, 0.05f, "%.4f"))
-	{
-	}
-
-	if (ImGui::Combo("Rendering Mode", &renderingOptions->renderingMode, RenderingMode::RenderingModeList, RenderingMode::RenderingMode::COUNT))
-	{
-		this->updateShaders = true;
-	}
-
-	if (ImGui::Combo("Draw Mode", &renderingOptions->drawMode, DrawMode::DrawModeList, DrawMode::DrawMode::COUNT))
-	{
-	}
-
-
-	if (ImGui::InputInt("Line Length", & renderingOptions->lineLength,1,10))
-	{
-		if (renderingOptions->lineLength < 1)
+		if (ImGui::Checkbox("Show Seed Box", &renderingOptions->showSeedBox))
 		{
-			renderingOptions->lineLength = 1;
 		}
+
+		if (ImGui::Checkbox("Show Volume Box", &renderingOptions->showVolumeBox))
+		{
+		}
+
+		if (ImGui::Checkbox("Show Clip Box", &renderingOptions->showClipBox))
+		{
+		}
+
+
+		if (ImGui::SliderFloat("Box Radius", &renderingOptions->boxRadius, 0.0f, 0.05f, "%.4f"))
+		{
+		}
+
+		if (ImGui::Combo("Rendering Mode", &renderingOptions->renderingMode, RenderingMode::RenderingModeList, RenderingMode::RenderingMode::COUNT))
+		{
+			this->updateShaders = true;
+		}
+
+		if (ImGui::Combo("Draw Mode", &renderingOptions->drawMode, DrawMode::DrawModeList, DrawMode::DrawMode::COUNT))
+		{
+		}
+
+
+		if (ImGui::InputInt("Line Length", &renderingOptions->lineLength, 1, 10))
+		{
+			if (renderingOptions->lineLength < 1)
+			{
+				renderingOptions->lineLength = 1;
+			}
+		}
+
+		if (ImGui::ColorEdit4("Background", (float*)&renderingOptions->bgColor))
+		{
+
+			this->updateRaycasting = true;
+			this->updateDispersion = true;
+		}
+
+
+		ImGui::SliderFloat("Tube Radius", &renderingOptions->tubeRadius, 0.0f, 0.1f, "%.5f");         
+
+
+
+		ImGui::Text("Color Coding:");
+
+		if (ImGui::ColorEdit4("Minimum", (float*)&renderingOptions->minColor))
+		{
+
+		}
+		if (ImGui::InputFloat("Min Value", (float*)& renderingOptions->minMeasure, 0.1f))
+		{
+
+		}
+
+		if (ImGui::ColorEdit4("Maximum", (float*)&renderingOptions->maxColor))
+		{
+
+		}
+		if (ImGui::InputFloat("Max Value", (float*)& renderingOptions->maxMeasure, 0.1f))
+		{
+
+		}
+
+		ImGui::End();
 	}
-
-	if (ImGui::ColorEdit4("Background", (float*)&renderingOptions->bgColor))
-	{
-
-		this->updateRaycasting = true;
-		this->updateDispersion = true;
-	}
-	
-
-	ImGui::SliderFloat("Tube Radius", &renderingOptions->tubeRadius, 0.0f, 0.02f,"%.5f");            // Edit 1 float using a slider from 0.0f to 1.0f
-
-
-
-	ImGui::Text("Color Coding:");
-
-	if (ImGui::ColorEdit4("Minimum", (float*)&renderingOptions->minColor))
-	{
-
-	}
-	if (ImGui::InputFloat("Min Value", (float*)& renderingOptions->minMeasure, 0.1f)) 
-	{
-
-	}
-
-	if (ImGui::ColorEdit4("Maximum", (float*)&renderingOptions->maxColor))
-	{
-
-	}
-	if (ImGui::InputFloat("Max Value", (float*)& renderingOptions->maxMeasure, 0.1f)) 
-	{
-
-	}
-
-
-
-
-
-	ImGui::End();
 
 }
 
 void RenderImGuiOptions::drawRaycastingOptions()
 {
 
-
-	ImGui::Begin("Raycasting Options");
-	
-	if (ImGui::Checkbox("Identical Data", &this->raycastingOptions->identicalDataset))
-	{}
-
-
-	if (!raycastingOptions->identicalDataset)
-	{
-		//if (ImGui::InputText("File Path", solverOptions->filePath, sizeof(raycastingOptions->filePath)))
-		//{
-		//}
-
-		//if (ImGui::InputText("File Name", solverOptions->fileName, sizeof(raycastingOptions->fileName)))
-		//{
-		//}
-	}
-	if (ImGui::Checkbox("Enable Raycasintg", &this->showRaycasting)) 
-	{
-		this->renderingOptions->isRaycasting = this->showRaycasting;
-		this->updateRaycasting = true;
-	}
-
-	if (ImGui::Combo("Isosurface Measure 0", &raycastingOptions->isoMeasure_0, IsoMeasureModes,(int)IsoMeasure::COUNT))
-	{
-		this->updateRaycasting = true;
-		this->updateTimeSpaceField = true;
-
-	}
-
-	if (ImGui::Button("okay"))
+	if (b_drawRaycastingOptions)
 	{
 
-	}
 
+		ImGui::Begin("Raycasting Options");
 
-	if (ImGui::DragFloat("Sampling Rate 0", &raycastingOptions->samplingRate_0, 0.00001f,0.0001f,1.0f,"%.5f"))
-	{
-		if (raycastingOptions->samplingRate_0 < 0.0001f)
+		if (ImGui::Checkbox("Identical Data", &this->raycastingOptions->identicalDataset))
 		{
-			raycastingOptions->samplingRate_0 = 0.0001f;
-		}
-		this->updateRaycasting	= true;
-		this->updateDispersion	= true;
-		this->updateFTLE = true;
-
-
-
-	}
-
-
-
-	if (ImGui::DragFloat3("Clip Box", raycastingOptions->clipBox, 0.01f))
-	{
-
-		this->updateRaycasting = true;
-		this->updateTimeSpaceField = true;
-
-	}
-
-	if (ImGui::DragFloat3("Clip Box Center", raycastingOptions->clipBoxCenter, 0.01f))
-	{
-
-		this->updateRaycasting = true;
-		this->updateTimeSpaceField = true;
-
-	}
-
-
-	if (ImGui::DragFloat("Isovalue 0", &raycastingOptions->isoValue_0, 0.001f))
-	{
-		this->updateRaycasting = true;
-		this->updateTimeSpaceField = true;
-	}
-
-	if (ImGui::DragFloat("Tolerance 0", &raycastingOptions->tolerance_0, 0.00001f,0.0001f,5,"%5f"))
-	{
-		this->updateRaycasting = true;
-		this->updateDispersion = true;
-		this->updateFTLE = true;
-
-	}
-
-
-
-	ImGui::Text("Surfaces color 0:");
-
-
-	if (ImGui::ColorEdit3("Isosurface Color 0", (float*)& raycastingOptions->color_0))
-	{
-		this->updateRaycasting = true;
-		this->updateDispersion = true;
-	}
-
-	if (ImGui::ColorEdit4("Min Color", (float*)&raycastingOptions->minColor))
-	{
-		this->updateRaycasting = true;
-		this->updateDispersion = true;
-		this->updateFTLE = true;
-
-	}
-	if (ImGui::ColorEdit4("Max Color", (float*)&raycastingOptions->maxColor))
-	{
-		this->updateRaycasting = true;
-		this->updateDispersion = true;
-		this->updateFTLE = true;
-
-	}
-
-
-
-	if (this->raycastingOptions->fileLoaded)
-	{
-		ImGui::Text("File is loaded!");
-	}
-	else
-	{
-		ImGui::Text("File is not loaded yet!");
-	}
-
-	if (raycastingOptions->isoMeasure_0 == IsoMeasure::Velocity_X_Plane ||
-		raycastingOptions->isoMeasure_0 == IsoMeasure::Velocity_Y_Plane ||
-		raycastingOptions->isoMeasure_0 == IsoMeasure::Velocity_Z_Plane	||
-		raycastingOptions->isoMeasure_0 == IsoMeasure::LAMBDA2
-		)
-	{
-		if (ImGui::InputFloat("Min Value", (float*)&raycastingOptions->minVal, 0.001f,0.1f))
-		{
-			this->updateRaycasting = true;
-
 		}
 
-		if (ImGui::InputFloat("max Value", (float*)&raycastingOptions->maxVal, 0.001f, 0.1f))
-		{
-			this->updateRaycasting = true;
 
+		if (!raycastingOptions->identicalDataset)
+		{
+			//if (ImGui::InputText("File Path", solverOptions->filePath, sizeof(raycastingOptions->filePath)))
+			//{
+			//}
+
+			//if (ImGui::InputText("File Name", solverOptions->fileName, sizeof(raycastingOptions->fileName)))
+			//{
+			//}
 		}
-
-		if (ImGui::InputFloat("plane Thickness", (float*)& raycastingOptions->planeThinkness, 0.001f, 0.01f))
+		if (ImGui::Checkbox("Enable Raycasintg", &this->showRaycasting))
 		{
+			this->renderingOptions->isRaycasting = this->showRaycasting;
 			this->updateRaycasting = true;
 		}
 
-		if (ImGui::InputFloat("Wall-normal clipping", &raycastingOptions->wallNormalClipping, 0.01f, 0.1f))
+		if (ImGui::Combo("Isosurface Measure 0", &raycastingOptions->isoMeasure_0, IsoMeasureModes, (int)IsoMeasure::COUNT))
 		{
-			if (raycastingOptions->wallNormalClipping > 1.0f)
+			this->updateRaycasting = true;
+			this->updateTimeSpaceField = true;
+
+		}
+
+		if (ImGui::Button("okay"))
+		{
+
+		}
+
+
+		if (ImGui::DragFloat("Sampling Rate 0", &raycastingOptions->samplingRate_0, 0.00001f, 0.0001f, 1.0f, "%.5f"))
+		{
+			if (raycastingOptions->samplingRate_0 < 0.0001f)
 			{
-				raycastingOptions->wallNormalClipping = 1.0f;
+				raycastingOptions->samplingRate_0 = 0.0001f;
 			}
-			else if (raycastingOptions->wallNormalClipping < 0.0f)
+			this->updateRaycasting = true;
+			this->updateDispersion = true;
+			this->updateFTLE = true;
+
+
+
+		}
+
+
+
+		if (ImGui::DragFloat3("Clip Box", raycastingOptions->clipBox, 0.01f))
+		{
+
+			this->updateRaycasting = true;
+			this->updateTimeSpaceField = true;
+			this->updatefluctuation = true;
+
+		}
+
+		if (ImGui::DragFloat3("Clip Box Center", raycastingOptions->clipBoxCenter, 0.01f))
+		{
+
+			this->updateRaycasting = true;
+			this->updateTimeSpaceField = true;
+			this->updatefluctuation = true;
+
+		}
+
+
+		if (ImGui::DragFloat("Isovalue 0", &raycastingOptions->isoValue_0, 0.001f))
+		{
+			this->updateRaycasting = true;
+			this->updateTimeSpaceField = true;
+		}
+
+		if (ImGui::DragFloat("Tolerance 0", &raycastingOptions->tolerance_0, 0.00001f, 0.0001f, 5, "%5f"))
+		{
+			this->updateRaycasting = true;
+			this->updateDispersion = true;
+			this->updateFTLE = true;
+
+		}
+
+
+
+		ImGui::Text("Surfaces color 0:");
+
+
+		if (ImGui::ColorEdit3("Isosurface Color 0", (float*)& raycastingOptions->color_0))
+		{
+			this->updateRaycasting = true;
+			this->updateDispersion = true;
+		}
+
+		if (ImGui::ColorEdit4("Min Color", (float*)&raycastingOptions->minColor))
+		{
+			this->updateRaycasting = true;
+			this->updateDispersion = true;
+			this->updateFTLE = true;
+
+		}
+		if (ImGui::ColorEdit4("Max Color", (float*)&raycastingOptions->maxColor))
+		{
+			this->updateRaycasting = true;
+			this->updateDispersion = true;
+			this->updateFTLE = true;
+
+		}
+
+
+
+		if (this->raycastingOptions->fileLoaded)
+		{
+			ImGui::Text("File is loaded!");
+		}
+		else
+		{
+			ImGui::Text("File is not loaded yet!");
+		}
+
+		if (raycastingOptions->isoMeasure_0 == IsoMeasure::Velocity_X_Plane ||
+			raycastingOptions->isoMeasure_0 == IsoMeasure::Velocity_Y_Plane ||
+			raycastingOptions->isoMeasure_0 == IsoMeasure::Velocity_Z_Plane ||
+			raycastingOptions->isoMeasure_0 == IsoMeasure::LAMBDA2
+			)
+		{
+			if (ImGui::InputFloat("Min Value", (float*)&raycastingOptions->minVal, 0.001f, 0.1f))
 			{
-				raycastingOptions->wallNormalClipping = 0.0f;
+				this->updateRaycasting = true;
+
 			}
 
-			this->updateRaycasting = true;
+			if (ImGui::InputFloat("max Value", (float*)&raycastingOptions->maxVal, 0.001f, 0.1f))
+			{
+				this->updateRaycasting = true;
+
+			}
+
+			if (ImGui::InputFloat("plane Thickness", (float*)& raycastingOptions->planeThinkness, 0.001f, 0.01f))
+			{
+				this->updateRaycasting = true;
+			}
+
+			if (ImGui::InputFloat("Wall-normal clipping", &raycastingOptions->wallNormalClipping, 0.01f, 0.1f))
+			{
+				if (raycastingOptions->wallNormalClipping > 1.0f)
+				{
+					raycastingOptions->wallNormalClipping = 1.0f;
+				}
+				else if (raycastingOptions->wallNormalClipping < 0.0f)
+				{
+					raycastingOptions->wallNormalClipping = 0.0f;
+				}
+
+				this->updateRaycasting = true;
+			}
 		}
+
+
+
+		ImGui::End();
 	}
-
-	
-
-	ImGui::End();
-
 }
 
 
@@ -1007,156 +1064,127 @@ void RenderImGuiOptions::drawDispersionOptions()
 
 void RenderImGuiOptions::drawTimeSpaceOptions()
 {
-	ImGui::Begin("Time-Space Rendering");
-
-	if (solverOptions->lastIdx - solverOptions->firstIdx > 0)
+	if (b_drawTimeSpaceOptions)
 	{
-		if (ImGui::Checkbox("Enable Rendering", &this->showFluctuationHeightfield))
+
+
+		ImGui::Begin("Time-Space Rendering");
+
+		if (solverOptions->lastIdx - solverOptions->firstIdx > 0)
 		{
-			this->renderingOptions->isRaycasting = this->showFluctuationHeightfield;
+			if (ImGui::Checkbox("Enable Rendering", &this->showFluctuationHeightfield))
+			{
+				this->renderingOptions->isRaycasting = this->showFluctuationHeightfield;
+				this->updatefluctuation = true;
+			}
+		}
+
+		if (ImGui::Checkbox("Shading", &fluctuationOptions->shading))
+		{
 			this->updatefluctuation = true;
 		}
-	}
-
-	if (ImGui::Combo("Field Mode", &fluctuationOptions->fieldMode, FieldMode, 3))
-	{
-
-		if (ImGui::InputText("File Path", fluctuationOptions->filePath, sizeof(fluctuationOptions->filePath)))
+		if (ImGui::Checkbox("Gaussin Filtering", &fluctuationOptions->gaussianFilter))
 		{
 		}
 
-		if (ImGui::InputText("File Name", fluctuationOptions->fileName, sizeof(fluctuationOptions->fileName)))
+		if (ImGui::Combo("Slider Background", &fluctuationOptions->sliderBackground, SliderBackground::SliderBackgroundList, SliderBackground::SliderBackground::COUNT))
 		{
+			this->updatefluctuation = true;
+		}
+
+		if (fluctuationOptions->sliderBackground == SliderBackground::SliderBackground::BAND)
+		{
+			if (ImGui::InputInt("Band Layers", &fluctuationOptions->bandSize,1,2))
+			{
+				this->updatefluctuation = true;
+			}
+
+		}
+
+		if (ImGui::InputInt("Number of Slices", &fluctuationOptions->streamwiseSlice, 1, 1))
+		{
+			this->updatefluctuation = true;
+		}
+
+		if (ImGui::DragFloat("Slice Position", &fluctuationOptions->streamwiseSlicePos, 0.1f, 0))
+		{
+			this->updatefluctuation = true;
+		}
+
+		if (ImGui::DragFloat("Height Tolerance", &fluctuationOptions->hegiht_tolerance, 0.0001f, 0.0001f, 1, "%8f"))
+		{
+			this->updatefluctuation = true;
 		}
 
 
-	}
 
-	if (ImGui::InputInt("Number of Slices", &fluctuationOptions->streamwiseSlice, 1, 1))
-	{
-		this->updatefluctuation = true;
-	}
+		ImGui::Text("Color Coding:");
 
-	if (ImGui::DragFloat("Height Tolerance", &fluctuationOptions->hegiht_tolerance, 0.0001f, 0.0001f, 1, "%8f"))
-	{
-		this->updatefluctuation = true;
-	}
-
-
-
-	ImGui::Text("Color Coding:");
-
-	if (ImGui::ColorEdit4("Minimum", (float*)& fluctuationOptions->minColor))
-	{
-		updatefluctuation = true;
-	}
-	if (ImGui::InputFloat("Min Value", (float*)& fluctuationOptions->min_val, 0.1f))
-	{
-		updatefluctuation = true;
-	}
-
-	if (ImGui::ColorEdit4("Maximum", (float*)& fluctuationOptions->maxColor))
-	{
-		updatefluctuation = true;
-	}
-
-	if (ImGui::InputFloat("Max Value", (float*)& fluctuationOptions->max_val, 0.1f))
-	{
-		updatefluctuation = true;
-	}
-
-	ImGui::Separator();
-
-	if (ImGui::DragInt("wall-normal Size", &fluctuationOptions->wallNormalgridSize,1,1,solverOptions->gridSize[1]))
-	{
-
-	}
-
-	if (ImGui::InputInt("wall-normal", &fluctuationOptions->wallNoramlPos,1,5))
-	{
-		if (fluctuationOptions->wallNoramlPos > fluctuationOptions->wallNormalgridSize)
+		if (ImGui::ColorEdit4("Minimum", (float*)& fluctuationOptions->minColor))
 		{
-			fluctuationOptions->wallNoramlPos = fluctuationOptions->wallNormalgridSize;
+			updatefluctuation = true;
 		}
-		this->updatefluctuation = true;
-
-
-	}
-
-
-	if (ImGui::Checkbox("Absolute Value", &fluctuationOptions->usingAbsolute))
-	{
-		this->updatefluctuation = true;
-	}
-
-
-	if (ImGui::DragFloat("height scale", &fluctuationOptions->height_scale,0.01f,0,10.0f))
-	{
-		this->updatefluctuation = true;
-
-	}
-
-	if (ImGui::DragFloat("height offset", &fluctuationOptions->offset, 0.01f, 0, 10.0f))
-	{
-		this->updatefluctuation = true;
-
-	}
-	
-	if (ImGui::DragFloat("height clamp", &fluctuationOptions->heightLimit, 0.01f, 0, 5.0f))
-	{
-		this->updatefluctuation = true;
-
-	}
-
-
-	ImGui::Separator();
-
-	// Solver Options
-	if (ImGui::InputText("File Path", fluctuationOptions->filePath, sizeof(fluctuationOptions->filePath)))
-	{
-	}
-
-	if (ImGui::InputText("File Name", fluctuationOptions->fileName, sizeof(fluctuationOptions->fileName)))
-	{
-	}
-
-
-
-	if (ImGui::InputInt("First Index", &(fluctuationOptions->firstIdx)))
-	{
-		if (fluctuationOptions->lastIdx < fluctuationOptions->firstIdx)
+		if (ImGui::InputFloat("Min Value", (float*)& fluctuationOptions->min_val, 0.1f))
 		{
-			fluctuationOptions->firstIdx = fluctuationOptions->lastIdx;
+			updatefluctuation = true;
 		}
 
-		solverOptions->timeSteps = solverOptions->lastIdx - solverOptions->firstIdx + 1;
-
-	}
-
-	if (ImGui::InputInt("Last Index", &(fluctuationOptions->lastIdx)))
-	{
-		if (fluctuationOptions->lastIdx < fluctuationOptions->firstIdx)
+		if (ImGui::ColorEdit4("Maximum", (float*)& fluctuationOptions->maxColor))
 		{
-			fluctuationOptions->firstIdx = fluctuationOptions->lastIdx;
+			updatefluctuation = true;
 		}
 
-		solverOptions->timeSteps = solverOptions->lastIdx - solverOptions->firstIdx + 1;
-
-	}
-
-
-	if (ImGui::DragFloat("Sampling Rate 0", &fluctuationOptions->samplingRate_0, 0.00001f, 0.00001f, 1.0f, "%.5f"))
-	{
-		if (fluctuationOptions->samplingRate_0 < 0.0001f)
+		if (ImGui::InputFloat("Max Value", (float*)& fluctuationOptions->max_val, 0.1f))
 		{
-			fluctuationOptions->samplingRate_0 = 0.0001f;
+			updatefluctuation = true;
 		}
 
-		this->updatefluctuation = true;
+		ImGui::Separator();
+
+
+
+		if (ImGui::InputInt("wall-normal", &fluctuationOptions->wallNoramlPos, 1, 5))
+		{
+			this->updatefluctuation = true;
+		}
+
+
+		if (ImGui::Checkbox("Absolute Value", &fluctuationOptions->usingAbsolute))
+		{
+			this->updatefluctuation = true;
+		}
+
+
+		if (ImGui::DragFloat("height scale", &fluctuationOptions->height_scale, 0.01f, 0, 10.0f))
+		{
+			this->updatefluctuation = true;
+
+		}
+
+		if (ImGui::DragFloat("height offset", &fluctuationOptions->offset, 0.01f, 0, 10.0f))
+		{
+			this->updatefluctuation = true;
+
+		}
+
+		if (ImGui::DragFloat("height clamp", &fluctuationOptions->heightLimit, 0.01f, 0, 5.0f))
+		{
+			this->updatefluctuation = true;
+
+		}
+
+		if (ImGui::DragFloat("Sampling Rate 0", &fluctuationOptions->samplingRate_0, 0.00001f, 0.00001f, 1.0f, "%.5f"))
+		{
+			if (fluctuationOptions->samplingRate_0 < 0.0001f)
+			{
+				fluctuationOptions->samplingRate_0 = 0.0001f;
+			}
+
+			this->updatefluctuation = true;
+		}
+
+		ImGui::End();
 	}
-
-	ImGui::End();
-
 }
 
 
@@ -1281,7 +1309,41 @@ void RenderImGuiOptions::drawTurbulentMixingOptions()
 
 }
 
+void RenderImGuiOptions::drawImguiOptions()
+{
+	ImGui_ImplDX11_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
 
+	ImGui::Begin("View Options");
+
+	if (ImGui::Checkbox("View Solver Options", &this->b_drawSolverOptions))
+	{
+
+	}
+
+	if (ImGui::Checkbox("View Raycasting", &this->b_drawRaycastingOptions))
+	{
+
+	}
+
+	if (ImGui::Checkbox("View Rendering Options", &this->b_drawLineRenderingOptions))
+	{
+
+	}
+
+	if (ImGui::Checkbox("View Time-Space Rendering", &this->b_drawTimeSpaceOptions))
+	{
+
+	}
+
+	if (ImGui::Checkbox("View Log", &this->b_drawLog))
+	{
+
+	}
+
+	ImGui::End();
+}
 
 void RenderImGuiOptions::drawDataset()
 {
@@ -1320,8 +1382,8 @@ void RenderImGuiOptions::drawDataset()
 			{
 
 				
-				this->solverOptions->fileName = "FieldComp";
-				this->solverOptions->filePath = "G:\\KIT2Padded\\OscillatingWall\\Compressed\\";
+				this->solverOptions->fileName = "Comp_FieldP";
+				this->solverOptions->filePath = "G:\\KIT2\\Comp_Ref\\";
 
 				setArray<float>(&this->solverOptions->gridDiameter[0], 7.854f, 2.0f, 3.1415f);
 				setArray<float>(&this->solverOptions->seedBox[0], 7.854f, 2.0f, 3.1415f);
@@ -1330,15 +1392,16 @@ void RenderImGuiOptions::drawDataset()
 
 				this->solverOptions->dt = 0.001f;
 				this->solverOptions->firstIdx = 1;
-				this->solverOptions->lastIdx = 900;
+				this->solverOptions->lastIdx = 1000;
 				this->solverOptions->Compressed = true;
+				this->solverOptions->maxSize = 7000000;
 				break;			
 			}
 
-			case Dataset::Dataset::KIT2OW:
+			case Dataset::Dataset::KIT2OW_COMP:
 			{
-				this->solverOptions->fileName = "FieldP";
-				this->solverOptions->filePath = "G:\\KIT2Padded\\OscillatingWall\\Padded\\";
+				this->solverOptions->fileName = "Comp_FieldP";
+				this->solverOptions->filePath = "G:\\KIT2\\Comp_OW\\";
 				
 				setArray<float>(&this->solverOptions->gridDiameter[0], 7.854f, 2.0f, 3.1415f);
 				setArray<float>(&this->solverOptions->seedBox[0], 7.854f, 2.0f, 3.1415f);
@@ -1348,9 +1411,11 @@ void RenderImGuiOptions::drawDataset()
 				this->solverOptions->dt = 0.001f;
 				this->solverOptions->firstIdx = 1;
 				this->solverOptions->lastIdx = 1000;
+				this->solverOptions->Compressed = true;
+				this->solverOptions->maxSize = 7000000;
 				break;			
 			}
-			case Dataset::Dataset::KIT2BF:
+			case Dataset::Dataset::KIT2BF_COMP:
 			{
 				this->solverOptions->fileName = "FieldP";
 				this->solverOptions->filePath = "G:\\KIT2Padded\\VirtualBody\\Padded\\";
@@ -1391,7 +1456,7 @@ void RenderImGuiOptions::drawDataset()
 
 				setArray<float>(&this->solverOptions->gridDiameter[0], 0.4f, 2.0f, 7.0f);
 				setArray<float>(&this->solverOptions->seedBox[0], 0.4f, 2.0f, 7.0f);
-				setArray<float>(&this->raycastingOptions->clipBox[0], 0.4f, 2.0f, 7.0f);
+				setArray<float>(&this->raycastingOptions->clipBox[0], 5.0f, 2.0f, 7.0f);
 				setArray<int>(&this->solverOptions->gridSize[0], 64, 503, 2048);
 
 				this->solverOptions->firstIdx = 500;
@@ -1412,7 +1477,7 @@ void RenderImGuiOptions::drawDataset()
 				this->solverOptions->filePath = "G:\\KIT3\\Comp_OF_AVG50\\";
 
 
-				this->solverOptions->firstIdx = 551;
+				this->solverOptions->firstIdx = 500;
 				this->solverOptions->lastIdx = 949;
 				this->solverOptions->currentIdx = 551;
 
@@ -1426,6 +1491,29 @@ void RenderImGuiOptions::drawDataset()
 				this->solverOptions->periodic = true;
 				this->solverOptions->Compressed = true;
 				this->solverOptions->maxSize = 96000000;
+
+				break;
+
+			}			case Dataset::Dataset::KIT3_OF_ENERGY_COMPRESSED:
+			{
+				this->solverOptions->fileName = "OF_Energy_";
+				this->solverOptions->filePath = "G:\\KIT3\\Comp_OF_Energy\\";
+
+
+				this->solverOptions->firstIdx = 551;
+				this->solverOptions->lastIdx = 949;
+				this->solverOptions->currentIdx = 551;
+
+				setArray<float>(&this->solverOptions->gridDiameter[0], 0.4f, 2.0f, 7.0f);
+				setArray<float>(&this->solverOptions->seedBox[0], 0.4f, 2.0f, 7.0f);
+				setArray<float>(&this->raycastingOptions->clipBox[0], 0.4f, 2.0f, 7.0f);
+				setArray<int>(&this->solverOptions->gridSize[0], 64, 503, 2048);
+
+
+				this->solverOptions->dt = 0.001f;
+				this->solverOptions->periodic = true;
+				this->solverOptions->Compressed = true;
+				this->solverOptions->maxSize = 125000000;
 
 				break;
 

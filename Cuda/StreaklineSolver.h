@@ -5,7 +5,6 @@
 #include "device_launch_parameters.h"
 #include "texture_fetch_functions.h"
 
-
 #include "device_launch_parameters.h"
 #include <vector>
 #include <stdio.h>

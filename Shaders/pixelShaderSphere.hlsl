@@ -20,6 +20,7 @@ struct PS_INPUT
 	float3 outNormal : NORMAL;
 	float outMeasure : MEASURE;
 	float radius : RADIUS;
+	float transparency : TRANSPARENCY;
 };
 
 
@@ -37,7 +38,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 
 		float diffuse = max(dot(normalize(input.outNormal), input.outLightDir),0);
 		rgb = rgb * diffuse * (1- 0.5 * radius / input.radius ) * (1 - 0.5 * radius / input.radius);
-		rgb.w = 1.0;
+		rgb.w = input.transparency;
 		return rgb;
 	}
 	else

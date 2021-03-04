@@ -11,7 +11,7 @@ bool LineRenderer::setShaders(D3D11_PRIMITIVE_TOPOLOGY Topology)
 	this->deviceContext->VSSetShader(vertexshader.GetShader(), NULL, 0);			// set vertex shader
 	this->deviceContext->PSSetShader(pixelshader.GetShader(), NULL, 0);		
 	this->deviceContext->GSSetShader(geometryshader.GetShader(), NULL, 0);
-	//this->deviceContext->OMSetBlendState(this->blendState.Get(), NULL, 0xFFFFFFFF);
+	this->deviceContext->OMSetBlendState(this->blendState.Get(), NULL, 0xFFFFFFFF);
 
 
 	return true;
@@ -95,6 +95,8 @@ bool LineRenderer::initializeShaders()
 		{"NORMAL",0,DXGI_FORMAT::DXGI_FORMAT_R32G32B32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,
 		D3D11_INPUT_CLASSIFICATION::D3D11_INPUT_PER_VERTEX_DATA,0},
 		{"INITIALPOS",0,DXGI_FORMAT::DXGI_FORMAT_R32G32B32_FLOAT,0,D3D11_APPEND_ALIGNED_ELEMENT,
+		D3D11_INPUT_CLASSIFICATION::D3D11_INPUT_PER_VERTEX_DATA,0},
+		{"TIME",0,DXGI_FORMAT::DXGI_FORMAT_R32_UINT,0,D3D11_APPEND_ALIGNED_ELEMENT,
 		D3D11_INPUT_CLASSIFICATION::D3D11_INPUT_PER_VERTEX_DATA,0}
 	};
 	UINT numElements = ARRAYSIZE(layout);
@@ -128,8 +130,6 @@ bool LineRenderer::initializeShaders()
 			return false;
 		}
 
-
-
 		if (!this->pixelshader.Initialize(this->device, shaderfolder + L"pixelShaderSphere.cso"))
 		{
 			return false;
@@ -158,6 +158,22 @@ bool LineRenderer::releaseScene()
 	return true;
 }
 
+float LineRenderer::streakProjectionPlane()
+{
+	int current		= solverOptions->currentIdx;
+	float timeDim	= solverOptions->timeDim;
+	int lastIdx		= solverOptions->lastIdx;
+	int	firstIdx	= solverOptions->firstIdx;
+
+	//float init_pos = (solverOptions->gridDiameter[0] / solverOptions->gridSize[0]) * solverOptions->projectPos;
+	
+	float init_pos =  - timeDim / 2;
+	init_pos += (current - firstIdx) * (timeDim / (lastIdx -firstIdx +1));
+
+	
+
+	return init_pos;
+}
 
 
 bool LineRenderer::initializeRasterizer()

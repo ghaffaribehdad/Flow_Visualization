@@ -3,6 +3,41 @@
 #include <d3d11.h>
 #include <string>
 
+
+
+namespace AdvectionMode
+{
+	enum AdvectionMode
+	{
+		ONTHEFLY,
+		PRECOMPUTATION,
+		COUNT
+
+	};
+
+	static const char* AdvectionModeList[]
+	{
+		"On the fly",
+		"Pre Computation"
+	};
+}
+
+namespace TransparencyMode
+{
+	enum TransparencyMode
+	{
+		STREAKPOS = 0,
+		TIMEPOS,
+		COUNT
+	};
+
+	static const char* TransparencyModeList[]
+	{
+		"Streak Pos.",
+		"Time Pos"
+	};
+}
+
 struct SolverOptions
 {
 public:
@@ -23,7 +58,8 @@ public:
 	int counter;
 	int fileCounter = 0;
 	int fileToSave = 1000;
-	unsigned int randomSeed = 1;
+	unsigned int seedValue = 1;
+	bool randomSeed = true;
 	int channels = 4;
 	int gridSize[3] = { 64,503,2048 };						//KIT3
 	//int gridSize[3] = { 100,503,500 };					//KIT3 timespace short spanwise
@@ -51,7 +87,7 @@ public:
 	float dt = 0.001f;
 	float advectTime = 0.0f;
 
-
+	int advectionMode = AdvectionMode::AdvectionMode::ONTHEFLY;
 
 	int lineLength = 1024;
 	int lines_count = 1024;
@@ -65,6 +101,8 @@ public:
 
 	int lineRenderingMode = LineRenderingMode::lineRenderingMode::PATHLINES;
 	int colorMode = 0;
+	
+	int transparencyMode = TransparencyMode::TransparencyMode::STREAKPOS;
 	SeedingPattern seedingPattern = SeedingPattern::SEED_RANDOM;
 
 	bool interOperation = false;
@@ -77,10 +115,16 @@ public:
 	bool loadNewfile = false;
 	bool fileLoaded = false;
 	bool shutdown = false;
+	bool usingTransparency = false;
 
 	SolverOptions() {};
 
 	int projection = Projection::Projection::NO_PROJECTION;
+	bool projectToInit = true;
+	int  projectPos = 32;
+
+	bool syncWithStreak = false;
+
 	bool periodic = false;
 
 	bool Compressed = false;
@@ -88,4 +132,20 @@ public:
 	bool drawComplete = false;
 
 	size_t maxSize = 64000000;
+
+	float timeDim = 5;
+};
+
+struct FieldOptions
+{
+	char	filePath_out[100] = "D:\\copy\\bf\\Binary_z_Major\\Padded\\";
+	float	gridDiameter[3] = { 0.4f,2.0f,7.0f };								//KIT3
+	int		gridSize[3] = { 64,503,2048 };										//KIT3
+	float	dt = 0.001f;
+	int		firstIdx = 1;
+	int		lastIdx = 600;
+	int		currentIdx = 1;
+	size_t	maxSize = 64000000;
+	bool	periodic = false;
+	bool	Compressed = false;
 };

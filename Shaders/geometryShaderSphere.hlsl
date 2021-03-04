@@ -8,6 +8,11 @@ cbuffer GS_CBuffer
 	int projection;
 	float3 gridDiameter;
 	bool periodicity;
+	float particlePlanePos;
+	unsigned int transparencyMode;
+	unsigned int timDim;
+	float streakPos;
+	unsigned int currentTime;
 };
 
 
@@ -21,6 +26,7 @@ struct GS_INPUT
 	float inMeasure : MEASURE;
 	float3 inNormal : NORMAL;
 	float3 inInitial : INITIALPOS;
+	unsigned int inTime : TIME;
 };
 
 
@@ -35,6 +41,7 @@ struct GS_OUTPUT
 	float3 outNormal : NORMAL;
 	float outMeasure : MEASURE;
 	float radius : RADIUS;
+	float transparency : TRANSPARENCY;
 };
 
 
@@ -45,8 +52,24 @@ struct GS_OUTPUT
 void main(point GS_INPUT input[1], inout TriangleStream<GS_OUTPUT> output)
 {
 
+	float transparency = 1;
 
 	float3 pos0 = input[0].inPosition - (gridDiameter / 2);
+	
+	switch (transparencyMode)
+	{
+	case(0):
+	{
+		transparency = 1 - abs(input[0].inPosition.x - streakPos) / gridDiameter.x;
+		break;
+	}
+	case(1):
+	{
+		transparency = 1 - abs(currentTime - (float)input[0].inTime) / (float)timDim;
+		break;
+	}
+	}
+	
 
 
 	switch (projection)
@@ -69,10 +92,13 @@ void main(point GS_INPUT input[1], inout TriangleStream<GS_OUTPUT> output)
 
 		break;
 	}
-	default:
+	case(4):
+	{
+		pos0.x = particlePlanePos;
 		break;
 	}
 
+	}
 
 	switch (periodicity)
 	{
@@ -100,7 +126,7 @@ void main(point GS_INPUT input[1], inout TriangleStream<GS_OUTPUT> output)
 	float3 inPlaneVecPer = normalize(cross(inPlaneVec, viewDir));
 
 
-
+	vertex0.transparency = transparency;
 	vertex0.outCenter = pos0;
 
 	vertex0.outLightDir = normalize(-tangent0);

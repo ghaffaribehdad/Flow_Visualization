@@ -28,11 +28,12 @@ namespace Dataset
 	{
 		NONE = 0,
 		KIT2REF_COMP,
-		KIT2OW,
-		KIT2BF,
+		KIT2OW_COMP,
+		KIT2BF_COMP,
 		KIT3_FLUC,
 		KIT3_COMPRESSED,
 		KIT3_OF_AVG50_COMPRESSED,
+		KIT3_OF_ENERGY_COMPRESSED,
 		KIT3_OF_COMPRESSED_FAST,
 		KIT3_AVG_COMPRESSED_10,
 		KIT3_AVG_COMPRESSED_50,
@@ -58,6 +59,7 @@ namespace Dataset
 		"KIT3 Fluctuation",
 		"KIT3 Fluc. Comp.",
 		"KIT3 OF AVG50 Comp.",
+		"KIT3 OF Energy Comp.",
 		"KIT3 OF Comp. Fast",
 		"KIT3 AVG Comp. 10",
 		"KIT3 AVG Comp. 50",
@@ -79,20 +81,6 @@ namespace Dataset
 
 static const char* const IsoMeasureModes[] = 
 { 
-
-	/*	VelocityMagnitude = 0,
-	Velocity_X,
-	Velocity_Y,
-	Velocity_Z,
-	ShearStress,
-	TURBULENT_DIFFUSIVITY,
-	LAMBDA2,
-	Velocity_X_Plane,
-	Velocity_Y_Plane,
-	Velocity_Z_Plane,
-	COUNT
-	*/
-
 	"Velocity Magnitude",
 	"Velocity X",
 	"Velocity Y",
@@ -113,7 +101,7 @@ namespace ColorMode
 		"u", 
 		"v",
 		"w",
-		"Curvature"
+		"Curvature",
 	};
 	enum ColorMode
 	{
@@ -216,6 +204,7 @@ namespace Projection
 		"ZY-Plane",
 		"XZ-Plane",
 		"XY-Plane",
+		"Streak Proj."
 	};
 
 	enum Projection
@@ -224,6 +213,7 @@ namespace Projection
 		ZY_PROJECTION,
 		XZ_PROJECTION,
 		XY_PROJECTION,
+		STREAK_PROJECTION,
 		COUNT
 	};
 }

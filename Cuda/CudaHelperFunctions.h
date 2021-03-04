@@ -46,17 +46,6 @@ __device__ Particle RK4Streak
 
 
 
-__device__ void RK4Stream
-(
-	cudaTextureObject_t t_VelocityField_0,
-	Particle* particle,
-	const float3& gridDiameter,
-	const int3& gridSize,
-	float dt,
-	float3 velocityScale = { 1.0f,1.0f,1.0f }
-);
-
-
 
 __global__ void TracingPath
 (
@@ -88,7 +77,9 @@ __global__ void copyTextureToSurface
 	cudaSurfaceObject_t	s_velocityField
 )
 {
-	int index = CUDA_INDEX;
+	int index = CUDA_INDEX; // The Spanwise Position
+
+	float textureOffset = 0.5;
 
 	if (index < solverOptions.gridSize[2])
 	{
@@ -99,14 +90,16 @@ __global__ void copyTextureToSurface
 			T2 measure2;
 			T3 measure3;
 			T4 measure4;
-			float value1 = measure1.ValueAtXYZ_Tex(t_velocityField, make_float3(streamwisePos, y, index));
-			float value2 = measure2.ValueAtXYZ_Tex(t_velocityField, make_float3(streamwisePos, y, index));
-			float value3 = measure3.ValueAtXYZ_Tex(t_velocityField, make_float3(streamwisePos, y, index));
-			float value4 = measure4.ValueAtXYZ_Tex(t_velocityField, make_float3(streamwisePos, y, index));
+
+			float3 pos = make_float3(streamwisePos + textureOffset, y + textureOffset, index + textureOffset);
+			float value1 = measure1.ValueAtXYZ_Tex(t_velocityField, pos);
+			float value2 = measure2.ValueAtXYZ_Tex(t_velocityField, pos);
+			float value3 = measure3.ValueAtXYZ_Tex(t_velocityField, pos);
+			float value4 = measure4.ValueAtXYZ_Tex(t_velocityField, pos);
 
 			float4 value = make_float4(value1, value2, value3, value4);
 
-			surf3Dwrite(value, s_velocityField, 4 * sizeof(float) * index, y, time);
+			surf3Dwrite(value, s_velocityField, 4 * sizeof(float) * time, y,  index);
 
 		}
 	}
@@ -139,20 +132,6 @@ __global__ void TracingStreak
 	int step
 );
 
-
-
-
-__global__ void TracingStreakRealTime
-(
-	cudaTextureObject_t t_VelocityField_0,
-	cudaTextureObject_t t_VelocityField_1,
-	SolverOptions solverOptions,
-	Vertex* p_VertexBuffer,
-	bool odd,
-	int step
-);
-
-
 __global__ void TracingStream
 (
 	Particle* d_particles,
@@ -161,48 +140,6 @@ __global__ void TracingStream
 	Vertex* p_VertexBuffer
 );
 
-//__global__ void TracingStream
-//(
-//	Particle* d_particles,
-//	cudaTextureObject_t t_VelocityField,
-//	SolverOptions solverOptions,
-//	Vertex* p_VertexBuffer,
-//	float4* d_VertexBuffer
-//);
-//__global__ void TracingStream
-//(
-//	Particle* d_particles,
-//	cudaTextureObject_t t_VelocityField,
-//	cudaTextureObject_t t_Vorticity,
-//	SolverOptions solverOptions,
-//	Vertex* p_VertexBuffer,
-//	float4* d_VertexBuffer
-//);
-//
-//__global__ void Vorticity
-//(
-//	cudaTextureObject_t t_VelocityField,
-//	SolverOptions solverOptions,
-//	cudaSurfaceObject_t	s_measure
-//);
-
-
-
-
-
-//template <typename Observable>
-//__device__ float3 binarySearch
-//(
-//	Observable& observable,
-//	cudaTextureObject_t field,
-//	float3& _position,
-//	float3& gridDiameter,
-//	int3& gridSize,
-//	float3& _samplingStep,
-//	float& value,
-//	float& tolerance,
-//	int maxIteration
-//);
 
 
 template <typename Observable>

@@ -79,11 +79,11 @@ bool CUDASolver::InitializeCUDA()
 
 
 
-void CUDASolver::InitializeParticles(SeedingPattern seedingPattern)
+void CUDASolver::initializeParticles(SeedingPattern seedingPattern)
 {
 
 	// Create an array of particles
-	this->h_Particles = new Particle[solverOptions->lines_count];
+	Particle * h_Particles = new Particle[solverOptions->lines_count];
 
 	switch (seedingPattern)
 	{
@@ -103,7 +103,7 @@ void CUDASolver::InitializeParticles(SeedingPattern seedingPattern)
 		{
 			// Create an array of particles
 
-			seedParticleGridPoints(this->h_Particles, solverOptions);
+			seedParticleGridPoints(h_Particles, solverOptions);
 			break;
 		}
 
@@ -112,7 +112,7 @@ void CUDASolver::InitializeParticles(SeedingPattern seedingPattern)
 			float3 gridDiamter = Array2Float3(solverOptions->gridDiameter);
 			seedParticle_tiltedPlane
 			(
-				this->h_Particles,
+				h_Particles,
 				gridDiamter,
 				make_int2(solverOptions->gridSize_2D[0], solverOptions->gridSize_2D[1]),
 				solverOptions->seedWallNormalDist,
@@ -133,9 +133,9 @@ void CUDASolver::InitializeParticles(SeedingPattern seedingPattern)
 
 	gpuErrchk(cudaMalloc((void**) &this->d_Particles, Particles_byte));
 
-	gpuErrchk(cudaMemcpy(this->d_Particles, this->h_Particles, Particles_byte, cudaMemcpyHostToDevice));
+	gpuErrchk(cudaMemcpy(this->d_Particles, h_Particles, Particles_byte, cudaMemcpyHostToDevice));
 
-	delete[] this->h_Particles;
+	delete[] h_Particles;
 }
 
 void CUDASolver::loadTexture
@@ -145,7 +145,8 @@ void CUDASolver::loadTexture
 	const int & idx,
 	cudaTextureAddressMode addressModeX ,
 	cudaTextureAddressMode addressModeY ,
-	cudaTextureAddressMode addressModeZ 
+	cudaTextureAddressMode addressModeZ ,
+	bool normalize
 )
 {
 	// Read current volume
@@ -155,7 +156,7 @@ void CUDASolver::loadTexture
 	// set the pointer to the volume texture
 	volumeTexture.setField(h_VelocityField);
 	// initialize the volume texture
-	volumeTexture.initialize(Array2Int3(solverOptions->gridSize), true, addressModeX, addressModeY, addressModeZ);
+	volumeTexture.initialize(Array2Int3(solverOptions->gridSize), normalize, addressModeX, addressModeY, addressModeZ);
 	// release host memory
 	volume_IO.release();
 }
@@ -168,20 +169,22 @@ void CUDASolver::loadTextureCompressed
 	const int & idx,
 	cudaTextureAddressMode addressModeX,
 	cudaTextureAddressMode addressModeY,
-	cudaTextureAddressMode addressModeZ
+	cudaTextureAddressMode addressModeZ,
+	bool nomralize
+
 )
 {
 
 	Timer timer;
 
 	// Read current volume
-	this->volume_IO.readVolume(idx, solverOptions);
+	this->volume_IO.readVolume_Compressed(idx, Array2Int3(solverOptions->gridSize));
 	// Return a pointer to volume
 	float * h_VelocityField = this->volume_IO.getField_float_GPU();
 	// set the pointer to the volume texture
 	volumeTexture.setField(h_VelocityField);
 	// initialize the volume texture
-	TIMELAPSE(volumeTexture.initialize_devicePointer(Array2Int3(solverOptions->gridSize), true, addressModeX, addressModeY, addressModeZ),"Initialize Texture including DDCopy");
+	TIMELAPSE(volumeTexture.initialize_devicePointer(Array2Int3(solverOptions->gridSize), nomralize, addressModeX, addressModeY, addressModeZ),"Initialize Texture including DDCopy");
 	// release device memory
 	cudaFree(h_VelocityField);
 }

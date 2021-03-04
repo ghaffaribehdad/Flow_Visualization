@@ -445,9 +445,6 @@
     <ClInclude Include="VolumeIO\Volume_IO.h">
       <Filter>Header Files\VolumeIO</Filter>
     </ClInclude>
-    <ClInclude Include="VolumeIO\Volume_IO_X_Major.h">
-      <Filter>Header Files\VolumeIO</Filter>
-    </ClInclude>
     <ClInclude Include="VolumeIO\Volume_IO_Z_Major.h">
       <Filter>Header Files\VolumeIO</Filter>
     </ClInclude>
@@ -589,6 +586,9 @@
     <ClInclude Include="VolumeIO\Compression.h">
       <Filter>Header Files\VolumeIO</Filter>
     </ClInclude>
+    <ClInclude Include="Cuda\ParticleTracingHelper.h">
+      <Filter>Header Files\Cuda</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\geometryshaderLineTube.hlsl">
@@ -717,6 +717,9 @@
     </CudaCompile>
     <CudaCompile Include="VolumeIO\Compression.cu">
       <Filter>Source Files\VolumeIO</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Cuda\ParticleTracingHelper.cu">
+      <Filter>Source Files\Cuda</Filter>
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>

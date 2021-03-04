@@ -74,7 +74,7 @@ public:
 	virtual bool initializeBuffers() { return true; }		// initilize vertex, constant and index buffer
 	virtual void cleanPipeline();							// Deactivates the Geometry Shader prevent conflict with other pipelines
 	bool releaseScene();
-
+	float streakProjectionPlane();
 															// need to be called at the initilization of this object 
 	//=> To Do: Move it to the constructor
 	void setResources(RenderingOptions& _renderingOptions, SolverOptions& _solverOptions, ID3D11DeviceContext* _deviceContext, ID3D11Device* _device, IDXGIAdapter* pAdapter);

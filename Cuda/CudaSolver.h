@@ -8,7 +8,9 @@
 #include "../Graphics/Vertex.h"
 #include "../VolumeIO/Volume_IO_Z_Major.h"
 #include "../VolumeTexture/VolumeTexture.h"
-
+#include "..//VolumeTexture/VolumeTexture.h"
+#include "..//Cuda/cudaSurface.h"
+#include "..//Cuda/CudaArray.h"
 
 
 
@@ -17,51 +19,42 @@ class CUDASolver
 public:
 	CUDASolver();
 
+	SolverOptions * solverOptions;
+
+
+	virtual bool initializeRealtime(SolverOptions * p_solverOptions) { return true; };
+	virtual bool resetRealtime() { return true; };
+	virtual bool solve() { return true; }
 
 	bool Initialize(SolverOptions * _solverOptions);
-
 	bool Reinitialize();
-
-	// Solve must be defined in the derived classes
-	virtual bool solve()
-	{
-		return true;
-	}
-	__host__ virtual bool initializeRealtime(SolverOptions * p_solverOptions) { return true; };
-	__host__ virtual bool resetRealtime() { return true; };
 	bool FinalizeCUDA();
 
 	__host__ bool checkFile(SolverOptions * p_solverOptions)
 	{
 		return volume_IO.file_check(p_solverOptions->filePath + p_solverOptions->fileName + std::to_string(p_solverOptions->currentIdx) + ".bin");
 	}
-	// Solver Parameters
-	SolverOptions * solverOptions;
 
 protected:
 	
-	void releaseVolumeIO();
-	__host__ void InitializeParticles(SeedingPattern seedingPattern);
 
+	// CUDA interoperation resources
 	cudaGraphicsResource* cudaGraphics = NULL;
-
-	// A COM pointer to the vector Field
-	bool InitializeCUDA();
-
+	void* p_VertexBuffer = NULL;
 	cudaDeviceProp cuda_device_prop;
 	IDXGIAdapter* adapter = NULL;
 	ID3D11Device* device = NULL;
 
-	Volume_IO_Z_Major volume_IO;
 
-	// The probe particles
+	// Particle Tracing Resources
 	Particle* d_Particles = nullptr;
-	Particle* h_Particles = nullptr;
+	Volume_IO_Z_Major volume_IO;
+	VolumeTexture3D volumeTexture;
 
+	bool InitializeCUDA();
 	virtual bool release() = 0;
-
-	void* p_VertexBuffer = NULL;
-
+	void releaseVolumeIO();
+	void initializeParticles(SeedingPattern seedingPattern);
 	void loadTexture
 	(
 		SolverOptions * solverOptions,
@@ -69,9 +62,9 @@ protected:
 		const int & idx,
 		cudaTextureAddressMode addressModeX = cudaAddressModeWrap,
 		cudaTextureAddressMode addressModeY = cudaAddressModeBorder,
-		cudaTextureAddressMode addressModeZ = cudaAddressModeWrap
+		cudaTextureAddressMode addressModeZ = cudaAddressModeWrap,
+		bool normalized = false
 	);
-
 
 	void loadTextureCompressed
 	(
@@ -80,6 +73,10 @@ protected:
 		const int & idx,
 		cudaTextureAddressMode addressModeX = cudaAddressModeWrap,
 		cudaTextureAddressMode addressModeY = cudaAddressModeBorder,
-		cudaTextureAddressMode addressModeZ = cudaAddressModeWrap
+		cudaTextureAddressMode addressModeZ = cudaAddressModeWrap,
+		bool normalized = false
 	);
+
+
+
 };

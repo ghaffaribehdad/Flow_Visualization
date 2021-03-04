@@ -39,7 +39,7 @@ private:
 	RaycastingOptions*				raycastingOptions;
 	DispersionOptions*				dispersionOptions;
 	CrossSectionOptions*			crossSectionOptions;
-	TimeSpaceRenderingOptions*	fluctuationOptions;
+	TimeSpaceRenderingOptions*		fluctuationOptions;
 	TurbulentMixingOptions*			turbulentMixingOptions;
 	TimeSpace3DOptions*				timeSpace3DOptions;
 
@@ -134,15 +134,16 @@ public:
 
 	void drawOptionWindows()
 	{
+		this->drawImguiOptions();
 		this->drawSolverOptions();	
 		this->drawLog();								
 		this->drawLineRenderingOptions();			
 		this->drawRaycastingOptions();				
-		this->drawDispersionOptions();				
+		//this->drawDispersionOptions();				
 		this->drawTimeSpaceOptions();	
-		this->drawCrossSectionOptions();			
-		this->drawTurbulentMixingOptions();
-		this->drawTimeSpaceField();
+		//this->drawCrossSectionOptions();			
+		//this->drawTurbulentMixingOptions();
+		//this->drawTimeSpaceField();
 		this->drawDataset();
 	}
 
@@ -160,18 +161,26 @@ public:
 	int screenshotCounter = 0;
 private:
 
-
+	void drawImguiOptions();
 	void drawSolverOptions();					// draw the solver option window
 	void drawLog();								// draw Log window
 	void drawLineRenderingOptions();			// draw options of stream/pathline rendering
 	void drawRaycastingOptions();				// draw options of isosurface rendering (raycasting)
 	void drawDispersionOptions();				// draw options of dispersion calculation
-	void drawTimeSpaceOptions();	// draw options of heightfield of fluctuation 
+	void drawTimeSpaceOptions();				// draw options of heightfield of fluctuation 
 	void drawCrossSectionOptions();				// draw options of CrossSection rendering
 	void drawTimeSpaceField();
 	void drawTurbulentMixingOptions();
 	void drawDataset();
 
-
+	bool b_drawSolverOptions		= true;
+	bool b_drawLog					= false;
+	bool b_drawLineRenderingOptions = true;
+	bool b_drawRaycastingOptions	= false;
+	bool b_drawDispersionOptions	= false;
+	bool b_drawTimeSpaceOptions		= false;
+	bool b_drawCrossSectionOptions	= false;
+	bool b_drawTimeSpaceField		= false;
+	bool b_drawDataset				= true;
 };
 

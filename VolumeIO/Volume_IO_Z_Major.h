@@ -10,8 +10,6 @@ class Volume_IO_Z_Major : public VolumeIO::Volume_IO
 
 public:
 
-
-
 	virtual bool readVolumePlane(unsigned int idx, VolumeIO::readPlaneMode planeMode, size_t plane)
 	{
 		// Solver Options is essential

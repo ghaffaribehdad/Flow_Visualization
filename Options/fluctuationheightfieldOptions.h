@@ -22,6 +22,26 @@ namespace TimeSpaceRendering
 	};
 }
 
+namespace SliderBackground
+{
+	enum SliderBackground
+	{
+		NONE,
+		FORWARD,
+		BACKWARD,
+		BAND,
+		COUNT
+	};
+
+	static const char* SliderBackgroundList[]
+	{
+		"None",
+		"Forward",
+		"Backward",
+		"Band"
+	};
+}
+
 
 
 struct TimeSpaceRenderingOptions
@@ -31,17 +51,15 @@ struct TimeSpaceRenderingOptions
 	int fieldMode = 0;
 
 	float hegiht_tolerance = 0.01f;
-	int wallNoramlPos = 0;
-	int wallNormalgridSize = 250;
+	int wallNoramlPos = 9;
 	float heightLimit = 0.5f;
-	float gridDiameter[3] = {5.0f, 5.0f, 5.0f };
 	int spanwisePos = 0;
 
 	// Color Coding
 	int colorCode = static_cast<int>(TimeSpaceRendering::fluctuationColorCode::NONE);
 	float max_val = 1.0f;
 	float min_val = 1.0f;
-	float height_scale = 1.0;
+	float height_scale = 0.0f;
 	float offset = 0.0f;
 	float minColor[4] = { 0,0,1,1 };
 	float maxColor[4] = { 1,0,0,1 };
@@ -52,15 +70,18 @@ struct TimeSpaceRenderingOptions
 	bool dispersion = false;
 	bool retrace = false;
 	bool released = false;
+	bool shading = false;
+	bool gaussianFilter = false;
 
 
-	char	fileName[100] = "FieldPadded";
-	char	filePath[100] = "Q:\\MinimalChannel\\binary_fluct_x_major_Padded_1_1000\\";
-	int		firstIdx = 100;
-	int		lastIdx = 120;
 	float	samplingRate_0 = 0.01f;
 	bool	usingAbsolute = true;
 	int		streamwiseSlice = 1;
+	float	streamwiseSlicePos = 0;
+
+	int currentTime = 0;
+	int sliderBackground = SliderBackground::SliderBackground::NONE;
+	int bandSize = 10;
 
 
 

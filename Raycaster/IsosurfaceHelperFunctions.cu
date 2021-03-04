@@ -141,9 +141,9 @@ __device__ float3 FetchTextureSurface::Measure::GradientAtXYZ_Surf(cudaSurfaceOb
 }
 
 
-__device__ float3 FetchTextureSurface::Measure::GradientAtXYZ_Tex(cudaTextureObject_t tex, const float3 & position, const float3 & gridDiamter, const int3 & gridSize)
+__device__ float3 FetchTextureSurface::Measure::GradientAtXYZ_Tex(cudaTextureObject_t tex, const float3 & position, const float3 & gridDiameter, const int3 & gridSize)
 {
-	float3 h = gridDiamter / gridSize;
+	float3 h = gridDiameter / gridSize;
 	float3 gradient = { 0,0,0 };
 
 
@@ -159,6 +159,26 @@ __device__ float3 FetchTextureSurface::Measure::GradientAtXYZ_Tex(cudaTextureObj
 	return  gradient /(2.0f * h.x);
 
 }
+
+__device__ float3 FetchTextureSurface::Measure::GradientAtXYZ_Tex_Absolute(cudaTextureObject_t tex, const float3 & position, const float3 & gridDiameter, const int3 & gridSize)
+{
+	float3 h = gridDiameter / gridSize;
+	float3 gradient = { 0,0,0 };
+
+
+	gradient.x += fabs(ValueAtXYZ_Tex(tex, make_float3(position.x + 1, position.y, position.z)));
+	gradient.y += fabs(ValueAtXYZ_Tex(tex, make_float3(position.x, position.y + 1, position.z)));
+	gradient.z += fabs(ValueAtXYZ_Tex(tex, make_float3(position.x, position.y, position.z + 1)));
+
+	gradient.x -= fabs(ValueAtXYZ_Tex(tex, make_float3(position.x - 1, position.y, position.z)));
+	gradient.y -= fabs(ValueAtXYZ_Tex(tex, make_float3(position.x, position.y - 1, position.z)));
+	gradient.z -= fabs(ValueAtXYZ_Tex(tex, make_float3(position.x, position.y, position.z - 1)));
+
+
+	return  gradient / (2.0f * h.x);
+
+}
+
 
 
 __device__ float3 FetchTextureSurface::Measure::GradientAtXYZ_Tex_GradientBase(cudaTextureObject_t tex, const float3 & position, const float3 & gridDiamter, const int3 & gridSize)
@@ -301,6 +321,7 @@ __device__  float FetchTextureSurface::Velocity_Magnitude::ValueAtXYZ_Surf(cudaS
 __device__ float FetchTextureSurface::Channel_X::ValueAtXYZ_Tex(cudaTextureObject_t tex, const float3 & position)
 {
 	return tex3D<float4>(tex, position.x, position.y, position.z).x;
+	
 }
 
 __device__ float FetchTextureSurface::Channel_Y::ValueAtXYZ_Tex(cudaTextureObject_t tex, const float3 & position)

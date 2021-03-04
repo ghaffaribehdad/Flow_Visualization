@@ -22,6 +22,11 @@ struct Tube_geometryShader
 	int projection;
 	DirectX::XMFLOAT3 gridDiameter;
 	bool periodicity;
+	float particlePlanePos;
+	unsigned int transparencyMode;
+	unsigned int timDim;
+	float streakPos;
+	unsigned int currentTime;
 };
 
 
@@ -42,5 +47,5 @@ struct CB_pixelShader
 	DirectX::XMFLOAT4 maxColor;
 	float minMeasure;
 	float maxMeasure;
-	bool isRaycasting;
+	bool condition;
 };

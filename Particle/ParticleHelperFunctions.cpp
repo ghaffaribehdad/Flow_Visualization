@@ -1,7 +1,7 @@
 #include "ParticleHelperFunctions.h"
 #include <math.h>
 #include <random>
-
+#include <ctime>
 
 void seedParticle_tiltedPlane(Particle* particle, const float3& gridDiameter, const int2& gridSize, const float& y_slice, const float& tilt)
 {
@@ -121,7 +121,20 @@ __host__ void seedParticleRandom(Particle* particle, const SolverOptions* solver
 
 	std::default_random_engine generator;
 	std::uniform_real_distribution<double> distribution(0.0, 1.0);
-	generator.seed(solverOptions->randomSeed);
+
+	if (solverOptions->randomSeed)
+	{
+		std::srand(std::time(0)); //use current time as seed for random generator
+		int random_variable = std::rand();
+		generator.seed(random_variable);
+
+	}
+	else
+	{
+		generator.seed(solverOptions->seedValue);
+	}
+
+
 
 	for (int i = 0; i < solverOptions->lines_count; i++)
 	{

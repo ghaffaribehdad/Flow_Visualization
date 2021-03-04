@@ -363,23 +363,10 @@ __global__ void CudaTerrainRenderer_extra_FTLE
 
 
 
-template <typename Observable>
-__global__ void CudaTerrainRenderer_extra_double
-(
-	cudaSurfaceObject_t raycastingSurface,
-	cudaTextureObject_t heightField_Primary,
-	cudaTextureObject_t extraField_Primary,
-	cudaTextureObject_t heightField_Secondary,
-	cudaTextureObject_t extraField_Seconary,
-	int rays,
-	float samplingRate,
-	float IsosurfaceTolerance,
-	DispersionOptions dispersionOptions,
-	int traceTime
-);
 
 
-template <typename Observable>
+
+template <typename Observable1, typename Observable2>
 __global__ void CudaTerrainRenderer_extra_fluctuation
 (
 	cudaSurfaceObject_t raycastingSurface,

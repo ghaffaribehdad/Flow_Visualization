@@ -1,6 +1,8 @@
 #include "DispersionHelper.h"
 #include "../Cuda/helper_math.h"
 #include "../Cuda/CudaHelperFunctions.h"
+#include "../Cuda/ParticleTracingHelper.h"
+
 
 //Explicit Instantiation
 template __global__ void heightFieldGradient3D<struct FetchTextureSurface::Channel_X>\
@@ -55,7 +57,7 @@ __global__ void traceDispersion
 		for (int i = 0; i < timeStep; i++)
 		{
 
-			RK4Stream(velocityField, &particle[index], Array2Float3(solverOptions.gridDiameter), Array2Int3(solverOptions.gridSize), dt, Array2Float3(solverOptions.velocityScalingFactor));
+			ParticleTracing::RK4Stream(velocityField, &particle[index], Array2Float3(solverOptions.gridDiameter), Array2Int3(solverOptions.gridSize), dt, Array2Float3(solverOptions.velocityScalingFactor));
 		}
 		
 
@@ -162,7 +164,7 @@ __global__ void  traceDispersion3D
 		{
 
 			// Advect the particle
-			RK4Stream(velocityField, &particle[index], Array2Float3(solverOptions.gridDiameter),Array2Int3(solverOptions.gridSize), dt, Array2Float3(solverOptions.velocityScalingFactor));
+			ParticleTracing::RK4Stream(velocityField, &particle[index], Array2Float3(solverOptions.gridDiameter),Array2Int3(solverOptions.gridSize), dt, Array2Float3(solverOptions.velocityScalingFactor));
 		
 			// extract the height
 			float4 height = { particle[index].m_position.y,0.0,0.0,0.0 };
@@ -303,7 +305,7 @@ __global__ void fluctuationfieldGradient3D
 
 				float4 texel = ValueAtXYZ_Surface_float4(heightFieldSurface3D, make_int3(index, y, t));
 
-				gradient = observable.GradientAtXYZ_Surf(heightFieldSurface3D, make_int3(index,y, t), ARRAYTOFLOAT3(fluctuationOptions.gridDiameter), gridSize);
+				gradient = observable.GradientAtXYZ_Surf(heightFieldSurface3D, make_int3(index,y, t), ARRAYTOFLOAT3(solverOptions.gridDiameter), gridSize);
 				float sum = sqrt((gradient.x * gradient.x) + (gradient.z * gradient.z));
 				gradient = gradient / sum;
 

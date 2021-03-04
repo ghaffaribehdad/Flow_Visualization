@@ -37,15 +37,16 @@ public:
 			}
 			else
 			{
-				switch (renderingOptions->drawMode)
+				switch (solverOptions->advectionMode)
 				{
-				case(DrawMode::DrawMode::REALTIME):
+				case(AdvectionMode::AdvectionMode::ONTHEFLY):
 				{
 
 					if (!solverOptions->drawComplete)
 					{
 						this->updateSceneRealtime();
 						renderImGuiOptions->updateRaycasting = true;
+						renderImGuiOptions->updatefluctuation = true;
 						renderImGuiOptions->fileChanged = true;
 					}
 
@@ -57,7 +58,7 @@ public:
 					break;
 
 				}
-				default:
+				case(AdvectionMode::AdvectionMode::PRECOMPUTATION):
 				{
 
 					if (renderImGuiOptions->updatePathlines)
@@ -122,7 +123,7 @@ public:
 	{
 		if (pathCounter == 0)
 		{
-			this->initializeRealtime ();
+			this->initializeRealtime();
 		}
 		else
 		{
@@ -139,6 +140,7 @@ public:
 	{
 
 		pathCounter = 0;
+		this->counter = 0;
 		this->pathlinesolver.resetRealtime();
 
 	}
@@ -161,24 +163,11 @@ public:
 
 		switch (renderingOptions->drawMode)
 		{
-		case DrawMode::DrawMode::STATIONARY:
-		{
-			this->deviceContext->Draw(llInt(solverOptions->lineLength) * llInt(solverOptions->lines_count), 0);
-			break;
-		}
+
+
 		case DrawMode::DrawMode::REALTIME:
 		{
 			this->deviceContext->Draw(llInt(solverOptions->lineLength) * llInt(solverOptions->lines_count), 0);
-			break;
-		}
-		case DrawMode::DrawMode::ADVECTION:
-		{
-			for (int i = 0; i < solverOptions->lines_count; i++)
-			{
-				this->deviceContext->Draw(pathCounter, i * solverOptions->lineLength);
-
-			}
-
 			break;
 		}
 
@@ -186,21 +175,20 @@ public:
 		{
 			for (int i = 0; i < solverOptions->lines_count; i++)
 			{
-				this->deviceContext->Draw(renderingOptions->lineLength, i * solverOptions->lineLength + counter);
+				this->deviceContext->Draw(renderingOptions->lineLength, i * solverOptions->lineLength + (
+					solverOptions->currentIdx - solverOptions->firstIdx - renderingOptions->lineLength+1));
 			}
-
-			this->counter++;
-
-			if (counter == solverOptions->lineLength - renderingOptions->lineLength)
-			{
-				counter = 0;
-			}
-
 			break;
 		}
 
-		this->cleanPipeline();
+		default:
+		{
+			this->deviceContext->Draw(llInt(solverOptions->lineLength) * llInt(solverOptions->lines_count), 0);
+			break;
 		}
+
+		}
+		this->cleanPipeline();
 	}
 
 	bool initializeBuffers() override
@@ -221,7 +209,7 @@ public:
 		}
 
 
-		//Dummy Vertex Buffer which will be expand to the desired size
+		//Dummy Vertex Buffer which will be expand to the desired size in UpdateScene
 		hr = this->vertexBuffer.Initialize(this->device, NULL, 1);
 		if (FAILED(hr))
 		{
@@ -242,7 +230,6 @@ public:
 
 		DirectX::XMMATRIX world = DirectX::XMMatrixIdentity();
 
-		// Set attributes of constant buffer for geometry shader
 		GS_constantBuffer.data.View = world * camera.GetViewMatrix();
 		GS_constantBuffer.data.Proj = camera.GetProjectionMatrix();
 		GS_constantBuffer.data.eyePos = camera.GetPositionFloat3();
@@ -253,14 +240,20 @@ public:
 		GS_constantBuffer.data.gridDiameter.y = solverOptions->gridDiameter[1];
 		GS_constantBuffer.data.gridDiameter.z = solverOptions->gridDiameter[2];
 		GS_constantBuffer.data.periodicity = solverOptions->periodic;
+		GS_constantBuffer.data.particlePlanePos = streakProjectionPlane();
+		GS_constantBuffer.data.transparencyMode = solverOptions->transparencyMode;
+		GS_constantBuffer.data.timDim = solverOptions->lastIdx - solverOptions->firstIdx + 1 ;
+		GS_constantBuffer.data.currentTime = solverOptions->currentIdx - solverOptions->firstIdx;
 
+
+		GS_constantBuffer.data.streakPos = (float)solverOptions->projectPos * (solverOptions->gridDiameter[0] /(float) solverOptions->gridSize[0]);
 
 		PS_constantBuffer.data.minMeasure = renderingOptions->minMeasure;
 		PS_constantBuffer.data.maxMeasure = renderingOptions->maxMeasure;
-
 		PS_constantBuffer.data.minColor = DirectX::XMFLOAT4(renderingOptions->minColor);
 		PS_constantBuffer.data.maxColor = DirectX::XMFLOAT4(renderingOptions->maxColor);
-		PS_constantBuffer.data.isRaycasting = renderingOptions->isRaycasting;
+		PS_constantBuffer.data.condition = solverOptions->usingTransparency;
+
 
 		// Update Constant Buffer
 		GS_constantBuffer.ApplyChanges();

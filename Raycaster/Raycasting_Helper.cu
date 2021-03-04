@@ -16,8 +16,8 @@ __device__ float2 findIntersections(const float3 pixelPos, const BoundingBox bou
 
 	float arrayPixelPos[3] = { pixelPos.x, pixelPos.y, pixelPos.z };
 
-	float tNear = -10000000;
-	float tFar = +10000000;
+	float tNear = -100000;
+	float tFar = +100000;
 
 	float3 dir = normalize(pixelPos - boundingBox.m_eyePos);
 	float D[3] = { dir.x,dir.y,dir.z };

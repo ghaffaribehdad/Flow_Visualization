@@ -9,7 +9,6 @@
 
 
 extern __constant__  BoundingBox d_boundingBox;
-extern __constant__ float3 d_raycastingColor;
 
 __host__ bool HeightfieldFTLE::InitializeParticles()
 {
@@ -463,7 +462,6 @@ __host__ bool HeightfieldFTLE::initializeBoundingBox()
 	h_boundingBox->distImagePlane = this->distImagePlane;
 
 	gpuErrchk(cudaMemcpyToSymbol(d_boundingBox, h_boundingBox, sizeof(BoundingBox)));
-	gpuErrchk(cudaMemcpyToSymbol(d_raycastingColor, this->raycastingOptions->color_0, sizeof(float3)));
 
 
 	delete h_boundingBox;

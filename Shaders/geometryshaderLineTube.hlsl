@@ -9,6 +9,11 @@ cbuffer GS_CBuffer
 	int projection;
 	float3 gridDiameter;
 	bool periodicity;
+	float particlePlanePos;
+	unsigned int transparencyMode;
+	unsigned int timDim;
+	float streakPos;
+	unsigned int currentTime;
 };
 
 
@@ -22,6 +27,7 @@ struct GS_INPUT
 	float inMeasure : MEASURE;
 	float3 inNormal : NORMAL;
 	float3 inInitial : INITIALPOS;
+	unsigned int inTime : TIME;
 };
 
 struct GS_OUTPUT
@@ -32,6 +38,7 @@ struct GS_OUTPUT
 	float3 outLightDir: LIGHTDIR;
 	float3 outNormal : NORMAL;
 	float outMeasure : MEASURE;
+	float transparency : TRANSPARENCY;
 };
 
 
@@ -41,6 +48,23 @@ struct GS_OUTPUT
 void main(lineadj GS_INPUT input[4], inout TriangleStream<GS_OUTPUT> output)
 {
 
+	float transparency = 1;
+
+	switch (transparencyMode)
+	{
+	case(0):
+	{
+		transparency = 1 - abs(input[0].inPosition.x - streakPos) / gridDiameter.x;
+
+		break;
+	}
+	case(1):
+	{
+		transparency = 1 - abs(currentTime - (float)input[0].inTime) / (float)timDim;
+
+		break;
+	}
+	}
 
 	float3 pos0 = input[0].inPosition - (gridDiameter /2);
 	float3 pos1 = input[1].inPosition - (gridDiameter / 2);
@@ -74,6 +98,15 @@ void main(lineadj GS_INPUT input[4], inout TriangleStream<GS_OUTPUT> output)
 		pos3.z = input[1].inInitial.z - (gridDiameter.z / 2);
 		break;
 	}
+	case(4):
+	{
+		pos0.x = particlePlanePos;
+		pos1.x = particlePlanePos;
+		pos2.x = particlePlanePos;
+		pos3.x = particlePlanePos;
+		break;
+	}
+
 	default:
 		break;
 	}
@@ -170,6 +203,8 @@ void main(lineadj GS_INPUT input[4], inout TriangleStream<GS_OUTPUT> output)
 			vertex1.outPosition = mul(View, float4(position1, 1.0f));
 			vertex1.outPosition = mul(Proj, vertex1.outPosition);
 
+			vertex0.transparency = transparency;
+			vertex1.transparency = transparency;
 
 
 			// Normals

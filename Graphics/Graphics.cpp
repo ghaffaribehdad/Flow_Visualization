@@ -76,8 +76,6 @@ void Graphics::RenderFrame()
 	this->deviceContext->OMSetDepthStencilState(this->depthStencilState.Get(), 0);	
 
 
-
-
 		/*
 
 	##############################################################
@@ -94,10 +92,6 @@ void Graphics::RenderFrame()
 	clipBox.show(&renderImGuiOptions, raycastingOptions.clipBox, raycastingOptions.clipBoxCenter);		
 
 
-
-
-
-
 	raycasting.show(&renderImGuiOptions);					// Raycasting 
 
 	if (!renderImGuiOptions.pauseRendering)
@@ -105,39 +99,16 @@ void Graphics::RenderFrame()
 		streamlineRenderer.show(&renderImGuiOptions);		// Streamline rendering
 		streaklineRenderer.show(&renderImGuiOptions);		// Streakline rendering
 		pathlineRenderer.show(&renderImGuiOptions);			// Pathline rendering
-		dispersionTracer.show(&renderImGuiOptions); 		// Heightfield Rendering
-		crossSection.show(&renderImGuiOptions);				// Cross Section rendering
-		heightfieldFTLE.show(&renderImGuiOptions);			// Heightfield Rendering FTLE
 		fluctuationHeightfield.show(&renderImGuiOptions);	// Fluctuation Heightfield
-		timeSpacefield.show(&renderImGuiOptions);			// Time Space raycasting
 	}
 
-	/*
-	##############################################################
-	##															##
-	##						Take Screenshots					##
-	##															##
-	##############################################################
-
-	*/
-
-	//if (renderImGuiOptions.saveScreenshot && !renderImGuiOptions.saved)
-	//{
-	//	std::string fullName = dispersionOptions.filePath + dispersionOptions.fileName + std::to_string(solverOptions.currentIdx) + std::string(".jpg");
-	//	this->saveTextureJPEG(getBackBuffer(), fullName);
-	//	renderImGuiOptions.saved = true;
-	//}
-
-
 
 	/*
-
 	##############################################################
 	##															##
 	##							Draw							##
 	##															##
 	##############################################################
-
 	*/
 	if (renderingOptions.showVolumeBox)
 	{
@@ -185,7 +156,19 @@ void Graphics::RenderFrame()
 
 	if (this->renderImGuiOptions.showPathlines)
 	{
-		this->pathlineRenderer.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ);
+		switch (renderingOptions.renderingMode)
+		{
+		case RenderingMode::RenderingMode::TUBES:
+		{
+			this->pathlineRenderer.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ);
+			break;
+		}
+		case RenderingMode::RenderingMode::SPHERES:
+		{
+			this->pathlineRenderer.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
+			break;
+		}
+		}
 	}
 
 	/*
@@ -233,7 +216,7 @@ void Graphics::RenderFrame()
 			renderImGuiOptions.saveScreenshot = false;
 			renderImGuiOptions.screenshotCounter = 0;
 		}
-		else
+		else if (solverOptions.lineRenderingMode == LineRenderingMode::STREAMLINES)
 		{
 			solverOptions.currentIdx++;
 			renderImGuiOptions.updateRaycasting = true;
@@ -258,11 +241,6 @@ void Graphics::RenderFrame()
 	{
 		renderImGuiOptions.render();				// Render ImGui 
 	}
-	//#############################################################
-
-
-
-
 
 
 	// Present the backbuffer

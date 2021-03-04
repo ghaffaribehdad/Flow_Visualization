@@ -52,6 +52,11 @@ public:
 		return this->stride.get();
 	}
 
+	void reset()
+	{
+		buffer.Reset();
+	}
+
 	HRESULT Initialize(ID3D11Device * device, T * data, UINT numVertices, unsigned int accessFlag = 0 )
 	{
 		// Release if it is already alocated

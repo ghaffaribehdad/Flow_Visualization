@@ -14,7 +14,7 @@
 
 
 // Read a velocity volume
-bool VolumeIO::Volume_IO::readVolume(unsigned int idx)
+bool VolumeIO::Volume_IO::readVolume(const uint & idx)
 {
 	// Generate absolute path of the file
 	
@@ -26,15 +26,13 @@ bool VolumeIO::Volume_IO::readVolume(unsigned int idx)
 }
 
 
-bool VolumeIO::Volume_IO::readVolume(unsigned int idx, SolverOptions * solverOptions)
+bool VolumeIO::Volume_IO::readVolume_Compressed(const uint & idx, const int3 & gridSize)
 {
 	// Generate absolute path of the file
-
 	this->fullName = m_filePath + m_fileName + std::to_string(idx) + ".bin";
 
 	// Read volume into the buffer
-
-	return Read_Compressed(solverOptions);
+	return Read_Compressed(gridSize);
 }
 
 
@@ -169,7 +167,7 @@ bool VolumeIO::Volume_IO::Read()
 
 
 
-bool VolumeIO::Volume_IO::Read_Compressed(SolverOptions * solverOptions)
+bool VolumeIO::Volume_IO::Read_Compressed(int3 _gridSize)
 {
 	// define the istream
 	std::ifstream myFile;
@@ -211,7 +209,7 @@ bool VolumeIO::Volume_IO::Read_Compressed(SolverOptions * solverOptions)
 	// close the file
 	myFile.close();
 
-	int3 gridSize = { solverOptions->gridSize[0] * 4,solverOptions->gridSize[1],solverOptions->gridSize[2] };
+	int3 gridSize = { _gridSize.x * 4,_gridSize.y,_gridSize.z };
 
 	this->dp_field = decompress(gridSize, reinterpret_cast<uint*>(&(buffer.at(0))), 0.01f, this->decompressResources.config, this->decompressResources.shared, this->decompressResources.res, buffer_size);
 

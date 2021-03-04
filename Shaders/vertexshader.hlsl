@@ -12,6 +12,7 @@ struct VS_INPUT
 	float inMeasure : MEASURE;
 	float3 inNormal : NORMAL;
 	float3 inInitialPos : INITIALPOS;
+	unsigned int inTime : TIME;
 };
 
 
@@ -23,6 +24,7 @@ struct VS_OUTPUT
 	float outMeasure : MEASURE;
 	float3 outNormal : NORMAL;
 	float3 outInitialPos : INITIALPOS;
+	unsigned int outTime : TIME;
 };
 
 
@@ -38,6 +40,7 @@ VS_OUTPUT main(VS_INPUT input)
 	output.outMeasure = input.inMeasure;
 	output.outNormal = input.inNormal;
 	output.outInitialPos = input.inInitialPos;
+	output.outTime = input.inTime;
 
     return output;
 }

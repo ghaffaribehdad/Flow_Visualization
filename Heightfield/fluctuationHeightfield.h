@@ -57,11 +57,7 @@ public:
 	{
 		if (renderImGuiOptions->showFluctuationHeightfield)
 		{
-			//if (this->dispersionOptions.retrace)
-			//{
-			//	this->fluctuationHeightfield.retrace();
-			//	this->fluctuationheightfieldOptions .retrace = false;
-			//}
+
 			if (!this->timeSpaceRenderingOptions->initialized)
 			{
 
@@ -81,11 +77,7 @@ public:
 		}
 		else
 		{
-			//if (fluctuationheightfieldOptions->released)
-			//{
-			//	this->release();
-			//	fluctuationheightfieldOptions->released = false;
-			//}
+
 		}
 	}
 
@@ -106,7 +98,7 @@ private:
 	cudaTextureObject_t heightFieldTexture2D;
 
 
-	virtual bool InitializeHeightSurface3D() override;
+	virtual bool InitializeHeightSurface3D(cudaArray_t cudaArray);
 
 
 };

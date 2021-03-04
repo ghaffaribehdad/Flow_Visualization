@@ -11,31 +11,36 @@ namespace RenderingMode
 		COUNT
 	};
 
-	static const char* const RenderingModeList[] =
+	static const char* RenderingModeList[] =
 	{
 		"Tubes",
 		"Spheres",
 	};
 }
+
+
+
 namespace DrawMode
 {
 
 	
 	enum DrawMode
 	{
-		STATIONARY = 0,
-		ADVECTION,
+		REALTIME = 0,
+		STATIONARY,
 		CURRENT,
-		REALTIME,
+		ADVECTION,
+		ADVECTION_FINAL,
 		COUNT
 	};
 
-	static const char* const DrawModeList[] =
+	static const char* DrawModeList[] =
 	{
-		"Stationary",
-		"Advection",
+		"Realtime",
+		"Strationary",
 		"Current",
-		"Realtime"
+		"Advection",
+		"Adv. Final"
 	};
 
 }
@@ -43,6 +48,7 @@ namespace DrawMode
 
 struct RenderingOptions
 {
+	
 	float tubeRadius = 0.01f;
 	float minColor[4] = 
 	{ 
@@ -79,6 +85,6 @@ struct RenderingOptions
 	bool showClipBox = true;
 
 	float boxRadius = 0.005f;
-	int lineLength = 5;
+	int lineLength = 1;
 
 };

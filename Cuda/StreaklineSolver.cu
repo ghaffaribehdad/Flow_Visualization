@@ -3,6 +3,7 @@
 
 
 
+
 bool StreaklineSolver::release()
 {
 	this->volume_IO.release();
@@ -20,8 +21,9 @@ __host__ bool StreaklineSolver::initializeRealtime(SolverOptions * p_solverOptio
 	this->solverOptions = p_solverOptions;
 	this->InitializeCUDA();
 	this->volume_IO.Initialize(p_solverOptions);
+	this->initializeParticles(this->solverOptions->seedingPattern);
 
-	this->InitializeParticles(this->solverOptions->seedingPattern);
+
 
 	int blockDim = 256;
 	int thread = (this->solverOptions->lines_count / blockDim) + 1;
@@ -45,17 +47,17 @@ __host__ bool StreaklineSolver::solve()
 	this->volume_IO.Initialize(this->solverOptions);
 
 	// Initialize Particles and upload it to GPU
-	this->InitializeParticles(solverOptions->seedingPattern);
+	this->initializeParticles(solverOptions->seedingPattern);
 
 	// Number of threads based on the number of lines
-	int blockDim = 256;
-	int thread = (this->solverOptions->lines_count / blockDim) + 1;
+	dim3 thread = { maxBlockDim,maxBlockDim,1 };
+	int blocks = BLOCK_THREAD(this->solverOptions->lines_count);
 
 	solverOptions->lineLength = timeSteps;
 	bool odd = false;
 
 	// set the position of the vertex buffer to the intial position of the particle
-	InitializeVertexBufferStreaklines << <blockDim, thread >> >
+	InitializeVertexBufferStreaklines << <blocks, thread >> >
 		(	this->d_Particles,
 			*solverOptions,
 			reinterpret_cast<Vertex*>(this->p_VertexBuffer)
@@ -123,7 +125,7 @@ __host__ bool StreaklineSolver::solve()
 
 		}
 
-		TracingStreak << <blockDim, thread >> >
+		TracingStreak << <blocks, thread >> >
 			(
 				volumeTexture_0.getTexture(),
 				volumeTexture_1.getTexture(),
@@ -138,7 +140,7 @@ __host__ bool StreaklineSolver::solve()
 	}
 
 	// Bring the position to the middle
-	AddOffsetVertexBufferStreaklines << <blockDim, thread >> >(*solverOptions, reinterpret_cast<Vertex*>(this->p_VertexBuffer));
+	AddOffsetVertexBufferStreaklines << <blocks, thread >> >(*solverOptions, reinterpret_cast<Vertex*>(this->p_VertexBuffer));
 	this->release();
 	return true;
 }
@@ -146,8 +148,8 @@ __host__ bool StreaklineSolver::solve()
 
 __host__ bool StreaklineSolver::solveRealtime(int & streakCounter)
 {
-	int blockDim = 256;
-	int thread = (this->solverOptions->lines_count / blockDim) + 1;
+	dim3 thread = { maxBlockDim,maxBlockDim,1 };
+	int blocks = BLOCK_THREAD(this->solverOptions->lines_count);
 
 	bool odd = false;
 
@@ -210,7 +212,7 @@ __host__ bool StreaklineSolver::solveRealtime(int & streakCounter)
 
 
 
-	if (streakCounter == solverOptions->lineLength)
+	if (streakCounter == solverOptions->lineLength - 1)
 	{
 
 		resetRealtime();
@@ -221,7 +223,7 @@ __host__ bool StreaklineSolver::solveRealtime(int & streakCounter)
 	{
 		
 	
-	TracingStreak << <blockDim, thread >> > (volumeTexture_0.getTexture(), volumeTexture_1.getTexture(), *solverOptions, reinterpret_cast<Vertex*>(this->p_VertexBuffer), odd, streakCounter);
+	TracingStreak << <blocks, thread >> > (volumeTexture_0.getTexture(), volumeTexture_1.getTexture(), *solverOptions, reinterpret_cast<Vertex*>(this->p_VertexBuffer), odd, streakCounter);
 	std::printf("\n\n");
 	streakCounter++;
 
