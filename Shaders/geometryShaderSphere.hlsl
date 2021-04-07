@@ -1,3 +1,4 @@
+
 cbuffer GS_CBuffer
 {
 	float4x4 View;
@@ -13,6 +14,8 @@ cbuffer GS_CBuffer
 	unsigned int timDim;
 	float streakPos;
 	unsigned int currentTime;
+	bool usingThreshold;
+	float threshold;
 };
 
 
@@ -52,24 +55,28 @@ struct GS_OUTPUT
 void main(point GS_INPUT input[1], inout TriangleStream<GS_OUTPUT> output)
 {
 
+	bool append = true;
+
+
+
 	float transparency = 1;
 
 	float3 pos0 = input[0].inPosition - (gridDiameter / 2);
 	
 	switch (transparencyMode)
 	{
-	case(0):
+	case(0): // Based on position
 	{
 		transparency = 1 - abs(input[0].inPosition.x - streakPos) / gridDiameter.x;
 		break;
 	}
-	case(1):
+	case(1): // Based on Time
 	{
 		transparency = 1 - abs(currentTime - (float)input[0].inTime) / (float)timDim;
 		break;
 	}
+
 	}
-	
 
 
 	switch (projection)
@@ -100,72 +107,70 @@ void main(point GS_INPUT input[1], inout TriangleStream<GS_OUTPUT> output)
 
 	}
 
-	switch (periodicity)
-	{
-	case(false): // not periodic
+	if (!periodicity)
 	{
 		if (abs(pos0.x) > gridDiameter.x / 2 || abs(pos0.y) > gridDiameter.y / 2 || abs(pos0.z) > gridDiameter.z / 2)
 		{
-			output.RestartStrip();
+			append = false;
 		}
-
-		break;
 	}
-	case(true): // periodic
+
+	if (usingThreshold)
 	{
-
-		break;
+		if (abs(input[0].inPosition.x - streakPos) > threshold)
+		{
+			append = false;
+		}
 	}
+
+	if (append)
+	{
+		GS_OUTPUT vertex0;
+
+		float3 tangent0 = input[0].inTangent;
+		float3 inPlaneVec = normalize(cross(viewDir, tangent0));
+		float3 inPlaneVecPer = normalize(cross(inPlaneVec, viewDir));
+
+
+		vertex0.transparency = transparency;
+		vertex0.outCenter = pos0;
+
+		vertex0.outLightDir = normalize(-tangent0);
+		vertex0.outNormal = normalize(-tangent0);;
+		vertex0.outMeasure = input[0].inMeasure;
+
+		vertex0.radius = tubeRadius;
+
+		vertex0.outPosition = mul(View, float4(pos0  + tubeRadius * inPlaneVec, 1.0f));
+		vertex0.outPosition = mul(Proj, vertex0.outPosition);
+		vertex0.outViewPos = pos0 + tubeRadius * inPlaneVec;
+		output.Append(vertex0);
+
+
+		vertex0.outPosition = mul(View, float4(pos0 + tubeRadius * inPlaneVecPer, 1.0f));
+		vertex0.outPosition = mul(Proj, vertex0.outPosition);
+		vertex0.outViewPos = pos0 + tubeRadius * inPlaneVecPer;
+		output.Append(vertex0);
+
+		vertex0.outPosition = mul(View, float4(pos0 - tubeRadius * inPlaneVec, 1.0f));
+		vertex0.outPosition = mul(Proj, vertex0.outPosition);
+		vertex0.outViewPos = pos0 - tubeRadius * inPlaneVec;
+		output.Append(vertex0);
+
+
+		vertex0.outPosition = mul(View, float4(pos0 - tubeRadius * inPlaneVecPer, 1.0f));
+		vertex0.outPosition = mul(Proj, vertex0.outPosition);
+		vertex0.outViewPos = pos0 - tubeRadius * inPlaneVecPer;
+		output.Append(vertex0);
+
+
+		vertex0.outPosition = mul(View, float4(pos0 + tubeRadius * inPlaneVec, 1.0f));
+		vertex0.outPosition = mul(Proj, vertex0.outPosition);
+		vertex0.outViewPos = pos0 + tubeRadius * inPlaneVec;
+		output.Append(vertex0);
+
 	}
 
-
-	GS_OUTPUT vertex0;
-
-	float3 tangent0 = input[0].inTangent;
-	float3 inPlaneVec = normalize(cross(viewDir, tangent0));
-	float3 inPlaneVecPer = normalize(cross(inPlaneVec, viewDir));
-
-
-	vertex0.transparency = transparency;
-	vertex0.outCenter = pos0;
-
-	vertex0.outLightDir = normalize(-tangent0);
-	vertex0.outNormal = normalize(-tangent0);;
-	vertex0.outMeasure = input[0].inMeasure;
-
-	vertex0.radius = tubeRadius;
-
-	vertex0.outPosition = mul(View, float4(pos0  + tubeRadius * inPlaneVec, 1.0f));
-	vertex0.outPosition = mul(Proj, vertex0.outPosition);
-	vertex0.outViewPos = pos0 + tubeRadius * inPlaneVec;
-	output.Append(vertex0);
-
-
-	vertex0.outPosition = mul(View, float4(pos0 + tubeRadius * inPlaneVecPer, 1.0f));
-	vertex0.outPosition = mul(Proj, vertex0.outPosition);
-	vertex0.outViewPos = pos0 + tubeRadius * inPlaneVecPer;
-	output.Append(vertex0);
-
-	vertex0.outPosition = mul(View, float4(pos0 - tubeRadius * inPlaneVec, 1.0f));
-	vertex0.outPosition = mul(Proj, vertex0.outPosition);
-	vertex0.outViewPos = pos0 - tubeRadius * inPlaneVec;
-	output.Append(vertex0);
-
-
-	vertex0.outPosition = mul(View, float4(pos0 - tubeRadius * inPlaneVecPer, 1.0f));
-	vertex0.outPosition = mul(Proj, vertex0.outPosition);
-	vertex0.outViewPos = pos0 - tubeRadius * inPlaneVecPer;
-	output.Append(vertex0);
-
-
-	vertex0.outPosition = mul(View, float4(pos0 + tubeRadius * inPlaneVec, 1.0f));
-	vertex0.outPosition = mul(Proj, vertex0.outPosition);
-	vertex0.outViewPos = pos0 + tubeRadius * inPlaneVec;
-	output.Append(vertex0);
-
-
-
-	
 	output.RestartStrip();
 }
 

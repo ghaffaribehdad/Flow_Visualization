@@ -44,9 +44,9 @@ public:
 			{
 
 
-				switch (solverOptions->advectionMode)
+				switch (solverOptions->computationMode)
 				{
-				case(AdvectionMode::AdvectionMode::ONTHEFLY):
+				case(ComputationMode::ComputationMode::ONTHEFLY):
 				{
 
 					if (!solverOptions->drawComplete)
@@ -62,7 +62,7 @@ public:
 					}
 					break;
 				}
-				case(AdvectionMode::AdvectionMode::PRECOMPUTATION):
+				case(ComputationMode::ComputationMode::PRECOMPUTATION):
 					if (renderImGuiOptions->updateStreaklines)
 					{
 						this->updateScene();
@@ -170,7 +170,7 @@ public:
 		{
 
 
-		case DrawMode::DrawMode::REALTIME:
+		case DrawMode::DrawMode::FULL:
 		{
 			this->deviceContext->Draw(llInt(solverOptions->lineLength) * llInt(solverOptions->lines_count), 0);
 			break;

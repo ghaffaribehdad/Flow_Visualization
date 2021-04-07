@@ -13,7 +13,7 @@ bool LineRenderer::setShaders(D3D11_PRIMITIVE_TOPOLOGY Topology)
 	this->deviceContext->GSSetShader(geometryshader.GetShader(), NULL, 0);
 	this->deviceContext->OMSetBlendState(this->blendState.Get(), NULL, 0xFFFFFFFF);
 
-
+	
 	return true;
 }
 
@@ -164,13 +164,24 @@ float LineRenderer::streakProjectionPlane()
 	float timeDim	= solverOptions->timeDim;
 	int lastIdx		= solverOptions->lastIdx;
 	int	firstIdx	= solverOptions->firstIdx;
-
-	//float init_pos = (solverOptions->gridDiameter[0] / solverOptions->gridSize[0]) * solverOptions->projectPos;
 	
 	float init_pos =  - timeDim / 2;
 	init_pos += (current - firstIdx) * (timeDim / (lastIdx -firstIdx +1));
 
-	
+
+	return init_pos;
+}
+
+float LineRenderer::streakProjectionPlane_Stream()
+{
+	int current = solverOptions->currentSegment;
+	float timeDim = solverOptions->timeDim;
+	int lastIdx = solverOptions->lineLength;
+	int	firstIdx = 0;
+
+	float init_pos = -timeDim / 2;
+	init_pos += (current - firstIdx) * (timeDim / (lastIdx - firstIdx + 1));
+
 
 	return init_pos;
 }
@@ -189,11 +200,6 @@ bool LineRenderer::initializeRasterizer()
 		rasterizerDesc.MultisampleEnable = true;
 		rasterizerDesc.AntialiasedLineEnable = true;
 		//rasterizerDesc.FrontCounterClockwise = TRUE;//= 1;
-
-
-
-
-
 
 		HRESULT hr = this->device->CreateRasterizerState(&rasterizerDesc, this->rasterizerstate.GetAddressOf());
 		if (FAILED(hr))

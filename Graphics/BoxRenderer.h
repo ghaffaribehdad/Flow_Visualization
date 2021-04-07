@@ -296,11 +296,17 @@ public:
 	{
 		initializeRasterizer();
 		setShaders(Topology);
+		if (Topology == D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST)
+		{
+			this->deviceContext->GSSetShader(NULL, NULL, 0);
+		}
+
 		updateConstantBuffer(camera);
 		setBuffers();
 		this->deviceContext->Draw(24,0);
 		this->cleanPipeline();
 	}
+
 
 	void updateConstantBuffer(Camera & camera) override
 	{

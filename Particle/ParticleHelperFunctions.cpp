@@ -81,9 +81,9 @@ void seedParticle_ZY_Plane_FTLE
 {
 	float3 gridMeshSize =
 	{
-		solverOptions->seedBox[0] / ((float)solverOptions->seedGrid[0]+1),
-		solverOptions->seedBox[1] / ((float)solverOptions->seedGrid[1]+1),
-		solverOptions->seedBox[2] / ((float)solverOptions->seedGrid[2]+1),
+		solverOptions->seedBox[0] / ((float)solverOptions->seedGrid[0]-1),
+		solverOptions->seedBox[1] / ((float)solverOptions->seedGrid[1]-1),
+		solverOptions->seedBox[2] / ((float)solverOptions->seedGrid[2]-1),
 	};
 
 	for (int x = 0; x < solverOptions->seedGrid[0]; x++)
@@ -98,15 +98,15 @@ void seedParticle_ZY_Plane_FTLE
 
 					solverOptions->gridDiameter[0] / 2.0f -
 					solverOptions->seedBox[0] / 2.0f +
-					solverOptions->seedBoxPos[0] + (float)(x+1) * gridMeshSize.x,
+					solverOptions->seedBoxPos[0] + (float)(x) * gridMeshSize.x,
 
 					solverOptions->gridDiameter[1] / 2.0f -
 					solverOptions->seedBox[1] / 2.0f +
-					solverOptions->seedBoxPos[1] + (float)(y + 1) * gridMeshSize.y,
+					solverOptions->seedBoxPos[1] + (float)(y) * gridMeshSize.y,
 
 					solverOptions->gridDiameter[2] / 2.0f -
 					solverOptions->seedBox[2] / 2.0f +
-					solverOptions->seedBoxPos[2] + (float)(z + 1) * gridMeshSize.z
+					solverOptions->seedBoxPos[2] + (float)(z) * gridMeshSize.z
 				};
 
 			}
@@ -142,18 +142,18 @@ __host__ void seedParticleRandom(Particle* particle, const SolverOptions* solver
 			solverOptions->seedBox[0] / 2.0f + solverOptions->seedBoxPos[0] +
 			(float)distribution(generator) * solverOptions->seedBox[0];
 
-		distribution.reset();
+		//distribution.reset();
 
 		particle[i].m_position.y = solverOptions->gridDiameter[1] / 2.0f -
 			solverOptions->seedBox[1] / 2.0f + solverOptions->seedBoxPos[1] +
 			(float)distribution(generator) * solverOptions->seedBox[1];
 
-		distribution.reset();
+		//distribution.reset();
 
 		particle[i].m_position.z = solverOptions->gridDiameter[2] / 2.0f -
 			solverOptions->seedBox[2] / 2.0f + solverOptions->seedBoxPos[2] +
 			(float)distribution(generator) * solverOptions->seedBox[2];
-		distribution.reset();
+		//distribution.reset();
 
 	}
 

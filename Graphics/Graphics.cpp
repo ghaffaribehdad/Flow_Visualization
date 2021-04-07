@@ -73,26 +73,27 @@ void Graphics::RenderFrame()
 
 	this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), renderingOptions.bgColor);
 	this->deviceContext->ClearDepthStencilView(this->depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-	this->deviceContext->OMSetDepthStencilState(this->depthStencilState.Get(), 0);	
+	this->deviceContext->OMSetDepthStencilState(this->depthStencilState.Get(), 0);
 
 
-		/*
+	/*
 
-	##############################################################
-	##															##
-	##						Show Scene							##
-	##															##
-	##############################################################
+##############################################################
+##															##
+##						Show Scene							##
+##															##
+##############################################################
 
-	*/
-
-
-	volumeBox.show(&renderImGuiOptions, solverOptions.gridDiameter);		
-	seedBox.show(&renderImGuiOptions, solverOptions.seedBox, solverOptions.seedBoxPos);	
-	clipBox.show(&renderImGuiOptions, raycastingOptions.clipBox, raycastingOptions.clipBoxCenter);		
+*/
 
 
-	raycasting.show(&renderImGuiOptions);					// Raycasting 
+	volumeBox.show(&renderImGuiOptions, solverOptions.gridDiameter);
+	seedBox.show(&renderImGuiOptions, solverOptions.seedBox, solverOptions.seedBoxPos);
+	clipBox.show(&renderImGuiOptions, raycastingOptions.clipBox, raycastingOptions.clipBoxCenter);
+	streakBox.show(&renderImGuiOptions, solverOptions.streakBox, solverOptions.streakBoxPos);
+	streakPlane.show(&renderImGuiOptions, solverOptions.streakBox, solverOptions.streakBoxPos);
+
+
 
 	if (!renderImGuiOptions.pauseRendering)
 	{
@@ -122,15 +123,29 @@ void Graphics::RenderFrame()
 	}
 
 
+	if (renderingOptions.showStreakBox)
+	{
+		this->streakBox.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_LINELIST);
+
+	}
+
+
+
 	if (renderingOptions.showClipBox)
 	{
 		this->clipBox.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_LINELIST);
 
 	}
 
+	if (renderingOptions.showStreakPlane)
+	{
+		this->streakPlane.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	}
+
 
 	if (this->renderImGuiOptions.showStreamlines)
-	{	
+	{
 		switch (renderingOptions.renderingMode)
 		{
 		case RenderingMode::RenderingMode::TUBES:
@@ -146,6 +161,8 @@ void Graphics::RenderFrame()
 		}
 
 	}
+
+	raycasting.show(&renderImGuiOptions);					// Raycasting 
 
 	if (this->renderImGuiOptions.showStreaklines)
 	{
@@ -170,6 +187,8 @@ void Graphics::RenderFrame()
 		}
 		}
 	}
+
+
 
 	/*
 
@@ -411,6 +430,24 @@ bool Graphics::InitializeResources()
 		this->adapter
 	);
 
+	streakBox.setResources
+	(
+		this->renderingOptions,
+		this->solverOptions,
+		this->deviceContext.Get(),
+		this->device.Get(),
+		this->adapter
+	);
+
+	streakPlane.setResources
+	(
+		this->renderingOptions,
+		this->solverOptions,
+		this->deviceContext.Get(),
+		this->device.Get(),
+		this->adapter
+	);
+
 	raycasting.setResources
 	(
 		&this->camera,
@@ -528,7 +565,19 @@ bool Graphics::InitializeResources()
 	if (!seedBox.initializeBuffers())
 		return false;
 
+	if (!streakBox.initializeBuffers())
+		return false;
+
+	if (!streakPlane.initializeBuffers())
+		return false;
+
 	if (!clipBox.initializeBuffers())
+		return false;
+
+	if (!raycasting.initializeBuffers())
+		return false;
+
+	if (!fluctuationHeightfield.initializeBuffers())
 		return false;
 
 	return true;
@@ -625,6 +674,12 @@ bool Graphics::InitializeShaders()
 	if (!this->seedBox.initializeShaders())
 		return false;
 
+	if (!this->streakBox.initializeShaders())
+		return false;
+
+	if (!this->streakPlane.initializeShaders())
+		return false;
+
 	if (!this->clipBox.initializeShaders())
 		return false;
 
@@ -641,9 +696,15 @@ bool Graphics::InitializeScene()
 	DirectX::XMFLOAT4 redColor = { 1,0,0,1.0f};
 	DirectX::XMFLOAT4 greenColor = { 0,1,0,1.0f };
 	DirectX::XMFLOAT4 blueColor = { 0,0,1,1.0f };
+	DirectX::XMFLOAT4 whiteColor = { 1,1,1,1.0f };
 
 	volumeBox.addBox(this->solverOptions.gridDiameter, center, greenColor);
 	seedBox.addBox( this->solverOptions.seedBox, this->solverOptions.seedBoxPos, redColor);
+
+	streakBox.addBox( this->solverOptions.streakBox, this->solverOptions.streakBoxPos, redColor);
+
+	streakPlane.addBox(this->solverOptions.streakBox, this->solverOptions.streakBoxPos, whiteColor);
+
 	clipBox.addBox(this->raycastingOptions.clipBox, this->raycastingOptions.clipBoxCenter, blueColor);
 	
 	return true;

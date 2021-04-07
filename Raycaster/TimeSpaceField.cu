@@ -163,14 +163,14 @@ bool TimeSpaceField::cudaRaycaster()
 
 
 	//We need normal raycasting here !!!!!!!
-	CudaIsoSurfacRenderer_float_PlaneColor << < blocks, thread >> >
-		(
-			raycastingSurface.getSurfaceObject(),
-			this->cudaTexture3D_float.getTexture(),
-			int(this->rays),
-			generatedFieldSize,
-			*timeSpace3DOptions
-			);
+	//CudaIsoSurfacRenderer_float_PlaneColor << < blocks, thread >> >
+	//	(
+	//		raycastingSurface.getSurfaceObject(),
+	//		this->cudaTexture3D_float.getTexture(),
+	//		int(this->rays),
+	//		generatedFieldSize,
+	//		*timeSpace3DOptions
+	//		);
 
 	return true;
 }

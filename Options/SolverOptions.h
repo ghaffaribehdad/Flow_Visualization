@@ -5,9 +5,9 @@
 
 
 
-namespace AdvectionMode
+namespace ComputationMode
 {
-	enum AdvectionMode
+	enum ComputationMode
 	{
 		ONTHEFLY,
 		PRECOMPUTATION,
@@ -15,7 +15,7 @@ namespace AdvectionMode
 
 	};
 
-	static const char* AdvectionModeList[]
+	static const char* ComputationModeList[]
 	{
 		"On the fly",
 		"Pre Computation"
@@ -34,7 +34,7 @@ namespace TransparencyMode
 	static const char* TransparencyModeList[]
 	{
 		"Streak Pos.",
-		"Time Pos"
+		"Time Pos",
 	};
 }
 
@@ -58,7 +58,7 @@ public:
 	int counter;
 	int fileCounter = 0;
 	int fileToSave = 1000;
-	unsigned int seedValue = 1;
+	int seedValue = 1;
 	bool randomSeed = true;
 	int channels = 4;
 	int gridSize[3] = { 64,503,2048 };						//KIT3
@@ -78,16 +78,18 @@ public:
 	float volumeDiameter[3] = { 0.4f,2.0f,7.0f };
 
 	float seedBox[3] = { 0.4f,2.0f,7.0f };					//KIT3
-
-
+	float streakBox[3] = { 0.4f,2.0f,7.0f };					//KIT3
+	float streakBoxPos[3] = { 0.0f, 0.0f, 0.0f };
 	float seedBoxPos[3] = { 0.0f, 0.0f, 0.0f }; 
+
+
 
 	int precision = 32;
 
 	float dt = 0.001f;
 	float advectTime = 0.0f;
 
-	int advectionMode = AdvectionMode::AdvectionMode::ONTHEFLY;
+	int computationMode = ComputationMode::ComputationMode::PRECOMPUTATION;
 
 	int lineLength = 1024;
 	int lines_count = 1024;
@@ -98,8 +100,9 @@ public:
 	int lastIdx = 600;
 	int currentIdx =1;
 	int timeSteps = lastIdx - firstIdx + 1;
+	int currentSegment = 0;
 
-	int lineRenderingMode = LineRenderingMode::lineRenderingMode::PATHLINES;
+	int lineRenderingMode = LineRenderingMode::LineRenderingMode::PATHLINES;
 	int colorMode = 0;
 	
 	int transparencyMode = TransparencyMode::TransparencyMode::STREAKPOS;
@@ -113,9 +116,12 @@ public:
 	bool idChange = false;
 	bool fileChanged = false;
 	bool loadNewfile = false;
+	bool updatePause = false;
 	bool fileLoaded = false;
 	bool shutdown = false;
 	bool usingTransparency = false;
+	bool usingThreshold = false;
+	float transparencyThreshold = 0.4f;
 
 	SolverOptions() {};
 

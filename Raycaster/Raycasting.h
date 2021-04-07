@@ -42,7 +42,7 @@ protected:
 
 	float* averageTemp = nullptr;
 	float* d_averageTemp = nullptr;
-	float FOV_deg	= 30.0f;
+	float FOV_deg = 30.0f;
 	float distImagePlane = 0.1f;
 	unsigned int maxBlockDim = 16;
 
@@ -55,7 +55,7 @@ protected:
 	SolverOptions* solverOptions;
 	RaycastingOptions* raycastingOptions;
 	RenderingOptions* renderingOptions;
-	
+
 	float* field = nullptr;
 
 
@@ -64,7 +64,7 @@ protected:
 
 	VertexBuffer<TexCoordVertex> vertexBuffer;
 
-
+	ConstantBuffer<CB_pixelShader_Sampler>		PS_constantBuffer;
 	Microsoft::WRL::ComPtr<ID3D11Texture2D>				raycastingTexture;
 	Microsoft::WRL::ComPtr< ID3D11RenderTargetView>		renderTargetView;
 	Microsoft::WRL::ComPtr<ID3D11RasterizerState>		rasterizerstate;
@@ -72,10 +72,10 @@ protected:
 	Microsoft::WRL::ComPtr <ID3D11ShaderResourceView>	shaderResourceView;
 	Microsoft::WRL::ComPtr<ID3D11BlendState>			blendState;
 
-	ID3D11Device* device				= nullptr;
-	IDXGIAdapter* pAdapter				= nullptr;
-	ID3D11DeviceContext* deviceContext	= nullptr;
-	Camera* camera						= nullptr;
+	ID3D11Device* device = nullptr;
+	IDXGIAdapter* pAdapter = nullptr;
+	ID3D11DeviceContext* deviceContext = nullptr;
+	Camera* camera = nullptr;
 
 	CudaSurface raycastingSurface;
 	Interoperability interoperatibility;
@@ -93,6 +93,7 @@ protected:
 	__host__ bool initializeScene();
 	__host__ bool initializeCudaSurface();
 	__host__ bool initializeRasterizer();
+
 	__host__ bool initializeSamplerstate();
 	__host__ void setShaders();
 	__host__ void updateFile
@@ -122,7 +123,7 @@ protected:
 		cudaTextureAddressMode addressModeY,
 		cudaTextureAddressMode addressModeZ
 	);
-	
+
 public:
 
 	__host__ virtual bool initialize
@@ -134,7 +135,24 @@ public:
 	__host__ virtual bool release();
 	__host__ virtual void rendering();
 	__host__ virtual bool updateScene();
+	__host__ bool updateconstantBuffer()
+	{
+		PS_constantBuffer.data.transparency = raycastingOptions->transparecny;
+		PS_constantBuffer.ApplyChanges();
 
+		return true;
+	}
+
+	__host__ bool initializeBuffers()
+	{
+		HRESULT	hr = this->PS_constantBuffer.Initialize(this->device, this->deviceContext);
+		if (FAILED(hr))
+		{
+			ErrorLogger::Log(hr, "Failed to Create Pixel shader Constant buffer.");
+			return false;
+		}
+		return true;
+	}
 
 	__host__ bool resize();
 	__host__  void draw();
@@ -205,6 +223,24 @@ __global__ void CudaIsoSurfacRenderer
 );
 
 
+__global__ void CudaIsoSurfacRenderer_lambda2_velocityX
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field1,
+	int rays,
+	RaycastingOptions raycastingOptions
+);
+
+template <IsoMeasure::IsoMeasureMode iso1, IsoMeasure::IsoMeasureMode iso2>
+__global__ void CudaIsoSurfacRenderer_ENUM
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field1,
+	int rays,
+	RaycastingOptions raycastingOptions
+);
+
+
 
 template <typename Observable>
 __global__ void CudaIsoSurfacRenderer_GradientBase
@@ -225,22 +261,44 @@ __global__ void CudaIsoSurfacRenderer_float
 	TimeSpace3DOptions timeSpace3DOptions
 );
 
-__global__ void CudaIsoSurfacRenderer_float_PlaneColor
-(
-	cudaSurfaceObject_t raycastingSurface,
-	cudaTextureObject_t field1,
-	int rays,
-	int3 gridSize,
-	TimeSpace3DOptions timeSpace3DOptions
-);
+//__global__ void CudaIsoSurfacRenderer_float_PlaneColor
+//(
+//	cudaSurfaceObject_t raycastingSurface,
+//	cudaTextureObject_t field1,
+//	int rays,
+//	int3 gridSize,
+//	TimeSpace3DOptions timeSpace3DOptions
+//);
 
+//template <typename Observable>
+//__global__ void CudaIsoSurfacRenderer_float_PlaneColor
+//(
+//	cudaSurfaceObject_t raycastingSurface,
+//	cudaTextureObject_t field1,
+//	int rays,
+//	int3 gridSize,
+//	TimeSpace3DOptions timeSpace3DOptions
+//);
+//
+//template <typename Observable>
+//__global__ void CudaIsoSurfacRenderer_float_PlaneColor
+//(
+//	cudaSurfaceObject_t raycastingSurface,
+//	cudaTextureObject_t field1,
+//	int rays,
+//	int3 gridSize,
+//	RaycastingOptions raycastingOptions
+//);
+
+template <typename Observable>
 __global__ void CudaIsoSurfacRenderer_float_PlaneColor
 (
 	cudaSurfaceObject_t raycastingSurface,
 	cudaTextureObject_t field1,
 	int rays,
 	int3 gridSize,
-	RaycastingOptions raycastingOptions
+	RaycastingOptions raycastingOptions,
+	SolverOptions solverOptions
 );
 
 __global__ void CudaIsoSurfacRenderer_TurbulentDiffusivity
@@ -375,6 +433,20 @@ __global__ void CudaTerrainRenderer_extra_fluctuation
 	float samplingRate,
 	float IsosurfaceTolerance,
 	TimeSpaceRenderingOptions fluctuationOptions
+);
+
+
+template <typename Observable1, typename Observable2>
+__global__ void CudaTerrainRenderer_extra_fluctuation_raycasting
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t t_heightField,
+	cudaTextureObject_t t_isosurface,
+	int rays,
+	float samplingRate,
+	float IsosurfaceTolerance,
+	TimeSpaceRenderingOptions fluctuationOptions,
+	RaycastingOptions
 );
 
 

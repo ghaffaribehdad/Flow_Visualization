@@ -14,11 +14,36 @@ namespace IsoMeasure
 		ShearStress,
 		TURBULENT_DIFFUSIVITY,
 		LAMBDA2,
-		Velocity_X_Plane,
-		Velocity_Y_Plane,
-		Velocity_Z_Plane,
+		LAMBDA2_VELOCITY_X,
 		COUNT
 	};
+
+	static const char* const IsoMeasureModes[] =
+	{
+		"Velocity Magnitude",
+		"Velocity X",
+		"Velocity Y",
+		"Velocity Z",
+		"Shear Stress",
+		"Turbulent Diffusivity",
+		"lambda2",
+		"lambda2_velocity",
+	};
+
+	enum ProjectionPlane
+	{
+		XYPLANE,
+		YZPLANE,
+		ZXPLANE,
+		COUNT_PLANE
+	};
+	static const char* const ProjectionPlaneList[] =
+	{
+		"XY Plane",
+		"ZY Plane",
+		"ZX Plane"
+	};
+
 }
 
 
@@ -29,6 +54,7 @@ public:
 	float samplingRate_0 = 0.001f;
 	float tolerance_0 = 0.001f;
 	float isoValue_0 = 10.0f;
+	float isoValue_1 = 10.0f;
 
 	float planeThinkness = 0.002f;
 
@@ -36,7 +62,9 @@ public:
 	bool fileChanged = false;
 	bool Raycasting = false;
 	bool initialized = false;
+	bool planarRaycasting = false;
 
+	int projectionPlane = IsoMeasure::ProjectionPlane::YZPLANE;
 	int isoMeasure_0 = IsoMeasure::VelocityMagnitude;
 	int isoMeasure_1 = IsoMeasure::VelocityMagnitude;
 	int isoMeasure_2 = IsoMeasure::VelocityMagnitude;
@@ -46,16 +74,17 @@ public:
 
 	float wallNormalClipping = 0.5f;
 
-	float color_0[3] = { 127 / 255.0f,201 / 255.0f,127 / 255.0f };
+	float color_0[3] = { 117 / 255.0f,112 / 255.0f,179 / 255.0f };
+	float color_1[3] = { 217 / 255.0f,95 / 255.0f,2 / 255.0f };
 
 	float minColor[4] = { 5 / 255.0f,113 / 255.0f,176 / 255.0f };
 	float maxColor[4] = { 202 / 255.0f,0 / 255.0f,32 / 255.0f };
 
 	float minVal = -1.0f;
 	float maxVal = +1.0f;
-
+	float transparecny = 1.0f;
 	bool identicalDataset = true;
-
+	bool adaptiveSampling = false;
 
 	char fileName[100] = "timespaceOFstreamwise";
 	char filePath[100] = "F:\\Dataset\\KIT3\\binary_fluc_z_major\\OpticalFlowPaddedStreamwise\\";

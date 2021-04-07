@@ -20,7 +20,7 @@ void RenderImGuiOptions::drawSolverOptions()
 
 
 
-		if (ImGui::Combo("Line Rendering Mode", &solverOptions->lineRenderingMode, LineRenderingMode::lineRenderingModeList, LineRenderingMode::lineRenderingMode::COUNT))
+		if (ImGui::Combo("Line Rendering Mode", &solverOptions->lineRenderingMode, LineRenderingMode::LineRenderingModeList, LineRenderingMode::LineRenderingMode::COUNT))
 		{
 			if (this->showStreamlines)
 			{
@@ -40,10 +40,10 @@ void RenderImGuiOptions::drawSolverOptions()
 			}
 		}
 
-		if (solverOptions->lineRenderingMode == LineRenderingMode::lineRenderingMode::PATHLINES)
+		if (solverOptions->lineRenderingMode == LineRenderingMode::LineRenderingMode::PATHLINES)
 			//|| solverOptions->lineRenderingMode == LineRenderingMode::lineRenderingMode::STREAKLINES)
 		{
-			if (ImGui::Combo("Advection Mode", &solverOptions->advectionMode, AdvectionMode::AdvectionModeList, AdvectionMode::AdvectionMode::COUNT))
+			if (ImGui::Combo("Computation Mode", &solverOptions->computationMode, ComputationMode::ComputationModeList, ComputationMode::ComputationMode::COUNT))
 			{
 
 			}
@@ -82,6 +82,40 @@ void RenderImGuiOptions::drawSolverOptions()
 
 		}
 
+		if (solverOptions->projection == Projection::Projection::STREAK_PROJECTION)
+		{
+			switch (solverOptions->lineRenderingMode)
+			{
+			case(LineRenderingMode::LineRenderingMode::STREAMLINES):
+			{
+				float init_pos = -1 * (solverOptions->gridDiameter[0] / solverOptions->gridSize[0]) * (solverOptions->projectPos - solverOptions->gridSize[0] / 2.0f);
+				init_pos -= solverOptions->timeDim / 2;
+				init_pos += (solverOptions->currentIdx - solverOptions->firstIdx) * (solverOptions->timeDim / (solverOptions->lastIdx - solverOptions->firstIdx));
+				solverOptions->streakBoxPos[0] = init_pos;
+				break;
+			}
+			case(LineRenderingMode::LineRenderingMode::PATHLINES):
+			{
+
+				float init_pos = -1 * (solverOptions->gridDiameter[0] / solverOptions->gridSize[0]) * (solverOptions->projectPos - solverOptions->gridSize[0] / 2.0f);
+				init_pos -= solverOptions->timeDim / 2;
+				init_pos += (solverOptions->currentIdx - solverOptions->firstIdx) * (solverOptions->timeDim / (solverOptions->lastIdx - solverOptions->firstIdx));
+				solverOptions->streakBoxPos[0] = init_pos;
+
+				break;
+			}
+			case(LineRenderingMode::LineRenderingMode::STREAKLINES):
+			{
+				float init_pos = -1 * (solverOptions->gridDiameter[0] / solverOptions->gridSize[0]) * (solverOptions->projectPos - solverOptions->gridSize[0] / 2.0f);
+				init_pos -= solverOptions->timeDim / 2;
+				init_pos += (solverOptions->currentIdx - solverOptions->firstIdx) * (solverOptions->timeDim / (solverOptions->lastIdx - solverOptions->firstIdx));
+				solverOptions->streakBoxPos[0] = init_pos;
+			}
+			default:
+				break;
+			} 
+		}
+
 		if (ImGui::InputFloat("Time Dim", &solverOptions->timeDim))
 		{
 
@@ -103,6 +137,10 @@ void RenderImGuiOptions::drawSolverOptions()
 
 
 
+		if (ImGui::Checkbox("pause updating", &solverOptions->updatePause))
+		{
+
+		}
 
 
 		if (ImGui::InputInt3("Grid Size", solverOptions->gridSize, sizeof(solverOptions->gridSize)))
@@ -131,8 +169,13 @@ void RenderImGuiOptions::drawSolverOptions()
 		}
 		if (ImGui::Button("Optical Flow"))
 		{
-			divideArrayFloat3Int3(solverOptions->velocityScalingFactor, solverOptions->gridDiameter, solverOptions->gridSize);
-			this->solverOptions->dt = 1.0f;
+			solverOptions->velocityScalingFactor[0] = solverOptions->gridDiameter[0] / (solverOptions->gridSize[0] + 20); // 20 pixel padding
+			solverOptions->velocityScalingFactor[1] = solverOptions->gridDiameter[1] / solverOptions->gridSize[1]; // 20 pixel padding
+			solverOptions->velocityScalingFactor[2] = solverOptions->gridDiameter[2] / (solverOptions->gridSize[2] + 20); // 20 pixel padding
+			if (solverOptions->lineRenderingMode == LineRenderingMode::STREAKLINES || solverOptions->lineRenderingMode == LineRenderingMode::PATHLINES)
+			{
+				this->solverOptions->dt = 1.0f;
+			}
 			this->updatePathlines = true;
 			this->updateStreamlines = true;
 
@@ -167,12 +210,16 @@ void RenderImGuiOptions::drawSolverOptions()
 				this->updatePathlines = true;
 				this->updateStreaklines = true;
 			}
+		}
 
+		if (!solverOptions->randomSeed)
+		{
+			ImGui::InputInt("Seed Value", &solverOptions->seedValue, 1, 10);
 		}
 
 		if (solverOptions->seedingPattern == (int)SeedingPattern::SEED_GRIDPOINTS)
 		{
-			if (ImGui::DragInt3("Seed Grid", solverOptions->seedGrid, 1, 1, 1024))
+			if (ImGui::DragInt3("Seed Grid", solverOptions->seedGrid, 1, 2, 1024))
 			{
 				this->updateStreamlines = true;
 				this->updatePathlines = true;
@@ -232,48 +279,28 @@ void RenderImGuiOptions::drawSolverOptions()
 
 
 		ImGui::PushItemWidth(75);
-		if (ImGui::InputInt("First Index", &(solverOptions->firstIdx)))
+		if (ImGui::DragInt("First Index", &(solverOptions->firstIdx),1,solverOptions->currentIdx,solverOptions->lastIdx-1))
 		{
-			if (solverOptions->lastIdx < solverOptions->firstIdx)
-			{
-				solverOptions->firstIdx = solverOptions->lastIdx;
-			}
-			this->updatePathlines = true;
 
-			if (solverOptions->currentIdx < solverOptions->firstIdx)
-			{
-				solverOptions->currentIdx = solverOptions->firstIdx;
-				this->updateStreamlines = true;
-
-			}
 
 		}
 
-		if (solverOptions->lineRenderingMode == LineRenderingMode::lineRenderingMode::STREAKLINES || solverOptions->lineRenderingMode == LineRenderingMode::lineRenderingMode::PATHLINES)
+		if (solverOptions->lineRenderingMode == LineRenderingMode::LineRenderingMode::STREAKLINES || solverOptions->lineRenderingMode == LineRenderingMode::LineRenderingMode::PATHLINES)
 		{
-			solverOptions->lineLength = solverOptions->lastIdx - solverOptions->firstIdx + 1;
+			solverOptions->lineLength = solverOptions->lastIdx - solverOptions->firstIdx;
 		}
 
 		ImGui::SameLine();
 
-		if (ImGui::InputInt("Last Index", &(solverOptions->lastIdx)))
+		if (ImGui::DragInt("Last Index", &(solverOptions->lastIdx),1,solverOptions->firstIdx-1))
 		{
 			this->updatePathlines = true;
 			this->updateStreaklines = true;
 
 		}
 
-		if (ImGui::InputInt("Current Index", &(solverOptions->currentIdx), 1, 2))
+		if (ImGui::DragInt("Current Index", &(solverOptions->currentIdx),1,solverOptions->firstIdx,solverOptions->lastIdx))
 		{
-			if (solverOptions->currentIdx < solverOptions->firstIdx)
-			{
-				solverOptions->currentIdx = solverOptions->firstIdx;
-			}
-
-			if (solverOptions->currentIdx > solverOptions->lastIdx)
-			{
-				solverOptions->currentIdx = solverOptions->lastIdx;
-			}
 
 			this->updateStreamlines = true;
 			solverOptions->loadNewfile = true;
@@ -288,9 +315,22 @@ void RenderImGuiOptions::drawSolverOptions()
 			this->saved = false;
 		}
 
+		if (solverOptions->lineRenderingMode == LineRenderingMode::LineRenderingMode::STREAMLINES)
+		{
+			if (ImGui::InputInt("Current segment", &solverOptions->currentSegment, 1, 10))
+			{
+				if (solverOptions->currentSegment < 0)
+					solverOptions->currentSegment = 1;
+				else if (solverOptions->currentSegment > solverOptions->lineLength)
+					solverOptions->currentSegment = solverOptions->lineLength;
+			}
+
+		}
+
+
 		ImGui::PopItemWidth();
 
-		if (ImGui::DragFloat("dt", &(solverOptions->dt), 0.0001f, 0.001f, 1.0f, "%.4f"))
+		if (ImGui::DragFloat("dt", &(solverOptions->dt),0.0001f, 0.000001f, 1.0f, "%.6f"))
 		{
 
 			this->updateStreamlines = true;
@@ -314,7 +354,7 @@ void RenderImGuiOptions::drawSolverOptions()
 
 		// length of the line is fixed for the pathlines
 
-		if (solverOptions->lineRenderingMode == LineRenderingMode::lineRenderingMode::STREAMLINES)
+		if (solverOptions->lineRenderingMode == LineRenderingMode::LineRenderingMode::STREAMLINES)
 		{
 			if (ImGui::InputInt("Line Length", &(solverOptions->lineLength)))
 			{
@@ -331,9 +371,7 @@ void RenderImGuiOptions::drawSolverOptions()
 
 		if (ImGui::Checkbox("Using Transparency", &solverOptions->usingTransparency))
 		{
-			//this->updateStreamlines = true;
-			//this->updatePathlines = true;
-			//this->updateStreaklines = true;
+
 		}
 
 		if (ImGui::Combo("Transparency Mode", &solverOptions->transparencyMode, TransparencyMode::TransparencyModeList, TransparencyMode::TransparencyMode::COUNT))
@@ -341,6 +379,17 @@ void RenderImGuiOptions::drawSolverOptions()
 
 		}
 
+		if (ImGui::Checkbox("Using Threshold", &solverOptions->usingThreshold))
+		{
+
+		}
+		if (solverOptions->usingThreshold)
+		{
+			if (ImGui::InputFloat("Threshold", &solverOptions->transparencyThreshold, 0.01f, 0.1f))
+			{
+
+			}
+		}
 
 		if (ImGui::Combo("Color Mode", &solverOptions->colorMode, ColorMode::ColorModeList, ColorMode::ColorMode::COUNT))
 		{
@@ -395,7 +444,7 @@ void RenderImGuiOptions::drawSolverOptions()
 
 		switch (solverOptions->lineRenderingMode)
 		{
-		case LineRenderingMode::lineRenderingMode::STREAMLINES:
+		case LineRenderingMode::LineRenderingMode::STREAMLINES:
 		{
 			// Show Lines
 			if (this->streamlineRendering || this->streamlineGenerating)
@@ -418,7 +467,7 @@ void RenderImGuiOptions::drawSolverOptions()
 			break;
 		}
 
-		case LineRenderingMode::lineRenderingMode::PATHLINES:
+		case LineRenderingMode::LineRenderingMode::PATHLINES:
 		{
 			if (this->solverOptions->lastIdx - this->solverOptions->firstIdx >= 1)
 			{
@@ -438,7 +487,7 @@ void RenderImGuiOptions::drawSolverOptions()
 		}
 
 
-		case LineRenderingMode::lineRenderingMode::STREAKLINES:
+		case LineRenderingMode::LineRenderingMode::STREAKLINES:
 		{
 			if (this->solverOptions->lastIdx - this->solverOptions->firstIdx >= 1)
 			{
@@ -477,7 +526,7 @@ void RenderImGuiOptions::drawSolverOptions()
 
 		if (ImGui::Button("Edge View", ImVec2(80, 25)))
 		{
-			this->camera->SetPosition(-10.7f, 4.0f, -6.93f);
+			this->camera->SetPosition(-5.18f, 0.71f, -7.42f);
 			this->camera->SetLookAtPos({ 0.75f,-0.35f,0.55f });
 
 			this->updateRaycasting = true;
@@ -490,8 +539,8 @@ void RenderImGuiOptions::drawSolverOptions()
 
 		if (ImGui::Button("Top", ImVec2(80, 25)))
 		{
-			this->camera->SetPosition(0, 0, +10);
-			this->camera->SetLookAtPos({ 0, 0, 0 });
+			this->camera->SetPosition(0, 12, 0);
+			this->camera->SetLookAtPos({ 0, -1.0, 0 });
 
 			this->updateRaycasting = true;
 			this->updateDispersion = true;
@@ -515,8 +564,8 @@ void RenderImGuiOptions::drawSolverOptions()
 		ImGui::SameLine();
 		if (ImGui::Button("Side", ImVec2(80, 25)))
 		{
-			this->camera->SetPosition(5, 5, 10);
-			this->camera->SetLookAtPos({ 0, 0, 0 });
+			this->camera->SetPosition(6.7f, 3.40f, 9.3f);
+			this->camera->SetLookAtPos({ -0.56f, -.37f, -0.74f });
 
 			this->updateRaycasting = true;
 			this->updateDispersion = true;
@@ -645,11 +694,19 @@ void RenderImGuiOptions::drawLineRenderingOptions()
 		{
 		}
 
+		if (ImGui::Checkbox("Show Streak Box", &renderingOptions->showStreakBox))
+		{
+		}
+
 		if (ImGui::Checkbox("Show Volume Box", &renderingOptions->showVolumeBox))
 		{
 		}
 
 		if (ImGui::Checkbox("Show Clip Box", &renderingOptions->showClipBox))
+		{
+		}
+
+		if (ImGui::Checkbox("Show Streak plane", &renderingOptions->showStreakPlane))
 		{
 		}
 
@@ -742,17 +799,26 @@ void RenderImGuiOptions::drawRaycastingOptions()
 			this->renderingOptions->isRaycasting = this->showRaycasting;
 			this->updateRaycasting = true;
 		}
+		if (ImGui::Checkbox("Planar raycasting", &this->raycastingOptions->planarRaycasting))
+		{
+			this->updateRaycasting = true;
+		}
 
-		if (ImGui::Combo("Isosurface Measure 0", &raycastingOptions->isoMeasure_0, IsoMeasureModes, (int)IsoMeasure::COUNT))
+		if (ImGui::Checkbox("Enable Adaptive Sampling", &this->raycastingOptions->adaptiveSampling))
+		{
+			this->renderingOptions->isRaycasting = this->showRaycasting;
+			this->updateRaycasting = true;
+		}
+		if (ImGui::Combo("Isosurface Measure 0", &raycastingOptions->isoMeasure_0,IsoMeasure::IsoMeasureModes, (int)IsoMeasure::COUNT))
 		{
 			this->updateRaycasting = true;
 			this->updateTimeSpaceField = true;
 
 		}
 
-		if (ImGui::Button("okay"))
+		if (ImGui::DragFloat("Transparency", &raycastingOptions->transparecny, 0.01, 0, 1.0f))
 		{
-
+			this->updateRaycasting = true;
 		}
 
 
@@ -769,8 +835,6 @@ void RenderImGuiOptions::drawRaycastingOptions()
 
 
 		}
-
-
 
 		if (ImGui::DragFloat3("Clip Box", raycastingOptions->clipBox, 0.01f))
 		{
@@ -797,6 +861,13 @@ void RenderImGuiOptions::drawRaycastingOptions()
 			this->updateTimeSpaceField = true;
 		}
 
+		if (ImGui::DragFloat("Isovalue 1", &raycastingOptions->isoValue_1, 0.001f))
+		{
+			this->updateRaycasting = true;
+			this->updateTimeSpaceField = true;
+		}
+
+
 		if (ImGui::DragFloat("Tolerance 0", &raycastingOptions->tolerance_0, 0.00001f, 0.0001f, 5, "%5f"))
 		{
 			this->updateRaycasting = true;
@@ -811,6 +882,12 @@ void RenderImGuiOptions::drawRaycastingOptions()
 
 
 		if (ImGui::ColorEdit3("Isosurface Color 0", (float*)& raycastingOptions->color_0))
+		{
+			this->updateRaycasting = true;
+			this->updateDispersion = true;
+		}
+
+		if (ImGui::ColorEdit3("Isosurface Color 1", (float*)& raycastingOptions->color_1))
 		{
 			this->updateRaycasting = true;
 			this->updateDispersion = true;
@@ -842,12 +919,14 @@ void RenderImGuiOptions::drawRaycastingOptions()
 			ImGui::Text("File is not loaded yet!");
 		}
 
-		if (raycastingOptions->isoMeasure_0 == IsoMeasure::Velocity_X_Plane ||
-			raycastingOptions->isoMeasure_0 == IsoMeasure::Velocity_Y_Plane ||
-			raycastingOptions->isoMeasure_0 == IsoMeasure::Velocity_Z_Plane ||
-			raycastingOptions->isoMeasure_0 == IsoMeasure::LAMBDA2
-			)
+		if (raycastingOptions->planarRaycasting)
 		{
+
+			if (ImGui::Combo("Projection Plane", &raycastingOptions->projectionPlane, IsoMeasure::ProjectionPlaneList, IsoMeasure::COUNT_PLANE))
+			{
+				this->updateRaycasting = true;
+			}
+
 			if (ImGui::InputFloat("Min Value", (float*)&raycastingOptions->minVal, 0.001f, 0.1f))
 			{
 				this->updateRaycasting = true;
@@ -1079,6 +1158,15 @@ void RenderImGuiOptions::drawTimeSpaceOptions()
 			}
 		}
 
+		if (ImGui::Checkbox("Render Isosurfaces", &fluctuationOptions->additionalRaycasting))
+		{
+			this->updatefluctuation = true;
+		}
+
+		if (ImGui::Combo("Height Mode", &fluctuationOptions->heightMode, TimeSpaceRendering::HeightModeList, TimeSpaceRendering::HeightMode::COUNT))
+		{
+			this->updatefluctuation=true;
+		}
 		if (ImGui::Checkbox("Shading", &fluctuationOptions->shading))
 		{
 			this->updatefluctuation = true;
@@ -1430,10 +1518,30 @@ void RenderImGuiOptions::drawDataset()
 				this->solverOptions->lastIdx = 1000;
 				break;			
 			}
+
+			case Dataset::Dataset::KIT3_RAW:
+			{
+				this->solverOptions->fileName = "FieldP";
+				this->solverOptions->filePath = "E:\\KIT3\\initialPadded\\";
+
+
+				setArray<float>(&this->solverOptions->gridDiameter[0], 0.4f, 2.0f, 7.0f);
+				setArray<float>(&this->solverOptions->seedBox[0], 0.4f, 2.0f, 7.0f);
+				setArray<float>(&this->raycastingOptions->clipBox[0], 0.4f, 2.0f, 7.0f);
+				setArray<int>(&this->solverOptions->gridSize[0], 64, 503, 2048);
+
+
+
+				this->solverOptions->dt = 0.001f;
+				break;
+
+			}
+
+
 			case Dataset::Dataset::KIT3_FLUC:
 			{
 				this->solverOptions->fileName = "FieldP";
-				this->solverOptions->filePath = "F:\\Dataset\\KIT3\\binary_fluc_z_major\\Padded\\";
+				this->solverOptions->filePath = "F:\\KIT3\\Fluc\\";
 
 
 				setArray<float>(&this->solverOptions->gridDiameter[0], 0.4f, 2.0f, 7.0f);
@@ -1448,6 +1556,32 @@ void RenderImGuiOptions::drawDataset()
 
 			}
 
+			case Dataset::Dataset::KIT3_INITIAL_COMPRESSED:
+			{
+				this->solverOptions->fileName = "initialComp_";
+				this->solverOptions->filePath = "G:\\KIT3\\Comp_initial\\";
+
+
+
+
+
+				setArray<float>(&this->solverOptions->gridDiameter[0], 0.4f, 2.0f, 7.0f);
+				setArray<float>(&this->solverOptions->seedBox[0], 0.4f, 2.0f, 7.0f);
+				setArray<float>(&this->raycastingOptions->clipBox[0], 5.0f, 2.0f, 7.0f);
+				setArray<int>(&this->solverOptions->gridSize[0], 64, 503, 2048);
+
+				this->solverOptions->firstIdx = 500;
+				this->solverOptions->lastIdx = 1000;
+				this->solverOptions->currentIdx = 500;
+				this->solverOptions->dt = 0.00012f;
+				this->solverOptions->periodic = true;
+				this->solverOptions->Compressed = true;
+				this->solverOptions->maxSize = 69000000;
+				break;
+
+			}
+
+		
 			case Dataset::Dataset::KIT3_COMPRESSED:
 			{
 				this->solverOptions->fileName = "Fluc_Comp_";
@@ -1783,22 +1917,19 @@ void RenderImGuiOptions::drawDataset()
 			}
 			case Dataset::Dataset::TEST_FIELD:
 			{
-				this->solverOptions->fileName = "Field";
-				this->solverOptions->filePath = "D:\\VelocityFieldGen\\";
-				this->solverOptions->gridDiameter[0] = 7.854f;
-				this->solverOptions->gridDiameter[1] = 2.0f;
-				this->solverOptions->gridDiameter[2] = 3.1415f;
+				this->solverOptions->fileName = "refined_fluc";
+				this->solverOptions->filePath = "F:\\CheckAverageOperator\\";
 
-				this->solverOptions->seedBox[0] = 7.854f;
-				this->solverOptions->seedBox[1] = 2.0f;
-				this->solverOptions->seedBox[2] = 3.1415f;
 
-				this->solverOptions->gridSize[0] = 64;
-				this->solverOptions->gridSize[1] = 503;
-				this->solverOptions->gridSize[2] = 2048;
 				this->solverOptions->dt = 0.001f;
 				this->solverOptions->periodic = true;
 				this->solverOptions->Compressed = false;
+
+
+				setArray<float>(&this->solverOptions->gridDiameter[0], 0.4f, 2.0f, 8.0f);
+				setArray<float>(&this->solverOptions->seedBox[0], 0.4f, 2.0f, 8.0f);
+				setArray<float>(&this->raycastingOptions->clipBox[0], 0.4f, 2.0f, 8.0f);
+				setArray<int>(&this->solverOptions->gridSize[0], 64, 503, 2048);
 
 				break;
 

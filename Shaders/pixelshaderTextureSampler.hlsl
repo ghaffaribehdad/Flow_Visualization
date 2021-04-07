@@ -1,5 +1,8 @@
 
-
+cbuffer PS_CBuffer
+{
+	float transparency;
+};
 
 
 
@@ -25,7 +28,7 @@ PS_OUT main(PS_INPUT input)
 
 	float4 color = objTexture.Sample(objSamplerState, input.inTexCoord);
 
-	output.color = float4(color.xyz,1.0f);
+	output.color = float4(color.xyz, transparency);
 	output.depth = color.w;
 
 

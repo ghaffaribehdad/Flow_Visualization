@@ -589,6 +589,9 @@
     <ClInclude Include="Cuda\ParticleTracingHelper.h">
       <Filter>Header Files\Cuda</Filter>
     </ClInclude>
+    <ClInclude Include="Graphics\PlaneRenderer.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\geometryshaderLineTube.hlsl">
@@ -616,6 +619,12 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="Shaders\pixelShaderSphere.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\pixelShaderPlane.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\geometryshaderplane.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

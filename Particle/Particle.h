@@ -9,7 +9,7 @@ struct Particle
 	float3 m_velocity = { 0,0,0 };
 
 	__device__ void updatePosition(const float dt);
-	__device__ void updateVelocity(const float3& gridDiameter, const int3& gridSize, cudaTextureObject_t t_VelocityField);
+	__device__ void updateVelocity(const float3& gridDiameter, const int3& gridSize, cudaTextureObject_t t_VelocityField, float3 velocityScale = { 1.0f,1.0f ,1.0f });
 	__device__ __host__ float3 findRelative(const float3& gridDiameter);
 
 	__device__ __host__ Particle()

@@ -24,9 +24,7 @@ __global__ void ParticleTracing::TracingStream
 		int3 gridSize = Array2Int3(solverOptions.gridSize);
 		float3 init_pos = *d_particles[particleIdx].getPosition();
 		float3 upDir = make_float3(0.0f, 1.0f, 0.0f);
-
-
-		d_particles[particleIdx].updateVelocity(gridDiameter, gridSize, t_VelocityField);
+		d_particles[particleIdx].updateVelocity(gridDiameter, gridSize, t_VelocityField, Array2Float3(solverOptions.velocityScalingFactor));
 
 		for (int i = 0; i < solverOptions.lineLength; i++)
 		{
@@ -91,6 +89,14 @@ __global__ void ParticleTracing::TracingStream
 				float curvature = magnitude(gamma1Xgamma2);
 				curvature = curvature / powf(magnitude(gamma1), 3);
 				p_VertexBuffer[vertexIdx + i].measure = curvature;
+
+				break;
+			}
+
+			case ColorMode::ColorMode::DISTANCE_STREAK:
+			{
+
+				p_VertexBuffer[vertexIdx + i].measure = fabs(magnitude(init_pos - d_particles[particleIdx].m_position));
 
 				break;
 			}
@@ -178,5 +184,5 @@ __device__ void ParticleTracing::RK4Stream(
 	float3 relativePos = world2Tex(particle->m_position, gridDiameter, gridSize, false, true);
 
 	float4 velocity4D = tex3D<float4>(t_VelocityField_0, relativePos.x, relativePos.y, relativePos.z);
-	particle->m_velocity = make_float3(velocity4D.x, velocity4D.y, velocity4D.z);
+	particle->m_velocity = make_float3(velocity4D.x, velocity4D.y, velocity4D.z) *velocityScale;
 }

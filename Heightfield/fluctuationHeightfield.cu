@@ -7,6 +7,10 @@
 #include "..//Cuda/CudaHelperFunctions.h"
 
 extern __constant__  BoundingBox d_boundingBox;
+extern __constant__  BoundingBox d_boundingBox_spacetime;
+
+
+
 
 bool FluctuationHeightfield::initialize
 (
@@ -179,18 +183,135 @@ __host__ void FluctuationHeightfield::rendering()
 
 	timeSpaceRenderingOptions->currentTime = solverOptions->currentIdx - solverOptions->firstIdx ;
 
+	if (timeSpaceRenderingOptions->additionalRaycasting)
+	{
+		if (timeSpaceRenderingOptions->additionalLoading)
+		{
+			timeSpaceRenderingOptions->additionalLoading = false;
+
+			this->volume_IO.Initialize(this->solverOptions);
+
+			switch (solverOptions->Compressed)
+			{
+
+			case true: // Compressed Data
+			{
+				loadTextureCompressed(solverOptions, this->volumeTexture, solverOptions->currentIdx, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
+
+				break;
+			}
+
+			case false: // Uncompressed Data
+			{
+				loadTexture(solverOptions, this->volumeTexture, solverOptions->currentIdx, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
+				break;
+			}
+
+			}
+
+		}
+
+		switch (timeSpaceRenderingOptions->heightMode)
+		{
+		case TimeSpaceRendering::HeightMode::V_X_FLUCTUATION:
+		{
+			CudaTerrainRenderer_extra_fluctuation_raycasting<FetchTextureSurface::Channel_X, FetchTextureSurface::Channel_X> << < blocks, thread >> >
+				(
+					this->raycastingSurface.getSurfaceObject(),
+					this->volumeTexture3D_height.getTexture(),
+					volumeTexture.getTexture(),
+					int(this->rays),
+					this->timeSpaceRenderingOptions->samplingRate_0,
+					this->raycastingOptions->tolerance_0,
+					*timeSpaceRenderingOptions,
+					*raycastingOptions
+					);
+			break;
+		}
+		case TimeSpaceRendering::HeightMode::V_Y_FLUCTUATION:
+		{
+			CudaTerrainRenderer_extra_fluctuation_raycasting<FetchTextureSurface::Channel_X, FetchTextureSurface::Channel_Y> << < blocks, thread >> >
+				(
+					this->raycastingSurface.getSurfaceObject(),
+					this->volumeTexture3D_height.getTexture(),
+					volumeTexture.getTexture(),
+					int(this->rays),
+					this->timeSpaceRenderingOptions->samplingRate_0,
+					this->raycastingOptions->tolerance_0,
+					*timeSpaceRenderingOptions,
+					*raycastingOptions
+					);
+			break;
+		}
+		case TimeSpaceRendering::HeightMode::V_Z_FLUCTUATION:
+		{
+			CudaTerrainRenderer_extra_fluctuation_raycasting<FetchTextureSurface::Channel_X, FetchTextureSurface::Channel_Z> << < blocks, thread >> >
+				(
+					this->raycastingSurface.getSurfaceObject(),
+					this->volumeTexture3D_height.getTexture(),
+					volumeTexture.getTexture(),
+					int(this->rays),
+					this->timeSpaceRenderingOptions->samplingRate_0,
+					this->raycastingOptions->tolerance_0,
+					*timeSpaceRenderingOptions,
+					*raycastingOptions
+					);
+			break;
+		}
+		default:
+			break;
+		}
 
 
-	CudaTerrainRenderer_extra_fluctuation<FetchTextureSurface::Channel_X, FetchTextureSurface::Channel_Y> << < blocks, thread >> >
-		(
-			this->raycastingSurface.getSurfaceObject(),
-			this->volumeTexture3D_height.getTexture(),
-			int(this->rays),
-			this->timeSpaceRenderingOptions->samplingRate_0,
-			this->raycastingOptions->tolerance_0,
-			*timeSpaceRenderingOptions
-			);
+	}
+	else
+	{
 
+		switch (timeSpaceRenderingOptions->heightMode)
+		{
+		case TimeSpaceRendering::HeightMode::V_X_FLUCTUATION:
+		{
+			CudaTerrainRenderer_extra_fluctuation<FetchTextureSurface::Channel_X, FetchTextureSurface::Channel_X> << < blocks, thread >> >
+				(
+					this->raycastingSurface.getSurfaceObject(),
+					this->volumeTexture3D_height.getTexture(),
+					int(this->rays),
+					this->timeSpaceRenderingOptions->samplingRate_0,
+					this->raycastingOptions->tolerance_0,
+					*timeSpaceRenderingOptions
+					);
+			break;
+		}
+		case TimeSpaceRendering::HeightMode::V_Y_FLUCTUATION:
+		{
+			CudaTerrainRenderer_extra_fluctuation<FetchTextureSurface::Channel_X, FetchTextureSurface::Channel_Y> << < blocks, thread >> >
+				(
+					this->raycastingSurface.getSurfaceObject(),
+					this->volumeTexture3D_height.getTexture(),
+					int(this->rays),
+					this->timeSpaceRenderingOptions->samplingRate_0,
+					this->raycastingOptions->tolerance_0,
+					*timeSpaceRenderingOptions
+					);
+			break;
+		}
+		case TimeSpaceRendering::HeightMode::V_Z_FLUCTUATION:
+		{
+			CudaTerrainRenderer_extra_fluctuation<FetchTextureSurface::Channel_X, FetchTextureSurface::Channel_Z> << < blocks, thread >> >
+				(
+					this->raycastingSurface.getSurfaceObject(),
+					this->volumeTexture3D_height.getTexture(),
+					int(this->rays),
+					this->timeSpaceRenderingOptions->samplingRate_0,
+					this->raycastingOptions->tolerance_0,
+					*timeSpaceRenderingOptions
+					);
+			break;
+		}
+		default:
+			break;
+		}
+	}
 }
 
 
@@ -212,10 +333,32 @@ __host__ bool FluctuationHeightfield::initializeBoundingBox()
 	h_boundingBox->FOV = (this->FOV_deg / 360.0f) * XM_2PI;
 	h_boundingBox->distImagePlane = this->distImagePlane;
 
-	gpuErrchk(cudaMemcpyToSymbol(d_boundingBox, h_boundingBox, sizeof(BoundingBox)));
-
-
+	gpuErrchk(cudaMemcpyToSymbol(d_boundingBox_spacetime, h_boundingBox, sizeof(BoundingBox)));
 	delete h_boundingBox;
+
+	if (timeSpaceRenderingOptions->additionalRaycasting)
+	{
+		BoundingBox * h_boundingBox = new BoundingBox;
+
+		h_boundingBox->gridSize = ArrayInt3ToInt3(solverOptions->gridSize);
+		h_boundingBox->updateBoxFaces(ArrayFloat3ToFloat3(raycastingOptions->clipBox), ArrayFloat3ToFloat3(raycastingOptions->clipBoxCenter));
+		h_boundingBox->updateAspectRatio(*width, *height);
+		h_boundingBox->m_eyePos = XMFloat3ToFloat3(camera->GetPositionFloat3());
+		h_boundingBox->constructEyeCoordinates
+		(
+			XMFloat3ToFloat3(camera->GetPositionFloat3()),
+			XMFloat3ToFloat3(camera->GetViewVector()),
+			XMFloat3ToFloat3(camera->GetUpVector())
+		);
+
+		h_boundingBox->FOV = (this->FOV_deg / 360.0f)* XM_2PI;
+		h_boundingBox->distImagePlane = this->distImagePlane;
+		h_boundingBox->m_dimensions = ArrayFloat3ToFloat3(solverOptions->gridDiameter);
+		gpuErrchk(cudaMemcpyToSymbol(d_boundingBox, h_boundingBox, sizeof(BoundingBox)));
+
+		delete h_boundingBox;
+	}
+
 
 	return true;
 }

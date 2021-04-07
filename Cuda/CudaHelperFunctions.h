@@ -140,6 +140,60 @@ __global__ void TracingStream
 	Vertex* p_VertexBuffer
 );
 
+template <typename Observable>
+__device__ float3 binarySearch_GradientBased
+(
+	Observable& observable,
+	cudaTextureObject_t field,
+	float3& _position,
+	float3& gridDiameter,
+	int3& gridSize,
+	float3& _samplingStep,
+	float& value,
+	float& tolerance,
+	int maxIteration
+)
+{
+	float3 position = _position;
+	float3 relative_position = world2Tex(position, gridDiameter, gridSize);
+	float3 samplingStep = _samplingStep * 0.5f;
+	bool side = 0; // 1 -> right , 0 -> left
+	int counter = 0;
+
+	while (fabsf(observable.ValueAtXYZ_Tex_GradientBase(field, relative_position, gridDiameter, gridSize) - value) > tolerance&& counter < maxIteration)
+	{
+
+		if (observable.ValueAtXYZ_Tex_GradientBase(field, relative_position, gridDiameter, gridSize) - value > 0)
+		{
+			if (side)
+			{
+				samplingStep = 0.5 * samplingStep;
+			}
+			position = position - samplingStep;
+			relative_position = world2Tex(position, gridDiameter, gridSize);
+			side = 0;
+
+		}
+		else
+		{
+
+			if (!side)
+			{
+				samplingStep = 0.5 * samplingStep;
+			}
+
+			position = position + samplingStep;
+			relative_position = world2Tex(position, gridDiameter, gridSize);
+			side = 1;
+
+		}
+		counter++;
+
+	}
+
+	return position;
+
+};
 
 
 template <typename Observable>

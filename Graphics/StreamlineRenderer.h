@@ -66,7 +66,7 @@ public:
 	void updateBuffers() override
 	{
 		
-		if (solverOptions->loadNewfile)
+		if (solverOptions->loadNewfile && !solverOptions->updatePause)
 		{
 
 
@@ -112,30 +112,48 @@ public:
 		{
 			for (int i = 0; i < solverOptions->lines_count; i++)
 			{
-				this->deviceContext->Draw(counter, i * solverOptions->lineLength);
+				this->deviceContext->Draw(solverOptions->currentSegment, i * solverOptions->lineLength);
 			}
 
-			this->counter++;
+			solverOptions->currentSegment++;
 
-			if (counter == solverOptions->lineLength)
+			if (solverOptions->currentSegment == solverOptions->lineLength)
 			{
-				counter = 0;
+				solverOptions->currentSegment = 0;
 			}
 
+			break;
+		}
+
+		case DrawMode::DrawMode::CURRENT:
+		{
+			for (int i = 0; i < solverOptions->lines_count; i++)
+			{
+				this->deviceContext->Draw(renderingOptions->lineLength, i * solverOptions->lineLength + (
+					solverOptions->currentSegment - renderingOptions->lineLength + 1));
+			}
+			break;
+		}
+		case DrawMode::DrawMode::CURRENT_FULL:
+		{
+			for (int i = 0; i < solverOptions->lines_count; i++)
+			{
+				this->deviceContext->Draw(solverOptions->currentSegment, i * solverOptions->lineLength);
+			}
 			break;
 		}
 		case DrawMode::DrawMode::ADVECTION_FINAL:
 		{
 			for (int i = 0; i < solverOptions->lines_count; i++)
 			{
-				this->deviceContext->Draw(renderingOptions->lineLength, i * solverOptions->lineLength + counter);
+				this->deviceContext->Draw(renderingOptions->lineLength, i * solverOptions->lineLength + solverOptions->currentSegment);
 			}
 
-			this->counter++;
+			solverOptions->currentSegment++;
 
-			if (counter == solverOptions->lineLength - renderingOptions->lineLength)
+			if (solverOptions->currentSegment == solverOptions->lineLength - renderingOptions->lineLength)
 			{
-				counter = 0;
+				solverOptions->currentSegment = 0;
 			}
 
 			break;
@@ -198,7 +216,9 @@ public:
 		GS_constantBuffer.data.streakPos = solverOptions->projectPos * (solverOptions->gridDiameter[0] / solverOptions->gridSize[0]);
 		GS_constantBuffer.data.transparencyMode = solverOptions->transparencyMode;
 		GS_constantBuffer.data.timDim = solverOptions->lineLength;
-		GS_constantBuffer.data.currentTime = solverOptions->projectPos;
+		GS_constantBuffer.data.currentTime = solverOptions->firstIdx - solverOptions->currentIdx;
+		GS_constantBuffer.data.usingThreshold = solverOptions->usingThreshold;
+		GS_constantBuffer.data.threshold = solverOptions->transparencyThreshold;
 
 
 		PS_constantBuffer.data.minMeasure = renderingOptions->minMeasure;

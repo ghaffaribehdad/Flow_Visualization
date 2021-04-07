@@ -37,9 +37,9 @@ public:
 			}
 			else
 			{
-				switch (solverOptions->advectionMode)
+				switch (solverOptions->computationMode)
 				{
-				case(AdvectionMode::AdvectionMode::ONTHEFLY):
+				case(ComputationMode::ComputationMode::ONTHEFLY):
 				{
 
 					if (!solverOptions->drawComplete)
@@ -58,7 +58,7 @@ public:
 					break;
 
 				}
-				case(AdvectionMode::AdvectionMode::PRECOMPUTATION):
+				case(ComputationMode::ComputationMode::PRECOMPUTATION):
 				{
 
 					if (renderImGuiOptions->updatePathlines)
@@ -165,7 +165,7 @@ public:
 		{
 
 
-		case DrawMode::DrawMode::REALTIME:
+		case DrawMode::DrawMode::FULL:
 		{
 			this->deviceContext->Draw(llInt(solverOptions->lineLength) * llInt(solverOptions->lines_count), 0);
 			break;
@@ -244,6 +244,9 @@ public:
 		GS_constantBuffer.data.transparencyMode = solverOptions->transparencyMode;
 		GS_constantBuffer.data.timDim = solverOptions->lastIdx - solverOptions->firstIdx + 1 ;
 		GS_constantBuffer.data.currentTime = solverOptions->currentIdx - solverOptions->firstIdx;
+		GS_constantBuffer.data.usingThreshold = solverOptions->usingThreshold;
+		GS_constantBuffer.data.threshold = solverOptions->transparencyThreshold;
+
 
 
 		GS_constantBuffer.data.streakPos = (float)solverOptions->projectPos * (solverOptions->gridDiameter[0] /(float) solverOptions->gridSize[0]);

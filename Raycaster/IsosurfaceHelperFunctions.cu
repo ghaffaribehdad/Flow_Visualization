@@ -174,7 +174,6 @@ __device__ float3 FetchTextureSurface::Measure::GradientAtXYZ_Tex_Absolute(cudaT
 	gradient.y -= fabs(ValueAtXYZ_Tex(tex, make_float3(position.x, position.y - 1, position.z)));
 	gradient.z -= fabs(ValueAtXYZ_Tex(tex, make_float3(position.x, position.y, position.z - 1)));
 
-
 	return  gradient / (2.0f * h.x);
 
 }

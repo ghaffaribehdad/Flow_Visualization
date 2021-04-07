@@ -3,6 +3,7 @@
 #include "AdapterReader.h"
 #include "Shaders.h"
 #include "Vertex.h"
+#include "PlaneRenderer.h"
 
 #include <WICTextureLoader.h>
 #include "VertexBuffer.h"
@@ -185,6 +186,9 @@ private:
 	BoxRenderer volumeBox;
 	BoxRenderer seedBox;
 	BoxRenderer clipBox;
+	BoxRenderer streakBox;
+
+	PlaneRenderer streakPlane;
 
 	// Raycasting (This object would write into a texture and pass it to the graphics then we need to use sampler state to show it on the backbuffer)
 	Raycasting				raycasting;

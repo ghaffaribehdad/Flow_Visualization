@@ -26,9 +26,9 @@ namespace DrawMode
 	
 	enum DrawMode
 	{
-		REALTIME = 0,
-		STATIONARY,
+		FULL = 0,
 		CURRENT,
+		CURRENT_FULL,
 		ADVECTION,
 		ADVECTION_FINAL,
 		COUNT
@@ -36,9 +36,9 @@ namespace DrawMode
 
 	static const char* DrawModeList[] =
 	{
-		"Realtime",
-		"Strationary",
+		"Full",
 		"Current",
+		"Current Full",
 		"Advection",
 		"Adv. Final"
 	};
@@ -52,11 +52,25 @@ struct RenderingOptions
 	float tubeRadius = 0.01f;
 	float minColor[4] = 
 	{ 
-		27.0f/255.0f,
-		158.0f / 255.0f,
-		119.0f / 255.0f,
+		178.0f/255.0f,
+		136.0f / 255.0f,
+		103.0f/ 255.0f,
 		1.0f
-	};
+	};	
+	//float minColor[4] = 
+	//{ 
+	//	217.0f/255.0f,
+	//	95.0f / 255.0f,
+	//	2.0f / 255.0f,
+	//	1.0f
+	//};	
+	//float minColor[4] = 
+	//{ 
+	//	27.0f/255.0f,
+	//	158.0f / 255.0f,
+	//	119.0f / 255.0f,
+	//	1.0f
+	//};
 	float maxColor[4] =
 	{
 	27.0f / 255.0f,
@@ -64,23 +78,20 @@ struct RenderingOptions
 	119.0f / 255.0f,
 	1.0f
 	};
-	//{
-	//	217.0f / 255.0f,
-	//	95.0f / 255.0f,
-	//	2.0f / 255.0f,
-	//	1.0f 
-	//};
+
 	int renderingMode = RenderingMode::RenderingMode::TUBES;
-	int drawMode = DrawMode::DrawMode::REALTIME;
+	int drawMode = DrawMode::DrawMode::FULL;
 
 	float maxMeasure = 10.0f;
 	float minMeasure = 0.0f;
 
 
 	bool isRaycasting = false;
-	float bgColor[4] = { 1.0f,1.0f,1.0f,1.0f };
+	float bgColor[4] = {1.0f,1.0f,1.0f,1.0f };
 
 	bool showSeedBox = true;
+	bool showStreakBox = false;
+	bool showStreakPlane = false;
 	bool showVolumeBox = true;
 	bool showClipBox = true;
 

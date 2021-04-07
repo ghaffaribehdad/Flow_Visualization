@@ -1045,14 +1045,14 @@ inline __device__  float3 world2Tex(float3 position, float3 dimension, const int
 			pos.x = (float)(size.x - 1) + fmod(pos.x, (float)(size.x - 1));
 		}
 
-		if (pos.y > 0)
-		{
-			pos.y = fmod(pos.y, (float)(size.y - 1));
-		}
-		else
-		{
-			pos.y = (float)(size.y - 1) + fmod(pos.y, (float)(size.y - 1));
-		}
+		//if (pos.y > 0)
+		//{
+		//	pos.y = fmod(pos.y, (float)(size.y - 1));
+		//}
+		//else
+		//{
+		//	pos.y = (float)(size.y - 1) + fmod(pos.y, (float)(size.y - 1));
+		//}
 
 
 		if (pos.z > 0)

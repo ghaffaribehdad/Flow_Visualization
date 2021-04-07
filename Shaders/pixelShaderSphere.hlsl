@@ -5,7 +5,7 @@ cbuffer PS_CBuffer
 	float4 maxColor;
 	float minMeasure;
 	float maxMeasure;
-	bool isRaycasting;
+	bool condition;
 };
 
 
@@ -38,7 +38,13 @@ float4 main(PS_INPUT input) : SV_TARGET
 
 		float diffuse = max(dot(normalize(input.outNormal), input.outLightDir),0);
 		rgb = rgb * diffuse * (1- 0.5 * radius / input.radius ) * (1 - 0.5 * radius / input.radius);
-		rgb.w = input.transparency;
+
+
+		if (condition)
+			rgb.w = input.transparency;
+		else
+			rgb.w = 1;
+
 		return rgb;
 	}
 	else

@@ -3,23 +3,21 @@
 
 namespace TimeSpaceRendering
 {
-
-
-	enum fluctuationColorCode
+	enum HeightMode
 	{
-		NONE = 0,
-		V_X_FLUCTUATION,
-		V_y_FLUCTUATION,
-		V_z_FLUCTUATION
-
+		V_X_FLUCTUATION = 0,
+		V_Y_FLUCTUATION,
+		V_Z_FLUCTUATION,
+		COUNT
 	};
 
-	enum FieldMode
+	static const char* HeightModeList[]
 	{
-		FF_VX_VY,
-		FF_VZ_VY,
-		FI_VX_VY
+		"Vx",
+		"Vy",
+		"Vz",
 	};
+
 }
 
 namespace SliderBackground
@@ -56,13 +54,15 @@ struct TimeSpaceRenderingOptions
 	int spanwisePos = 0;
 
 	// Color Coding
-	int colorCode = static_cast<int>(TimeSpaceRendering::fluctuationColorCode::NONE);
+	//int colorCode = static_cast<int>(TimeSpaceRendering::fluctuationColorCode::NONE);
 	float max_val = 1.0f;
 	float min_val = 1.0f;
 	float height_scale = 0.0f;
 	float offset = 0.0f;
-	float minColor[4] = { 0,0,1,1 };
-	float maxColor[4] = { 1,0,0,1 };
+
+
+	float minColor[4] = { 117 / 255.0f,112 / 255.0f,179 / 255.0f };
+	float maxColor[4] = { 217 / 255.0f,95 / 255.0f,2 / 255.0f };
 
 
 	// Rendering status
@@ -83,6 +83,10 @@ struct TimeSpaceRenderingOptions
 	int sliderBackground = SliderBackground::SliderBackground::NONE;
 	int bandSize = 10;
 
+	int heightMode = TimeSpaceRendering::HeightMode::V_Y_FLUCTUATION;
+
+	bool additionalRaycasting = false;
+	bool additionalLoading = true;
 
 
 };

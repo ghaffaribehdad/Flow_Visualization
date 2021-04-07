@@ -14,6 +14,8 @@ cbuffer GS_CBuffer
 	unsigned int timDim;
 	float streakPos;
 	unsigned int currentTime;
+	bool usingThreshold;
+	float threshold;
 };
 
 
@@ -48,25 +50,28 @@ struct GS_OUTPUT
 void main(lineadj GS_INPUT input[4], inout TriangleStream<GS_OUTPUT> output)
 {
 
+	bool append = true;
+
 	float transparency = 1;
 
 	switch (transparencyMode)
 	{
 	case(0):
 	{
-		transparency = 1 - abs(input[0].inPosition.x - streakPos) / gridDiameter.x;
+		transparency = 1 - abs(input[1].inPosition.x - streakPos) / gridDiameter.x;
 
 		break;
 	}
 	case(1):
 	{
-		transparency = 1 - abs(currentTime - (float)input[0].inTime) / (float)timDim;
+		transparency = 1 - abs(currentTime - (float)input[1].inTime) / (float)timDim;
 
 		break;
 	}
+
 	}
 
-	float3 pos0 = input[0].inPosition - (gridDiameter /2);
+	float3 pos0 = input[0].inPosition - (gridDiameter / 2);
 	float3 pos1 = input[1].inPosition - (gridDiameter / 2);
 	float3 pos2 = input[2].inPosition - (gridDiameter / 2);
 	float3 pos3 = input[3].inPosition - (gridDiameter / 2);
@@ -75,11 +80,11 @@ void main(lineadj GS_INPUT input[4], inout TriangleStream<GS_OUTPUT> output)
 	{
 	case(1):
 	{
-		 pos0.x = input[0].inInitial.x - (gridDiameter.x / 2);
-		 pos1.x = input[1].inInitial.x - (gridDiameter.x / 2);
-		 pos2.x = input[2].inInitial.x - (gridDiameter.x / 2);
-		 pos3.x = input[3].inInitial.x - (gridDiameter.x / 2);
-	
+		pos0.x = input[0].inInitial.x - (gridDiameter.x / 2);
+		pos1.x = input[1].inInitial.x - (gridDiameter.x / 2);
+		pos2.x = input[2].inInitial.x - (gridDiameter.x / 2);
+		pos3.x = input[3].inInitial.x - (gridDiameter.x / 2);
+
 		break;
 	}
 	case(2):
@@ -104,6 +109,7 @@ void main(lineadj GS_INPUT input[4], inout TriangleStream<GS_OUTPUT> output)
 		pos1.x = particlePlanePos;
 		pos2.x = particlePlanePos;
 		pos3.x = particlePlanePos;
+		
 		break;
 	}
 
@@ -113,27 +119,28 @@ void main(lineadj GS_INPUT input[4], inout TriangleStream<GS_OUTPUT> output)
 
 
 	// Filter periodicity
-	switch (periodicity)
+	if (!periodicity)
 	{
-	case(false): // not periodic
-	{
-		if(abs(pos2.x) > gridDiameter.x /2 || abs(pos2.y) > gridDiameter.y / 2 || abs(pos2.z) > gridDiameter.z / 2)
+		if (abs(pos2.x) > gridDiameter.x / 2 || abs(pos2.y) > gridDiameter.y / 2 || abs(pos2.z) > gridDiameter.z / 2)
 		{
-			pos1 = pos0;
-			pos2 = pos0;
+			append = false;
 		}
-
-		break;
 	}
-	case(true): // periodic
+	if (usingThreshold)
 	{
-		break;
-	}
+		if (abs(input[0].inPosition.x - streakPos) > threshold)
+		{
+			append = false;
+		}
 	}
 
-
-	if (input[1].inLineID == input[2].inLineID)
+	
+	if (input[1].inLineID == input[2].inLineID && append)
 	{
+
+
+
+
 		GS_OUTPUT vertex0;
 		GS_OUTPUT vertex1;
 
@@ -212,8 +219,8 @@ void main(lineadj GS_INPUT input[4], inout TriangleStream<GS_OUTPUT> output)
 			vertex1.outNormal = -orient1_rotated;
 
 			// Colors
-			vertex0.outMeasure = input[1].inMeasure;
-			vertex1.outMeasure = input[2].inMeasure;
+			vertex0.outMeasure = (input[1].inMeasure + input[2].inMeasure) * 0.5f;
+			vertex1.outMeasure = (input[1].inMeasure + input[2].inMeasure) * 0.5f;
 
 			// Tangent
 			vertex0.outTangent = tangent;
@@ -223,10 +230,24 @@ void main(lineadj GS_INPUT input[4], inout TriangleStream<GS_OUTPUT> output)
 			vertex0.outLightDir = viewDir;
 			vertex1.outLightDir = viewDir;
 
-			output.Append(vertex0);
-			output.Append(vertex1);
+			if (usingThreshold)
+			{
+				if (abs(input[1].inPosition.x - streakPos) < threshold)
+				{
+					output.Append(vertex0);
+					output.Append(vertex1);
+				}
+			}
+			else
+			{
+				output.Append(vertex0);
+				output.Append(vertex1);
+			}
+
 
 		}
+
+
 
 		output.RestartStrip();
 	}

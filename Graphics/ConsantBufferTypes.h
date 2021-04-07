@@ -27,6 +27,8 @@ struct Tube_geometryShader
 	unsigned int timDim;
 	float streakPos;
 	unsigned int currentTime;
+	bool usingThreshold;
+	float threshold;
 };
 
 
@@ -48,4 +50,10 @@ struct CB_pixelShader
 	float minMeasure;
 	float maxMeasure;
 	bool condition;
+};
+
+struct CB_pixelShader_Sampler
+{
+
+	float transparency;
 };

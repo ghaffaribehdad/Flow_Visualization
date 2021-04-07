@@ -30,7 +30,9 @@ namespace Dataset
 		KIT2REF_COMP,
 		KIT2OW_COMP,
 		KIT2BF_COMP,
+		KIT3_RAW,
 		KIT3_FLUC,
+		KIT3_INITIAL_COMPRESSED,
 		KIT3_COMPRESSED,
 		KIT3_OF_AVG50_COMPRESSED,
 		KIT3_OF_ENERGY_COMPRESSED,
@@ -54,9 +56,11 @@ namespace Dataset
 	{
 		"None",
 		"KIT2 Ref Compressed",
-		"KIT2 Oscillating Wall",
-		"KIT2 Virtual Body",
+		"KIT2 Oscillating Wall Compressed",
+		"KIT2 Virtual Body Compressed",
+		"KIT3 Initi",
 		"KIT3 Fluctuation",
+		"KIT3 Inital Comp.",
 		"KIT3 Fluc. Comp.",
 		"KIT3 OF AVG50 Comp.",
 		"KIT3 OF Energy Comp.",
@@ -102,6 +106,7 @@ namespace ColorMode
 		"v",
 		"w",
 		"Curvature",
+		"Distance to Projection Plane"
 	};
 	enum ColorMode
 	{
@@ -110,19 +115,20 @@ namespace ColorMode
 		V_VELOCITY,
 		W_VELOCITY,
 		CURVATURE,
+		DISTANCE_STREAK,
 		COUNT
 	};
 }
 
 namespace LineRenderingMode
 {
-	static const char* const lineRenderingModeList[] =
+	static const char* const LineRenderingModeList[] =
 	{
 		"Streamlines",
 		"Pathlines",
 		"Streaklines",
 	};
-	enum lineRenderingMode
+	enum LineRenderingMode
 	{
 		STREAMLINES,
 		PATHLINES,
