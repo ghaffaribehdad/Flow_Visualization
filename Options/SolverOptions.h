@@ -66,7 +66,7 @@ public:
 	float velocityScalingFactor[3] = { 1.0f,1.0f,1.0f};		// time-space scale
 	//int gridSize[3] = { 32,1024,1024 };					//TUI ra1e5
 
-
+	bool viewChanged = true;
 
 	int seedGrid[3] = { 5,5,10 };
 	int gridSize_2D[2] = { 192,192 };
@@ -82,7 +82,7 @@ public:
 	float streakBoxPos[3] = { 0.0f, 0.0f, 0.0f };
 	float seedBoxPos[3] = { 0.0f, 0.0f, 0.0f }; 
 
-
+	bool orderIndependetTransparency = true;
 
 	int precision = 32;
 
@@ -102,7 +102,7 @@ public:
 	int timeSteps = lastIdx - firstIdx + 1;
 	int currentSegment = 0;
 
-	int lineRenderingMode = LineRenderingMode::LineRenderingMode::PATHLINES;
+	int lineRenderingMode = LineRenderingMode::LineRenderingMode::STREAMLINES;
 	int colorMode = 0;
 	
 	int transparencyMode = TransparencyMode::TransparencyMode::STREAKPOS;

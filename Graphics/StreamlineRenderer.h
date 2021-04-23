@@ -7,11 +7,310 @@
 class StreamlineRenderer :public LineRenderer
 {
 
+public:
+
+	ID3D11Texture2D* getOITTexture()
+	{
+		return OITTexture.Get();
+	}
 
 private:
 	StreamlineSolver streamlineSolver;
 
+	Microsoft::WRL::ComPtr<ID3D11Buffer>				g_pStartOffsetBuffer;		
+	Microsoft::WRL::ComPtr<ID3D11Buffer>				g_pFragmentAndLinkStructuredBuffer;
+
+
+	Microsoft::WRL::ComPtr<ID3D11Texture2D>				OITTexture;
+	Microsoft::WRL::ComPtr< ID3D11RenderTargetView>		OITRTV;
+
+	ID3D11UnorderedAccessView*	pUAV[2];						
+	ID3D11ShaderResourceView*	pSRV[2];
+
+
+	ID3D11UnorderedAccessView*	g_pFragmentAndLinkStructuredBufferUAV = NULL;
+	ID3D11UnorderedAccessView*	g_pStartOffsetBufferUAV = NULL;
+
+	ID3D11ShaderResourceView*	g_pFragmentAndLinkStructuredBufferSRV = NULL;
+	ID3D11ShaderResourceView*   g_pStartOffsetBufferSRV = NULL;
+
+	ID3D11BlendState* g_pBlendStateNoBlend;
+	ID3D11BlendState* g_pBlendStateSrcAlphaInvSrcAlphaBlend;
+	ID3D11BlendState* g_pColorWritesOff;
+
+	ID3D11DepthStencilState*    g_pDepthTestEnabledNoDepthWritesStencilWriteIncrementDSS = NULL;
+	ID3D11DepthStencilState*    g_pDepthTestDisabledDSS = NULL;
+	ID3D11DepthStencilState*    g_pDepthTestEnabledNoDepthWritesDSS = NULL;
+	ID3D11DepthStencilState*    g_pDepthTestEnabledDSS = NULL;
+
+	// Depth stencil buffer variables
+	ID3D11Texture2D*            g_pDepthStencilTexture = NULL;
+	ID3D11DepthStencilView*     g_pDepthStencilTextureDSV = NULL;
+
+	Microsoft::WRL::ComPtr<ID3D11SamplerState>			samplerState;		// To sample the head of fragment in the second pass
+	VertexBuffer<TexCoordVertex> vertexBufferQuad;
+
+
+	bool initializeQuad()
+	{
+		
+		TexCoordVertex quad[]=
+		{
+			TexCoordVertex(-1.0f,	-1.0f,	1.0f,	0.0f,	1.0f), //Bottom Left 
+			TexCoordVertex(-1.0f,	1.0f,	1.0f,	0.0f,	0.0f), //Top Left
+			TexCoordVertex(1.0f,	1.0f,	1.0f,	1.0f,	0.0f), //Top Right
+
+			TexCoordVertex(-1.0f,	-1.0f,	1.0f,	0.0f,	1.0f), //Bottom Left 
+			TexCoordVertex(1.0f,	1.0f,	1.0f,	1.0f,	0.0f), //Top Right
+			TexCoordVertex(1.0f,	-1.0f,	1.0f,	1.0f,	1.0f), //Bottom Right
+
+		};
+
+		HRESULT hr = this->vertexBufferQuad.Initialize(this->device, quad, ARRAYSIZE(quad));
+		if (FAILED(hr))
+		{
+			ErrorLogger::Log(hr, "Failed to Create offset buffer.");
+			return false;
+		}
+
+
+		return true;
+	}
+
+
+
+
+
+	bool firstPassInitialization()
+	{
+		HRESULT hr;	
+
+
+		// Create Start Offset buffer
+		D3D11_BUFFER_DESC OffsetBufferDesc;
+		OffsetBufferDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
+		OffsetBufferDesc.ByteWidth = width * height * sizeof(UINT);
+		OffsetBufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS;
+		OffsetBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+		OffsetBufferDesc.CPUAccessFlags = 0;
+		OffsetBufferDesc.StructureByteStride = 0;
+		hr = device->CreateBuffer(&OffsetBufferDesc, NULL, g_pStartOffsetBuffer.GetAddressOf());
+		if (FAILED(hr))
+		{
+			ErrorLogger::Log(hr, "Failed to Create offset buffer.");
+			return false;
+		}
+
+
+
+		// Create UAV view of Start Offset buffer
+		D3D11_UNORDERED_ACCESS_VIEW_DESC UAVOffsetBufferDesc;
+		UAVOffsetBufferDesc.Format = DXGI_FORMAT_R32_TYPELESS;
+		UAVOffsetBufferDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
+		UAVOffsetBufferDesc.Buffer.FirstElement = 0;
+		UAVOffsetBufferDesc.Buffer.NumElements = width * height;
+		UAVOffsetBufferDesc.Buffer.Flags = D3D11_BUFFER_UAV_FLAG_RAW;
+		hr = device->CreateUnorderedAccessView(g_pStartOffsetBuffer.Get(), &UAVOffsetBufferDesc, &g_pStartOffsetBufferUAV);
+		if (FAILED(hr))
+		{
+			ErrorLogger::Log(hr, "Failed to Create offset buffer UAV View.");
+			return false;
+		}
+
+		// Create SRV view of Start Offset buffer
+		D3D11_SHADER_RESOURCE_VIEW_DESC SRVOffsetBufferDesc;
+		SRVOffsetBufferDesc.Format = DXGI_FORMAT_R32_UINT;
+		SRVOffsetBufferDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
+		SRVOffsetBufferDesc.Buffer.ElementOffset = 0;
+		SRVOffsetBufferDesc.Buffer.ElementWidth = (DWORD)(width * height);
+		hr = device->CreateShaderResourceView(g_pStartOffsetBuffer.Get(), &SRVOffsetBufferDesc, &g_pStartOffsetBufferSRV);
+		if (FAILED(hr))
+		{
+			ErrorLogger::Log(hr, "Failed to Create offset buffer SRV View.");
+			return false;
+		}
+
+		D3D11_BUFFER_DESC BufferDesc;
+		BufferDesc.CPUAccessFlags = 0;
+		BufferDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
+		BufferDesc.ByteWidth = (DWORD)( 100 * width * height *
+			sizeof(LinkedList));
+		BufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+		BufferDesc.Usage = D3D11_USAGE_DEFAULT;
+		BufferDesc.StructureByteStride = sizeof(LinkedList);
+		hr = device->CreateBuffer(&BufferDesc, NULL, g_pFragmentAndLinkStructuredBuffer.GetAddressOf());
+		if (FAILED(hr))
+		{
+			ErrorLogger::Log(hr, "Failed to Create UAV link list buffer!");
+			return false;
+		}
+
+		// Create UAV view of Fragment and Link Buffer
+		D3D11_UNORDERED_ACCESS_VIEW_DESC UAVDesc;
+		UAVDesc.Format = DXGI_FORMAT_UNKNOWN;
+		UAVDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
+		UAVDesc.Buffer.FirstElement = 0;
+		UAVDesc.Buffer.NumElements = (DWORD)(100 * width * height);
+		UAVDesc.Buffer.Flags = D3D11_BUFFER_UAV_FLAG_COUNTER;
+		hr = device->CreateUnorderedAccessView(g_pFragmentAndLinkStructuredBuffer.Get(), &UAVDesc,
+			&g_pFragmentAndLinkStructuredBufferUAV);
+		if (FAILED(hr))
+		{
+			ErrorLogger::Log(hr, "Failed to Create UAV link list buffer view!");
+			return false;
+		}
+
+
+		D3D11_SHADER_RESOURCE_VIEW_DESC SRVBufferDesc;
+		// Create SRV view of Fragment and Link Buffer
+		SRVBufferDesc.Format = DXGI_FORMAT_UNKNOWN;
+		SRVBufferDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
+		SRVBufferDesc.Buffer.ElementOffset = 0;
+		SRVBufferDesc.Buffer.ElementWidth = (DWORD)(100 * width * height);
+		hr = device->CreateShaderResourceView(g_pFragmentAndLinkStructuredBuffer.Get(), &SRVBufferDesc,
+			&g_pFragmentAndLinkStructuredBufferSRV);
+		if (FAILED(hr))
+		{
+			ErrorLogger::Log(hr, "Failed to Create SRV link list buffer view!");
+			return false;
+		}
+
+
+		////Create sampler description for sampler state
+		//D3D11_SAMPLER_DESC sampDesc;
+		//ZeroMemory(&sampDesc, sizeof(sampDesc));
+		//sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+		//sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+		//sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+		//sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+		//sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+		//sampDesc.MinLOD = 0;
+		//sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+		// hr = this->device->CreateSamplerState(&sampDesc, this->samplerState.GetAddressOf()); //Create sampler state
+		//if (FAILED(hr))
+		//{
+		//	ErrorLogger::Log(hr, "Failed to create sampler state.");
+		//	return false;
+		//}
+
+		pUAV[0] = g_pStartOffsetBufferUAV;
+		pUAV[1] = g_pFragmentAndLinkStructuredBufferUAV;
+		pSRV[0] = g_pStartOffsetBufferSRV;
+		pSRV[1] = g_pFragmentAndLinkStructuredBufferSRV;
+
+		initializeQuad();
+
+
+		// Create a blend state to disable alpha blending
+		D3D11_BLEND_DESC BlendState;
+		ZeroMemory(&BlendState, sizeof(D3D11_BLEND_DESC));
+		BlendState.IndependentBlendEnable = FALSE;
+		BlendState.RenderTarget[0].BlendEnable = FALSE;
+		BlendState.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+		hr = device->CreateBlendState(&BlendState, &g_pBlendStateNoBlend);
+
+		// Create a blend state to enable alpha blending
+		ZeroMemory(&BlendState, sizeof(D3D11_BLEND_DESC));
+		BlendState.IndependentBlendEnable = TRUE;
+		BlendState.RenderTarget[0].BlendEnable = TRUE;
+		BlendState.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+		BlendState.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+		BlendState.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+		BlendState.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+		BlendState.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+		BlendState.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+		BlendState.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+		hr = device->CreateBlendState(&BlendState, &g_pBlendStateSrcAlphaInvSrcAlphaBlend);
+
+
+		// Create a blend state to disable color writes
+		BlendState.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
+		BlendState.RenderTarget[0].DestBlend = D3D11_BLEND_ZERO;
+		BlendState.RenderTarget[0].RenderTargetWriteMask = 0;
+		hr = device->CreateBlendState(&BlendState, &g_pColorWritesOff);
+
+
+
+
+
+		D3D11_DEPTH_STENCIL_DESC DSDesc;
+		DSDesc.DepthEnable = FALSE;
+		DSDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+		DSDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+		DSDesc.StencilEnable = FALSE;
+		DSDesc.StencilReadMask = 0xff;
+		DSDesc.StencilWriteMask = 0xff;
+		DSDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+		DSDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+		DSDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+		DSDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+		DSDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+		DSDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+		DSDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+		DSDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+		hr = device->CreateDepthStencilState(&DSDesc, &g_pDepthTestDisabledDSS);
+		DSDesc.DepthEnable = TRUE;
+		DSDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+		DSDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+		DSDesc.StencilEnable = FALSE;
+		hr = device->CreateDepthStencilState(&DSDesc, &g_pDepthTestEnabledNoDepthWritesDSS);
+		DSDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+		DSDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+		hr = device->CreateDepthStencilState(&DSDesc, &g_pDepthTestEnabledDSS);
+		
+		if (FAILED(hr))
+		{
+			ErrorLogger::Log(hr, "Failed to Create depth stencil!");
+			return false;
+		}
+
+			
+		DSDesc.DepthEnable = TRUE;
+		DSDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+		DSDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+		DSDesc.StencilEnable = TRUE;
+		DSDesc.StencilReadMask = 0xFF;
+		DSDesc.StencilWriteMask = 0xFF;
+		DSDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+		DSDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+		DSDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_INCR_SAT;
+		DSDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+		DSDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+		DSDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+		DSDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_INCR_SAT;
+		DSDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+		hr = device->CreateDepthStencilState(&DSDesc, &g_pDepthTestEnabledNoDepthWritesStencilWriteIncrementDSS);
+		if (FAILED(hr))
+		{
+			ErrorLogger::Log(hr, "Failed to Create depth stencil!");
+			return false;
+		}
+
+		// Create Depth Stencil View
+		D3D11_DEPTH_STENCIL_VIEW_DESC SRVDepthStencilDesc;
+		SRVDepthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+		SRVDepthStencilDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+		SRVDepthStencilDesc.Texture2D.MipSlice = 0;
+		SRVDepthStencilDesc.Flags = 0;
+		hr = device->CreateDepthStencilView(g_pDepthStencilTexture, &SRVDepthStencilDesc,
+			&g_pDepthStencilTextureDSV);
+
+		return true;
+	}
+
+
 public:
+
+
+	virtual bool initializeShaders() override
+	{
+		LineRenderer::initializeShaders();
+		firstPassInitialization();
+
+		return true;
+
+	}
+
 
 	virtual void show(RenderImGuiOptions* renderImGuiOptions) 
 	{
@@ -90,22 +389,62 @@ public:
 
 		this->streamlineSolver.solve();
 		this->streamlineSolver.FinalizeCUDA();
-
 		this->streamlineSolver.releaseVolumeIO();
 
 		
 	}
 
 
+	virtual bool setShaders(D3D11_PRIMITIVE_TOPOLOGY Topology) override
+	{
+	
+		UINT initialCounts[2] = { 0,0 };
+		UINT offset = 0;
 
-	void draw(Camera& camera, D3D11_PRIMITIVE_TOPOLOGY Topology) override
+		// Clear start offset buffer to -1
+		const UINT dwClearDataMinusOne[1] = { 0xFFFFFFFF };
+		this->deviceContext->ClearUnorderedAccessViewUint(g_pStartOffsetBufferUAV, dwClearDataMinusOne);
+
+		this->deviceContext->IASetInputLayout(this->vertexshader.GetInputLayout());			// InputLayouut
+		this->deviceContext->IASetPrimitiveTopology(Topology);								// Topology
+		this->deviceContext->RSSetState(this->rasterizerstate.Get());						// Rasterizer
+		this->deviceContext->VSSetShader(vertexshader.GetShader(), NULL, 0);				// Vertex shader
+		this->deviceContext->GSSetShader(geometryshader.GetShader(), NULL, 0);				// Geometry shader
+		this->deviceContext->PSSetShader(pixelshaderFirstPass.GetShader(), NULL, 0);		// Pixel shader
+		this->deviceContext->OMSetBlendState(g_pColorWritesOff, 0, 0xffffffff);													// Blend state
+		//this->deviceContext->OMSetBlendState(g_pBlendStateNoBlend, 0, 0xffffffff);													// Blend state
+		this->deviceContext->OMSetDepthStencilState(g_pDepthTestEnabledNoDepthWritesStencilWriteIncrementDSS, 0x00);			// Depth/Stencil
+		this->deviceContext->OMSetRenderTargetsAndUnorderedAccessViews(NULL, NULL, depthstencil, 1, 2, pUAV, initialCounts);	//Render Target and UAV 
+		return true;
+
+	}
+
+	bool setShaders_SecondPass(D3D11_PRIMITIVE_TOPOLOGY Topology)
 	{
 
-		initializeRasterizer();
-		setShaders(Topology);
-		updateConstantBuffer(camera);
-		setBuffers();
+		UINT initialCounts[2] = { 0,0 };
+		pUAV[0] = NULL;
+		pUAV[1] = NULL;
 
+		deviceContext->OMSetRenderTargetsAndUnorderedAccessViews(1, OITRTV.GetAddressOf(), NULL, 1, 2,pUAV, initialCounts);
+		this->deviceContext->PSSetShaderResources(0, 2, pSRV);
+		this->deviceContext->RSSetState(this->rasterizerstate.Get());					// set the rasterizer state
+		this->deviceContext->IASetInputLayout(this->vertexshaderSecondPass.GetInputLayout());		// Set the input layout
+		this->deviceContext->IASetPrimitiveTopology(Topology);
+		this->deviceContext->PSSetShader(pixelshaderSecondPass.GetShader(), NULL, 0);				// Pixel shader to blend
+		this->deviceContext->VSSetShader(vertexshaderSecondPass.GetShader(), NULL, 0);	// Vertex shader to sample the texture and send it to pixel shader
+		this->deviceContext->GSSetShader(NULL, NULL, NULL);								// Geometry shader is not needed
+		UINT offset = 0;
+		this->deviceContext->IASetVertexBuffers(0, 1, this->vertexBufferQuad.GetAddressOf(), this->vertexBufferQuad.StridePtr(), &offset);
+		this->deviceContext->PSSetConstantBuffers(0, 1, this->PS_constantBuffer.GetAddressOf());
+		this->deviceContext->OMSetBlendState(g_pBlendStateNoBlend, NULL, 0xFFFFFFFF);
+
+		return true;
+	}
+
+
+	void Draw_firstPass()
+	{
 		switch (renderingOptions->drawMode)
 		{
 		case DrawMode::DrawMode::ADVECTION:
@@ -158,20 +497,121 @@ public:
 
 			break;
 		}
-		
+
 		default:
 		{
-			this->deviceContext->Draw(llInt(solverOptions->lineLength) * llInt(solverOptions->lines_count), 0);
+			//this->deviceContext->Draw(llInt(solverOptions->lineLength) * llInt(solverOptions->lines_count), 0);
+
+			for (int i = 0; i < solverOptions->lines_count; i++)
+			{
+				this->deviceContext->Draw(llInt(solverOptions->lineLength), i * llInt(solverOptions->lineLength));
+
+			}
 			break;
 		}
 
+
+		}
+	}
+
+	void Draw_secondPass()
+	{
+		this->deviceContext->Draw(6, 0);
+	}
+
+	void cleanPipeline()
+	{
+
+		pUAV[0] = nullptr;
+		pUAV[1] = nullptr;
+
+		pSRV[0] = nullptr;
+		pSRV[1] = nullptr;
+
+		SAFE_RELEASE(g_pStartOffsetBufferUAV);
+		SAFE_RELEASE(g_pStartOffsetBufferSRV);
+
+		SAFE_RELEASE(g_pFragmentAndLinkStructuredBufferSRV);
+		SAFE_RELEASE(g_pFragmentAndLinkStructuredBufferUAV);
+
+		SAFE_RELEASE(g_pBlendStateNoBlend);
+		SAFE_RELEASE(g_pBlendStateSrcAlphaInvSrcAlphaBlend);
+		SAFE_RELEASE(g_pColorWritesOff);
+
+		SAFE_RELEASE(g_pDepthTestEnabledNoDepthWritesStencilWriteIncrementDSS);
+		SAFE_RELEASE(g_pDepthTestDisabledDSS);
+		SAFE_RELEASE(g_pDepthTestEnabledNoDepthWritesDSS);
+		SAFE_RELEASE(g_pDepthTestEnabledDSS);
+		SAFE_RELEASE(g_pDepthStencilTextureDSV);
+		SAFE_RELEASE(g_pDepthStencilTexture);
+
+
+
+		g_pFragmentAndLinkStructuredBuffer.Reset();
+		g_pStartOffsetBuffer.Reset();
+		vertexBufferQuad.reset();
+		blendState.Reset();
+		rasterizerstate.Reset();
+		OITTexture.Reset();
+		OITRTV.Reset();
 		
+	}
+
+	void draw(Camera& camera, D3D11_PRIMITIVE_TOPOLOGY Topology) override
+	{
+		if (solverOptions->viewChanged)
+		{
+			cleanPipeline();
+			firstPassInitialization();
+			initializeRasterizer();
+			solverOptions->viewChanged = false;
+			initializeOITRTV();
+			// First Pass
+			setBuffers();
+			updateConstantBuffer(camera);
+			setShaders(Topology);
+			Draw_firstPass();
+			// Second Pass
+			setShaders_SecondPass(D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			this->deviceContext->Draw(6, 0);
 		}
 
-		this->cleanPipeline();
+		
 	}
 
 		
+	void initializeOITRTV()
+	{
+	D3D11_TEXTURE2D_DESC textureDesc;
+	ZeroMemory(&textureDesc, sizeof(textureDesc));
+
+	textureDesc.ArraySize = 1;
+	textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET ;
+	textureDesc.CPUAccessFlags = 0;
+	textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	textureDesc.Height = height;
+	textureDesc.Width = width;
+	textureDesc.MipLevels = 1;
+	textureDesc.MiscFlags = 0;
+	textureDesc.SampleDesc.Count = 4;
+	textureDesc.SampleDesc.Quality = 0;
+	textureDesc.Usage = D3D11_USAGE_DEFAULT;
+
+
+	HRESULT hr = this->device->CreateTexture2D(&textureDesc, nullptr, this->OITTexture.GetAddressOf());
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to Create Front Texture");
+	}
+
+	// Create Render targe view
+	hr = this->device->CreateRenderTargetView(OITTexture.Get(), NULL, this->OITRTV.GetAddressOf());
+	if (FAILED(hr))
+	{
+		ErrorLogger::Log(hr, "Failed to Create RenderTargetView");
+	}
+
+	}
 
 	bool initializeBuffers() override
 	{
@@ -189,6 +629,8 @@ public:
 			ErrorLogger::Log(hr, "Failed to Create Pixel shader Constant buffer.");
 			return false;
 		}
+
+
 
 
 		return true;
@@ -226,7 +668,8 @@ public:
 		PS_constantBuffer.data.minColor = DirectX::XMFLOAT4(renderingOptions->minColor);
 		PS_constantBuffer.data.maxColor = DirectX::XMFLOAT4(renderingOptions->maxColor);
 		PS_constantBuffer.data.condition = solverOptions->usingTransparency;
-
+		PS_constantBuffer.data.viewportWidth = width;
+		PS_constantBuffer.data.viewportHeight = height;
 
 		// Update Constant Buffer
 		GS_constantBuffer.ApplyChanges();

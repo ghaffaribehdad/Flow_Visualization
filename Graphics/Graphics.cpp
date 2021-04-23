@@ -143,6 +143,12 @@ void Graphics::RenderFrame()
 
 	}
 
+	raycasting.show(&renderImGuiOptions);					// Raycasting 
+
+
+
+	streamlineRenderer.mainRTV = renderTargetView.Get();
+	streamlineRenderer.depthstencil = depthStencilView.Get();
 
 	if (this->renderImGuiOptions.showStreamlines)
 	{
@@ -159,10 +165,13 @@ void Graphics::RenderFrame()
 			break;
 		}
 		}
-
+		deviceContext->CopyResource(getBackBuffer(), streamlineRenderer.getOITTexture());
 	}
 
-	raycasting.show(&renderImGuiOptions);					// Raycasting 
+	
+
+	this->deviceContext->OMSetRenderTargets(1, this->renderTargetView.GetAddressOf(), this->depthStencilView.Get());
+	this->deviceContext->OMSetDepthStencilState(this->depthStencilState.Get(), 0);
 
 	if (this->renderImGuiOptions.showStreaklines)
 	{
@@ -263,7 +272,7 @@ void Graphics::RenderFrame()
 
 
 	// Present the backbuffer
-	this->swapchain->Present(1, NULL);
+	this->swapchain->Present(0, NULL);
 }
 
 
@@ -286,9 +295,6 @@ bool Graphics::InitializeDirectXResources()
 	{
 		ErrorLogger::Log(hr, "Failed to Create RenderTargetView");
 	}
-
-
-	this->deviceContext->OMSetRenderTargets(1, renderTargetView.GetAddressOf(), NULL);
 
 
 	if (this->depthStencilBuffer.Get() != nullptr)
@@ -381,7 +387,10 @@ bool Graphics::InitializeResources()
 		this->solverOptions,
 		this->deviceContext.Get(),
 		this->device.Get(),
-		this->adapter
+		this->adapter,
+		this->windowWidth,
+		this->windowHeight,
+		getBackBuffer()
 	);
 
 	streaklineRenderer.setResources
@@ -771,10 +780,8 @@ void Graphics::Resize(HWND hwnd)
 	}
 
 	// Create and bind the backbuffer
-
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> backbuffer;
-
-	hr = this->swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(backbuffer.GetAddressOf()));
+	hr = this->swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(backbuffer.ReleaseAndGetAddressOf()));
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log(hr, "Failed to Get Back buffer");

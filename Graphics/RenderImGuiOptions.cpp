@@ -816,7 +816,7 @@ void RenderImGuiOptions::drawRaycastingOptions()
 
 		}
 
-		if (ImGui::DragFloat("Transparency", &raycastingOptions->transparecny, 0.01, 0, 1.0f))
+		if (ImGui::DragFloat("Transparency", &raycastingOptions->transparecny, 0.01f, 0, 1.0f))
 		{
 			this->updateRaycasting = true;
 		}

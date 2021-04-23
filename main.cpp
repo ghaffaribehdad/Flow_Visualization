@@ -17,6 +17,7 @@ int APIENTRY wWinMain(
 	AllocConsole();
 	freopen("CONOUT$", "w", stdout);
 
+//#pragma enable_d3d11_debug_symbols
 
 	// define the engine
 	Engine engine;

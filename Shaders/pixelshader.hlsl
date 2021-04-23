@@ -5,9 +5,10 @@ cbuffer PS_CBuffer
 	float4 maxColor;
 	float minMeasure;
 	float maxMeasure;
+	int viewportWidth;
+	int viewportHeight;
 	bool saturation;
 };
-
 
 
 struct PS_INPUT
@@ -39,9 +40,6 @@ float4 main(PS_INPUT input) : SV_TARGET
 
 		rgb = (Projection )* rgb_compl_max + maxColor;
 
-
-
-
 		float diffuse = max(dot(normalize(input.outNormal), input.outLightDir), 0);
 		float3 reflection = 2.0 * dot(input.outNormal, input.outLightDir) * input.outNormal - input.outLightDir;
 		reflection = normalize(reflection);
@@ -60,6 +58,9 @@ float4 main(PS_INPUT input) : SV_TARGET
 
 		return rgb;
 	}
+
+
+
 	//else the color gradient
 	float measure = abs(input.outMeasure);
 	float4 rgb_compl_min = float4(1.0f, 1.0f, 1.0, 1.0f) - minColor;
@@ -80,10 +81,6 @@ float4 main(PS_INPUT input) : SV_TARGET
 	}
 
 
-
-
-
-
 	float diffuse = max(dot(normalize(input.outNormal), input.outLightDir), 0);
 	float3 reflection = 2.0 * dot(input.outNormal, input.outLightDir) * input.outNormal - input.outLightDir;
 	reflection = normalize(reflection);
@@ -100,7 +97,6 @@ float4 main(PS_INPUT input) : SV_TARGET
 	rgb = rgb * diffuse;
 	rgb += specular;
 	rgb.w = 1;
-
 	return rgb;
 
 	

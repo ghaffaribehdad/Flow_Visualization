@@ -4,6 +4,7 @@ cbuffer mycBuffer
 };
 
 
+
 struct VS_INPUT
 {
     float3 inPos : POSITION;

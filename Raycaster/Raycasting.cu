@@ -2196,8 +2196,10 @@ bool Raycasting::initializeRasterizer()
 		rtbd.SrcBlend = D3D11_BLEND::D3D11_BLEND_SRC_ALPHA;
 		rtbd.DestBlend = D3D11_BLEND::D3D11_BLEND_INV_SRC_ALPHA;
 		rtbd.BlendOp = D3D11_BLEND_OP::D3D11_BLEND_OP_ADD;
+
 		rtbd.SrcBlendAlpha = D3D11_BLEND::D3D11_BLEND_ONE;
 		rtbd.DestBlendAlpha = D3D11_BLEND::D3D11_BLEND_ZERO;
+
 		rtbd.BlendOpAlpha = D3D11_BLEND_OP::D3D11_BLEND_OP_ADD;
 		rtbd.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE::D3D11_COLOR_WRITE_ENABLE_ALL;
 

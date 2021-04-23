@@ -146,9 +146,6 @@ void main(lineadj GS_INPUT input[4], inout TriangleStream<GS_OUTPUT> output)
 
 
 
-		float3 vecNormal1 = input[1].inNormal;
-		float3 vecNormal2 = input[1].inNormal;
-
 		// Radius of the tubes
 		float tubeRad = tubeRadius;
 
@@ -183,8 +180,9 @@ void main(lineadj GS_INPUT input[4], inout TriangleStream<GS_OUTPUT> output)
 
 		}
 
-		float3 tangent = normalize(tangent0 + tangent1);
-
+		float3 tangent = normalize(tangent0 + tangent1); // average of the tangents
+		float3 vecNormal1 = { 0,1.0f,0};
+		float3 vecNormal2 = vecNormal1;
 
 		float3 orient0_rotated = normalize(cross(vecNormal1, tangent0));
 		float3 orient1_rotated = normalize(cross(vecNormal2, tangent1));

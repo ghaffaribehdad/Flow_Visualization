@@ -102,7 +102,7 @@ __host__ bool PathlineSolver::solve()
 		}
 	
 
-		TracingPath << <blocks, thread >> > (this->d_Particles, volumeTexture_0.getTexture(), volumeTexture_1.getTexture(), *solverOptions, reinterpret_cast<Vertex*>(this->p_VertexBuffer), odd, step);
+		TracingPath <<<blocks, thread >>> (this->d_Particles, volumeTexture_0.getTexture(), volumeTexture_1.getTexture(), *solverOptions, reinterpret_cast<Vertex*>(this->p_VertexBuffer), odd, step);
 		std::printf("\n\n");
 	}  	
 

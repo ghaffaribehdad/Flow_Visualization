@@ -31,6 +31,7 @@
 #include "../TurbulentMixing/TurbulentMixing.h"
 #include "../Heightfield/HightfieldFTLE.h"
 
+// OIT implemented using https://github.com/QianMo/GPU-Pro-Books-Source-Code/tree/9899ba26f6dc60c843cea93a0de64ff8d97a8b36/GPU-Pro-2/07%20GPGPU/02%20-%20Order-Independent%20Transparency%20Using%20Per-Pixel%20Linked%20Lists%20in%20DirectX%2011/OIT11LinkedLists
 
 
 typedef long long int llInt;
@@ -50,6 +51,7 @@ public:
 		this->renderImGuiOptions.updateTurbulentMixing = true;
 		this->renderImGuiOptions.updateFTLE = true;
 		this->renderImGuiOptions.updateTimeSpaceField = true;
+		this->solverOptions.viewChanged = true;
 	}
 
 

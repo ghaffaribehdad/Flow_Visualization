@@ -332,10 +332,7 @@ __global__ void TracingPath(Particle* d_particles, cudaTextureObject_t t_Velocit
 {
 	int particleIdx = CUDA_INDEX;
 	if (particleIdx < solverOptions.lines_count)
-	{
-		
-
-
+	{	
 		float timeSteps = solverOptions.lastIdx - solverOptions.firstIdx + 1;
 		// line_index indicates the line segment index
 		int lineIdx = particleIdx * solverOptions.lineLength;
@@ -367,8 +364,6 @@ __global__ void TracingPath(Particle* d_particles, cudaTextureObject_t t_Velocit
 
 		else
 		{
-
-
 			if (!solverOptions.projectToInit)
 			{
 				switch (solverOptions.projection)
