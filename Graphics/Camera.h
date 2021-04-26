@@ -26,9 +26,11 @@ class Camera
 public:
 	Camera();
 	void SetProjectionValues(float fovDegrees, float aspectRatio, float nearZ, float farZ);
+	void SetParallelProjectionValues(const float & aspectRatio, const float &  viewHeight, float nearZ, float farZ);
 
 	const XMMATRIX & GetViewMatrix() const;
 	const XMMATRIX & GetProjectionMatrix() const;
+	const XMMATRIX & GetParallelProjectionMatrix() const;
 
 	const XMVECTOR & GetPositionVector() const;
 	const XMFLOAT3 & GetPositionFloat3() const;
@@ -56,6 +58,23 @@ public:
 	const XMFLOAT3& GetViewVector();
 	const XMVECTOR& GetViewXMVector();
 	
+	const XMMATRIX 	GetViewMatrix(XMFLOAT3 _eyePos)
+	{
+
+		XMFLOAT3 eyePos = _eyePos;
+		XMVECTOR posVector = XMLoadFloat3(&eyePos);
+		//XMMATRIX camRotationMatrix = XMMatrixRotationRollPitchYaw(this->rot.x, this->rot.y, this->rot.z);
+		//XMMATRIX camRotationMatrix = XMMatrixRotationRollPitchYaw(0, 0,0);
+		XMVECTOR camTarget = this->DEFAULT_RIGHT_VECTOR;
+		//Adjust cam target to be offset by the camera's current position
+		camTarget += posVector;
+		//Calculate up direction based on current rotation
+		XMVECTOR upDir = this->DEFAULT_UP_VECTOR;
+		//Rebuild view matrix
+		return XMMatrixLookAtLH(posVector, camTarget, upDir);
+	}
+
+
 	
 private:
 	void UpdateViewMatrix();
@@ -65,6 +84,7 @@ private:
 	XMFLOAT3 rot;
 	XMMATRIX viewMatrix;
 	XMMATRIX projectionMatrix;
+	XMMATRIX parallelProjectionMatrix;
 	XMFLOAT3 viewDir;
 	XMFLOAT3 upDir;
 	XMVECTOR v_viewDir;

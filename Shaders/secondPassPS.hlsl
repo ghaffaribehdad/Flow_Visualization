@@ -1,5 +1,6 @@
 #define MAX_24BIT_UINT  ( (1<<24) - 1 )
 static uint2 SortedFragments[200 + 1];
+SamplerState objSamplerState: SAMPLER;
 
 struct Fragment_And_Link_Buffer_STRUCT
 {

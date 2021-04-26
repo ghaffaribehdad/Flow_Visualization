@@ -12,6 +12,12 @@ struct CB_VS_vertexshader
 // 8 Bytes
 
 
+struct CB_VS_Sampler
+{
+	DirectX::XMMATRIX View;
+	DirectX::XMMATRIX Proj;
+};
+
 struct Tube_geometryShader
 {
 	DirectX::XMMATRIX View;

@@ -36,6 +36,7 @@ protected:
 	VertexBuffer<Vertex>				vertexBuffer;
 	IndexBuffer							indexBuffer;
 	ConstantBuffer<Tube_geometryShader> GS_constantBuffer;
+	ConstantBuffer<CB_VS_Sampler>		VS_SamplerConstantBuffer;
 	ConstantBuffer<CB_pixelShader>		PS_constantBuffer;
 	ConstantBuffer<CB_pixelShader_Sampler> PS_constantBufferSecondPass;
 	std::vector<DWORD>					indices;
@@ -52,10 +53,12 @@ protected:
 	// Shaders
 	VertexShader		vertexshader;
 	VertexShader		vertexshaderSecondPass;
+	VertexShader		vertexshaderSampler;
 
 	PixelShader			pixelshader;
 	PixelShader			pixelshaderFirstPass;
 	PixelShader			pixelshaderSecondPass;
+	PixelShader			pixelShaderSampler;
 	GeometryShader		geometryshader;
 
 

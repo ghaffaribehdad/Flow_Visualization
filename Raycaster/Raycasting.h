@@ -64,7 +64,7 @@ protected:
 
 	VertexBuffer<TexCoordVertex> vertexBuffer;
 
-	ConstantBuffer<CB_pixelShader_Sampler>		PS_constantBuffer;
+	ConstantBuffer<CB_pixelShader_Sampler>				PS_constantBuffer;
 	Microsoft::WRL::ComPtr<ID3D11Texture2D>				raycastingTexture;
 	Microsoft::WRL::ComPtr< ID3D11RenderTargetView>		renderTargetView;
 	Microsoft::WRL::ComPtr<ID3D11RasterizerState>		rasterizerstate;

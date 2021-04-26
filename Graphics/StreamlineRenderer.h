@@ -20,13 +20,12 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11Buffer>				g_pStartOffsetBuffer;		
 	Microsoft::WRL::ComPtr<ID3D11Buffer>				g_pFragmentAndLinkStructuredBuffer;
 
-
 	Microsoft::WRL::ComPtr<ID3D11Texture2D>				OITTexture;
-	Microsoft::WRL::ComPtr< ID3D11RenderTargetView>		OITRTV;
+	Microsoft::WRL::ComPtr<ID3D11RenderTargetView>		OITRenderTargetView;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>	OITResourceView;
 
 	ID3D11UnorderedAccessView*	pUAV[2];						
 	ID3D11ShaderResourceView*	pSRV[2];
-
 
 	ID3D11UnorderedAccessView*	g_pFragmentAndLinkStructuredBufferUAV = NULL;
 	ID3D11UnorderedAccessView*	g_pStartOffsetBufferUAV = NULL;
@@ -53,16 +52,15 @@ private:
 
 	bool initializeQuad()
 	{
-		
-		TexCoordVertex quad[]=
+		TexCoordVertex quad[] =
 		{
-			TexCoordVertex(-1.0f,	-1.0f,	1.0f,	0.0f,	1.0f), //Bottom Left 
-			TexCoordVertex(-1.0f,	1.0f,	1.0f,	0.0f,	0.0f), //Top Left
-			TexCoordVertex(1.0f,	1.0f,	1.0f,	1.0f,	0.0f), //Top Right
+				TexCoordVertex(-1.0f,	-1.0f,	1.0f,	0.0f,	1.0f), //Bottom Left 
+				TexCoordVertex(-1.0f,	1.0f,	1.0f,	0.0f,	0.0f), //Top Left
+				TexCoordVertex(1.0f,	1.0f,	1.0f,	1.0f,	0.0f), //Top Right
 
-			TexCoordVertex(-1.0f,	-1.0f,	1.0f,	0.0f,	1.0f), //Bottom Left 
-			TexCoordVertex(1.0f,	1.0f,	1.0f,	1.0f,	0.0f), //Top Right
-			TexCoordVertex(1.0f,	-1.0f,	1.0f,	1.0f,	1.0f), //Bottom Right
+				TexCoordVertex(-1.0f,	-1.0f,	1.0f,	0.0f,	1.0f), //Bottom Left 
+				TexCoordVertex(1.0f,	1.0f,	1.0f,	1.0f,	0.0f), //Top Right
+				TexCoordVertex(1.0f,	-1.0f,	1.0f,	1.0f,	1.0f), //Bottom Right
 
 		};
 
@@ -73,6 +71,33 @@ private:
 			return false;
 		}
 
+
+		return true;
+	}
+
+	bool initializeProjectionPlane()
+	{
+
+		TexCoordVertex quad[] =
+		{
+			TexCoordVertex(0,	-solverOptions->gridDiameter[1] / 2.0f,	-solverOptions->gridDiameter[2] / 2.0f,	0.0f,	1.0f), //Bottom Left 
+			TexCoordVertex(0,	 solverOptions->gridDiameter[1] / 2.0f,	-solverOptions->gridDiameter[2] / 2.0f,	0.0f,	0.0f), //Top Left
+			TexCoordVertex(0,	 solverOptions->gridDiameter[1] / 2.0f,	 solverOptions->gridDiameter[2] / 2.0f,	1.0f,	0.0f), //Top Right
+
+			TexCoordVertex(0,	-solverOptions->gridDiameter[1] / 2.0f,	-solverOptions->gridDiameter[2] / 2.0f,	0.0f,	1.0f), //Bottom Left 
+			TexCoordVertex(0,	 solverOptions->gridDiameter[1] / 2.0f,	 solverOptions->gridDiameter[2] / 2.0f,	1.0f,	0.0f), //Top Right
+			TexCoordVertex(0,	-solverOptions->gridDiameter[1] / 2.0f,	 solverOptions->gridDiameter[2] / 2.0f,	1.0f,	1.0f), //Bottom Right
+
+		};
+
+	
+
+		HRESULT hr = this->vertexBufferQuad.Initialize(this->device, quad, ARRAYSIZE(quad));
+		if (FAILED(hr))
+		{
+			ErrorLogger::Log(hr, "Failed to Create offset buffer.");
+			return false;
+		}
 
 		return true;
 	}
@@ -176,22 +201,22 @@ private:
 		}
 
 
-		////Create sampler description for sampler state
-		//D3D11_SAMPLER_DESC sampDesc;
-		//ZeroMemory(&sampDesc, sizeof(sampDesc));
-		//sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-		//sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-		//sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-		//sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
-		//sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-		//sampDesc.MinLOD = 0;
-		//sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
-		// hr = this->device->CreateSamplerState(&sampDesc, this->samplerState.GetAddressOf()); //Create sampler state
-		//if (FAILED(hr))
-		//{
-		//	ErrorLogger::Log(hr, "Failed to create sampler state.");
-		//	return false;
-		//}
+		//Create sampler description for sampler state
+		D3D11_SAMPLER_DESC sampDesc;
+		ZeroMemory(&sampDesc, sizeof(sampDesc));
+		sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+		sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+		sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+		sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+		sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+		sampDesc.MinLOD = 0;
+		sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+		 hr = this->device->CreateSamplerState(&sampDesc, this->samplerState.GetAddressOf()); //Create sampler state
+		if (FAILED(hr))
+		{
+			ErrorLogger::Log(hr, "Failed to create sampler state.");
+			return false;
+		}
 
 		pUAV[0] = g_pStartOffsetBufferUAV;
 		pUAV[1] = g_pFragmentAndLinkStructuredBufferUAV;
@@ -426,7 +451,7 @@ public:
 		pUAV[0] = NULL;
 		pUAV[1] = NULL;
 
-		deviceContext->OMSetRenderTargetsAndUnorderedAccessViews(1, OITRTV.GetAddressOf(), NULL, 1, 2,pUAV, initialCounts);
+		deviceContext->OMSetRenderTargetsAndUnorderedAccessViews(1, OITRenderTargetView.GetAddressOf(), NULL, 1, 2,pUAV, initialCounts);
 		this->deviceContext->PSSetShaderResources(0, 2, pSRV);
 		this->deviceContext->RSSetState(this->rasterizerstate.Get());					// set the rasterizer state
 		this->deviceContext->IASetInputLayout(this->vertexshaderSecondPass.GetInputLayout());		// Set the input layout
@@ -438,10 +463,33 @@ public:
 		this->deviceContext->IASetVertexBuffers(0, 1, this->vertexBufferQuad.GetAddressOf(), this->vertexBufferQuad.StridePtr(), &offset);
 		this->deviceContext->PSSetConstantBuffers(0, 1, this->PS_constantBuffer.GetAddressOf());
 		this->deviceContext->OMSetBlendState(g_pBlendStateNoBlend, NULL, 0xFFFFFFFF);
-
+		this->deviceContext->PSSetSamplers(0, 1, this->samplerState.GetAddressOf());
 		return true;
 	}
 
+	bool setShaders_ThirdPass(D3D11_PRIMITIVE_TOPOLOGY Topology)
+	{
+		UINT offset = 0;
+		this->deviceContext->IASetVertexBuffers(0, 1, this->vertexBufferQuad.GetAddressOf(), this->vertexBufferQuad.StridePtr(), &offset);
+		this->deviceContext->IASetInputLayout(this->vertexshaderSampler.GetInputLayout());		
+		this->deviceContext->IASetPrimitiveTopology(Topology);
+
+		this->deviceContext->VSSetConstantBuffers(0, 1, this->VS_SamplerConstantBuffer.GetAddressOf());
+		this->deviceContext->VSSetShader(vertexshaderSampler.GetShader(), NULL, 0);
+
+		this->deviceContext->RSSetState(this->rasterizerstate.Get());					
+
+		this->deviceContext->PSSetShader(pixelShaderSampler.GetShader(), NULL, 0);				
+		this->deviceContext->PSSetSamplers(0, 1, this->samplerState.GetAddressOf());
+		this->deviceContext->PSSetShaderResources(0, 1, OITResourceView.GetAddressOf());
+
+		this->deviceContext->OMSetBlendState(g_pBlendStateNoBlend, NULL, 0xFFFFFFFF);
+		this->deviceContext->OMGetRenderTargets(1, &mainRTV, &depthstencil);
+
+		this->deviceContext->GSSetShader(NULL, NULL, NULL);								
+
+		return true;
+	}
 
 	void Draw_firstPass()
 	{
@@ -534,7 +582,6 @@ public:
 		SAFE_RELEASE(g_pFragmentAndLinkStructuredBufferSRV);
 		SAFE_RELEASE(g_pFragmentAndLinkStructuredBufferUAV);
 
-		SAFE_RELEASE(g_pBlendStateNoBlend);
 		SAFE_RELEASE(g_pBlendStateSrcAlphaInvSrcAlphaBlend);
 		SAFE_RELEASE(g_pColorWritesOff);
 
@@ -549,12 +596,10 @@ public:
 
 		g_pFragmentAndLinkStructuredBuffer.Reset();
 		g_pStartOffsetBuffer.Reset();
-		vertexBufferQuad.reset();
 		blendState.Reset();
-		rasterizerstate.Reset();
 		OITTexture.Reset();
-		OITRTV.Reset();
-		
+		OITRenderTargetView.Reset();
+		vertexBufferQuad.reset();
 	}
 
 	void draw(Camera& camera, D3D11_PRIMITIVE_TOPOLOGY Topology) override
@@ -564,21 +609,86 @@ public:
 			cleanPipeline();
 			firstPassInitialization();
 			initializeRasterizer();
-			solverOptions->viewChanged = false;
-			initializeOITRTV();
+
 			// First Pass
 			setBuffers();
 			updateConstantBuffer(camera);
 			setShaders(Topology);
 			Draw_firstPass();
+
 			// Second Pass
+			initializeOITRTV();
 			setShaders_SecondPass(D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			this->deviceContext->Draw(6, 0);
+			vertexBufferQuad.reset();
+
+			solverOptions->viewChanged = false;
 		}
 
-		
+		// Third pass
+		OITRenderTargetView.Reset();			// Release OIT RTV
+		initializeRasterizer();
+		initializeProjectionPlane();	//Initialize vertex buffer
+		initializeThirdPassResources();
+		updateConstantBufferSampler(camera);
+		setShaders_ThirdPass(D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+		this->deviceContext->Draw(6, 0);
+
+		cleanPipelineSampler();
 	}
 
+
+	void cleanPipelineSampler()
+	{
+		samplerState.Reset();
+		vertexBufferQuad.reset();
+		rasterizerstate.Reset();
+		OITRenderTargetView.Reset();
+		OITResourceView.Reset();
+		SAFE_RELEASE(g_pBlendStateNoBlend);
+
+	}
+	bool initializeThirdPassResources()
+	{
+		HRESULT hr;
+
+		//Create sampler description for sampler state
+		D3D11_SAMPLER_DESC sampDesc;
+		ZeroMemory(&sampDesc, sizeof(sampDesc));
+		sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+		sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+		sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+		sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+		sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+		sampDesc.MinLOD = 0;
+		sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+		hr = this->device->CreateSamplerState(&sampDesc, this->samplerState.GetAddressOf()); //Create sampler state
+		if (FAILED(hr))
+		{
+			ErrorLogger::Log(hr, "Failed to create sampler state.");
+			return false;
+		}
+
+		D3D11_SHADER_RESOURCE_VIEW_DESC shader_resource_view_desc;
+		ZeroMemory(&shader_resource_view_desc, sizeof(shader_resource_view_desc));
+		shader_resource_view_desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		shader_resource_view_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DMS;
+
+		hr = this->device->CreateShaderResourceView(
+			OITTexture.Get(),
+			&shader_resource_view_desc,
+			OITResourceView.GetAddressOf()
+		);
+
+		if (FAILED(hr))
+		{
+			ErrorLogger::Log(hr, "Failed to Create shader resource view");
+			return false;
+		}
+
+		return true;
+	}
 		
 	void initializeOITRTV()
 	{
@@ -586,7 +696,7 @@ public:
 	ZeroMemory(&textureDesc, sizeof(textureDesc));
 
 	textureDesc.ArraySize = 1;
-	textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET ;
+	textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET |D3D11_BIND_SHADER_RESOURCE ;
 	textureDesc.CPUAccessFlags = 0;
 	textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	textureDesc.Height = height;
@@ -605,7 +715,7 @@ public:
 	}
 
 	// Create Render targe view
-	hr = this->device->CreateRenderTargetView(OITTexture.Get(), NULL, this->OITRTV.GetAddressOf());
+	hr = this->device->CreateRenderTargetView(OITTexture.Get(), NULL, this->OITRenderTargetView.GetAddressOf());
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log(hr, "Failed to Create RenderTargetView");
@@ -630,8 +740,12 @@ public:
 			return false;
 		}
 
-
-
+		hr = this->VS_SamplerConstantBuffer.Initialize(this->device, this->deviceContext);
+		if (FAILED(hr))
+		{
+			ErrorLogger::Log(hr, "Failed to Create vertex shader sampler constant buffer.");
+			return false;
+		}
 
 		return true;
 
@@ -640,15 +754,15 @@ public:
 
 	void updateConstantBuffer(Camera& camera) override
 	{
-
-
 		DirectX::XMMATRIX world = DirectX::XMMatrixIdentity();
-
-		GS_constantBuffer.data.View = world * camera.GetViewMatrix();
-		GS_constantBuffer.data.Proj = camera.GetProjectionMatrix();
-		GS_constantBuffer.data.eyePos = camera.GetPositionFloat3();
+		//GS_constantBuffer.data.View = world * camera.GetViewMatrix();
+		GS_constantBuffer.data.View = world * camera.GetViewMatrix(DirectX::XMFLOAT3(0, 0, 0));
+		GS_constantBuffer.data.Proj = camera.GetParallelProjectionMatrix();
+		//GS_constantBuffer.data.eyePos = camera.GetPositionFloat3();
+		GS_constantBuffer.data.eyePos = DirectX::XMFLOAT3(0, 0, 0);
 		GS_constantBuffer.data.tubeRadius = renderingOptions->tubeRadius;
-		GS_constantBuffer.data.viewDir = camera.GetViewVector();
+		//GS_constantBuffer.data.viewDir = camera.GetViewVector();
+		GS_constantBuffer.data.viewDir = DirectX::XMFLOAT3(0, 0 , 1);
 		GS_constantBuffer.data.projection = solverOptions->projection;
 		GS_constantBuffer.data.gridDiameter.x = solverOptions->gridDiameter[0];
 		GS_constantBuffer.data.gridDiameter.y = solverOptions->gridDiameter[1];
@@ -661,7 +775,6 @@ public:
 		GS_constantBuffer.data.currentTime = solverOptions->firstIdx - solverOptions->currentIdx;
 		GS_constantBuffer.data.usingThreshold = solverOptions->usingThreshold;
 		GS_constantBuffer.data.threshold = solverOptions->transparencyThreshold;
-
 
 		PS_constantBuffer.data.minMeasure = renderingOptions->minMeasure;
 		PS_constantBuffer.data.maxMeasure = renderingOptions->maxMeasure;
@@ -684,6 +797,22 @@ public:
 			return false;
 
 		return true;
+
+	}
+
+
+
+	void updateConstantBufferSampler(Camera& camera)
+	{
+
+
+		DirectX::XMMATRIX world = DirectX::XMMatrixIdentity();
+
+		// Set attributes of constant buffer for geometry shader
+		VS_SamplerConstantBuffer.data.View = world * camera.GetViewMatrix();
+		VS_SamplerConstantBuffer.data.Proj = camera.GetProjectionMatrix();
+		// Update Constant Buffer
+		VS_SamplerConstantBuffer.ApplyChanges();
 
 	}
 };

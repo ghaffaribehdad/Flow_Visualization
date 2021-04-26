@@ -147,10 +147,20 @@ bool LineRenderer::initializeShaders()
 
 	}
 
+	numElements = ARRAYSIZE(layoutSecondPass);
+	if (!vertexshaderSampler.Initialize(this->device, shaderfolder + L"vertexShaderSampler.cso", layoutSecondPass, numElements))
+	{
+		return false;
+
+	}
+
 	if (!this->pixelshaderSecondPass.Initialize(this->device, shaderfolder + L"secondPassPS.cso"))
 	{
 		return false;
 	}
+
+	if (!this->pixelShaderSampler.Initialize(this->device, shaderfolder + L"pixelshaderSampler.cso"))
+		return false;
 
 
 	switch (renderingOptions->renderingMode)

@@ -15,6 +15,14 @@ void Camera::SetProjectionValues(float fovDegrees, float aspectRatio, float near
 	this->projectionMatrix = XMMatrixPerspectiveFovLH(fovRadians, aspectRatio, nearZ, farZ);
 }
 
+void Camera::SetParallelProjectionValues(const float & aspectRatio, const float & viewHeight, float nearZ, float farZ)
+{
+	this->parallelProjectionMatrix = XMMatrixOrthographicLH(2.0f* aspectRatio, 2, nearZ, farZ);
+
+
+}
+
+
 const XMMATRIX & Camera::GetViewMatrix() const
 {
 	return this->viewMatrix;
@@ -23,6 +31,11 @@ const XMMATRIX & Camera::GetViewMatrix() const
 const XMMATRIX & Camera::GetProjectionMatrix() const
 {
 	return this->projectionMatrix;
+}
+
+const XMMATRIX & Camera::GetParallelProjectionMatrix() const
+{
+	return this->parallelProjectionMatrix;
 }
 
 const XMVECTOR & Camera::GetPositionVector() const

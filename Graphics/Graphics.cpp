@@ -9,8 +9,18 @@ bool Graphics::InitializeCamera()
 {
 	// set camera properties
 	camera.SetPosition(cameraProp.eyePosition);
-	camera.SetProjectionValues(this->cameraProp.FOV, static_cast<float>(this->windowWidth) / static_cast<float>(this->windowHeight), \
-		this->cameraProp.nearField, this->cameraProp.farField);
+	camera.SetProjectionValues(
+		this->cameraProp.FOV,
+		static_cast<float>(this->windowWidth) / static_cast<float>(this->windowHeight),
+		this->cameraProp.nearField,
+		this->cameraProp.farField
+	);
+	camera.SetParallelProjectionValues(
+		static_cast<float>(this->windowWidth) / static_cast<float>(this->windowHeight),
+		static_cast<float>(this->windowHeight),
+		this->cameraProp.nearField,
+		this->cameraProp.farField
+	);
 	return true;
 }
 
@@ -165,7 +175,7 @@ void Graphics::RenderFrame()
 			break;
 		}
 		}
-		deviceContext->CopyResource(getBackBuffer(), streamlineRenderer.getOITTexture());
+		//deviceContext->CopyResource(getBackBuffer(), streamlineRenderer.getOITTexture());
 	}
 
 	
@@ -272,7 +282,7 @@ void Graphics::RenderFrame()
 
 
 	// Present the backbuffer
-	this->swapchain->Present(0, NULL);
+	this->swapchain->Present(1, NULL);
 }
 
 
