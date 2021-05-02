@@ -260,6 +260,9 @@
     <ClCompile Include="cudaCompress\src\cudaCompress\Encode.cpp">
       <Filter>cudaCompress</Filter>
     </ClCompile>
+    <ClCompile Include="Graphics\StreamlineRenderer.cpp">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Keyboard\KeyboardEvent.h">

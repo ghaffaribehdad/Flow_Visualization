@@ -181,7 +181,7 @@ void main(lineadj GS_INPUT input[4], inout TriangleStream<GS_OUTPUT> output)
 		}
 
 		float3 tangent = normalize(tangent0 + tangent1); // average of the tangents
-		float3 vecNormal1 = { 0,1.0f,0};
+		float3 vecNormal1 = { 1.0,0.0f,1.0f};
 		float3 vecNormal2 = vecNormal1;
 
 		float3 orient0_rotated = normalize(cross(vecNormal1, tangent0));

@@ -79,7 +79,7 @@ void RenderImGuiOptions::drawSolverOptions()
 
 		if (ImGui::Combo("Projection", &solverOptions->projection, Projection::ProjectionList, Projection::Projection::COUNT))
 		{
-
+			this->updateOIT = true;
 		}
 
 		if (solverOptions->projection == Projection::Projection::STREAK_PROJECTION)
@@ -741,7 +741,10 @@ void RenderImGuiOptions::drawLineRenderingOptions()
 		}
 
 
-		ImGui::SliderFloat("Tube Radius", &renderingOptions->tubeRadius, 0.0f, 0.1f, "%.5f");         
+		if (ImGui::SliderFloat("Tube Radius", &renderingOptions->tubeRadius, 0.0f, 0.1f, "%.5f"))
+		{
+			this->updateOIT = true;
+		}
 
 
 
@@ -816,6 +819,7 @@ void RenderImGuiOptions::drawRaycastingOptions()
 
 		}
 
+		if (ImGui::DragFloat("Transparency", &raycastingOptions->transparecny, 0.01f, 0, 1.0f))
 		if (ImGui::DragFloat("Transparency", &raycastingOptions->transparecny, 0.01f, 0, 1.0f))
 		{
 			this->updateRaycasting = true;

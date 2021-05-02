@@ -22,12 +22,11 @@ class LineRenderer
 
 public:
 	ID3D11RenderTargetView*				mainRTV;
-	ID3D11Texture2D*					pRT;
 	ID3D11DepthStencilView*				depthstencil;
 protected:
 	
 	int counter = 0;
-
+	bool updateOIT = false;
 	// Resterizer com pointer
 	Microsoft::WRL::ComPtr<ID3D11RasterizerState> rasterizerstate;
 	Microsoft::WRL::ComPtr<ID3D11BlendState>			blendState;
@@ -38,7 +37,7 @@ protected:
 	ConstantBuffer<Tube_geometryShader> GS_constantBuffer;
 	ConstantBuffer<CB_VS_Sampler>		VS_SamplerConstantBuffer;
 	ConstantBuffer<CB_pixelShader>		PS_constantBuffer;
-	ConstantBuffer<CB_pixelShader_Sampler> PS_constantBufferSecondPass;
+	ConstantBuffer<CB_pixelShaderSampler> PS_constantBufferSampler;
 	std::vector<DWORD>					indices;
 
 
@@ -102,7 +101,7 @@ public:
 	float streakProjectionPlane_Stream();
 															// need to be called at the initilization of this object 
 	//=> To Do: Move it to the constructor
-	void setResources(RenderingOptions& _renderingOptions, SolverOptions& _solverOptions, ID3D11DeviceContext* _deviceContext, ID3D11Device* _device, IDXGIAdapter* pAdapter, const int & width = 0, const int & height = 0, ID3D11Texture2D* _mainRT = nullptr);
+	virtual void setResources(RenderingOptions& _renderingOptions, SolverOptions& _solverOptions, ID3D11DeviceContext* _deviceContext, ID3D11Device* _device, IDXGIAdapter* pAdapter, const int & width = 0, const int & height = 0);
 	
 	virtual bool initializeShaders();				// Create GS,VS and PS 
 

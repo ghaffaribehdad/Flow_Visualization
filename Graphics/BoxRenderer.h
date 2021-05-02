@@ -181,10 +181,19 @@ public:
 	bool updateScene(float * _edges, float * pos)
 	{
 		this->updateEdges(_edges, pos);
-		HRESULT hr = this->vertexBuffer.Initialize(this->device, this->edges, 24);
+		vertexBuffer.reset();
+		HRESULT hr = device->GetDeviceRemovedReason();
 		if (FAILED(hr))
 		{
-			ErrorLogger::Log(hr, "Failed to Create Vertex Buffer.");
+			ErrorLogger::Log(hr, "why??");
+			return false;
+		}
+
+
+		 hr = this->vertexBuffer.Initialize(this->device, this->edges, 24);
+		if (FAILED(hr))
+		{
+			ErrorLogger::Log(hr, "Failed to Create Vertex Buffer Box Renderer.");
 			return false;
 		}
 
@@ -269,7 +278,7 @@ public:
 			ErrorLogger::Log(hr, "Failed to Create Constant buffer.");
 			return false;
 		}
-
+		vertexBuffer.reset();
 
 		hr = this->vertexBuffer.Initialize(this->device, this->edges, 24);
 		if (FAILED(hr))

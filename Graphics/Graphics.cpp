@@ -147,41 +147,17 @@ void Graphics::RenderFrame()
 
 	}
 
+
 	if (renderingOptions.showStreakPlane)
 	{
 		this->streakPlane.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	}
-
 	raycasting.show(&renderImGuiOptions);					// Raycasting 
 
 
 
-	streamlineRenderer.mainRTV = renderTargetView.Get();
-	streamlineRenderer.depthstencil = depthStencilView.Get();
 
-	if (this->renderImGuiOptions.showStreamlines)
-	{
-		switch (renderingOptions.renderingMode)
-		{
-		case RenderingMode::RenderingMode::TUBES:
-		{
-			this->streamlineRenderer.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ);
-			break;
-		}
-		case RenderingMode::RenderingMode::SPHERES:
-		{
-			this->streamlineRenderer.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
-			break;
-		}
-		}
-		//deviceContext->CopyResource(getBackBuffer(), streamlineRenderer.getOITTexture());
-	}
-
-	
-
-	this->deviceContext->OMSetRenderTargets(1, this->renderTargetView.GetAddressOf(), this->depthStencilView.Get());
-	this->deviceContext->OMSetDepthStencilState(this->depthStencilState.Get(), 0);
 
 	if (this->renderImGuiOptions.showStreaklines)
 	{
@@ -206,6 +182,32 @@ void Graphics::RenderFrame()
 		}
 		}
 	}
+
+	streamlineRenderer.mainRTV = renderTargetView.Get();
+	streamlineRenderer.depthstencil = depthStencilView.Get();
+
+	if (this->renderImGuiOptions.showStreamlines)
+	{
+		switch (renderingOptions.renderingMode)
+		{
+		case RenderingMode::RenderingMode::TUBES:
+		{
+			this->streamlineRenderer.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ);
+			break;
+		}
+		case RenderingMode::RenderingMode::SPHERES:
+		{
+			this->streamlineRenderer.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
+			break;
+		}
+		}
+	}
+
+
+
+	this->deviceContext->OMSetRenderTargets(1, this->renderTargetView.GetAddressOf(), this->depthStencilView.Get());
+	this->deviceContext->OMSetDepthStencilState(this->depthStencilState.Get(), 0);
+
 
 
 
@@ -399,8 +401,7 @@ bool Graphics::InitializeResources()
 		this->device.Get(),
 		this->adapter,
 		this->windowWidth,
-		this->windowHeight,
-		getBackBuffer()
+		this->windowHeight
 	);
 
 	streaklineRenderer.setResources

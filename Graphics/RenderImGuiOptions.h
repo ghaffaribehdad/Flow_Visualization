@@ -96,6 +96,7 @@ public:
 	bool updateCrossSection		= false;
 	bool updateTurbulentMixing	= false;
 	bool updateTimeSpaceField	= false;
+	bool updateOIT	=			false;
 	bool updateShaders = false;
 
 	bool hideOptions = false;

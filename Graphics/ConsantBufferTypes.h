@@ -60,8 +60,14 @@ struct CB_pixelShader
 	bool condition;
 };
 
+
+struct CB_pixelShaderSampler
+{
+	int viewportWidth;
+	int viewportHeight;
+};
+
 struct CB_pixelShader_Sampler
 {
-
 	float transparency;
 };

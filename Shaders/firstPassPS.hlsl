@@ -4,12 +4,14 @@
 struct Fragment_And_Link_Buffer_STRUCT
 {
 	uint    uPixelColor;
-	uint    uDepthAndCoverage;       // Coverage is only used in the MSAA case
+	float    uDepthAndCoverage;       // Coverage is only used in the MSAA case
 	uint    uNext;
 };
 
 RWByteAddressBuffer StartOffsetBuffer  										:register(u1);
 RWStructuredBuffer<Fragment_And_Link_Buffer_STRUCT> FragmentAndLinkBuffer	:register(u2);
+
+
 
 
 cbuffer PS_CBuffer
@@ -47,6 +49,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 	float4 rgb_compl_max = float4(1.0f, 1.0f, 1.0, 1.0f) - maxColor;
 	float Projection = maxMeasure == 0 ? saturate(measure / (maxMeasure + .00001f)) : saturate(measure / maxMeasure);
 	float4 rgb = { 0.0f,0.0f,0.0f,0.0f };
+
 	rgb = (Projection)* rgb_compl_max + maxColor;
 	float diffuse = max(dot(normalize(input.outNormal), input.outLightDir), 0);
 	float3 reflection = 2.0 * dot(input.outNormal, input.outLightDir) * input.outNormal - input.outLightDir;
@@ -62,9 +65,10 @@ float4 main(PS_INPUT input) : SV_TARGET
 	}
 	rgb = rgb * diffuse;
 	rgb += specular;
-	rgb.w = 1;
-	if(saturation)
-		rgb.w = input.outMeasure;
+	rgb.w = Projection;
+
+
+	
 
 
 	uint uPixelCount = FragmentAndLinkBuffer.IncrementCounter(); // store the current counter value and increase it by 1
@@ -74,7 +78,8 @@ float4 main(PS_INPUT input) : SV_TARGET
 
 	Fragment_And_Link_Buffer_STRUCT Element;
 	Element.uPixelColor = (((uint)(rgb.x * 255)) << 24) | (((uint)(rgb.y * 255)) << 16) | (((uint)(rgb.z * 255)) << 8) | (uint)(rgb.w * 255);
-	Element.uDepthAndCoverage = ((uint)(input.outPosition.z * MAX_24BIT_UINT));
+	//Element.uDepthAndCoverage = input.outPosition.z * MAX_24BIT_UINT));
+	Element.uDepthAndCoverage = input.outPosition.z;
 	Element.uNext = uOldStartOffset;
 	FragmentAndLinkBuffer[uPixelCount] = Element;
 

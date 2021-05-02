@@ -29,7 +29,7 @@ struct TexCoordVertex
 struct LinkedList
 {
 	UINT    uPixelColor;
-	UINT    uDepthAndCoverage;
+	float    uDepthAndCoverage;
 	UINT    uNext;
 };
 

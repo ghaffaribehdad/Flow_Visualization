@@ -1,7 +1,5 @@
 #include <cudaCompress/util/Bits.h>
-
 #include <cudaCompress/cudaUtil.h>
-
 
 namespace cudaCompress {
 

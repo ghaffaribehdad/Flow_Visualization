@@ -11,7 +11,6 @@ bool LineRenderer::setShaders(D3D11_PRIMITIVE_TOPOLOGY Topology)
 	this->deviceContext->VSSetShader(vertexshader.GetShader(), NULL, 0);			// set vertex shader
 	this->deviceContext->PSSetShader(pixelshader.GetShader(), NULL, 0);		
 	this->deviceContext->GSSetShader(geometryshader.GetShader(), NULL, 0);
-	//this->deviceContext->OMSetBlendState(this->blendState.Get(), NULL, 0xFFFFFFFF);
 	this->deviceContext->OMSetBlendState(NULL, NULL, 0xFFFFFFFF);
 
 
@@ -59,7 +58,7 @@ void LineRenderer::updateConstantBuffer(Camera& camera)
 
 
 
-void LineRenderer::setResources(RenderingOptions& _renderingOptions, SolverOptions& _solverOptions,ID3D11DeviceContext* _deviceContext, ID3D11Device* _device, IDXGIAdapter * _adapter , const int & _width, const int & _height, ID3D11Texture2D* _mainRT)
+void LineRenderer::setResources(RenderingOptions& _renderingOptions, SolverOptions& _solverOptions,ID3D11DeviceContext* _deviceContext, ID3D11Device* _device, IDXGIAdapter * _adapter , const int & _width, const int & _height)
 {
 	this->solverOptions = &_solverOptions;
 	this->solverOptions->p_Adapter = _adapter;
@@ -68,10 +67,10 @@ void LineRenderer::setResources(RenderingOptions& _renderingOptions, SolverOptio
 	this->deviceContext = _deviceContext;
 	this->width = _width;
 	this->height = _height;
-	this->pRT = _mainRT;
 }
 bool LineRenderer::initializeShaders()
 {
+
 	std::wstring shaderfolder;
 #pragma region DetermineShaderPath
 	if (IsDebuggerPresent() == TRUE)
