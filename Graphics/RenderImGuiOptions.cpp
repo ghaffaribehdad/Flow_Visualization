@@ -371,7 +371,7 @@ void RenderImGuiOptions::drawSolverOptions()
 
 		if (ImGui::Checkbox("Using Transparency", &solverOptions->usingTransparency))
 		{
-
+			this->updateOIT = true;
 		}
 
 		if (ImGui::Combo("Transparency Mode", &solverOptions->transparencyMode, TransparencyMode::TransparencyModeList, TransparencyMode::TransparencyMode::COUNT))
@@ -752,20 +752,20 @@ void RenderImGuiOptions::drawLineRenderingOptions()
 
 		if (ImGui::ColorEdit4("Minimum", (float*)&renderingOptions->minColor))
 		{
-
+			this->updateOIT = true;
 		}
 		if (ImGui::InputFloat("Min Value", (float*)& renderingOptions->minMeasure, 0.1f))
 		{
-
+			this->updateOIT = true;
 		}
 
 		if (ImGui::ColorEdit4("Maximum", (float*)&renderingOptions->maxColor))
 		{
-
+			this->updateOIT = true;
 		}
 		if (ImGui::InputFloat("Max Value", (float*)& renderingOptions->maxMeasure, 0.1f))
 		{
-
+			this->updateOIT = true;
 		}
 
 		ImGui::End();

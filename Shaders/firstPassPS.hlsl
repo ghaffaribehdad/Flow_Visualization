@@ -14,6 +14,29 @@ RWStructuredBuffer<Fragment_And_Link_Buffer_STRUCT> FragmentAndLinkBuffer	:regis
 
 
 
+float4 colorcoding(float3 rgb_min, float3 rgb_max, float value, float min_val, float max_val)
+{
+
+	float3 rgb = { 0,0,0 };
+	float y_saturated = 0.0f;
+
+	if (value < 0)
+	{
+		float3 rgb_min_complement = float3(1, 1, 1) - rgb_min;
+		y_saturated = saturate(abs(value / min_val));
+		rgb = rgb_min_complement * (1 - y_saturated) + rgb_min;
+	}
+	else
+	{
+		float3 rgb_max_complement = float3(1, 1, 1) - rgb_max;
+		y_saturated = saturate(value / max_val);
+		rgb = rgb_max_complement * (1 - y_saturated) + rgb_max;
+	}
+
+	return float4(rgb.xyz, 1);
+}
+
+
 cbuffer PS_CBuffer
 {
 
@@ -23,7 +46,7 @@ cbuffer PS_CBuffer
 	float maxMeasure;
 	int viewportWidth;
 	int viewportHeight;
-	bool saturation;
+	bool condition; // In this case transparency
 	
 };
 
@@ -45,12 +68,24 @@ float4 main(PS_INPUT input) : SV_TARGET
 {
 
 	//else the color gradient
-	float measure = abs(input.outMeasure);
-	float4 rgb_compl_max = float4(1.0f, 1.0f, 1.0, 1.0f) - maxColor;
-	float Projection = maxMeasure == 0 ? saturate(measure / (maxMeasure + .00001f)) : saturate(measure / maxMeasure);
+	//float measure = abs(input.outMeasure);
+	float measure = input.outMeasure;
+	//float4 rgb_compl_max = float4(1.0f, 1.0f, 1.0, 1.0f) - maxColor;
 	float4 rgb = { 0.0f,0.0f,0.0f,0.0f };
 
-	rgb = (Projection)* rgb_compl_max + maxColor;
+	// calculate color coding
+	if (condition)
+	{
+
+		rgb = float4(maxColor.xyz, 1);
+	}
+	else
+	{
+		rgb = colorcoding(minColor.xyz, maxColor.xyz, measure, minMeasure, maxMeasure); // color coding
+	}
+
+	
+	// Compute shading
 	float diffuse = max(dot(normalize(input.outNormal), input.outLightDir), 0);
 	float3 reflection = 2.0 * dot(input.outNormal, input.outLightDir) * input.outNormal - input.outLightDir;
 	reflection = normalize(reflection);
@@ -65,11 +100,21 @@ float4 main(PS_INPUT input) : SV_TARGET
 	}
 	rgb = rgb * diffuse;
 	rgb += specular;
-	rgb.w = Projection;
 
 
-	
+	if (condition)
+	{
 
+		rgb.w = maxMeasure - minMeasure == 0 ? saturate((measure - minMeasure) / (maxMeasure - minMeasure + 0.001)) : saturate((measure - minMeasure) / (maxMeasure - minMeasure));
+	}
+	else
+	{
+		rgb.w = 1;
+	}
+
+
+
+	// OIT
 
 	uint uPixelCount = FragmentAndLinkBuffer.IncrementCounter(); // store the current counter value and increase it by 1
 	uint linearindex =   4*(input.outPosition.y * viewportWidth + input.outPosition.x);

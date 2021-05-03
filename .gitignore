@@ -11,7 +11,7 @@
 *.ptx
 *.cubin
 *.fatbin
-
+*.vcxproj
 # User-specific files
 *.rsuser
 *.suo
