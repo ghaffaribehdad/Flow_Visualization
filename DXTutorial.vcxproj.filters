@@ -595,6 +595,9 @@
     <ClInclude Include="Graphics\PlaneRenderer.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
+    <ClInclude Include="Timer\dummy.h">
+      <Filter>Source Files\Timer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\geometryshaderLineTube.hlsl">

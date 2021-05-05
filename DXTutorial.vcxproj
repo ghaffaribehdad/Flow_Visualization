@@ -292,6 +292,7 @@
     <ClInclude Include="Particle\ParticleHelperFunctions.h" />
     <ClInclude Include="Raycaster\FieldGenerator3D.h" />
     <ClInclude Include="Raycaster\TimeSpaceField.h" />
+    <ClInclude Include="Timer\dummy.h" />
     <ClInclude Include="Timer\Timer.h" />
     <ClInclude Include="TurbulentMixing\TurbulentMixing.h" />
     <ClInclude Include="TurbulentMixing\TurbulentMixingHelper.h" />
