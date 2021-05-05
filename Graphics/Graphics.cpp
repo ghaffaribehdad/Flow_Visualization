@@ -1,5 +1,5 @@
 #include "Graphics.h"
-#include <ScreenGrab.h>
+#include <ScreenGrab11.h>
 #include <dxgidebug.h>
 #include <dxgi1_3.h>
 #include <wincodec.h>

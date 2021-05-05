@@ -4,7 +4,7 @@
 #include "../Timer/Timer.h"
 #include "../Cuda/StreamlineSolver.h"
 #include "../Cuda/PathlineSolver.h"
-#include <ScreenGrab.h>
+#include <ScreenGrab11.h>
 
 
 

@@ -263,6 +263,9 @@
     <ClCompile Include="Graphics\StreamlineRenderer.cpp">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="Includes\ScreenGrab11.cpp">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Keyboard\KeyboardEvent.h">
@@ -597,6 +600,9 @@
     </ClInclude>
     <ClInclude Include="Timer\dummy.h">
       <Filter>Source Files\Timer</Filter>
+    </ClInclude>
+    <ClInclude Include="Includes\ScreenGrab11.h">
+      <Filter>Header Files\Graphics</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
