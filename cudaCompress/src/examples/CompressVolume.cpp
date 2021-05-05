@@ -2,11 +2,11 @@
 
 #include <algorithm>
 
-#include <cudaCompress/BitStream.h>
-#include <cudaCompress/Encode.h>
-#include <cudaCompress/EncodeCommon.h>
-#include <cudaCompress/util/DWT.h>
-#include <cudaCompress/util/Quantize.h>
+#include <cudaCompressInclude/BitStream.h>
+#include <cudaCompressInclude/Encode.h>
+#include <cudaCompressInclude/EncodeCommon.h>
+#include <cudaCompressInclude/util/DWT.h>
+#include <cudaCompressInclude/util/Quantize.h>
 using namespace cudaCompress;
 
 #include "cudaUtil.h"

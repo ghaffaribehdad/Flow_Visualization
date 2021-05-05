@@ -1,4 +1,4 @@
-#include <cudaCompress/util/CudaTimer.h>
+#include <cudaCompressInclude/util/CudaTimer.h>
 
 #include <cassert>
 

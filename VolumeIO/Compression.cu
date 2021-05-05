@@ -11,13 +11,13 @@
 #include <cuda_runtime.h>
 #include <cuda_profiler_api.h>
 
-#include <cudaCompress/Instance.h>
-#include <cudaCompress/Encode.h>
-#include <cudaCompress/util/Bits.h>
-#include <cudaCompress/util/DWT.h>
-#include <cudaCompress/util/Quantize.h>
-#include <cudaCompress/util/YCoCg.h>
-#include <cudaCompress/Timing.h>
+#include <cudaCompressInclude/Instance.h>
+#include <cudaCompressInclude/Encode.h>
+#include <cudaCompressInclude/util/Bits.h>
+#include <cudaCompressInclude/util/DWT.h>
+#include <cudaCompressInclude/util/Quantize.h>
+#include <cudaCompressInclude/util/YCoCg.h>
+#include <cudaCompressInclude/Timing.h>
 using namespace cudaCompress;
 
 

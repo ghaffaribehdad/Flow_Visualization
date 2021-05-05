@@ -1,4 +1,4 @@
-#include <cudaCompress/Instance.h>
+#include <cudaCompressInclude/Instance.h>
 
 #include <cudaCompress/InstanceImpl.h>
 

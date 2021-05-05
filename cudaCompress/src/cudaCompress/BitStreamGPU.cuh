@@ -2,7 +2,7 @@
 #define __TUM3D_CUDACOMPRESS__BITSTREAM_GPU_CUH__
 
 
-#include <cudaCompress/global.h>
+#include <cudaCompressInclude/global.h>
 
 
 namespace cudaCompress {

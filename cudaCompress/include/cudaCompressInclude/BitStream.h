@@ -2,7 +2,7 @@
 #define __TUM3D_CUDACOMPRESS__BIT_STREAM_H__
 
 
-#include <cudaCompress/global.h>
+#include <cudaCompressInclude/global.h>
 
 #include <algorithm>
 #include <cassert>

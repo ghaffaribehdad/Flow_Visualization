@@ -2,7 +2,7 @@
 #define __TUM3D__DWT_H__
 
 
-#include <cudaCompress/global.h>
+#include <cudaCompressInclude/global.h>
 
 #include <cuda_runtime.h>
 

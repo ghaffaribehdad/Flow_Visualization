@@ -2,7 +2,7 @@
 #define __TUM3D_CUDACOMPRESS__YCOCG_H__
 
 
-#include <cudaCompress/global.h>
+#include <cudaCompressInclude/global.h>
 
 #include <vector_types.h>
 

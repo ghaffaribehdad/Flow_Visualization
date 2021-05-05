@@ -8,8 +8,8 @@
 
 #include <cuda_runtime.h>
 
-#include <cudaCompress/Instance.h>
-#include <cudaCompress/util/CudaTimer.h>
+#include <cudaCompressInclude/Instance.h>
+#include <cudaCompressInclude/util/CudaTimer.h>
 
 #include "GPUResources.h"
 

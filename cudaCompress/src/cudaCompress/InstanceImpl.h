@@ -2,16 +2,16 @@
 #define __TUM3D_CUDACOMPRESS__INSTANCE_IMPL_H__
 
 
-#include <cudaCompress/global.h>
+#include <cudaCompressInclude/global.h>
 
 #include <vector>
 
 #include <cuda_runtime.h>
 
-#include <cudaCompress/util/CudaTimer.h>
+#include <cudaCompressInclude/util/CudaTimer.h>
 
 #include <cudaCompress/HuffmanTable.h>
-#include <cudaCompress/Timing.h>
+#include <cudaCompressInclude/Timing.h>
 
 #include <cudaCompress/profiler/profiler.hpp>
 

@@ -2,7 +2,7 @@
 #define __TUM3D_CUDACOMPRESS__UTIL_H__
 
 
-#include <cudaCompress/global.h>
+#include <cudaCompressInclude/global.h>
 
 
 #ifndef __CUDACC__

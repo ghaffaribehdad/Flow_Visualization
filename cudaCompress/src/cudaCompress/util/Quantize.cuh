@@ -2,9 +2,9 @@
 #define __TUM3D_CUDACOMPRESS__QUANTIZE_CUH__
 
 
-#include <cudaCompress/global.h>
+#include <cudaCompressInclude/global.h>
 
-#include <cudaCompress/util/Quantize.h> // for EQuantizeType
+#include <cudaCompressInclude/util/Quantize.h> // for EQuantizeType
 
 
 namespace cudaCompress {

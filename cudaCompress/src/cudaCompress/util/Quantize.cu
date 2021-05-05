@@ -1,4 +1,4 @@
-#include <cudaCompress/util/Quantize.h>
+#include <cudaCompressInclude/util/Quantize.h>
 
 #include <cudaCompress/tools/Operator.h>
 #include <cudaCompress/tools/Functor.h>

@@ -1,4 +1,4 @@
-#include <cudaCompress/Encode.h>
+#include <cudaCompressInclude/Encode.h>
 
 #include <cassert>
 

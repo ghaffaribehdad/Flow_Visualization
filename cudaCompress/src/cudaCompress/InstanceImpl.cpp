@@ -14,7 +14,7 @@
 #include <cudaCompress/HuffmanTable.h>
 #include <cudaCompress/RunLength.h>
 #include <cudaCompress/PackInc.h>
-#include <cudaCompress/Encode.h>
+#include <cudaCompressInclude/Encode.h>
 
 #include <cudaCompress/profiler/profilerlogwriter.hpp>
 

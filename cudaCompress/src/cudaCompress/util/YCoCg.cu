@@ -1,4 +1,4 @@
-#include <cudaCompress/util/YCoCg.h>
+#include <cudaCompressInclude/util/YCoCg.h>
 
 #include <cudaCompress/cudaUtil.h>
 

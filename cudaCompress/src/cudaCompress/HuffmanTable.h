@@ -2,13 +2,13 @@
 #define __TUM3D_CUDACOMPRESS__HUFFMAN_TABLE_H__
 
 
-#include <cudaCompress/global.h>
+#include <cudaCompressInclude/global.h>
 
 #include <vector>
 
-#include <cudaCompress/BitStream.h>
+#include <cudaCompressInclude/BitStream.h>
 
-#include <cudaCompress/EncodeCommon.h>
+#include <cudaCompressInclude/EncodeCommon.h>
 
 
 namespace cudaCompress {

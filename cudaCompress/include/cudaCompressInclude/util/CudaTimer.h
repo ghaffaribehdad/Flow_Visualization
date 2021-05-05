@@ -2,7 +2,7 @@
 #define __TUM3D_CUDACOMPRESS__CUDA_TIMER_H__
 
 
-#include <cudaCompress/global.h>
+#include <cudaCompressInclude/global.h>
 
 #include <deque>
 #include <map>

@@ -2,7 +2,7 @@
 #define __GLOBAL_H__
 
 
-#include <cudaCompress/global.h>
+#include <cudaCompressInclude/global.h>
 
 using cudaCompress::byte;
 using cudaCompress::uint;

@@ -1,4 +1,4 @@
-#include <cudaCompress/util/DWT.h>
+#include <cudaCompressInclude/util/DWT.h>
 
 #include <assert.h>
 
