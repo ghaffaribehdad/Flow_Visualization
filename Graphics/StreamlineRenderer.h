@@ -35,9 +35,9 @@ private:
 	ID3D11ShaderResourceView*	g_pFragmentAndLinkStructuredBufferSRV = NULL;
 	ID3D11ShaderResourceView*   g_pStartOffsetBufferSRV = NULL;
 
-	ID3D11BlendState* g_pBlendStateNoBlend;
-	ID3D11BlendState* g_pBlendStateSrcAlphaInvSrcAlphaBlend;
-	ID3D11BlendState* g_pColorWritesOff;
+	ID3D11BlendState* g_pBlendStateNoBlend = NULL;
+	ID3D11BlendState* g_pBlendStateSrcAlphaInvSrcAlphaBlend = NULL;
+	ID3D11BlendState* g_pColorWritesOff = NULL;
 
 	ID3D11DepthStencilState*    g_pDepthTestEnabledNoDepthWritesStencilWriteIncrementDSS = NULL;
 	ID3D11DepthStencilState*    g_pDepthTestDisabledStencilTestLessDSS = NULL;
