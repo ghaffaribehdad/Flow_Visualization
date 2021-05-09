@@ -346,6 +346,8 @@ public:
 	void draw(Camera& camera, D3D11_PRIMITIVE_TOPOLOGY Topology) override
 	{
 
+
+
 		if(solverOptions->viewChanged || updateOIT )
 		{
 			// First Pass
@@ -356,7 +358,7 @@ public:
 			solverOptions->viewChanged = false;
 
 		}
-		//// Second Pass
+		// Second Pass
 		updateBuffersSecondPass();
 		setShaders_SecondPass(D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		this->deviceContext->Draw(6, 0);

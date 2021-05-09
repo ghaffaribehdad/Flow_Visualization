@@ -46,7 +46,7 @@ public:
 	std::string  fileName ="FieldP";
 	std::string  filePath = "G:\\KIT3MipMapL1\\";
 
-
+	bool usingOIT = true;
 
 	float seedWallNormalDist = 0.1f;
 	float tilt_deg = 15.0f;

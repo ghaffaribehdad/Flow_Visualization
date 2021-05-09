@@ -299,9 +299,18 @@ void RenderImGuiOptions::drawSolverOptions()
 
 		}
 
-		if (ImGui::DragInt("Current Index", &(solverOptions->currentIdx),1,solverOptions->firstIdx,solverOptions->lastIdx))
+		if (ImGui::InputInt("Current Index", &(solverOptions->currentIdx)))
 		{
 
+			if (solverOptions->currentIdx > solverOptions->lastIdx)
+			{
+				solverOptions->currentIdx = solverOptions->lastIdx;
+			}
+
+			if (solverOptions->currentIdx < solverOptions->firstIdx)
+			{
+				solverOptions->currentIdx = solverOptions->firstIdx;
+			}
 			this->updateStreamlines = true;
 			solverOptions->loadNewfile = true;
 			this->solverOptions->fileChanged = true;
@@ -311,9 +320,10 @@ void RenderImGuiOptions::drawSolverOptions()
 			this->crossSectionOptions->updateTime = true;
 			this->updatefluctuation = true;
 			this->updateCrossSection = true;
-
+			this->updateOIT = true;
 			this->saved = false;
 		}
+
 
 		if (solverOptions->lineRenderingMode == LineRenderingMode::LineRenderingMode::STREAMLINES)
 		{
@@ -1522,6 +1532,26 @@ void RenderImGuiOptions::drawDataset()
 				this->solverOptions->lastIdx = 1000;
 				break;			
 			}
+
+
+			case Dataset::Dataset::KIT2OW_OF_STREAM:
+			{
+				this->solverOptions->fileName = "Comp_OF_";
+				this->solverOptions->filePath = "G:\\KIT2\\Comp_OW_OF_Streamwise\\";
+
+				setArray<float>(&this->solverOptions->gridDiameter[0], 7.854f, 2.0f, 3.1415f);
+				setArray<float>(&this->solverOptions->seedBox[0], 7.854f, 2.0f, 3.1415f);
+				setArray<float>(&this->raycastingOptions->clipBox[0], 7.854f, 2.0f, 3.1415f);
+				setArray<int>(&this->solverOptions->gridSize[0], 192, 192, 192);
+
+				
+				this->solverOptions->dt = 0.001f;
+				this->solverOptions->firstIdx = 1;
+				this->solverOptions->lastIdx = 1000;
+				break;
+			}
+
+
 
 			case Dataset::Dataset::KIT3_RAW:
 			{

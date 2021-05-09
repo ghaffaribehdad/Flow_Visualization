@@ -1,7 +1,7 @@
-#define MAX_24BIT_UINT  ( (1<<24) - 1 )
-//static uint2 SortedFragments[300 + 1];
-static uint SortedFragmentsColor[300 + 1];
-static float SortedFragmentsDepth[300 + 1];
+
+static int layerLimit = 100;
+static uint SortedFragmentsColor[100 + 1];
+static float SortedFragmentsDepth[100 + 1];
 
 struct Fragment_And_Link_Buffer_STRUCT
 {
@@ -53,24 +53,16 @@ PS_OUT main(PS_INPUT input)
 	uint first = uOffset;
 	int nNumFragments = 0;
 
-
-	while (uOffset != 0xFFFFFFFF)
+	int counter = 0;
+	while (uOffset != 0xFFFFFFFF && counter != layerLimit)
 	{
+		counter++;
+
 		Fragment_And_Link_Buffer_STRUCT Element = FragmentAndLinkBufferSRV[uOffset];
 		//SortedFragments[nNumFragments] = uint2(Element.uPixelColor, Element.uDepthAndCoverage);
 		SortedFragmentsColor[nNumFragments] = Element.uPixelColor;
 		SortedFragmentsDepth[nNumFragments] = Element.uDepthAndCoverage;
 		int j = nNumFragments;
-
-		//while ((j > 0) && (SortedFragments[max(j - 1, 0)].y > SortedFragments[j].y))
-		//{
-		//	// Swap required
-		//	int jminusone = max(j - 1, 0);
-		//	uint2 Tmp = SortedFragments[j];
-		//	SortedFragments[j] = SortedFragments[jminusone];
-		//	SortedFragments[jminusone] = Tmp;
-		//	j--;
-		//}
 
 
 		while ((j > 0) && (SortedFragmentsDepth[max(j - 1, 0)] > SortedFragmentsDepth[j]))
@@ -116,7 +108,6 @@ PS_OUT main(PS_INPUT input)
 		output.depth = 1;
 	}
 
-	//return vCurrentColor;
 
 	return output;
 
