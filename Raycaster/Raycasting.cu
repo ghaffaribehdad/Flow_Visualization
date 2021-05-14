@@ -434,8 +434,8 @@ __host__ bool Raycasting::initializeBoundingBox()
 	BoundingBox * h_boundingBox = new BoundingBox;
 
 
-	h_boundingBox->gridSize = ArrayInt3ToInt3(solverOptions->gridSize);
-	h_boundingBox->updateBoxFaces(ArrayFloat3ToFloat3(raycastingOptions->clipBox), ArrayFloat3ToFloat3(raycastingOptions->clipBoxCenter));
+	h_boundingBox->gridSize = ArrayToInt3(solverOptions->gridSize);
+	h_boundingBox->updateBoxFaces(ArrayToFloat3(raycastingOptions->clipBox), ArrayToFloat3(raycastingOptions->clipBoxCenter));
 	h_boundingBox->updateAspectRatio(*width, *height);
 	h_boundingBox->m_eyePos = XMFloat3ToFloat3(camera->GetPositionFloat3());
 	h_boundingBox->constructEyeCoordinates
@@ -447,7 +447,7 @@ __host__ bool Raycasting::initializeBoundingBox()
 
 	h_boundingBox->FOV = (this->FOV_deg / 360.0f)* XM_2PI;
 	h_boundingBox->distImagePlane = this->distImagePlane;
-	h_boundingBox->m_dimensions = ArrayFloat3ToFloat3(solverOptions->gridDiameter);
+	h_boundingBox->m_dimensions = ArrayToFloat3(solverOptions->gridDiameter);
 	gpuErrchk(cudaMemcpyToSymbol(d_boundingBox, h_boundingBox, sizeof(BoundingBox)));
 
 	delete h_boundingBox;
@@ -2235,7 +2235,6 @@ void Raycasting::setShaders()
 	this->deviceContext->PSSetSamplers(0, 1, this->samplerState.GetAddressOf());
 	this->deviceContext->PSSetShaderResources(0, 1, this->shaderResourceView.GetAddressOf());
 	this->deviceContext->OMSetBlendState(this->blendState.Get(), NULL, 0xFFFFFFFF); 
-
 	this->deviceContext->PSSetConstantBuffers(0, 1, this->PS_constantBuffer.GetAddressOf());
 
 }
@@ -2316,8 +2315,6 @@ __global__ void CudaTerrainRenderer_extra_fluctuation_raycasting
 				float3 texPos = { relativePos.x,(float)timeSpaceOptions.wallNoramlPos + 0.5f , relativePos.z };
 
 
-
-
 				float height = observable2.ValueAtXYZ_Tex(heightField, texPos);
 
 				if (timeSpaceOptions.usingAbsolute)
@@ -2383,10 +2380,6 @@ __global__ void CudaTerrainRenderer_extra_fluctuation_raycasting
 					break;
 
 				}
-
-
-
-
 
 
 
@@ -2481,9 +2474,15 @@ __global__ void CudaTerrainRenderer_extra_fluctuation
 
 				// Adds an offset to position while the center of the grid is at gridDiamter/2
 				position += d_boundingBox_spacetime.m_dimensions / 2.0;
+				float3 position_shifted = position;
+
+				if (timeSpaceOptions.shiftProjection)
+				{
+					position_shifted.x += timeSpaceOptions.shiftProjectionPlane;
+				}
 
 				//Relative position calculates the position of the point on the cuda texture
-				float3 relativePos = world2Tex(position, d_boundingBox_spacetime.m_dimensions, d_boundingBox_spacetime.gridSize);
+				float3 relativePos = world2Tex(position_shifted, d_boundingBox_spacetime.m_dimensions, d_boundingBox_spacetime.gridSize);
 
 				// 0.5 is the offset for the texture coordinate
 				float3 texPos = {relativePos.x,(float)timeSpaceOptions.wallNoramlPos + 0.5f , relativePos.z};

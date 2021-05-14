@@ -173,7 +173,16 @@ __host__ void FluctuationHeightfield::rendering()
 
 	// Create a 2D texture to read hight array
 
+	int current = solverOptions->currentIdx;
+	float timeDim = solverOptions->timeDim;
+	int lastIdx = solverOptions->lastIdx;
+	int	firstIdx = solverOptions->firstIdx;
 
+	float init_pos = -timeDim / 2;
+	init_pos += (current - firstIdx) * (timeDim / (lastIdx - firstIdx));
+
+
+	this->timeSpaceRenderingOptions->shiftProjectionPlane = init_pos;
 	this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), renderingOptions->bgColor);// Clear the target view
 
 	// Calculates the block and grid sizes
@@ -320,8 +329,17 @@ __host__ bool FluctuationHeightfield::initializeBoundingBox()
 	BoundingBox* h_boundingBox = new BoundingBox;
 
 	h_boundingBox->gridSize = make_int3((int)this->m_gridSize3D.x, (int)this->m_gridSize3D.y, (int)this->m_gridSize3D.z); // Use the heightfield dimension instead of velocity volume
-	h_boundingBox->updateBoxFaces(ArrayFloat3ToFloat3(raycastingOptions->clipBox), ArrayFloat3ToFloat3(raycastingOptions->clipBoxCenter));
-	h_boundingBox->m_dimensions = ArrayFloat3ToFloat3(solverOptions->gridDiameter);
+	float3 center = Array2Float3(raycastingOptions->clipBoxCenter);
+	float3 clipBox = Array2Float3(raycastingOptions->clipBox);
+
+	if (timeSpaceRenderingOptions->shiftProjection)
+	{
+		center.x -= timeSpaceRenderingOptions->shiftProjectionPlane;
+		//clipBox.x += timeSpaceRenderingOptions->shiftProjectionPlane;
+	}
+
+	h_boundingBox->updateBoxFaces(clipBox, center);
+	h_boundingBox->m_dimensions = ArrayToFloat3(solverOptions->gridDiameter);
 	h_boundingBox->m_dimensions.x = solverOptions->timeDim;
 	h_boundingBox->updateAspectRatio(*width, *height);						
 	h_boundingBox->constructEyeCoordinates
@@ -340,8 +358,8 @@ __host__ bool FluctuationHeightfield::initializeBoundingBox()
 	{
 		BoundingBox * h_boundingBox = new BoundingBox;
 
-		h_boundingBox->gridSize = ArrayInt3ToInt3(solverOptions->gridSize);
-		h_boundingBox->updateBoxFaces(ArrayFloat3ToFloat3(raycastingOptions->clipBox), ArrayFloat3ToFloat3(raycastingOptions->clipBoxCenter));
+		h_boundingBox->gridSize = ArrayToInt3(solverOptions->gridSize);
+		h_boundingBox->updateBoxFaces(ArrayToFloat3(raycastingOptions->clipBox), ArrayToFloat3(raycastingOptions->clipBoxCenter));
 		h_boundingBox->updateAspectRatio(*width, *height);
 		h_boundingBox->m_eyePos = XMFloat3ToFloat3(camera->GetPositionFloat3());
 		h_boundingBox->constructEyeCoordinates
@@ -353,7 +371,7 @@ __host__ bool FluctuationHeightfield::initializeBoundingBox()
 
 		h_boundingBox->FOV = (this->FOV_deg / 360.0f)* XM_2PI;
 		h_boundingBox->distImagePlane = this->distImagePlane;
-		h_boundingBox->m_dimensions = ArrayFloat3ToFloat3(solverOptions->gridDiameter);
+		h_boundingBox->m_dimensions = ArrayToFloat3(solverOptions->gridDiameter);
 		gpuErrchk(cudaMemcpyToSymbol(d_boundingBox, h_boundingBox, sizeof(BoundingBox)));
 
 		delete h_boundingBox;

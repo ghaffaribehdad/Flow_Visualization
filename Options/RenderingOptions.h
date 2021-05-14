@@ -48,7 +48,7 @@ namespace DrawMode
 
 struct RenderingOptions
 {
-	
+	float mouseSpeed = 0.005f;
 	float tubeRadius = 0.01f;
 	float minColor[4] = 
 	{ 

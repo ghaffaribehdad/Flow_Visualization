@@ -31,6 +31,7 @@ namespace Dataset
 		KIT2OW_COMP,
 		KIT2BF_COMP,
 		KIT2OW_OF_STREAM,
+		KIT2OW_OF_LAMBDA,
 		KIT3_RAW,
 		KIT3_FLUC,
 		KIT3_INITIAL_COMPRESSED,
@@ -59,7 +60,8 @@ namespace Dataset
 		"KIT2 Ref Compressed",
 		"KIT2 Oscillating Wall Compressed",
 		"KIT2 Virtual Body Compressed",
-		"KIT2 OF Stream Compressed",
+		"KIT2 OW OF Stream Compressed",
+		"KIT2 OW OF Lambda Compressed",
 		"KIT3 Initi",
 		"KIT3 Fluctuation",
 		"KIT3 Inital Comp.",
@@ -212,7 +214,8 @@ namespace Projection
 		"ZY-Plane",
 		"XZ-Plane",
 		"XY-Plane",
-		"Streak Proj."
+		"Streak Proj.",
+		"Streak Proj. Fix"
 	};
 
 	enum Projection
@@ -222,6 +225,7 @@ namespace Projection
 		XZ_PROJECTION,
 		XY_PROJECTION,
 		STREAK_PROJECTION,
+		STREAK_PROJECTION_FIX,
 		COUNT
 	};
 }

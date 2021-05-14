@@ -86,7 +86,7 @@ public:
 
 	void gaussianFilter();
 	virtual void rendering() override;
-	__host__ bool initializeBoundingBox() override;
+	
 
 
 	TimeSpaceRenderingOptions* timeSpaceRenderingOptions;
@@ -97,7 +97,7 @@ private:
 	CudaArray_2D<float> heightArray2D;
 	cudaTextureObject_t heightFieldTexture2D;
 
-
+	virtual bool initializeBoundingBox() override;
 	virtual bool InitializeHeightSurface3D(cudaArray_t cudaArray);
 
 

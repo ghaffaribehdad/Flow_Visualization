@@ -60,6 +60,8 @@ struct TimeSpaceRenderingOptions
 	float height_scale = 0.0f;
 	float offset = 0.0f;
 
+	float shiftProjectionPlane = 0.0f;
+	bool shiftProjection = false;
 
 	float minColor[4] = { 117 / 255.0f,112 / 255.0f,179 / 255.0f };
 	float maxColor[4] = { 217 / 255.0f,95 / 255.0f,2 / 255.0f };

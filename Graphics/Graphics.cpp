@@ -84,7 +84,7 @@ void Graphics::RenderFrame()
 	this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), renderingOptions.bgColor);
 	this->deviceContext->ClearDepthStencilView(this->depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 	this->deviceContext->OMSetDepthStencilState(this->depthStencilState.Get(), 0);
-
+	this->mouseSpeed = this->renderingOptions.mouseSpeed;
 
 	/*
 

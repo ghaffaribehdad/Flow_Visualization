@@ -116,6 +116,41 @@ void RenderImGuiOptions::drawSolverOptions()
 			} 
 		}
 
+
+		if (solverOptions->projection == Projection::Projection::STREAK_PROJECTION_FIX)
+		{
+			switch (solverOptions->lineRenderingMode)
+			{
+			case(LineRenderingMode::LineRenderingMode::STREAMLINES):
+			{
+				float init_pos = -1 * (solverOptions->gridDiameter[0] / solverOptions->gridSize[0]) * (solverOptions->projectPos - solverOptions->gridSize[0] / 2.0f);
+				init_pos -= solverOptions->timeDim / 2;
+				//init_pos += (solverOptions->currentIdx - solverOptions->firstIdx) * (solverOptions->timeDim / (solverOptions->lastIdx - solverOptions->firstIdx));
+				solverOptions->streakBoxPos[0] = 0;
+				break;
+			}
+			case(LineRenderingMode::LineRenderingMode::PATHLINES):
+			{
+
+				float init_pos = -1 * (solverOptions->gridDiameter[0] / solverOptions->gridSize[0]) * (solverOptions->projectPos - solverOptions->gridSize[0] / 2.0f);
+				init_pos -= solverOptions->timeDim / 2;
+				init_pos += (solverOptions->currentIdx - solverOptions->firstIdx) * (solverOptions->timeDim / (solverOptions->lastIdx - solverOptions->firstIdx));
+				solverOptions->streakBoxPos[0] = 0;
+
+				break;
+			}
+			case(LineRenderingMode::LineRenderingMode::STREAKLINES):
+			{
+				float init_pos = -1 * (solverOptions->gridDiameter[0] / solverOptions->gridSize[0]) * (solverOptions->projectPos - solverOptions->gridSize[0] / 2.0f);
+				init_pos -= solverOptions->timeDim / 2;
+				init_pos += (solverOptions->currentIdx - solverOptions->firstIdx) * (solverOptions->timeDim / (solverOptions->lastIdx - solverOptions->firstIdx));
+				solverOptions->streakBoxPos[0] = 0;
+			}
+			default:
+				break;
+			}
+		}
+
 		if (ImGui::InputFloat("Time Dim", &solverOptions->timeDim))
 		{
 
@@ -315,7 +350,7 @@ void RenderImGuiOptions::drawSolverOptions()
 			solverOptions->loadNewfile = true;
 			this->solverOptions->fileChanged = true;
 
-
+			this->updateTimeSpaceField = true;
 			this->raycastingOptions->fileChanged = true;
 			this->crossSectionOptions->updateTime = true;
 			this->updatefluctuation = true;
@@ -699,6 +734,13 @@ void RenderImGuiOptions::drawLineRenderingOptions()
 	{
 		ImGui::Begin("Rendering Options");
 
+		if (ImGui::Button("Remote connection"))
+		{
+			renderingOptions->mouseSpeed = 0.0005f;
+		}
+		if (ImGui::SliderFloat("Mouse Speed", &renderingOptions->mouseSpeed, 0.00005f, 0.05f, "%.5f"))
+		{
+		}
 
 		if (ImGui::Checkbox("Show Seed Box", &renderingOptions->showSeedBox))
 		{
@@ -1172,6 +1214,12 @@ void RenderImGuiOptions::drawTimeSpaceOptions()
 			}
 		}
 
+		if (ImGui::Checkbox("Shift time-space", &fluctuationOptions->shiftProjection))
+		{
+			this->updatefluctuation = true;
+		}
+
+
 		if (ImGui::Checkbox("Render Isosurfaces", &fluctuationOptions->additionalRaycasting))
 		{
 			this->updatefluctuation = true;
@@ -1544,14 +1592,29 @@ void RenderImGuiOptions::drawDataset()
 				setArray<float>(&this->raycastingOptions->clipBox[0], 7.854f, 2.0f, 3.1415f);
 				setArray<int>(&this->solverOptions->gridSize[0], 192, 192, 192);
 
-				
+				this->solverOptions->dt = 0.001f;
+				this->solverOptions->firstIdx = 1;
+				this->solverOptions->lastIdx = 1000;
+				this->solverOptions->Compressed = true;
+				break;
+			}
+
+			case Dataset::Dataset::KIT2OW_OF_LAMBDA:
+			{
+				this->solverOptions->fileName = "Comp_OF_";
+				this->solverOptions->filePath = "G:\\KIT2\\Comp_OW_OF_Lambda\\";
+
+				setArray<float>(&this->solverOptions->gridDiameter[0], 7.854f, 2.0f, 3.1415f);
+				setArray<float>(&this->solverOptions->seedBox[0], 7.854f, 2.0f, 3.1415f);
+				setArray<float>(&this->raycastingOptions->clipBox[0], 7.854f, 2.0f, 3.1415f);
+				setArray<int>(&this->solverOptions->gridSize[0], 192, 192, 192);
+
+				this->solverOptions->Compressed = true;
 				this->solverOptions->dt = 0.001f;
 				this->solverOptions->firstIdx = 1;
 				this->solverOptions->lastIdx = 1000;
 				break;
 			}
-
-
 
 			case Dataset::Dataset::KIT3_RAW:
 			{

@@ -54,7 +54,7 @@ public:
 		this->solverOptions.viewChanged = true;
 	}
 
-
+	float mouseSpeed = 0.005f;
 	// Initialize graphics
 	bool Initialize(HWND hwnd, int width, int height);
 

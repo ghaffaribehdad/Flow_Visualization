@@ -112,6 +112,15 @@ void main(lineadj GS_INPUT input[4], inout TriangleStream<GS_OUTPUT> output)
 		
 		break;
 	}
+	case(5):
+	{
+		pos0.x = particlePlanePos;
+		pos1.x = particlePlanePos;
+		pos2.x = particlePlanePos;
+		pos3.x = particlePlanePos;
+
+		break;
+	}
 
 	default:
 		break;

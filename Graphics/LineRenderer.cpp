@@ -235,6 +235,20 @@ float LineRenderer::streakProjectionPlane()
 	return init_pos;
 }
 
+float LineRenderer::streakProjectionPlaneFix()
+{
+	int current = solverOptions->currentIdx;
+	float timeDim = solverOptions->timeDim;
+	int lastIdx = solverOptions->lastIdx;
+	int	firstIdx = solverOptions->firstIdx;
+
+	float init_pos = -timeDim / 2;
+	init_pos += (current - firstIdx) * (timeDim / (lastIdx - firstIdx + 1));
+
+
+	return init_pos;
+}
+
 float LineRenderer::streakProjectionPlane_Stream()
 {
 	int current = solverOptions->currentSegment;

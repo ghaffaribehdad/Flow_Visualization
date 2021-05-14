@@ -475,7 +475,18 @@ void StreamlineRenderer::updateConstantBuffer(Camera & camera)
 	GS_constantBuffer.data.gridDiameter.y = solverOptions->gridDiameter[1];
 	GS_constantBuffer.data.gridDiameter.z = solverOptions->gridDiameter[2];
 	GS_constantBuffer.data.periodicity = solverOptions->periodic;
-	GS_constantBuffer.data.particlePlanePos = streakProjectionPlane();
+
+
+	if (solverOptions->projection == Projection::STREAK_PROJECTION)
+	{
+		GS_constantBuffer.data.particlePlanePos = streakProjectionPlane();
+	}
+	else if (solverOptions->projection == Projection::STREAK_PROJECTION_FIX)
+	{
+		GS_constantBuffer.data.particlePlanePos = -solverOptions->timeDim / 2;;
+		GS_constantBuffer.data.particlePlanePos = 0;
+	}
+
 	GS_constantBuffer.data.streakPos = solverOptions->projectPos * (solverOptions->gridDiameter[0] / solverOptions->gridSize[0]);
 	GS_constantBuffer.data.transparencyMode = solverOptions->transparencyMode;
 	GS_constantBuffer.data.timDim = solverOptions->lineLength;

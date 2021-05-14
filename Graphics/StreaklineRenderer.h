@@ -243,7 +243,17 @@ public:
 		GS_constantBuffer.data.gridDiameter.y = solverOptions->gridDiameter[1];
 		GS_constantBuffer.data.gridDiameter.z = solverOptions->gridDiameter[2];
 		GS_constantBuffer.data.periodicity = solverOptions->periodic;
-		GS_constantBuffer.data.particlePlanePos = streakProjectionPlane();
+		if (solverOptions->projection == Projection::STREAK_PROJECTION)
+		{
+			GS_constantBuffer.data.particlePlanePos = streakProjectionPlane();
+		}
+		else if (solverOptions->projection == Projection::STREAK_PROJECTION_FIX)
+		{
+			GS_constantBuffer.data.particlePlanePos =  0;
+		}
+
+
+
 		GS_constantBuffer.data.streakPos = (float)solverOptions->projectPos * (solverOptions->gridDiameter[0] / (float)solverOptions->gridSize[0]);
 
 		PS_constantBuffer.data.minMeasure = renderingOptions->minMeasure;

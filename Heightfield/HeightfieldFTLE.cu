@@ -447,8 +447,8 @@ __host__ bool HeightfieldFTLE::initializeBoundingBox()
 
 
 	h_boundingBox->gridSize = make_int3(dispersionOptions->gridSize_2D[0], dispersionOptions->gridSize_2D[1], solverOptions->lastIdx - solverOptions->firstIdx + 1);
-	h_boundingBox->updateBoxFaces(ArrayFloat3ToFloat3(raycastingOptions->clipBox), ArrayFloat3ToFloat3(raycastingOptions->clipBoxCenter));
-	h_boundingBox->m_dimensions = ArrayFloat3ToFloat3(solverOptions->gridDiameter);
+	h_boundingBox->updateBoxFaces(ArrayToFloat3(raycastingOptions->clipBox), ArrayToFloat3(raycastingOptions->clipBoxCenter));
+	h_boundingBox->m_dimensions = ArrayToFloat3(solverOptions->gridDiameter);
 	h_boundingBox->updateAspectRatio(*width, *height);
 
 	h_boundingBox->constructEyeCoordinates

@@ -37,6 +37,8 @@ __host__ __device__ void BoundingBox::updateBoxFaces(const float3 & dimensions, 
 
 }
 
+
+
 __host__ __device__ void BoundingBox::updateAspectRatio(const int & width, const int & height)
 {
 	this->m_width = width;

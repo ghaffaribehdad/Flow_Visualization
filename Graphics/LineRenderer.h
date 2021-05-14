@@ -98,6 +98,7 @@ public:
 	virtual void cleanPipeline();							// Deactivates the Geometry Shader prevent conflict with other pipelines
 	bool releaseScene();
 	float streakProjectionPlane();
+	float streakProjectionPlaneFix();
 	float streakProjectionPlane_Stream();
 															// need to be called at the initilization of this object 
 	//=> To Do: Move it to the constructor
