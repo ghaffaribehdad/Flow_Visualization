@@ -12,6 +12,12 @@ struct CB_VS_vertexshader
 // 8 Bytes
 
 
+struct CB_VS_Sampler
+{
+	DirectX::XMMATRIX View;
+	DirectX::XMMATRIX Proj;
+};
+
 struct Tube_geometryShader
 {
 	DirectX::XMMATRIX View;
@@ -49,11 +55,19 @@ struct CB_pixelShader
 	DirectX::XMFLOAT4 maxColor;
 	float minMeasure;
 	float maxMeasure;
+	int viewportWidth;
+	int viewportHeight;
 	bool condition;
+};
+
+
+struct CB_pixelShaderSampler
+{
+	int viewportWidth;
+	int viewportHeight;
 };
 
 struct CB_pixelShader_Sampler
 {
-
 	float transparency;
 };

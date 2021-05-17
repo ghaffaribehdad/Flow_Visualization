@@ -11,7 +11,8 @@ bool LineRenderer::setShaders(D3D11_PRIMITIVE_TOPOLOGY Topology)
 	this->deviceContext->VSSetShader(vertexshader.GetShader(), NULL, 0);			// set vertex shader
 	this->deviceContext->PSSetShader(pixelshader.GetShader(), NULL, 0);		
 	this->deviceContext->GSSetShader(geometryshader.GetShader(), NULL, 0);
-	this->deviceContext->OMSetBlendState(this->blendState.Get(), NULL, 0xFFFFFFFF);
+	this->deviceContext->OMSetBlendState(NULL, NULL, 0xFFFFFFFF);
+
 
 	
 	return true;
@@ -24,12 +25,13 @@ void LineRenderer::setBuffers()
 {
 	
 	UINT offset = 0;
+	this->deviceContext->IASetVertexBuffers(0, 1, this->vertexBuffer.GetAddressOf(), this->vertexBuffer.StridePtr(), &offset);	// Vertex buffer
+	this->deviceContext->GSSetConstantBuffers(0, 1, this->GS_constantBuffer.GetAddressOf());									// Geometry shader constant buffer
+	this->deviceContext->PSSetConstantBuffers(0, 1, this->PS_constantBuffer.GetAddressOf());									// Pixel shader constant buffer
 
-	//set index and vertex buffer
-	this->deviceContext->IASetVertexBuffers(0, 1, this->vertexBuffer.GetAddressOf(), this->vertexBuffer.StridePtr(), &offset); // set Vertex buffer
-	this->deviceContext->GSSetConstantBuffers(0, 1, this->GS_constantBuffer.GetAddressOf());
-	this->deviceContext->PSSetConstantBuffers(0, 1, this->PS_constantBuffer.GetAddressOf());
 }
+
+
 
 
 
@@ -54,16 +56,21 @@ void LineRenderer::updateConstantBuffer(Camera& camera)
 
 
 
-void LineRenderer::setResources(RenderingOptions& _renderingOptions, SolverOptions& _solverOptions,ID3D11DeviceContext* _deviceContext, ID3D11Device* _device, IDXGIAdapter * _adapter)
+
+
+void LineRenderer::setResources(RenderingOptions& _renderingOptions, SolverOptions& _solverOptions,ID3D11DeviceContext* _deviceContext, ID3D11Device* _device, IDXGIAdapter * _adapter , const int & _width, const int & _height)
 {
 	this->solverOptions = &_solverOptions;
 	this->solverOptions->p_Adapter = _adapter;
 	this->renderingOptions = &_renderingOptions;
 	this->device = _device;
 	this->deviceContext = _deviceContext;
+	this->width = _width;
+	this->height = _height;
 }
 bool LineRenderer::initializeShaders()
 {
+
 	std::wstring shaderfolder;
 #pragma region DetermineShaderPath
 	if (IsDebuggerPresent() == TRUE)
@@ -107,10 +114,60 @@ bool LineRenderer::initializeShaders()
 	}
 
 
+	D3D11_INPUT_ELEMENT_DESC layoutSecondPass[] =
+	{
+		{
+			"POSITION",
+			0,
+			DXGI_FORMAT::DXGI_FORMAT_R32G32B32_FLOAT,
+			0,
+			D3D11_APPEND_ALIGNED_ELEMENT,
+			D3D11_INPUT_CLASSIFICATION::D3D11_INPUT_PER_VERTEX_DATA,
+			0
+		},
+
+		{
+			"TEXCOORD",
+			0,
+			DXGI_FORMAT::DXGI_FORMAT_R32G32_FLOAT,
+			0,
+			D3D11_APPEND_ALIGNED_ELEMENT,
+			D3D11_INPUT_CLASSIFICATION::D3D11_INPUT_PER_VERTEX_DATA,
+			0
+		}
+	};
+
+
+
+	numElements = ARRAYSIZE(layoutSecondPass);
+	if (!vertexshaderSecondPass.Initialize(this->device, shaderfolder + L"vertexShaderSecondPass.cso", layoutSecondPass, numElements))
+	{
+		return false;
+
+	}
+
+	numElements = ARRAYSIZE(layoutSecondPass);
+	if (!vertexshaderSampler.Initialize(this->device, shaderfolder + L"vertexShaderSampler.cso", layoutSecondPass, numElements))
+	{
+		return false;
+
+	}
+
+	if (!this->pixelshaderSecondPass.Initialize(this->device, shaderfolder + L"secondPassPS.cso"))
+	{
+		return false;
+	}
+
+	if (!this->pixelShaderSampler.Initialize(this->device, shaderfolder + L"pixelshaderSampler.cso"))
+		return false;
+
+
 	switch (renderingOptions->renderingMode)
 	{
 	case RenderingMode::RenderingMode::TUBES:
 	{
+
+
 		if (!this->geometryshader.Initialize(this->device, shaderfolder + L"geometryshaderLineTube.cso"))
 		{
 			return false;
@@ -120,6 +177,13 @@ bool LineRenderer::initializeShaders()
 		{
 			return false;
 		}
+
+		if (!this->pixelshaderFirstPass.Initialize(this->device, shaderfolder + L"firstPassPS.cso"))
+		{
+			return false;
+		}
+
+
 		break;
 	}
 	case RenderingMode::RenderingMode::SPHERES:
@@ -137,7 +201,6 @@ bool LineRenderer::initializeShaders()
 		break;
 	}
 	}
-
 
 
 
@@ -189,56 +252,20 @@ float LineRenderer::streakProjectionPlane_Stream()
 
 bool LineRenderer::initializeRasterizer()
 {
-	if (this->rasterizerstate.Get() == nullptr)
+	
+	// Create Rasterizer state
+	D3D11_RASTERIZER_DESC rasterizerDesc;
+	ZeroMemory(&rasterizerDesc, sizeof(D3D11_RASTERIZER_DESC));
+
+	rasterizerDesc.FillMode = D3D11_FILL_MODE::D3D11_FILL_SOLID;
+	rasterizerDesc.CullMode = D3D11_CULL_MODE::D3D11_CULL_NONE; // CULLING could be set to none
+	rasterizerDesc.MultisampleEnable = TRUE;
+	rasterizerDesc.AntialiasedLineEnable = TRUE;
+	HRESULT hr = this->device->CreateRasterizerState(&rasterizerDesc, this->rasterizerstate.GetAddressOf());
+	if (FAILED(hr))
 	{
-		// Create Rasterizer state
-		D3D11_RASTERIZER_DESC rasterizerDesc;
-		ZeroMemory(&rasterizerDesc, sizeof(D3D11_RASTERIZER_DESC));
-
-		rasterizerDesc.FillMode = D3D11_FILL_MODE::D3D11_FILL_SOLID;
-		rasterizerDesc.CullMode = D3D11_CULL_MODE::D3D11_CULL_NONE; // CULLING could be set to none
-		rasterizerDesc.MultisampleEnable = true;
-		rasterizerDesc.AntialiasedLineEnable = true;
-		//rasterizerDesc.FrontCounterClockwise = TRUE;//= 1;
-
-		HRESULT hr = this->device->CreateRasterizerState(&rasterizerDesc, this->rasterizerstate.GetAddressOf());
-		if (FAILED(hr))
-		{
-			ErrorLogger::Log(hr, "Failed to Create rasterizer state.");
-			return false;
-		}
-
-
-
-		//Create the blend state
-		D3D11_BLEND_DESC blendDesc;
-		ZeroMemory(&blendDesc, sizeof(blendDesc));
-
-		D3D11_RENDER_TARGET_BLEND_DESC rtbd;
-		ZeroMemory(&rtbd, sizeof(rtbd));
-
-		rtbd.BlendEnable = true;
-
-		rtbd.SrcBlend = D3D11_BLEND::D3D11_BLEND_SRC_ALPHA;
-		rtbd.SrcBlendAlpha = D3D11_BLEND::D3D11_BLEND_ONE;
-
-		rtbd.DestBlend = D3D11_BLEND::D3D11_BLEND_INV_SRC_ALPHA;
-		rtbd.DestBlendAlpha = D3D11_BLEND::D3D11_BLEND_INV_SRC_ALPHA;
-
-		rtbd.BlendOp = D3D11_BLEND_OP::D3D11_BLEND_OP_ADD;
-		rtbd.BlendOpAlpha = D3D11_BLEND_OP::D3D11_BLEND_OP_ADD;
-
-		rtbd.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE::D3D11_COLOR_WRITE_ENABLE_ALL;
-
-
-		blendDesc.RenderTarget[0] = rtbd;
-
-		hr = this->device->CreateBlendState(&blendDesc, this->blendState.GetAddressOf());
-		if (FAILED(hr))
-		{
-			ErrorLogger::Log(hr, "Failed to create blend state.");
-			return false;
-		}
+		ErrorLogger::Log(hr, "Failed to Create rasterizer state.");
+		return false;
 	}
 
 	return true;

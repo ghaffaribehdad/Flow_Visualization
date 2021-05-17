@@ -79,7 +79,7 @@ void RenderImGuiOptions::drawSolverOptions()
 
 		if (ImGui::Combo("Projection", &solverOptions->projection, Projection::ProjectionList, Projection::Projection::COUNT))
 		{
-
+			this->updateOIT = true;
 		}
 
 		if (solverOptions->projection == Projection::Projection::STREAK_PROJECTION)
@@ -371,7 +371,7 @@ void RenderImGuiOptions::drawSolverOptions()
 
 		if (ImGui::Checkbox("Using Transparency", &solverOptions->usingTransparency))
 		{
-
+			this->updateOIT = true;
 		}
 
 		if (ImGui::Combo("Transparency Mode", &solverOptions->transparencyMode, TransparencyMode::TransparencyModeList, TransparencyMode::TransparencyMode::COUNT))
@@ -741,7 +741,10 @@ void RenderImGuiOptions::drawLineRenderingOptions()
 		}
 
 
-		ImGui::SliderFloat("Tube Radius", &renderingOptions->tubeRadius, 0.0f, 0.1f, "%.5f");         
+		if (ImGui::SliderFloat("Tube Radius", &renderingOptions->tubeRadius, 0.0f, 0.1f, "%.5f"))
+		{
+			this->updateOIT = true;
+		}
 
 
 
@@ -749,20 +752,20 @@ void RenderImGuiOptions::drawLineRenderingOptions()
 
 		if (ImGui::ColorEdit4("Minimum", (float*)&renderingOptions->minColor))
 		{
-
+			this->updateOIT = true;
 		}
 		if (ImGui::InputFloat("Min Value", (float*)& renderingOptions->minMeasure, 0.1f))
 		{
-
+			this->updateOIT = true;
 		}
 
 		if (ImGui::ColorEdit4("Maximum", (float*)&renderingOptions->maxColor))
 		{
-
+			this->updateOIT = true;
 		}
 		if (ImGui::InputFloat("Max Value", (float*)& renderingOptions->maxMeasure, 0.1f))
 		{
-
+			this->updateOIT = true;
 		}
 
 		ImGui::End();
@@ -816,7 +819,8 @@ void RenderImGuiOptions::drawRaycastingOptions()
 
 		}
 
-		if (ImGui::DragFloat("Transparency", &raycastingOptions->transparecny, 0.01, 0, 1.0f))
+		if (ImGui::DragFloat("Transparency", &raycastingOptions->transparecny, 0.01f, 0, 1.0f))
+		if (ImGui::DragFloat("Transparency", &raycastingOptions->transparecny, 0.01f, 0, 1.0f))
 		{
 			this->updateRaycasting = true;
 		}

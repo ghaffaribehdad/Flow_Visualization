@@ -20,10 +20,13 @@ typedef long long int llInt;
 class LineRenderer
 {
 
+public:
+	ID3D11RenderTargetView*				mainRTV;
+	ID3D11DepthStencilView*				depthstencil;
 protected:
 	
 	int counter = 0;
-
+	bool updateOIT = false;
 	// Resterizer com pointer
 	Microsoft::WRL::ComPtr<ID3D11RasterizerState> rasterizerstate;
 	Microsoft::WRL::ComPtr<ID3D11BlendState>			blendState;
@@ -32,14 +35,32 @@ protected:
 	VertexBuffer<Vertex>				vertexBuffer;
 	IndexBuffer							indexBuffer;
 	ConstantBuffer<Tube_geometryShader> GS_constantBuffer;
+	ConstantBuffer<CB_VS_Sampler>		VS_SamplerConstantBuffer;
 	ConstantBuffer<CB_pixelShader>		PS_constantBuffer;
+	ConstantBuffer<CB_pixelShaderSampler> PS_constantBufferSampler;
 	std::vector<DWORD>					indices;
 
 
+
+
+
+
+	// Viewport dimension
+	int width = 0;
+	int height = 0;
+
 	// Shaders
 	VertexShader		vertexshader;
+	VertexShader		vertexshaderSecondPass;
+	VertexShader		vertexshaderSampler;
+
 	PixelShader			pixelshader;
+	PixelShader			pixelshaderFirstPass;
+	PixelShader			pixelshaderSecondPass;
+	PixelShader			pixelShaderSampler;
 	GeometryShader		geometryshader;
+
+
 
 	// Reference of resources
 	RenderingOptions	* renderingOptions;
@@ -58,8 +79,10 @@ protected:
 	virtual void updateIndexBuffer() {}; 			// Update Index buffer to match the vertex buffer (If Index buffer is needed)
 
 
+
+
 	virtual void updateConstantBuffer(Camera& _camera);	// Update Constant buffer based on the camera positions and view 
-	bool setShaders(D3D11_PRIMITIVE_TOPOLOGY Topology);					// set shaders and rasterizer
+	virtual bool setShaders(D3D11_PRIMITIVE_TOPOLOGY Topology);					// set shaders and rasterizer
 	bool initializeRasterizer();						// Create Rasterizer state
 	virtual void setBuffers();							// set vertex and index and constant buffer
 	virtual bool initilizeIndexBuffer() { return true; }
@@ -78,7 +101,7 @@ public:
 	float streakProjectionPlane_Stream();
 															// need to be called at the initilization of this object 
 	//=> To Do: Move it to the constructor
-	void setResources(RenderingOptions& _renderingOptions, SolverOptions& _solverOptions, ID3D11DeviceContext* _deviceContext, ID3D11Device* _device, IDXGIAdapter* pAdapter);
+	virtual void setResources(RenderingOptions& _renderingOptions, SolverOptions& _solverOptions, ID3D11DeviceContext* _deviceContext, ID3D11Device* _device, IDXGIAdapter* pAdapter, const int & width = 0, const int & height = 0);
 	
 	virtual bool initializeShaders();				// Create GS,VS and PS 
 

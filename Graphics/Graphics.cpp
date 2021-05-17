@@ -1,5 +1,5 @@
 #include "Graphics.h"
-#include <ScreenGrab.h>
+#include <ScreenGrab11.h>
 #include <dxgidebug.h>
 #include <dxgi1_3.h>
 #include <wincodec.h>
@@ -9,8 +9,18 @@ bool Graphics::InitializeCamera()
 {
 	// set camera properties
 	camera.SetPosition(cameraProp.eyePosition);
-	camera.SetProjectionValues(this->cameraProp.FOV, static_cast<float>(this->windowWidth) / static_cast<float>(this->windowHeight), \
-		this->cameraProp.nearField, this->cameraProp.farField);
+	camera.SetProjectionValues(
+		this->cameraProp.FOV,
+		static_cast<float>(this->windowWidth) / static_cast<float>(this->windowHeight),
+		this->cameraProp.nearField,
+		this->cameraProp.farField
+	);
+	camera.SetParallelProjectionValues(
+		static_cast<float>(this->windowWidth) / static_cast<float>(this->windowHeight),
+		static_cast<float>(this->windowHeight),
+		this->cameraProp.nearField,
+		this->cameraProp.farField
+	);
 	return true;
 }
 
@@ -137,32 +147,17 @@ void Graphics::RenderFrame()
 
 	}
 
+
 	if (renderingOptions.showStreakPlane)
 	{
 		this->streakPlane.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	}
-
-
-	if (this->renderImGuiOptions.showStreamlines)
-	{
-		switch (renderingOptions.renderingMode)
-		{
-		case RenderingMode::RenderingMode::TUBES:
-		{
-			this->streamlineRenderer.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ);
-			break;
-		}
-		case RenderingMode::RenderingMode::SPHERES:
-		{
-			this->streamlineRenderer.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
-			break;
-		}
-		}
-
-	}
-
 	raycasting.show(&renderImGuiOptions);					// Raycasting 
+
+
+
+
 
 	if (this->renderImGuiOptions.showStreaklines)
 	{
@@ -187,6 +182,32 @@ void Graphics::RenderFrame()
 		}
 		}
 	}
+
+	streamlineRenderer.mainRTV = renderTargetView.Get();
+	streamlineRenderer.depthstencil = depthStencilView.Get();
+
+	if (this->renderImGuiOptions.showStreamlines)
+	{
+		switch (renderingOptions.renderingMode)
+		{
+		case RenderingMode::RenderingMode::TUBES:
+		{
+			this->streamlineRenderer.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ);
+			break;
+		}
+		case RenderingMode::RenderingMode::SPHERES:
+		{
+			this->streamlineRenderer.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
+			break;
+		}
+		}
+	}
+
+
+
+	this->deviceContext->OMSetRenderTargets(1, this->renderTargetView.GetAddressOf(), this->depthStencilView.Get());
+	this->deviceContext->OMSetDepthStencilState(this->depthStencilState.Get(), 0);
+
 
 
 
@@ -288,9 +309,6 @@ bool Graphics::InitializeDirectXResources()
 	}
 
 
-	this->deviceContext->OMSetRenderTargets(1, renderTargetView.GetAddressOf(), NULL);
-
-
 	if (this->depthStencilBuffer.Get() != nullptr)
 	{
 		depthStencilBuffer->Release();
@@ -381,7 +399,9 @@ bool Graphics::InitializeResources()
 		this->solverOptions,
 		this->deviceContext.Get(),
 		this->device.Get(),
-		this->adapter
+		this->adapter,
+		this->windowWidth,
+		this->windowHeight
 	);
 
 	streaklineRenderer.setResources
@@ -771,10 +791,8 @@ void Graphics::Resize(HWND hwnd)
 	}
 
 	// Create and bind the backbuffer
-
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> backbuffer;
-
-	hr = this->swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(backbuffer.GetAddressOf()));
+	hr = this->swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(backbuffer.ReleaseAndGetAddressOf()));
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log(hr, "Failed to Get Back buffer");

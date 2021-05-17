@@ -1,6 +1,6 @@
 #pragma once
 #include <DirectXMath.h>
-
+#define SAFE_RELEASE(x) if(x) { x->Release(); x = NULL; }
 struct Vertex
 {
 	Vertex(){}
@@ -26,6 +26,11 @@ struct TexCoordVertex
 
 
 
-
+struct LinkedList
+{
+	UINT    uPixelColor;
+	float    uDepthAndCoverage;
+	UINT    uNext;
+};
 
 
