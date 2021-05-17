@@ -160,7 +160,29 @@ LRESULT WindowContainer::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
 					RAWINPUT* raw = reinterpret_cast<RAWINPUT*>(rawdata.get());
 					if (raw->header.dwType == RIM_TYPEMOUSE)
 					{
-						mouse.OnMouseMoveRaw(raw->data.mouse.lLastX, raw->data.mouse.lLastY);
+						if ((raw->data.mouse.usFlags & MOUSE_MOVE_ABSOLUTE) == MOUSE_MOVE_ABSOLUTE) {
+							// Mouse settings for remote desktop
+							static float lastPosX = FLT_MAX;
+							static float lastPosY = FLT_MAX;
+							const bool virtualDesktop = (raw->data.mouse.usFlags & MOUSE_VIRTUAL_DESKTOP) == MOUSE_VIRTUAL_DESKTOP;
+							const int width = GetSystemMetrics(virtualDesktop ? SM_CXVIRTUALSCREEN : SM_CXSCREEN);
+							const int height = GetSystemMetrics(virtualDesktop ? SM_CYVIRTUALSCREEN : SM_CYSCREEN);
+							
+							const float newPosX = (raw->data.mouse.lLastX / 65535.0f) * width;
+							const float newPosY = (raw->data.mouse.lLastY / 65535.0f) * height;
+						
+							if (lastPosX != FLT_MAX && lastPosY != FLT_MAX) {
+								// Converted absolute to delta codepath
+								mouse.OnMouseMoveRaw(newPosX - lastPosX, newPosY - lastPosY);
+							}
+							lastPosX = newPosX;
+							lastPosY = newPosY;
+						}
+						else {
+							// Normal, delta codepath
+							mouse.OnMouseMoveRaw(raw->data.mouse.lLastX, raw->data.mouse.lLastY);
+						}
+						
 					}
 				}
 			}
