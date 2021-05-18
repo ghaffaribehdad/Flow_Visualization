@@ -722,7 +722,7 @@ __global__ void CudaIsoSurfacRenderer
 
 					// shading (no ambient)
 					float diffuse = max(dot(normalize(gradient), d_boundingBox.m_viewDir), 0.0f);
-					float3 raycastingColor = Array2Float3(raycastingOptions.color_0);
+					float3 raycastingColor = Array2Float3(raycastingOptions.color_0)^raycastingOptions.brightness;
 					float3 rgb = raycastingColor * diffuse;
 
 					float depth = depthfinder(position, eyePos, d_boundingBox.m_viewDir, f, n);
@@ -2544,7 +2544,7 @@ __global__ void CudaTerrainRenderer_extra_fluctuation
 						float diffuse = max(dot(gradient, viewDir), 0.0f);
 						rgb = rgb * diffuse;
 					}
-
+					rgb = rgb ^ timeSpaceOptions.brightness;
 					// vector from eye to isosurface
 					float3 position_viewCoordinate = position - eyePos;
 
@@ -2556,7 +2556,6 @@ __global__ void CudaTerrainRenderer_extra_fluctuation
 					depth += (-1.0f / z_dist) * (f * n) / (f - n);
 
 					float4 rgba = { rgb.x , rgb.y, rgb.z, depth };
-
 					// write back color and depth into the texture (surface)
 					// stride size of 4 * floats for each texel
 					surf2Dwrite(rgba, raycastingSurface, sizeof(float4) * pixel.x, pixel.y);

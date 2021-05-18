@@ -23,6 +23,7 @@ __global__ void ParticleTracing::TracingStream
 		float3 gridDiameter = Array2Float3(solverOptions.gridDiameter);
 		int3 gridSize = Array2Int3(solverOptions.gridSize);
 		float3 init_pos = *d_particles[particleIdx].getPosition();
+		float streakPos = (solverOptions.projectPos / gridSize.x) * gridDiameter.x;
 		float3 upDir = make_float3(0.0f, 1.0f, 0.0f);
 		d_particles[particleIdx].updateVelocity(gridDiameter, gridSize, t_VelocityField, Array2Float3(solverOptions.velocityScalingFactor));
 
@@ -96,7 +97,7 @@ __global__ void ParticleTracing::TracingStream
 			case ColorMode::ColorMode::DISTANCE_STREAK:
 			{
 
-				p_VertexBuffer[vertexIdx + i].measure = fabs(magnitude(init_pos - d_particles[particleIdx].m_position));
+				p_VertexBuffer[vertexIdx + i].measure = fabs(streakPos - d_particles[particleIdx].m_position.x);
 
 				break;
 			}

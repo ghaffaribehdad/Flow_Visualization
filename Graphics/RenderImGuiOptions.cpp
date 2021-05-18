@@ -839,6 +839,14 @@ void RenderImGuiOptions::drawRaycastingOptions()
 		}
 
 
+		if (ImGui::SliderFloat("Brightness", &raycastingOptions->brightness, 0.2f, 2))
+		{
+			this->updateRaycasting = true;
+			this->updateTimeSpaceField = true;
+
+
+		}
+
 		if (!raycastingOptions->identicalDataset)
 		{
 			//if (ImGui::InputText("File Path", solverOptions->filePath, sizeof(raycastingOptions->filePath)))
@@ -1205,6 +1213,15 @@ void RenderImGuiOptions::drawTimeSpaceOptions()
 
 		ImGui::Begin("Time-Space Rendering");
 
+		if (ImGui::SliderFloat("Brightness", &fluctuationOptions->brightness, 0.2f, 2))
+		{
+			this->updateRaycasting = true;
+			this->updateTimeSpaceField = true;
+
+
+		}
+
+
 		if (solverOptions->lastIdx - solverOptions->firstIdx > 0)
 		{
 			if (ImGui::Checkbox("Enable Rendering", &this->showFluctuationHeightfield))
@@ -1503,17 +1520,21 @@ void RenderImGuiOptions::drawDataset()
 	if (!raycastingOptions->identicalDataset)
 	{
 
-		if (ImGui::Combo("RaycastingDataset", reinterpret_cast<int*>(&this->raycastyingDataset), Dataset::datasetList, Dataset::Dataset::COUNT))
+		if (ImGui::Combo("Raycasting Dataset", reinterpret_cast<int*>(&this->raycastyingDataset), Dataset::datasetList, Dataset::Dataset::COUNT))
 		{
-			//switch (raycastyingDataset)
-			//{
 
-			//}
-	
+			this->updateStreamlines = true;
+			this->updatePathlines = true;
+			this->updateStreaklines = true;
+			this->updateRaycasting = true;
+
+			this->solverOptions->fileChanged = true;
+			solverOptions->loadNewfile = true;
+			this->solverOptions->fileChanged = true;
 		}
 	}
 
-	if (ImGui::Combo("Dataset", reinterpret_cast<int*>(&this->dataset),Dataset::datasetList, Dataset::Dataset::COUNT))
+	if (ImGui::Combo("Dataset", reinterpret_cast<int*>(&this->dataset_0),Dataset::datasetList, Dataset::Dataset::COUNT))
 	{
 		this->updateStreamlines = true;
 		this->updatePathlines = true;
@@ -1525,7 +1546,7 @@ void RenderImGuiOptions::drawDataset()
 		this->solverOptions->fileChanged = true;
 
 
-		switch (dataset)
+		switch (dataset_0)
 		{
 
 			case Dataset::Dataset::KIT2REF_COMP:
@@ -1596,6 +1617,7 @@ void RenderImGuiOptions::drawDataset()
 				this->solverOptions->firstIdx = 1;
 				this->solverOptions->lastIdx = 1000;
 				this->solverOptions->Compressed = true;
+				this->solverOptions->maxSize = 9000000;
 				break;
 			}
 
@@ -1613,6 +1635,7 @@ void RenderImGuiOptions::drawDataset()
 				this->solverOptions->dt = 0.001f;
 				this->solverOptions->firstIdx = 1;
 				this->solverOptions->lastIdx = 1000;
+				this->solverOptions->maxSize = 9000000;
 				break;
 			}
 

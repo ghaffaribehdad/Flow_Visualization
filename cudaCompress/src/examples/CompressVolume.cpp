@@ -451,7 +451,7 @@ void decompressVolumeFloat(GPUResources& shared, CompressVolumeResources& resour
     // upload per-level symbol stream pointers
     cudaSafeCall(cudaEventSynchronize(resources.syncEventUpload));
     memcpy(resources.pUpload, dpSymbolStreams.data(), dpSymbolStreams.size() * sizeof(Symbol*));
-    cudaSafeCall(cudaMemcpyAsync(dppSymbolStreams, resources.pUpload, dpSymbolStreams.size() * sizeof(Symbol*), cudaMemcpyHostToDevice));
+	    cudaSafeCall(cudaMemcpyAsync(dppSymbolStreams, resources.pUpload, dpSymbolStreams.size() * sizeof(Symbol*), cudaMemcpyHostToDevice));
     cudaSafeCall(cudaEventRecord(resources.syncEventUpload));
 
 

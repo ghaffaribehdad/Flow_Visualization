@@ -267,6 +267,11 @@ inline __host__ __device__ float3 operator*(float3 a, float b)
 	return make_float3(a.x * b, a.y * b, a.z * b);
 }
 
+inline __host__ __device__ float3 operator^(float3 a, float b)
+{
+	return make_float3(pow(a.x, b), pow(a.y, b), pow(a.z, b));
+}
+
 inline __host__ __device__ float4 operator*(const float4& a ,const float & b)
 {
 	return make_float4(a.x * b, a.y * b, a.z * b,a.w * b);

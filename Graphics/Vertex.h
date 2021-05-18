@@ -30,6 +30,7 @@ struct LinkedList
 {
 	UINT    uPixelColor;
 	float    uDepthAndCoverage;
+	UINT	coverage;
 	UINT    uNext;
 };
 

@@ -4,7 +4,8 @@
 struct Fragment_And_Link_Buffer_STRUCT
 {
 	uint    uPixelColor;
-	float    uDepthAndCoverage;       // Coverage is only used in the MSAA case
+	float   uDepthAndCoverage;       // Coverage is only used in the MSAA case
+	uint	coverage;
 	uint    uNext;
 };
 
@@ -55,6 +56,7 @@ struct PS_INPUT
 {
 
 	float4 outPosition : SV_POSITION;
+	uint  uCoverage : SV_COVERAGE;
 	float3 outTangent: TANGENT;
 	float3 outLightDir: LIGHTDIR;
 	float3 outNormal : NORMAL;
@@ -105,7 +107,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 	if (condition)
 	{
 
-		rgb.w = maxMeasure - minMeasure == 0 ? saturate((measure - minMeasure) / (maxMeasure - minMeasure + 0.001)) : saturate((measure - minMeasure) / (maxMeasure - minMeasure));
+		rgb.w = 1 - pow((maxMeasure - minMeasure == 0 ? saturate((measure - minMeasure) / (maxMeasure - minMeasure + 0.001)) : saturate((measure - minMeasure) / (maxMeasure - minMeasure))),0.4);
 	}
 	else
 	{
@@ -126,6 +128,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 	//Element.uDepthAndCoverage = input.outPosition.z * MAX_24BIT_UINT));
 	Element.uDepthAndCoverage = input.outPosition.z;
 	Element.uNext = uOldStartOffset;
+	Element.coverage = input.uCoverage;
 	FragmentAndLinkBuffer[uPixelCount] = Element;
 
 

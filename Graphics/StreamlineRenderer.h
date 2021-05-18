@@ -16,7 +16,7 @@ public:
 
 private:
 
-	unsigned int n_occlusion = 100;
+	unsigned int n_occlusion = 50;
 	StreamlineSolver streamlineSolver;
 
 	Microsoft::WRL::ComPtr<ID3D11Buffer>				g_pStartOffsetBuffer;

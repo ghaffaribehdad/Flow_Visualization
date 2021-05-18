@@ -1,12 +1,14 @@
 
-static int layerLimit = 100;
-static uint SortedFragmentsColor[100 + 1];
-static float SortedFragmentsDepth[100 + 1];
+static int layerLimit = 50;
+static uint SortedFragmentsColor[50 + 1];
+static uint SortedFragmentsCoverage[50 + 1];
+static float SortedFragmentsDepth[50 + 1];
 
 struct Fragment_And_Link_Buffer_STRUCT
 {
 	uint    uPixelColor;
-	float    uDepthAndCoverage;       // Coverage is only used in the MSAA case
+	float   uDepthAndCoverage;       // Coverage is only used in the MSAA case
+	uint	uCoverage;
 	uint    uNext;
 };
 
@@ -62,6 +64,7 @@ PS_OUT main(PS_INPUT input)
 		//SortedFragments[nNumFragments] = uint2(Element.uPixelColor, Element.uDepthAndCoverage);
 		SortedFragmentsColor[nNumFragments] = Element.uPixelColor;
 		SortedFragmentsDepth[nNumFragments] = Element.uDepthAndCoverage;
+		SortedFragmentsCoverage[nNumFragments] = Element.uCoverage;
 		int j = nNumFragments;
 
 
@@ -71,10 +74,15 @@ PS_OUT main(PS_INPUT input)
 			int jminusone = max(j - 1, 0);
 			float TmpDepth = SortedFragmentsDepth[j];
 			uint TmpColor = SortedFragmentsColor[j];
+			uint TmpCoverage = SortedFragmentsCoverage[j];
+
 			SortedFragmentsColor[j] = SortedFragmentsColor[jminusone];
 			SortedFragmentsDepth[j] = SortedFragmentsDepth[jminusone];
+			SortedFragmentsCoverage[j] = SortedFragmentsCoverage[jminusone];
+
 			SortedFragmentsColor[jminusone] = TmpColor;
 			SortedFragmentsDepth[jminusone] = TmpDepth;
+			SortedFragmentsCoverage[jminusone] = TmpCoverage;
 			j--;
 		}
 
@@ -86,15 +94,36 @@ PS_OUT main(PS_INPUT input)
 	}
 
 
-
+	float3 vCurrentColorSample[4];
 
 	float4 vCurrentColor = { 1,1,1,0 };
+	//float4 vCurrentColor = { 0,0,0,0 };
 
 	for (int k = nNumFragments - 1; k >= 0; k--)
 	{
 		float4 vFragmentColor = UnpackUintIntoFloat4(SortedFragmentsColor[k]);
-		vCurrentColor.xyz = lerp(vCurrentColor.xyz, vFragmentColor.xyz, vFragmentColor.w);
+		uint uCoverage = SortedFragmentsCoverage[k];
+
+		for (uint uSample = 0; uSample < 4; uSample++)
+		{
+			float fIsSampleCovered = (uCoverage & (1 << uSample)) ? 1.0 : 0.0;
+			vCurrentColorSample[uSample].xyz = lerp(vCurrentColor.xyz, vFragmentColor.xyz, vFragmentColor.w * fIsSampleCovered);
+		}
+
 	}
+
+	//for (uint uSample = 0; uSample < 4; uSample++)
+	//{
+	//	vCurrentColor.xyz += vCurrentColorSample[uSample];
+	//}
+
+
+	for (int k = nNumFragments - 1; k >= 0; k--)
+	{
+		float4 vFragmentColor = UnpackUintIntoFloat4(SortedFragmentsColor[k]);
+		vCurrentColor.xyz = lerp(vCurrentColor.xyz, vFragmentColor.xyz, vFragmentColor.w );
+	}
+
 
 	PS_OUT output;
 	if (nNumFragments != 0)

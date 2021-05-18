@@ -47,7 +47,7 @@ struct TimeSpaceRenderingOptions
 
 	// Terrain Rendering Options
 	int fieldMode = 0;
-
+	float brightness = 0.5f;
 	float hegiht_tolerance = 0.01f;
 	int wallNoramlPos = 9;
 	float heightLimit = 0.5f;

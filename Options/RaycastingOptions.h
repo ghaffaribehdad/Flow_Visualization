@@ -68,6 +68,7 @@ public:
 	int isoMeasure_0 = IsoMeasure::VelocityMagnitude;
 	int isoMeasure_1 = IsoMeasure::VelocityMagnitude;
 	int isoMeasure_2 = IsoMeasure::VelocityMagnitude;
+	float brightness = 0.8f;
 
 	float clipBox[3] = { 1.0f,1.0f,1.0f };
 	float clipBoxCenter[3] = { 0.0f,0.0f,0.0f };

@@ -43,7 +43,8 @@ private:
 	TurbulentMixingOptions*			turbulentMixingOptions;
 	TimeSpace3DOptions*				timeSpace3DOptions;
 
-	Dataset::Dataset dataset = Dataset::Dataset::NONE;
+	Dataset::Dataset dataset_0 = Dataset::Dataset::NONE;
+	Dataset::Dataset dataset_1 = Dataset::Dataset::NONE;
 	Dataset::Dataset raycastyingDataset = Dataset::Dataset::NONE;
 
 public:
