@@ -2355,6 +2355,9 @@ __global__ void CudaTerrainRenderer_extra_fluctuation_raycasting
 
 				float value = observable1.ValueAtXYZ_Tex(t_isosurface, relativePosIso);
 
+				value = gaussianFilter(timeSpaceOptions.filterSize, t_isosurface, relativePosIso).x;
+
+
 				if (value > raycastingOptions.isoValue_0)
 				{
 
@@ -2487,7 +2490,7 @@ __global__ void CudaTerrainRenderer_extra_fluctuation
 				// 0.5 is the offset for the texture coordinate
 				float3 texPos = {relativePos.x,(float)timeSpaceOptions.wallNoramlPos + 0.5f , relativePos.z};
 
-
+				
 
 
 				float height = observable2.ValueAtXYZ_Tex(heightField, texPos);
@@ -2531,9 +2534,11 @@ __global__ void CudaTerrainRenderer_extra_fluctuation
 				// Heightfield
 				if ( position.y - height < timeSpaceOptions.hegiht_tolerance && height - position.y < timeSpaceOptions.hegiht_tolerance && !skip)
 				{
+					value = gaussianFilter(timeSpaceOptions.filterSize, heightField, texPos).x;
 
-					float3 rgb = colorCode(timeSpaceOptions.minColor, timeSpaceOptions.maxColor, observable1.ValueAtXYZ_Tex(heightField, texPos), timeSpaceOptions.min_val, timeSpaceOptions.max_val);
-
+					//float3 rgb = colorCode(timeSpaceOptions.minColor, timeSpaceOptions.maxColor, observable1.ValueAtXYZ_Tex(heightField, texPos), timeSpaceOptions.min_val, timeSpaceOptions.max_val);
+					float3 rgb = colorCode(timeSpaceOptions.minColor, timeSpaceOptions.maxColor, value, timeSpaceOptions.min_val, timeSpaceOptions.max_val);
+					rgb = rgb * timeSpaceOptions.brightness;
 
 					if (timeSpaceOptions.shading)
 					{
@@ -2544,7 +2549,7 @@ __global__ void CudaTerrainRenderer_extra_fluctuation
 						float diffuse = max(dot(gradient, viewDir), 0.0f);
 						rgb = rgb * diffuse;
 					}
-					rgb = rgb ^ timeSpaceOptions.brightness;
+					//rgb = rgb ^ timeSpaceOptions.brightness;
 					// vector from eye to isosurface
 					float3 position_viewCoordinate = position - eyePos;
 

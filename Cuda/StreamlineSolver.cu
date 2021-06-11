@@ -15,18 +15,15 @@ __host__ bool StreamlineSolver::loadVolumeTexture()
 	{
 	case true: // Compressed
 	{
-
-
 		// Initialize Volume IO (Save file path and file names)
-		this->volume_IO.InitializeBufferRealTime(this->solverOptions);
+		//this->volume_IO.Initialize(this->solverOptions);
 		loadTextureCompressed(solverOptions, volumeTexture, solverOptions->currentIdx);
 
 		break;
 	}
 	case false: // Uncompressed
 	{
-
-		this->volume_IO.Initialize(solverOptions);
+		//this->volume_IO.Initialize(solverOptions);
 		this->loadTexture(solverOptions, volumeTexture, solverOptions->currentIdx);
 
 		break;

@@ -172,7 +172,7 @@ public:
 
 		this->streamlineSolver.solve();
 		this->streamlineSolver.FinalizeCUDA();
-		this->streamlineSolver.releaseVolumeIO();
+		//this->streamlineSolver.releaseVolumeIO();
 
 		
 	}

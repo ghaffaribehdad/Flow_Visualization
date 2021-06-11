@@ -26,6 +26,12 @@ void Timer::Restart()
 	start = std::chrono::high_resolution_clock::now();
 }
 
+void Timer::Reset()
+{
+	isrunning = false;
+	start = std::chrono::high_resolution_clock::now();
+}
+
 bool Timer::Stop()
 {
 	if (!isrunning)

@@ -57,14 +57,14 @@ __host__ bool PathlineSolver::solve()
 				}
 				else if (step % 2 == 0) // => EVEN
 				{
-					this->volumeTexture_1.release();
-					loadTextureCompressed(solverOptions, volumeTexture_1, solverOptions->firstIdx + step + 1);
+					this->volumeTexture_0.release();
+					loadTextureCompressed(solverOptions, volumeTexture_0, solverOptions->firstIdx + step);
 					odd = false;
 				}
 				else if (step % 2 != 0) // => ODD
 				{
-					this->volumeTexture_0.release();
-					loadTextureCompressed(solverOptions, volumeTexture_0, solverOptions->firstIdx + step + 1);
+					this->volumeTexture_1.release();
+					loadTextureCompressed(solverOptions, volumeTexture_1, solverOptions->firstIdx + step);
 					odd = true;
 
 				}
@@ -85,15 +85,15 @@ __host__ bool PathlineSolver::solve()
 				}
 				else if (step % 2 == 0) // => EVEN
 				{
-					this->volumeTexture_1.release();
-					loadTexture(solverOptions, volumeTexture_1, solverOptions->firstIdx + step + 1);
+					this->volumeTexture_0.release();
+					loadTexture(solverOptions, volumeTexture_0, solverOptions->firstIdx + step);
 					odd = false;
 
 				}
 				else if (step % 2 != 0) // => ODD
 				{
-					this->volumeTexture_0.release();
-					loadTexture(solverOptions, volumeTexture_0, solverOptions->firstIdx + step + 1);
+					this->volumeTexture_1.release();
+					loadTexture(solverOptions, volumeTexture_1, solverOptions->firstIdx + step);
 					odd = true;
 				}
 				break;

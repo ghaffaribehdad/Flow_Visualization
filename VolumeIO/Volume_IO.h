@@ -31,7 +31,8 @@ namespace VolumeIO
 		DecompressResources decompressResources;
 		std::vector<unsigned int> index;
 		std::vector<char> buffer;
-		float* p_field = nullptr;	// Stores a pointer to the field on the Hose 
+		std::vector<char> buffer_compressed;
+		float* p_field = nullptr;	// Stores a pointer to the field on the Host 
 		float * dp_field = nullptr; 	// Stores a pointer to the field on the Device
 		float* planeBuffer = nullptr;
 		size_t buffer_size = 0;

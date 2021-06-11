@@ -14,7 +14,7 @@
 
 
 // Read a velocity volume
-bool VolumeIO::Volume_IO::readVolume(const uint & idx)
+bool VolumeIO::Volume_IO::readVolume(const unsigned int & idx)
 {
 	// Generate absolute path of the file
 	
@@ -26,7 +26,7 @@ bool VolumeIO::Volume_IO::readVolume(const uint & idx)
 }
 
 
-bool VolumeIO::Volume_IO::readVolume_Compressed(const uint & idx, const int3 & gridSize)
+bool VolumeIO::Volume_IO::readVolume_Compressed(const unsigned int & idx, const int3 & gridSize)
 {
 	// Generate absolute path of the file
 	this->fullName = m_filePath + m_fileName + std::to_string(idx) + ".bin";
@@ -57,12 +57,12 @@ void VolumeIO::Volume_IO::release()
 {
 	if (m_compressed)
 	{
-		cudaFree(dp_field);
+		//cudaFree(dp_field);
 		this->decompressResources.releaseDecompressionResources();
 	}
 	this->buffer.clear();
 	this->p_field = nullptr;
-	this->m_compressed = false;
+	//this->m_compressed = false;
 }
 
 
@@ -150,11 +150,13 @@ bool VolumeIO::Volume_IO::Read()
 	// size of the buffer
 	const size_t buffer_size = static_cast<size_t>(end - start);
 
+	TIMELAPSE(
 	// resize it to fit the dataset
 	(this->buffer).resize(buffer_size);
 
 	//read file and store it into buffer 
 	myFile.read(&(buffer.at(0)), buffer_size);
+	, "reading the file using ifstream");
 	// close the file
 	myFile.close();
 
@@ -169,9 +171,9 @@ bool VolumeIO::Volume_IO::Read()
 
 bool VolumeIO::Volume_IO::Read_Compressed(int3 _gridSize)
 {
-	// define the istream
-	std::ifstream myFile;
 
+		
+	std::ifstream myFile;
 	myFile = std::ifstream(this->fullName, std::ios::binary);
 
 	// check whether it can open the file
@@ -201,18 +203,22 @@ bool VolumeIO::Volume_IO::Read_Compressed(int3 _gridSize)
 	// size of the buffer
 	this->buffer_size = static_cast<size_t>(end - start);
 
-
+	TIMELAPSE(
 	//read file and store it into buffer 
-	TIMELAPSE(myFile.read(&(buffer.at(0)), buffer_size), "Reading from Disk");
-
+	myFile.read(&(buffer_compressed.at(0)), buffer_size);
+	,"reading the file using ifstream");
 
 	// close the file
 	myFile.close();
 
 	int3 gridSize = { _gridSize.x * 4,_gridSize.y,_gridSize.z };
 
-	this->dp_field = decompress(gridSize, reinterpret_cast<uint*>(&(buffer.at(0))), 0.01f, this->decompressResources.config, this->decompressResources.shared, this->decompressResources.res, buffer_size);
+	decompressResources.decompress(reinterpret_cast<uint*>(&(buffer_compressed.at(0))), 0.01f, buffer_size);
+	//decompressResources.decompress(0.01f, buffer_size);
+	this->dp_field = decompressResources.getDevicePointer();
 
+	//this->dp_field = decompress(gridSize, reinterpret_cast<uint*>(&(buffer.at(0))), 0.01f, this->decompressResources.config, this->decompressResources.shared, this->decompressResources.res, buffer_size);
+	
 	return true;
 }
 
@@ -226,6 +232,8 @@ void VolumeIO::Volume_IO::setFilePath(std::string _filePath)
 }
 
 
+
+
 void VolumeIO::Volume_IO::Initialize(SolverOptions* _solverOptions)
 {
 	m_fileName = _solverOptions->fileName;
@@ -234,8 +242,9 @@ void VolumeIO::Volume_IO::Initialize(SolverOptions* _solverOptions)
 
 	if (m_compressed)
 	{
-		this->decompressResources.initializeDecompressionResources({ _solverOptions->gridSize[0] * 4,_solverOptions->gridSize[1],_solverOptions->gridSize[2] });
-		TIMELAPSE((this->buffer).resize(_solverOptions->maxSize), "Resizing Buffer");
+		TIMELAPSE((this->buffer_compressed).resize(_solverOptions->maxSize), "Resizing Buffer");
+		this->decompressResources.initializeDecompressionResources(_solverOptions, reinterpret_cast<uint*>(&(buffer_compressed.at(0))));
+		
 	};
 
 

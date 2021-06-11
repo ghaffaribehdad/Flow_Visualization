@@ -2,6 +2,7 @@
 #include "cuda_runtime.h"
 #include <vector>
 #include "../cudaCompress/src/examples/CompressVolume.h"
+#include "../Options/SolverOptions.h"
 
 typedef unsigned int uint;
 
@@ -12,12 +13,36 @@ void releaseGPUResources(float * dp_field);
 struct DecompressResources
 {
 
+private:
+	int3 gridSize;
+	size_t maxSize = 0;
+	float * dp_field = nullptr;
+	unsigned int * pHost = nullptr;
+	void allocateAndRegister();
+
+public:
 	GPUResources::Config config;
 	GPUResources shared;
 	CompressVolumeResources res;
 	uint huffmanBits = 0;
-	void initializeDecompressionResources(int3 size);
+	void initializeDecompressionResources(SolverOptions * solverOption, unsigned int * _pHost);
 	void releaseDecompressionResources();
+	void pinHostMemory(size_t & maxSize);
+	void unpinHostMemory();
+
+	
+	void decompress(uint * h_data, const float & Quant_step, size_t & bufferSize);
+	void releaseGPUResources();
+
+
+public:
+
+
+	float * getDevicePointer()
+	{
+		return dp_field;
+	}
+
 
 
 };

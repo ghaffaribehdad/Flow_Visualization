@@ -21,18 +21,32 @@ float4 colorcoding(float3 rgb_min, float3 rgb_max, float value, float min_val, f
 	float3 rgb = { 0,0,0 };
 	float y_saturated = 0.0f;
 
-	if (value < 0)
-	{
-		float3 rgb_min_complement = float3(1, 1, 1) - rgb_min;
-		y_saturated = saturate(abs(value / min_val));
-		rgb = rgb_min_complement * (1 - y_saturated) + rgb_min;
-	}
-	else
-	{
-		float3 rgb_max_complement = float3(1, 1, 1) - rgb_max;
-		y_saturated = saturate(value / max_val);
-		rgb = rgb_max_complement * (1 - y_saturated) + rgb_max;
-	}
+
+	float min = 0;
+	float max = max_val - min_val;
+	float val = value - min_val;
+
+	float sat = saturate(value / (max - min));
+
+	rgb = (1 - sat) * rgb_min + sat * rgb_max;
+
+	//if (value < 0)
+	//{
+	//	float3 rgb_min_complement = float3(1, 1, 1) - rgb_min;
+	//	y_saturated = saturate(abs(value / min_val));
+	//	rgb = rgb_min_complement * (1 - y_saturated) + rgb_min;
+	//}
+	//else
+	//{
+	//	float3 rgb_max_complement = float3(1, 1, 1) - rgb_max;
+	//	y_saturated = saturate(max_val / value);
+	//	//rgb = rgb_max_complement * abs(y_saturated - 1) + rgb_max;
+	//	rgb = rgb_max_complement * (1 - y_saturated) + rgb_max;
+	//}
+
+
+
+
 
 	return float4(rgb.xyz, 1);
 }
@@ -107,7 +121,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 	if (condition)
 	{
 
-		rgb.w = 1 - pow((maxMeasure - minMeasure == 0 ? saturate((measure - minMeasure) / (maxMeasure - minMeasure + 0.001)) : saturate((measure - minMeasure) / (maxMeasure - minMeasure))),0.4);
+		rgb.w = 1 - pow((maxMeasure - minMeasure == 0 ? saturate((measure - minMeasure) / (maxMeasure - minMeasure + 0.001)) : saturate((measure - minMeasure) / (maxMeasure - minMeasure))),1);
 	}
 	else
 	{

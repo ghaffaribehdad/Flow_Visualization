@@ -23,20 +23,43 @@ struct PS_INPUT
 };
 
 
+float4 colorcoding(float3 rgb_min, float3 rgb_max, float value, float min_val, float max_val)
+{
+
+	float3 rgb = { 0,0,0 };
+	float y_saturated = 0.0f;
+
+
+	float min = 0;
+	float max = max_val - min_val;
+	float val = value - min_val;
+
+	float sat = saturate(value / (max - min));
+
+	rgb = (1 - sat) * rgb_min + sat * rgb_max;
+
+
+	return float4(rgb.xyz, 1);
+}
+
+
+
 
 float4 main(PS_INPUT input) : SV_TARGET
 {
+
+	float4 rgb = { 0.0f,0.0f,0.0f,0.0f };
+	float measure = input.outMeasure;
+
 	// If saturation is needed
 	if (saturation)
 	{
 		//else the color gradient
-		float measure = abs(input.outMeasure);
 		float4 rgb_compl_max = float4(1.0f, 1.0f, 1.0, 1.0f) - maxColor;
 
 		float Projection = maxMeasure == 0 ? saturate(measure / (maxMeasure  + .00001f)) : saturate(measure / maxMeasure);
 
 
-		float4 rgb = { 0.0f,0.0f,0.0f,0.0f };
 
 		rgb = (Projection )* rgb_compl_max + maxColor;
 
@@ -60,26 +83,7 @@ float4 main(PS_INPUT input) : SV_TARGET
 	}
 
 
-
-	//else the color gradient
-	float measure = abs(input.outMeasure);
-	float4 rgb_compl_min = float4(1.0f, 1.0f, 1.0, 1.0f) - minColor;
-	float4 rgb_compl_max = float4(1.0f, 1.0f, 1.0, 1.0f) - maxColor;
-
-	float Projection = maxMeasure - minMeasure == 0 ? saturate((measure - minMeasure) / (maxMeasure - minMeasure + .00001f) ): saturate((measure- minMeasure)/ (maxMeasure - minMeasure));
-	if (Projection < 0)
-		Projection = 0;
-
-	float4 rgb = { 0.0f,0.0f,0.0f,0.0f };
-	if(Projection < 0.5f)
-	{
-		rgb = (Projection * 2.0f)* rgb_compl_min + minColor;
-	}
-	else
-	{
-		rgb = (1.0f - ((Projection - 0.5f) *2.0f)) * rgb_compl_max + maxColor;
-	}
-
+	rgb = colorcoding(minColor.xyz, maxColor.xyz, measure, minMeasure, maxMeasure); // color coding
 
 	float diffuse = max(dot(normalize(input.outNormal), input.outLightDir), 0);
 	float3 reflection = 2.0 * dot(input.outNormal, input.outLightDir) * input.outNormal - input.outLightDir;
@@ -92,12 +96,9 @@ float4 main(PS_INPUT input) : SV_TARGET
 	if (cos_angle > 0.0f)
 	{
 		float4 specular = float4(1.0, 1.0f, 1.0f, 1.0f) * cos_angle;
-
 	}
 	rgb = rgb * diffuse;
 	rgb += specular;
 	rgb.w = 1;
 	return rgb;
-
-	
 }

@@ -115,6 +115,13 @@ __global__ void applyGaussianFilter
 	cudaSurfaceObject_t	s_velocityField
 );
 
+__device__ float4 gaussianFilter
+(
+	int filterSize,
+	cudaTextureObject_t t_velocityField,
+	float3 position
+);
+
 
 __global__ void AddOffsetVertexBufferStreaklines
 (
@@ -321,7 +328,8 @@ __device__ inline float getTemperature(float* temp, float pos, int size, int off
 
 
 __device__ inline float* gaussianFilter2D( int size, float std = 1);
-__device__ inline void applyFilter2D(float * filter, int size, cudaTextureObject_t tex, cudaSurfaceObject_t surf, int direction, int plane, int3 gridSize);
+__device__ inline void applyFilter2D(float * filter, int size, cudaTextureObject_t tex, cudaSurfaceObject_t surf, int direction ,int plane, int3 gridSize);
+__device__ inline float4 Filter2D(float * filter, int size, cudaTextureObject_t tex ,int direction, float3 relativePosition);
 __device__ inline void gaussianFilter3D(cudaTextureObject_t tex, cudaSurfaceObject_t surf, int3 size);
 
 

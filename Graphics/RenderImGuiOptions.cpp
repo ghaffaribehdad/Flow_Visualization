@@ -1213,14 +1213,17 @@ void RenderImGuiOptions::drawTimeSpaceOptions()
 
 		ImGui::Begin("Time-Space Rendering");
 
-		if (ImGui::SliderFloat("Brightness", &fluctuationOptions->brightness, 0.2f, 2))
+		if (ImGui::DragFloat("Light color", (float*)& fluctuationOptions->brightness))
 		{
 			this->updateRaycasting = true;
 			this->updateTimeSpaceField = true;
-
-
+			this->updatefluctuation = true;
 		}
 
+		if (ImGui::DragInt("filter size", &fluctuationOptions->filterSize, 1, 1, 100))
+		{
+			this->updatefluctuation = true;
+		}
 
 		if (solverOptions->lastIdx - solverOptions->firstIdx > 0)
 		{
@@ -1642,7 +1645,7 @@ void RenderImGuiOptions::drawDataset()
 			case Dataset::Dataset::KIT3_RAW:
 			{
 				this->solverOptions->fileName = "FieldP";
-				this->solverOptions->filePath = "E:\\KIT3\\initialPadded\\";
+				this->solverOptions->filePath = "G:\\KIT3\\Initial\\";
 
 
 				setArray<float>(&this->solverOptions->gridDiameter[0], 0.4f, 2.0f, 7.0f);
@@ -1885,6 +1888,8 @@ void RenderImGuiOptions::drawDataset()
 				break;
 
 			}
+
+
 
 
 

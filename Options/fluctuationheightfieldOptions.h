@@ -47,7 +47,7 @@ struct TimeSpaceRenderingOptions
 
 	// Terrain Rendering Options
 	int fieldMode = 0;
-	float brightness = 0.5f;
+	float brightness = 1.0f;
 	float hegiht_tolerance = 0.01f;
 	int wallNoramlPos = 9;
 	float heightLimit = 0.5f;
@@ -66,7 +66,6 @@ struct TimeSpaceRenderingOptions
 	float minColor[4] = { 117 / 255.0f,112 / 255.0f,179 / 255.0f };
 	float maxColor[4] = { 217 / 255.0f,95 / 255.0f,2 / 255.0f };
 
-
 	// Rendering status
 	bool initialized = false;
 	bool dispersion = false;
@@ -74,6 +73,8 @@ struct TimeSpaceRenderingOptions
 	bool released = false;
 	bool shading = false;
 	bool gaussianFilter = false;
+
+	int filterSize = 4;
 
 
 	float	samplingRate_0 = 0.01f;

@@ -100,9 +100,6 @@ __global__ void TracingStreak(cudaTextureObject_t t_VelocityField_0, cudaTexture
 			);
 	
 
-
-
-
 			if (odd)
 			{
 				tempPar = RK4Streak(t_VelocityField_1, t_VelocityField_0, oldPos, gridDiameter, gridSize, solverOptions.dt, Array2Float3(solverOptions.velocityScalingFactor));
@@ -253,6 +250,19 @@ __global__ void applyGaussianFilter
 	}
 }
 
+__device__ float4 gaussianFilter
+(
+	int filterSize,
+	cudaTextureObject_t t_velocityField,
+	float3 position
+)
+{
+
+	float * filter = gaussianFilter2D(filterSize, 1);
+	return Filter2D(filter, filterSize, t_velocityField,2,position);
+
+}
+
 __global__ void AddOffsetVertexBufferStreaklines
 (
 	SolverOptions solverOptions,
@@ -338,7 +348,7 @@ __global__ void TracingPath(Particle* d_particles, cudaTextureObject_t t_Velocit
 		int lineIdx = particleIdx * solverOptions.lineLength;
 		float3 gridDiameter = Array2Float3(solverOptions.gridDiameter);
 		int3 gridSize = Array2Int3(solverOptions.gridSize);
-		d_particles[particleIdx].updateVelocity(gridDiameter, gridSize, t_VelocityField_1);
+		d_particles[particleIdx].updateVelocity(gridDiameter, gridSize, t_VelocityField_0);
 		float3 current_vel = d_particles[particleIdx].m_velocity;
 		// Initialization
 		if (step == 0)
@@ -622,8 +632,6 @@ __device__ inline void applyFilter2D(float * filter, int filterSize, cudaTexture
 {
 
 
-
-
 	switch(direction)
 	{
 	case 0: //XY
@@ -704,4 +712,66 @@ __device__ inline void applyFilter2D(float * filter, int filterSize, cudaTexture
 	}
 
 	}
+}
+
+
+
+__device__ inline float4 Filter2D(float * filter, int filterSize, cudaTextureObject_t tex, int direction, float3 position)
+{
+	float4 filteredValue = { 0,0,0,0 };
+	switch (direction)
+	{
+	case 0: //XY
+	{
+
+
+			
+			for (int ii = -filterSize; ii <= filterSize; ii++)
+			{
+				for (int jj = -filterSize ; jj <= filterSize ; jj++)
+				{
+					filteredValue = filter[ii*filterSize + jj] * tex3D<float4>(tex, position.x + ii, position.y + jj, position.z);
+				}
+			}
+
+				
+
+		break;
+	}
+
+	case 1: //YZ
+	{
+
+		float4 filteredValue = { 0,0,0,0 };
+
+		for (int ii = -filterSize; ii <= filterSize; ii++)
+		{
+			for (int jj = -filterSize ; jj <= filterSize ; jj++)
+			{
+				filteredValue = filter[ii*filterSize + jj] * tex3D<float4>(tex, position.x, position.y + ii, position.z + jj);
+
+			}
+		}
+
+		break;
+	}
+
+	case 2: //ZX
+	{
+
+		float4 filteredValue = { 0,0,0,0 };
+		for (int ii = -filterSize ; ii <= filterSize ; ii++)
+		{
+			for (int jj = -filterSize ; jj <= filterSize ; jj++)
+			{
+				filteredValue = filteredValue + filter[ii*filterSize + jj] * tex3D<float4>(tex, position.x + jj , position.y, position.z + ii );
+			}
+		}
+
+		break;
+	}
+
+	}
+
+	return filteredValue;
 }

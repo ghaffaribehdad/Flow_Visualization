@@ -181,9 +181,5 @@ __device__ void ParticleTracing::RK4Stream(
 {
 
 	particle->m_position = ParticleTracing::RK4(t_VelocityField_0, t_VelocityField_0, particle->m_position, gridDiameter, gridSize, dt, velocityScale);
-
-	float3 relativePos = world2Tex(particle->m_position, gridDiameter, gridSize, false, true);
-
-	float4 velocity4D = tex3D<float4>(t_VelocityField_0, relativePos.x, relativePos.y, relativePos.z);
-	particle->m_velocity = make_float3(velocity4D.x, velocity4D.y, velocity4D.z) *velocityScale;
+	particle->updateVelocity(gridDiameter, gridSize, t_VelocityField_0, velocityScale);
 }

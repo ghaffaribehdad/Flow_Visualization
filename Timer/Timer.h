@@ -11,7 +11,7 @@
 	function;\
 	timer.Stop();\
 	std::printf(  "%s takes %f ms \n", string,timer.GetMilisecondsElapsed());\
-	timer.Restart();
+	//timer.Restart();
 
 #endif
 #ifndef CHECK_TIME
@@ -28,6 +28,7 @@ public:
 	Timer();
 	double GetMilisecondsElapsed();
 	void Restart();
+	void Reset();
 	bool Stop();
 	bool Start();
 private:

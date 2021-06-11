@@ -112,11 +112,15 @@ void  FluctuationHeightfield::generateTimeSpaceField3D(TimeSpaceRenderingOptions
 
 	blocks = BLOCK_THREAD(m_gridSize3D.z); // Kernel calls are based on the Spanwise gridSize
 
+	Timer timer;
 	
 	for (int t = 0; t < m_gridSize3D.x; t++) // Iterates over time
 	{
+		
 		// First Read the Compressed file and move it to GPU
-		this->volume_IO.readVolume_Compressed(t+solverOptions->firstIdx, Array2Int3(solverOptions->gridSize));
+		TIMELAPSE(this->volume_IO.readVolume_Compressed(t + solverOptions->firstIdx, Array2Int3(solverOptions->gridSize)), "read volume compress");
+
+		std::printf("\n\n");
 
 		// Copy the device pointer
 		float * h_VelocityField = this->volume_IO.getField_float_GPU();
@@ -124,20 +128,24 @@ void  FluctuationHeightfield::generateTimeSpaceField3D(TimeSpaceRenderingOptions
 		// Bind and copy device pointer to texture
 		volumeTexture.setField(h_VelocityField);
 
-		volumeTexture.initialize_devicePointer(Array2Int3(solverOptions->gridSize), false, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
+		TIMELAPSE(volumeTexture.initialize_devicePointer(Array2Int3(solverOptions->gridSize), false, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder),"initialize texture takes");
 		
 		// Release the device pointer
 		cudaFree(h_VelocityField);
 		
 		// Copy from texture to surface
+		timer.Start();
 		copyTextureToSurface<FetchTextureSurface::Channel_X, FetchTextureSurface::Channel_Y, FetchTextureSurface::Channel_Z, FetchTextureSurface::Channel_W> << < blocks, thread >> >
 			(
 				solverOptions->projectPos, //		Streamwise Pos
 				t, //		Timestep
-				*solverOptions,	
+				*solverOptions,
 				volumeTexture.getTexture(),
 				s_HeightSurface.getSurfaceObject()
-			);
+				);
+		timer.Stop();
+		std::printf("%s takes %f ms \n", "copy texture to surface", timer.GetMilisecondsElapsed());
+
 
 		// Release the volume texture
 		volumeTexture.release();
