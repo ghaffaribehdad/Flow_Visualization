@@ -107,20 +107,14 @@ __global__ void copyTextureToSurface
 
 }
 
-__global__ void applyGaussianFilter
-(
-	int filterSize,
-	int3 FieldSize,
-	cudaTextureObject_t t_velocityField,
-	cudaSurfaceObject_t	s_velocityField
-);
+//__global__ void applyGaussianFilter
+//(
+//	int filterSize,
+//	int3 FieldSize,
+//	cudaTextureObject_t t_velocityField,
+//	cudaSurfaceObject_t	s_velocityField
+//);
 
-__device__ float4 gaussianFilter
-(
-	int filterSize,
-	cudaTextureObject_t t_velocityField,
-	float3 position
-);
 
 
 __global__ void AddOffsetVertexBufferStreaklines
@@ -327,10 +321,43 @@ __device__ inline float getTemperature(float* temp, float pos, int size, int off
 }
 
 
-__device__ inline float* gaussianFilter2D( int size, float std = 1);
-__device__ inline void applyFilter2D(float * filter, int size, cudaTextureObject_t tex, cudaSurfaceObject_t surf, int direction ,int plane, int3 gridSize);
-__device__ inline float4 Filter2D(float * filter, int size, cudaTextureObject_t tex ,int direction, float3 relativePosition);
-__device__ inline void gaussianFilter3D(cudaTextureObject_t tex, cudaSurfaceObject_t surf, int3 size);
+__device__  inline float4 filterGaussian2D(int filterSize, float std, cudaTextureObject_t tex, int direction, float3 position)
+{
+	float4 filteredValue = { 0,0,0,0 };
+	switch (direction)
+	{
+
+	case 0: //XY
+	{
+
+		break;
+	}
+
+	case 1: //YZ
+	{
+
+		break;
+	}
+
+	case 2: //ZX
+	{
+
+		for (int ii = 0; ii < filterSize; ii++)
+		{
+			for (int jj = 0; jj < filterSize; jj++)
+			{
+				filteredValue = filteredValue +
+					0.5 * (1 / CUDA_PI_D) * (1.0 / powf(std, 2)) * exp(-1.0 * ((powf(ii - filterSize / 2, 2) + powf(jj - filterSize / 2, 2)) / (2.0f * std * std)))*
+					tex3D<float4>(tex, position.x + jj - filterSize / 2, position.y, position.z + ii - filterSize / 2);
+			}
+		}
+		break;
+	}
+
+	}
+
+	return filteredValue;
+}
 
 
 

@@ -39,7 +39,7 @@ private:
 	RaycastingOptions*				raycastingOptions;
 	DispersionOptions*				dispersionOptions;
 	CrossSectionOptions*			crossSectionOptions;
-	TimeSpaceRenderingOptions*		fluctuationOptions;
+	SpaceTimeOptions*		fluctuationOptions;
 	TurbulentMixingOptions*			turbulentMixingOptions;
 	TimeSpace3DOptions*				timeSpace3DOptions;
 
@@ -65,7 +65,7 @@ public:
 		SolverOptions * _solverOptions,
 		RaycastingOptions * _raycastingOptions,
 		DispersionOptions * _dispersionOptions,
-		TimeSpaceRenderingOptions * _fluctuationheightfieldOptions,
+		SpaceTimeOptions * _fluctuationheightfieldOptions,
 		CrossSectionOptions * _crossSectionOptions,
 		TurbulentMixingOptions* _turbulentMixingOptions,
 		TimeSpace3DOptions * _timeSpace3DOptions

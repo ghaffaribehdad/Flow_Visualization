@@ -73,7 +73,7 @@ __global__ void fluctuationfieldGradient3D
 (
 	cudaSurfaceObject_t heightFieldSurface3D,
 	SolverOptions solverOptions,
-	TimeSpaceRenderingOptions fluctuationOptions
+	SpaceTimeOptions fluctuationOptions
 
 );
 

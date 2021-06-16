@@ -178,22 +178,34 @@ public:
 
 	);
 
-	__host__ virtual  void show(RenderImGuiOptions* renderImGuiOptions)
+	__host__ virtual void show(RenderImGuiOptions* renderImGuiOptions)
 	{
 		if (renderImGuiOptions->showRaycasting)
 		{
+
+
+
 			if (!this->raycastingOptions->initialized)
 			{
 				this->initialize(cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
 				this->raycastingOptions->initialized = true;
 			}
 
+			if (this->raycastingOptions->resize)
+			{
+				this->release();
+				this->volume_IO.release();
+				this->initialize(cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
+				this->raycastingOptions->resize = false;
+			}
+
+
 			this->draw();
 
 			if (renderImGuiOptions->updateRaycasting)
 			{
-				this->updateScene();
 
+				this->updateScene();
 				renderImGuiOptions->updateRaycasting = false;
 
 			}
@@ -432,7 +444,7 @@ __global__ void CudaTerrainRenderer_extra_fluctuation
 	int rays,
 	float samplingRate,
 	float IsosurfaceTolerance,
-	TimeSpaceRenderingOptions fluctuationOptions
+	SpaceTimeOptions fluctuationOptions
 );
 
 
@@ -445,7 +457,7 @@ __global__ void CudaTerrainRenderer_extra_fluctuation_raycasting
 	int rays,
 	float samplingRate,
 	float IsosurfaceTolerance,
-	TimeSpaceRenderingOptions fluctuationOptions,
+	SpaceTimeOptions fluctuationOptions,
 	RaycastingOptions
 );
 

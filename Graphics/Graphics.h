@@ -74,7 +74,7 @@ public:
 	DispersionOptions				dispersionOptions;
 	TimeSpace3DOptions				timeSpace3DOptions;
 	CrossSectionOptions				crossSectionOptions;
-	TimeSpaceRenderingOptions	fluctuationheightfieldOptions;
+	SpaceTimeOptions				spaceTimeOptions;
 	TurbulentMixingOptions			turbulentMixingOptions;
 	FSLEOptions						fsleOptions;
 

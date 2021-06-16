@@ -23,6 +23,20 @@ public:
 	) override;
 
 
+
+	bool initializeRaycasting()
+	{
+		if (!this->initializeRaycastingTexture())				// initilize texture (the texture we need to write to)
+			return false;
+
+
+		if (!this->initializeBoundingBox())		// initialize the bounding box ( copy data to the constant memory of GPU about Bounding Box)
+			return false;
+
+		// set the number of rays = number of pixels
+		this->rays = (*this->width) * (*this->height);	// Set number of rays based on the number of pixels
+	}
+
 	void setResources(
 		Camera* _camera,
 		int* _width,
@@ -34,7 +48,7 @@ public:
 		IDXGIAdapter* _pAdapter,
 		ID3D11DeviceContext* _deviceContext,
 		DispersionOptions* _dispersionOptions,
-		TimeSpaceRenderingOptions* timeSpaceRenderingOptions
+		SpaceTimeOptions* _spaceTimeOptions
 	)
 	{
 		this->camera = _camera;
@@ -50,7 +64,7 @@ public:
 		this->pAdapter = _pAdapter;
 		this->deviceContext = _deviceContext;
 		this->dispersionOptions = _dispersionOptions;
-		this->timeSpaceRenderingOptions = timeSpaceRenderingOptions;
+		this->spaceTimeOptions = _spaceTimeOptions;
 	}
 
 	virtual void show(RenderImGuiOptions* renderImGuiOptions) override
@@ -58,12 +72,20 @@ public:
 		if (renderImGuiOptions->showFluctuationHeightfield)
 		{
 
-			if (!this->timeSpaceRenderingOptions->initialized)
+			if (!this->spaceTimeOptions->initialized)
 			{
 
 				this->initialize(cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
-				this->timeSpaceRenderingOptions->initialized = true;
+				this->spaceTimeOptions->initialized = true;
 			}
+
+			if (this->spaceTimeOptions->resize)
+			{
+				this->releaseRaycasting();
+				this->initializeRaycasting();
+				spaceTimeOptions->resize = false;
+			}
+
 			// Overrided draw
 			this->draw();
 
@@ -81,15 +103,13 @@ public:
 		}
 	}
 
-	void generateTimeSpaceField3D(TimeSpaceRenderingOptions * timeSpaceOptions);
+	void generateTimeSpaceField3D(SpaceTimeOptions * timeSpaceOptions);
 	
 
 	void gaussianFilter();
 	virtual void rendering() override;
-	
+	SpaceTimeOptions* spaceTimeOptions;
 
-
-	TimeSpaceRenderingOptions* timeSpaceRenderingOptions;
 private:
 
 	int3 m_gridSize3D = { 0,0,0 };

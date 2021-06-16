@@ -81,9 +81,9 @@ void seedParticle_ZY_Plane_FTLE
 {
 	float3 gridMeshSize =
 	{
-		solverOptions->seedBox[0] / ((float)solverOptions->seedGrid[0]-1),
-		solverOptions->seedBox[1] / ((float)solverOptions->seedGrid[1]-1),
-		solverOptions->seedBox[2] / ((float)solverOptions->seedGrid[2]-1),
+		solverOptions->seedBox[0] / ((float)solverOptions->seedGrid[0]),
+		solverOptions->seedBox[1] / ((float)solverOptions->seedGrid[1]),
+		solverOptions->seedBox[2] / ((float)solverOptions->seedGrid[2]),
 	};
 
 	for (int x = 0; x < solverOptions->seedGrid[0]; x++)

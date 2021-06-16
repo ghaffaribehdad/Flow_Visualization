@@ -39,6 +39,7 @@ public:
 	);
 
 	bool release() override;
+	bool releaseRaycasting();
 	void rendering() override;
 
 	virtual bool updateScene() override;

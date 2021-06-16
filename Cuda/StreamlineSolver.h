@@ -11,12 +11,13 @@
 #include <vector>
 #include <stdio.h>
 #include "../Particle/Particle.h"
-
+#include "../Timer/Timer.h"
 
 
 class StreamlineSolver : public CUDASolver
 {
-
+private:
+	Timer timer;
 public:
 
 	__host__ bool solve() override;

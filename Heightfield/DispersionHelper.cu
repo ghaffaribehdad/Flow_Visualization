@@ -16,14 +16,14 @@ template __global__ void fluctuationfieldGradient3D<struct FetchTextureSurface::
 (\
 	cudaSurfaceObject_t heightFieldSurface3D,
 	SolverOptions solverOptions,
-	TimeSpaceRenderingOptions fluctuationOptions
+	SpaceTimeOptions fluctuationOptions
 );
 
 template __global__ void fluctuationfieldGradient3D<struct FetchTextureSurface::Channel_Y>\
 (\
 	cudaSurfaceObject_t heightFieldSurface3D,
 	SolverOptions solverOptions,
-	TimeSpaceRenderingOptions fluctuationOptions
+	SpaceTimeOptions fluctuationOptions
 	);
 
 
@@ -281,7 +281,7 @@ __global__ void fluctuationfieldGradient3D
 (
 	cudaSurfaceObject_t heightFieldSurface3D,
 	SolverOptions solverOptions,
-	TimeSpaceRenderingOptions fluctuationOptions
+	SpaceTimeOptions fluctuationOptions
 )
 {
 

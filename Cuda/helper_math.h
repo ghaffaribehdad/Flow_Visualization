@@ -389,6 +389,7 @@ inline __host__ __device__ float3 operator-(const float3& a)
 
 
 
+
 inline __host__ __device__ void operator-=( float3& a, const float3 b)
 {
 	a.x -= b.x;
@@ -400,6 +401,11 @@ inline __host__ __device__ void operator-=( float3& a, const float3 b)
 inline __host__ __device__ float3 operator-(float3 a, float3 b)
 {
 	return make_float3(a.x - b.x, a.y - b.y, a.z - b.z);
+}
+
+inline __host__ __device__ float4 operator-(float4 a, float4 b)
+{
+	return make_float4(a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w);
 }
 
 inline __host__ __device__ double3 operator-(double3 a, double3 b)

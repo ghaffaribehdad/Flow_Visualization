@@ -124,9 +124,22 @@ bool Heightfield::release()
 	Raycasting::release();
 	cudaDestroyTextureObject(this->volumeTexture3D_height.getTexture());
 	this->a_HeightArray3D.release();
+	this->volumeTexture3D_height.release();
 
 	return true;
 }
+
+// Release resources 
+bool Heightfield::releaseRaycasting()
+{
+	Raycasting::release();
+	return true;
+}
+
+
+
+
+
 
 void Heightfield::trace3D_path_Single()
 {

@@ -10,7 +10,7 @@
 	timer.Start();\
 	function;\
 	timer.Stop();\
-	std::printf(  "%s takes %f ms \n", string,timer.GetMilisecondsElapsed());\
+	std::printf(  "%s takes %f ms \n", string,timer.GetMilisecondsElapsed());
 	//timer.Restart();
 
 #endif

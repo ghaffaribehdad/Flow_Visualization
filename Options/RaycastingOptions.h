@@ -86,6 +86,7 @@ public:
 	float transparecny = 1.0f;
 	bool identicalDataset = true;
 	bool adaptiveSampling = false;
+	bool resize = false;
 
 	char fileName[100] = "timespaceOFstreamwise";
 	char filePath[100] = "F:\\Dataset\\KIT3\\binary_fluc_z_major\\OpticalFlowPaddedStreamwise\\";

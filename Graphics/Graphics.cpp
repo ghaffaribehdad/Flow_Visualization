@@ -153,6 +153,9 @@ void Graphics::RenderFrame()
 		this->streakPlane.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	}
+
+
+
 	raycasting.show(&renderImGuiOptions);					// Raycasting 
 
 
@@ -309,10 +312,8 @@ bool Graphics::InitializeDirectXResources()
 	}
 
 
-	if (this->depthStencilBuffer.Get() != nullptr)
-	{
-		depthStencilBuffer->Release();
-	}
+	depthStencilBuffer.Reset();
+
 
 	// Describe our Depth/Stencil Buffer
 	D3D11_TEXTURE2D_DESC depthStencilDesc;
@@ -344,24 +345,23 @@ bool Graphics::InitializeDirectXResources()
 	}
 	this->deviceContext->OMSetRenderTargets(1, this->renderTargetView.GetAddressOf(), this->depthStencilView.Get());
 
-	if (this->depthStencilState.Get() == NULL)
+	depthStencilState.Reset();
+
+	// Create depth stencil description structure
+	D3D11_DEPTH_STENCIL_DESC depthstencildesc;
+	ZeroMemory(&depthstencildesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
+	depthstencildesc.DepthEnable = true;
+	depthstencildesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK::D3D11_DEPTH_WRITE_MASK_ALL;
+	depthstencildesc.DepthFunc = D3D11_COMPARISON_FUNC::D3D11_COMPARISON_LESS;
+
+	// Create depth stencil state
+	hr = this->device->CreateDepthStencilState(&depthstencildesc, this->depthStencilState.GetAddressOf());
+	if (FAILED(hr))
 	{
-		// Create depth stencil description structure
-		D3D11_DEPTH_STENCIL_DESC depthstencildesc;
-		ZeroMemory(&depthstencildesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
-		depthstencildesc.DepthEnable = true;
-		depthstencildesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK::D3D11_DEPTH_WRITE_MASK_ALL;
-		depthstencildesc.DepthFunc = D3D11_COMPARISON_FUNC::D3D11_COMPARISON_LESS;
-
-		// Create depth stencil state
-		hr = this->device->CreateDepthStencilState(&depthstencildesc, this->depthStencilState.GetAddressOf());
-		if (FAILED(hr))
-		{
-			ErrorLogger::Log(hr, "Failed to Create Depth/Stencil state");
-			return false;
-		}
+		ErrorLogger::Log(hr, "Failed to Create Depth/Stencil state");
+		return false;
 	}
-
+	
 
 	// Create the Viewport
 	D3D11_VIEWPORT viewport;
@@ -522,7 +522,7 @@ bool Graphics::InitializeResources()
 		this->adapter,
 		this->deviceContext.Get(),
 		&this->dispersionOptions,
-		&this->fluctuationheightfieldOptions
+		&this->spaceTimeOptions
 	);
 
 	dispersionTracer.setResources
@@ -752,7 +752,7 @@ bool Graphics::InitializeImGui(HWND hwnd)
 			&solverOptions,
 			&raycastingOptions,
 			&dispersionOptions,
-			&fluctuationheightfieldOptions,
+			&spaceTimeOptions,
 			&crossSectionOptions,
 			&turbulentMixingOptions,
 			&timeSpace3DOptions
@@ -780,8 +780,8 @@ void Graphics::Resize(HWND hwnd)
 	this->deviceContext->OMSetRenderTargets(0, 0, 0);
 
 	// Release RenderTarge View nad Depth Stencil View
-	this->depthStencilView->Release();
-	this->renderTargetView->Release();
+	this->depthStencilView.Reset();
+	this->renderTargetView.Reset();
 
 	// Resize the swapchain
 	HRESULT hr = this->swapchain->ResizeBuffers(1, windowWidth, windowHeight, DXGI_FORMAT_UNKNOWN, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH);

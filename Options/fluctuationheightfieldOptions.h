@@ -42,7 +42,7 @@ namespace SliderBackground
 
 
 
-struct TimeSpaceRenderingOptions
+struct SpaceTimeOptions
 {
 
 	// Terrain Rendering Options
@@ -73,9 +73,15 @@ struct TimeSpaceRenderingOptions
 	bool released = false;
 	bool shading = false;
 	bool gaussianFilter = false;
+	bool gaussianFilterHeight = false;
+	bool resize = false;
 
 	int filterSize = 4;
+	float std = 1.0f;
 
+
+	int filterSizeHeight = 4;
+	float stdHeight = 4;
 
 	float	samplingRate_0 = 0.01f;
 	bool	usingAbsolute = true;

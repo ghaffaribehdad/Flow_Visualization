@@ -204,13 +204,10 @@ void RenderImGuiOptions::drawSolverOptions()
 		}
 		if (ImGui::Button("Optical Flow"))
 		{
-			solverOptions->velocityScalingFactor[0] = solverOptions->gridDiameter[0] / (solverOptions->gridSize[0] + 20); // 20 pixel padding
-			solverOptions->velocityScalingFactor[1] = solverOptions->gridDiameter[1] / solverOptions->gridSize[1]; // 20 pixel padding
-			solverOptions->velocityScalingFactor[2] = solverOptions->gridDiameter[2] / (solverOptions->gridSize[2] + 20); // 20 pixel padding
-			if (solverOptions->lineRenderingMode == LineRenderingMode::STREAKLINES || solverOptions->lineRenderingMode == LineRenderingMode::PATHLINES)
-			{
-				this->solverOptions->dt = 1.0f;
-			}
+			solverOptions->velocityScalingFactor[0] = solverOptions->gridDiameter[0]/solverOptions->gridDiameter[1]; // 20 pixel padding
+			solverOptions->velocityScalingFactor[1] = 1.0f; // 20 pixel padding
+			solverOptions->velocityScalingFactor[2] = solverOptions->gridDiameter[2]/ solverOptions->gridDiameter[1]; // 20 pixel padding
+
 			this->updatePathlines = true;
 			this->updateStreamlines = true;
 
@@ -254,7 +251,7 @@ void RenderImGuiOptions::drawSolverOptions()
 
 		if (solverOptions->seedingPattern == (int)SeedingPattern::SEED_GRIDPOINTS)
 		{
-			if (ImGui::DragInt3("Seed Grid", solverOptions->seedGrid, 1, 2, 1024))
+			if (ImGui::DragInt3("Seed Grid", solverOptions->seedGrid, 1, 1, 1024))
 			{
 				this->updateStreamlines = true;
 				this->updatePathlines = true;
@@ -1220,10 +1217,55 @@ void RenderImGuiOptions::drawTimeSpaceOptions()
 			this->updatefluctuation = true;
 		}
 
-		if (ImGui::DragInt("filter size", &fluctuationOptions->filterSize, 1, 1, 100))
+		if (ImGui::Checkbox("Gaussin Filtering", &fluctuationOptions->gaussianFilter))
 		{
+			this->updateRaycasting = true;
+			this->updateTimeSpaceField = true;
 			this->updatefluctuation = true;
 		}
+
+		if (fluctuationOptions->gaussianFilter)
+		{
+			if (ImGui::DragInt("filter size", &fluctuationOptions->filterSize, 1, 1, 50))
+			{
+				this->updateRaycasting = true;
+				this->updateTimeSpaceField = true;
+				this->updatefluctuation = true;
+			}
+
+			if (ImGui::DragFloat("Standard Deviation ", &fluctuationOptions->std,0.5f,0.5f,50.0f))
+			{
+				this->updateRaycasting = true;
+				this->updateTimeSpaceField = true;
+				this->updatefluctuation = true;
+			}
+		}
+
+		if (ImGui::Checkbox("Gaussin Filtering Height", &fluctuationOptions->gaussianFilterHeight))
+		{
+			this->updateRaycasting = true;
+			this->updateTimeSpaceField = true;
+			this->updatefluctuation = true;
+		}
+
+		if (fluctuationOptions->gaussianFilterHeight)
+		{
+			if (ImGui::DragInt("filter size Height", &fluctuationOptions->filterSizeHeight, 1, 1, 50))
+			{
+				this->updateRaycasting = true;
+				this->updateTimeSpaceField = true;
+				this->updatefluctuation = true;
+			}
+
+			if (ImGui::DragFloat("Standard Deviation Height", &fluctuationOptions->stdHeight, 0.5f, 0.5f, 50.0f))
+			{
+				this->updateRaycasting = true;
+				this->updateTimeSpaceField = true;
+				this->updatefluctuation = true;
+			}
+		}
+
+
 
 		if (solverOptions->lastIdx - solverOptions->firstIdx > 0)
 		{
@@ -1253,9 +1295,7 @@ void RenderImGuiOptions::drawTimeSpaceOptions()
 		{
 			this->updatefluctuation = true;
 		}
-		if (ImGui::Checkbox("Gaussin Filtering", &fluctuationOptions->gaussianFilter))
-		{
-		}
+
 
 		if (ImGui::Combo("Slider Background", &fluctuationOptions->sliderBackground, SliderBackground::SliderBackgroundList, SliderBackground::SliderBackground::COUNT))
 		{
@@ -1964,6 +2004,126 @@ void RenderImGuiOptions::drawDataset()
 			{
 				this->solverOptions->fileName = "Field_AVG";
 				this->solverOptions->filePath = "E:\\TUI_RBC_Small\\timeAVG\\";
+
+
+				setArray<float>(&this->solverOptions->gridDiameter[0], 5.0f, 1.0f, 5.0f);
+				setArray<float>(&this->solverOptions->seedBox[0], 5.0f, 1.0f, 5.0f);
+				setArray<float>(&this->raycastingOptions->clipBox[0], 5.0f, 1.0f, 5.0f);
+				setArray<int>(&this->solverOptions->gridSize[0], 1024, 32, 1024);
+
+
+				this->solverOptions->dt = 0.01f;
+				this->solverOptions->periodic = false;
+				this->solverOptions->Compressed = false;
+
+				break;
+
+			}
+
+			case Dataset::Dataset::RBC_AVG_20:
+			{
+				this->solverOptions->fileName = "FieldAVG_20_";
+				this->solverOptions->filePath = "Y:\\RBC\\AVG20\\";
+
+
+				setArray<float>(&this->solverOptions->gridDiameter[0], 5.0f, 1.0f, 5.0f);
+				setArray<float>(&this->solverOptions->seedBox[0], 5.0f, 1.0f, 5.0f);
+				setArray<float>(&this->raycastingOptions->clipBox[0], 5.0f, 1.0f, 5.0f);
+				setArray<int>(&this->solverOptions->gridSize[0], 1024, 32, 1024);
+
+
+				this->solverOptions->dt = 0.01f;
+				this->solverOptions->periodic = false;
+				this->solverOptions->Compressed = false;
+
+				break;
+
+			}
+
+			case Dataset::Dataset::RBC_AVG_50:
+			{
+				this->solverOptions->fileName = "FieldAVG_50_";
+				this->solverOptions->filePath = "Y:\\RBC\\AVG50\\";
+
+
+				setArray<float>(&this->solverOptions->gridDiameter[0], 5.0f, 1.0f, 5.0f);
+				setArray<float>(&this->solverOptions->seedBox[0], 5.0f, 1.0f, 5.0f);
+				setArray<float>(&this->raycastingOptions->clipBox[0], 5.0f, 1.0f, 5.0f);
+				setArray<int>(&this->solverOptions->gridSize[0], 1024, 32, 1024);
+
+
+				this->solverOptions->dt = 0.01f;
+				this->solverOptions->periodic = false;
+				this->solverOptions->Compressed = false;
+
+				break;
+
+			}
+
+			case Dataset::Dataset::RBC_AVG_100:
+			{
+				this->solverOptions->fileName = "FieldAVG_100_";
+				this->solverOptions->filePath = "Y:\\RBC\\AVG100\\";
+
+
+				setArray<float>(&this->solverOptions->gridDiameter[0], 5.0f, 1.0f, 5.0f);
+				setArray<float>(&this->solverOptions->seedBox[0], 5.0f, 1.0f, 5.0f);
+				setArray<float>(&this->raycastingOptions->clipBox[0], 5.0f, 1.0f, 5.0f);
+				setArray<int>(&this->solverOptions->gridSize[0], 1024, 32, 1024);
+
+
+				this->solverOptions->dt = 0.01f;
+				this->solverOptions->periodic = false;
+				this->solverOptions->Compressed = false;
+
+				break;
+
+			}
+
+			case Dataset::Dataset::RBC_AVG_OF_20:
+			{
+				this->solverOptions->fileName = "AVG20_OF_";
+				this->solverOptions->filePath = "Y:\\RBC\\AVG20_OF\\";
+
+
+				setArray<float>(&this->solverOptions->gridDiameter[0], 5.0f, 1.0f, 5.0f);
+				setArray<float>(&this->solverOptions->seedBox[0], 5.0f, 1.0f, 5.0f);
+				setArray<float>(&this->raycastingOptions->clipBox[0], 5.0f, 1.0f, 5.0f);
+				setArray<int>(&this->solverOptions->gridSize[0], 1024, 32, 1024);
+
+
+				this->solverOptions->dt = 0.01f;
+				this->solverOptions->periodic = false;
+				this->solverOptions->Compressed = false;
+
+				break;
+
+			}
+
+			case Dataset::Dataset::RBC_AVG_OF_50:
+			{
+				this->solverOptions->fileName = "AVG50_OF_";
+				this->solverOptions->filePath = "Y:\\RBC\\AVG50_OF\\";
+
+
+				setArray<float>(&this->solverOptions->gridDiameter[0], 5.0f, 1.0f, 5.0f);
+				setArray<float>(&this->solverOptions->seedBox[0], 5.0f, 1.0f, 5.0f);
+				setArray<float>(&this->raycastingOptions->clipBox[0], 5.0f, 1.0f, 5.0f);
+				setArray<int>(&this->solverOptions->gridSize[0], 1024, 32, 1024);
+
+
+				this->solverOptions->dt = 0.01f;
+				this->solverOptions->periodic = false;
+				this->solverOptions->Compressed = false;
+
+				break;
+
+			}
+
+			case Dataset::Dataset::RBC_AVG_OF_100:
+			{
+				this->solverOptions->fileName = "AVG100_OF_";
+				this->solverOptions->filePath = "Y:\\RBC\\AVG100_OF\\";
 
 
 				setArray<float>(&this->solverOptions->gridDiameter[0], 5.0f, 1.0f, 5.0f);

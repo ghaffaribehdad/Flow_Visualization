@@ -20,12 +20,12 @@ template __global__ void CudaIsoSurfacRenderer<struct FetchTextureSurface::Shear
 template __global__ void CudaIsoSurfacRenderer<struct FetchTextureSurface::TurbulentDiffusivity>		(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, RaycastingOptions raycastingOptions);
 template __global__ void CudaIsoSurfacRenderer_GradientBase< struct FetchTextureSurface::Lambda2 >		(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, RaycastingOptions raycastingOptions);
 template __global__ void CudaTerrainRenderer_extra< struct FetchTextureSurface::Channel_X >				(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t heightField, cudaTextureObject_t extraField, int rays, float samplingRate, float IsosurfaceTolerance, DispersionOptions dispersionOptions, int traceTime);
-template __global__ void CudaTerrainRenderer_extra_fluctuation< struct FetchTextureSurface::Channel_X, struct FetchTextureSurface::Channel_Y >	(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t heightField, int rays, float samplingRate, float IsosurfaceTolerance, TimeSpaceRenderingOptions fluctuationOptions);
-template __global__ void CudaTerrainRenderer_extra_fluctuation <struct FetchTextureSurface::Channel_X, struct FetchTextureSurface::Channel_Z>(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t heightField, int rays, float samplingRate, float IsosurfaceTolerance, TimeSpaceRenderingOptions fluctuationOptions);
-template __global__ void CudaTerrainRenderer_extra_fluctuation <struct FetchTextureSurface::Channel_X, struct FetchTextureSurface::Channel_X>(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t heightField, int rays, float samplingRate, float IsosurfaceTolerance, TimeSpaceRenderingOptions fluctuationOptions);
-template __global__ void CudaTerrainRenderer_extra_fluctuation_raycasting <struct FetchTextureSurface::Channel_X, struct FetchTextureSurface::Channel_Y>(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t heightField, cudaTextureObject_t isoSurface,int rays, float samplingRate, float IsosurfaceTolerance, TimeSpaceRenderingOptions fluctuationOptions, RaycastingOptions raycastingOptions);
-template __global__ void CudaTerrainRenderer_extra_fluctuation_raycasting <struct FetchTextureSurface::Channel_X, struct FetchTextureSurface::Channel_X>(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t heightField, cudaTextureObject_t isoSurface,int rays, float samplingRate, float IsosurfaceTolerance, TimeSpaceRenderingOptions fluctuationOptions, RaycastingOptions raycastingOptions);
-template __global__ void CudaTerrainRenderer_extra_fluctuation_raycasting <struct FetchTextureSurface::Channel_X, struct FetchTextureSurface::Channel_Z>(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t heightField, cudaTextureObject_t isoSurface,int rays, float samplingRate, float IsosurfaceTolerance, TimeSpaceRenderingOptions fluctuationOptions, RaycastingOptions raycastingOptions);
+template __global__ void CudaTerrainRenderer_extra_fluctuation< struct FetchTextureSurface::Channel_X, struct FetchTextureSurface::Channel_Y >	(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t heightField, int rays, float samplingRate, float IsosurfaceTolerance, SpaceTimeOptions fluctuationOptions);
+template __global__ void CudaTerrainRenderer_extra_fluctuation <struct FetchTextureSurface::Channel_X, struct FetchTextureSurface::Channel_Z>(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t heightField, int rays, float samplingRate, float IsosurfaceTolerance, SpaceTimeOptions fluctuationOptions);
+template __global__ void CudaTerrainRenderer_extra_fluctuation <struct FetchTextureSurface::Channel_X, struct FetchTextureSurface::Channel_X>(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t heightField, int rays, float samplingRate, float IsosurfaceTolerance, SpaceTimeOptions fluctuationOptions);
+template __global__ void CudaTerrainRenderer_extra_fluctuation_raycasting <struct FetchTextureSurface::Channel_X, struct FetchTextureSurface::Channel_Y>(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t heightField, cudaTextureObject_t isoSurface,int rays, float samplingRate, float IsosurfaceTolerance, SpaceTimeOptions fluctuationOptions, RaycastingOptions raycastingOptions);
+template __global__ void CudaTerrainRenderer_extra_fluctuation_raycasting <struct FetchTextureSurface::Channel_X, struct FetchTextureSurface::Channel_X>(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t heightField, cudaTextureObject_t isoSurface,int rays, float samplingRate, float IsosurfaceTolerance, SpaceTimeOptions fluctuationOptions, RaycastingOptions raycastingOptions);
+template __global__ void CudaTerrainRenderer_extra_fluctuation_raycasting <struct FetchTextureSurface::Channel_X, struct FetchTextureSurface::Channel_Z>(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t heightField, cudaTextureObject_t isoSurface,int rays, float samplingRate, float IsosurfaceTolerance, SpaceTimeOptions fluctuationOptions, RaycastingOptions raycastingOptions);
 template __global__ void CudaIsoSurfacRenderer_float_PlaneColor<struct FetchTextureSurface::Channel_X>(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, int3 gridSize, RaycastingOptions raycastingOptions, SolverOptions solverOptions);
 template __global__ void CudaIsoSurfacRenderer_float_PlaneColor<struct FetchTextureSurface::Channel_Y>(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, int3 gridSize, RaycastingOptions raycastingOptions, SolverOptions solverOptions);
 template __global__ void CudaIsoSurfacRenderer_float_PlaneColor<struct FetchTextureSurface::Channel_Z>(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, int3 gridSize, RaycastingOptions raycastingOptions, SolverOptions solverOptions);
@@ -99,7 +99,7 @@ void Raycasting::loadTextureCompressed
 	// set the pointer to the volume texture
 	volumeTexture.setField(h_VelocityField);
 	// initialize the volume texture
-	TIMELAPSE(volumeTexture.initialize_devicePointer(Array2Int3(solverOptions->gridSize), false, addressModeX, addressModeY, addressModeZ), "Initialize Texture including DDCopy");
+	TIMELAPSE(volumeTexture.initialize_devicePointer(Array2Int3(solverOptions->gridSize), false, addressModeX, addressModeY, addressModeZ); , "Initialize Texture including DDCopy");
 	// release host memory
 	//volume_IO.release();
 	cudaFree(h_VelocityField);
@@ -188,6 +188,15 @@ __host__ bool Raycasting::initialize
 
 }
 
+
+__host__ bool Raycasting::release()
+{
+	this->volumeTexture.release();
+	//this->volume_IO.release();
+	return true;
+}
+
+
 void Raycasting::updateFile
 (
 	cudaTextureAddressMode addressMode_X,
@@ -220,14 +229,6 @@ void Raycasting::updateFile
 }
 
 
-__host__ bool Raycasting::release()
-{
-	this->interoperatibility.release();
-	this->volumeTexture.release();
-	this->raycastingSurface.destroySurface();
-
-	return true;
-}
 
 __host__ void Raycasting::rendering()
 {
@@ -2264,7 +2265,7 @@ __global__ void CudaTerrainRenderer_extra_fluctuation_raycasting
 	int rays,
 	float samplingRate,
 	float IsosurfaceTolerance,
-	TimeSpaceRenderingOptions timeSpaceOptions,
+	SpaceTimeOptions timeSpaceOptions,
 	RaycastingOptions raycastingOptions
 )
 {
@@ -2355,7 +2356,7 @@ __global__ void CudaTerrainRenderer_extra_fluctuation_raycasting
 
 				float value = observable1.ValueAtXYZ_Tex(t_isosurface, relativePosIso);
 
-				value = gaussianFilter(timeSpaceOptions.filterSize, t_isosurface, relativePosIso).x;
+				//value = gaussianFilter(timeSpaceOptions.filterSize, t_isosurface, relativePosIso).x;
 
 
 				if (value > raycastingOptions.isoValue_0)
@@ -2434,7 +2435,7 @@ __global__ void CudaTerrainRenderer_extra_fluctuation
 	int rays,
 	float samplingRate,
 	float IsosurfaceTolerance,
-	TimeSpaceRenderingOptions timeSpaceOptions
+	SpaceTimeOptions timeSpaceOptions
 )
 {
 
@@ -2493,7 +2494,17 @@ __global__ void CudaTerrainRenderer_extra_fluctuation
 				
 
 
-				float height = observable2.ValueAtXYZ_Tex(heightField, texPos);
+				float height = 0;
+
+				if (timeSpaceOptions.gaussianFilterHeight)
+				{
+					height = filterGaussian2D(timeSpaceOptions.filterSize, timeSpaceOptions.std, heightField, 2, texPos).y;
+				}
+				else
+				{
+					height = observable2.ValueAtXYZ_Tex(heightField, texPos);
+				}
+
 
 				if (timeSpaceOptions.usingAbsolute)
 				{
@@ -2534,8 +2545,15 @@ __global__ void CudaTerrainRenderer_extra_fluctuation
 				// Heightfield
 				if ( position.y - height < timeSpaceOptions.hegiht_tolerance && height - position.y < timeSpaceOptions.hegiht_tolerance && !skip)
 				{
-					value = gaussianFilter(timeSpaceOptions.filterSize, heightField, texPos).x;
-
+					float value = 0;
+					if (timeSpaceOptions.gaussianFilter)
+					{
+						value = observable1.ValueAtXYZ_Tex(heightField, texPos) - filterGaussian2D(timeSpaceOptions.filterSize, timeSpaceOptions.std, heightField, 2, texPos).x;
+					}
+					else
+					{
+						value = observable1.ValueAtXYZ_Tex(heightField, texPos);
+					}
 					//float3 rgb = colorCode(timeSpaceOptions.minColor, timeSpaceOptions.maxColor, observable1.ValueAtXYZ_Tex(heightField, texPos), timeSpaceOptions.min_val, timeSpaceOptions.max_val);
 					float3 rgb = colorCode(timeSpaceOptions.minColor, timeSpaceOptions.maxColor, value, timeSpaceOptions.min_val, timeSpaceOptions.max_val);
 					rgb = rgb * timeSpaceOptions.brightness;

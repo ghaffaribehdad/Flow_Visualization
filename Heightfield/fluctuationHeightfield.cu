@@ -52,59 +52,20 @@ bool FluctuationHeightfield::initialize
 		return false;
 
 	// Trace the fluctuation field
-	this->generateTimeSpaceField3D(timeSpaceRenderingOptions);
+	this->generateTimeSpaceField3D(spaceTimeOptions);
 
 	// Destroy the surface
 	this->s_HeightSurface.destroySurface();
 
 
-
-	switch (timeSpaceRenderingOptions->gaussianFilter)
-	{
-	case true: // Filter
-	{
-		// Initilize volume texture to do filtering
-		this->volumeTexture3D_height.setArray(a_HeightArray3D.getArrayRef());
-		this->volumeTexture3D_height.initialize_array(false, addressMode_X, addressMode_Y, addressMode_Z);
-
-		// Allocate new 3D Array
-		if (!a_HeightArray3D_Copy.initialize(m_gridSize3D.x, m_gridSize3D.y, m_gridSize3D.z))
-			return false;
-
-		// Bind the new array 3D to cuda surface and initilize it
-		cudaArray_t pCudaArray = a_HeightArray3D_Copy.getArray();
-		this->s_HeightSurface.setInputArray(pCudaArray);
-		if (!this->s_HeightSurface.initializeSurface())
-			return false;
-
-		this->gaussianFilter();
-
-		// Release the unfiltered (destroy array)
-		this->volumeTexture3D_height.release();
-		this->s_HeightSurface.destroySurface();
-
-		volumeTexture3D_height.setArray(a_HeightArray3D_Copy.getArrayRef());
-
-		break;
-	}
-	case false: // No Filter
-	{
-		volumeTexture3D_height.setArray(a_HeightArray3D.getArrayRef());
-		break;
-	}
-
-	}
-
-
-
+	volumeTexture3D_height.setArray(a_HeightArray3D.getArrayRef());
 	this->volumeTexture3D_height.initialize_array(false, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
-
 
 	return true;
 }
 
 
-void  FluctuationHeightfield::generateTimeSpaceField3D(TimeSpaceRenderingOptions * timeSpaceOptions)
+void  FluctuationHeightfield::generateTimeSpaceField3D(SpaceTimeOptions * timeSpaceOptions)
 {
 
 	unsigned int blocks;
@@ -134,7 +95,6 @@ void  FluctuationHeightfield::generateTimeSpaceField3D(TimeSpaceRenderingOptions
 		cudaFree(h_VelocityField);
 		
 		// Copy from texture to surface
-		timer.Start();
 		copyTextureToSurface<FetchTextureSurface::Channel_X, FetchTextureSurface::Channel_Y, FetchTextureSurface::Channel_Z, FetchTextureSurface::Channel_W> << < blocks, thread >> >
 			(
 				solverOptions->projectPos, //		Streamwise Pos
@@ -143,9 +103,6 @@ void  FluctuationHeightfield::generateTimeSpaceField3D(TimeSpaceRenderingOptions
 				volumeTexture.getTexture(),
 				s_HeightSurface.getSurfaceObject()
 				);
-		timer.Stop();
-		std::printf("%s takes %f ms \n", "copy texture to surface", timer.GetMilisecondsElapsed());
-
 
 		// Release the volume texture
 		volumeTexture.release();
@@ -164,13 +121,13 @@ void FluctuationHeightfield::gaussianFilter()
 
 	blocks = BLOCK_THREAD((int)m_gridSize3D.y);
 
-	applyGaussianFilter << < blocks, thread >> > 
-	(
-		9,
-		{ m_gridSize3D.x,m_gridSize3D.y,m_gridSize3D.z},
-		this->volumeTexture3D_height.getTexture(),
-		this->s_HeightSurface.getSurfaceObject()
-	);
+	//applyGaussianFilter << < blocks, thread >> > 
+	//(
+	//	9,
+	//	{ m_gridSize3D.x,m_gridSize3D.y,m_gridSize3D.z},
+	//	this->volumeTexture3D_height.getTexture(),
+	//	this->s_HeightSurface.getSurfaceObject()
+	//);
 
 
 }
@@ -178,6 +135,10 @@ void FluctuationHeightfield::gaussianFilter()
 __host__ void FluctuationHeightfield::rendering()
 {
 	this->deviceContext->PSSetSamplers(0, 1, this->samplerState.GetAddressOf());
+
+	// Odd filter Size
+	if (spaceTimeOptions->filterSize % 2 == 0)
+		spaceTimeOptions->filterSize++;
 
 	// Create a 2D texture to read hight array
 
@@ -190,7 +151,7 @@ __host__ void FluctuationHeightfield::rendering()
 	init_pos += (current - firstIdx) * (timeDim / (lastIdx - firstIdx));
 
 
-	this->timeSpaceRenderingOptions->shiftProjectionPlane = init_pos;
+	this->spaceTimeOptions->shiftProjectionPlane = init_pos;
 	this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), renderingOptions->bgColor);// Clear the target view
 
 	// Calculates the block and grid sizes
@@ -198,13 +159,13 @@ __host__ void FluctuationHeightfield::rendering()
 	dim3 thread = { maxBlockDim,maxBlockDim,1 };
 	blocks = static_cast<unsigned int>((this->rays % (thread.x * thread.y) == 0 ? rays / (thread.x * thread.y) : rays / (thread.x * thread.y) + 1));
 
-	timeSpaceRenderingOptions->currentTime = solverOptions->currentIdx - solverOptions->firstIdx ;
+	spaceTimeOptions->currentTime = solverOptions->currentIdx - solverOptions->firstIdx ;
 
-	if (timeSpaceRenderingOptions->additionalRaycasting)
+	if (spaceTimeOptions->additionalRaycasting)
 	{
-		if (timeSpaceRenderingOptions->additionalLoading)
+		if (spaceTimeOptions->additionalLoading)
 		{
-			timeSpaceRenderingOptions->additionalLoading = false;
+			spaceTimeOptions->additionalLoading = false;
 
 			this->volume_IO.Initialize(this->solverOptions);
 
@@ -228,7 +189,7 @@ __host__ void FluctuationHeightfield::rendering()
 
 		}
 
-		switch (timeSpaceRenderingOptions->heightMode)
+		switch (spaceTimeOptions->heightMode)
 		{
 		case TimeSpaceRendering::HeightMode::V_X_FLUCTUATION:
 		{
@@ -238,9 +199,9 @@ __host__ void FluctuationHeightfield::rendering()
 					this->volumeTexture3D_height.getTexture(),
 					volumeTexture.getTexture(),
 					int(this->rays),
-					this->timeSpaceRenderingOptions->samplingRate_0,
+					this->spaceTimeOptions->samplingRate_0,
 					this->raycastingOptions->tolerance_0,
-					*timeSpaceRenderingOptions,
+					*spaceTimeOptions,
 					*raycastingOptions
 					);
 			break;
@@ -253,9 +214,9 @@ __host__ void FluctuationHeightfield::rendering()
 					this->volumeTexture3D_height.getTexture(),
 					volumeTexture.getTexture(),
 					int(this->rays),
-					this->timeSpaceRenderingOptions->samplingRate_0,
+					this->spaceTimeOptions->samplingRate_0,
 					this->raycastingOptions->tolerance_0,
-					*timeSpaceRenderingOptions,
+					*spaceTimeOptions,
 					*raycastingOptions
 					);
 			break;
@@ -268,9 +229,9 @@ __host__ void FluctuationHeightfield::rendering()
 					this->volumeTexture3D_height.getTexture(),
 					volumeTexture.getTexture(),
 					int(this->rays),
-					this->timeSpaceRenderingOptions->samplingRate_0,
+					this->spaceTimeOptions->samplingRate_0,
 					this->raycastingOptions->tolerance_0,
-					*timeSpaceRenderingOptions,
+					*spaceTimeOptions,
 					*raycastingOptions
 					);
 			break;
@@ -284,7 +245,7 @@ __host__ void FluctuationHeightfield::rendering()
 	else
 	{
 
-		switch (timeSpaceRenderingOptions->heightMode)
+		switch (spaceTimeOptions->heightMode)
 		{
 		case TimeSpaceRendering::HeightMode::V_X_FLUCTUATION:
 		{
@@ -293,9 +254,9 @@ __host__ void FluctuationHeightfield::rendering()
 					this->raycastingSurface.getSurfaceObject(),
 					this->volumeTexture3D_height.getTexture(),
 					int(this->rays),
-					this->timeSpaceRenderingOptions->samplingRate_0,
+					this->spaceTimeOptions->samplingRate_0,
 					this->raycastingOptions->tolerance_0,
-					*timeSpaceRenderingOptions
+					*spaceTimeOptions
 					);
 			break;
 		}
@@ -306,9 +267,9 @@ __host__ void FluctuationHeightfield::rendering()
 					this->raycastingSurface.getSurfaceObject(),
 					this->volumeTexture3D_height.getTexture(),
 					int(this->rays),
-					this->timeSpaceRenderingOptions->samplingRate_0,
+					this->spaceTimeOptions->samplingRate_0,
 					this->raycastingOptions->tolerance_0,
-					*timeSpaceRenderingOptions
+					*spaceTimeOptions
 					);
 			break;
 		}
@@ -319,9 +280,9 @@ __host__ void FluctuationHeightfield::rendering()
 					this->raycastingSurface.getSurfaceObject(),
 					this->volumeTexture3D_height.getTexture(),
 					int(this->rays),
-					this->timeSpaceRenderingOptions->samplingRate_0,
+					this->spaceTimeOptions->samplingRate_0,
 					this->raycastingOptions->tolerance_0,
-					*timeSpaceRenderingOptions
+					*spaceTimeOptions
 					);
 			break;
 		}
@@ -340,9 +301,9 @@ __host__ bool FluctuationHeightfield::initializeBoundingBox()
 	float3 center = Array2Float3(raycastingOptions->clipBoxCenter);
 	float3 clipBox = Array2Float3(raycastingOptions->clipBox);
 
-	if (timeSpaceRenderingOptions->shiftProjection)
+	if (spaceTimeOptions->shiftProjection)
 	{
-		center.x -= timeSpaceRenderingOptions->shiftProjectionPlane;
+		center.x -= spaceTimeOptions->shiftProjectionPlane;
 		//clipBox.x += timeSpaceRenderingOptions->shiftProjectionPlane;
 	}
 
@@ -362,7 +323,7 @@ __host__ bool FluctuationHeightfield::initializeBoundingBox()
 	gpuErrchk(cudaMemcpyToSymbol(d_boundingBox_spacetime, h_boundingBox, sizeof(BoundingBox)));
 	delete h_boundingBox;
 
-	if (timeSpaceRenderingOptions->additionalRaycasting)
+	if (spaceTimeOptions->additionalRaycasting)
 	{
 		BoundingBox * h_boundingBox = new BoundingBox;
 

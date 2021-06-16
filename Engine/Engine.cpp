@@ -134,7 +134,8 @@ void Engine::Update()
 		OutputDebugStringA("It is resized!\n");
 		this->gfx.Resize(this->render_window.GetHWND());
 		this->gfx.renderImGuiOptions.updateStreamlines = true;
-
+		this->gfx.raycastingOptions.resize = true;
+		this->gfx.spaceTimeOptions.resize = true;
 		this->resize = false;
 	}
 }

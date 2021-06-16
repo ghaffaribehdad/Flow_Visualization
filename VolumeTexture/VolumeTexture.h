@@ -69,7 +69,7 @@ public:
 private:
 
 	cudaTextureObject_t t_field;
-	cudaArray_t cuArray_velocity;
+	cudaArray_t cuArray_velocity = NULL;
 	float* h_field = nullptr;
 	float3 gridDiameter;
 
