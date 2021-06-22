@@ -179,12 +179,12 @@ void CUDASolver::loadTextureCompressed
 
 	// Read current volume
 	this->volume_IO.readVolume_Compressed(idx, Array2Int3(solverOptions->gridSize));
-	// Return a pointer to volume
-	float * h_VelocityField = this->volume_IO.getField_float_GPU();
+	// Return a pointer to volume on device
+	float * d_VelocityField = this->volume_IO.getField_float_GPU();
 	// set the pointer to the volume texture
-	volumeTexture.setField(h_VelocityField);
+	volumeTexture.setField(d_VelocityField);
 	// initialize the volume texture
 	TIMELAPSE(volumeTexture.initialize_devicePointer(Array2Int3(solverOptions->gridSize), nomralize, addressModeX, addressModeY, addressModeZ),"Initialize Texture including DDCopy");
 	// release device memory
-	cudaFree(h_VelocityField);
+	cudaFree(d_VelocityField);
 }
