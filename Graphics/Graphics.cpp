@@ -3,6 +3,7 @@
 #include <dxgidebug.h>
 #include <dxgi1_3.h>
 #include <wincodec.h>
+#include "GraphicsHelper.h"
 
 
 bool Graphics::InitializeCamera()
@@ -65,12 +66,8 @@ bool Graphics::Initialize(HWND hwnd, int width, int height)
 
 
 
-
-
-
 void Graphics::RenderFrame()
 {
-
 
 	if (renderImGuiOptions.updateShaders)
 	{
@@ -79,11 +76,31 @@ void Graphics::RenderFrame()
 
 	}
 
+	if (renderImGuiOptions.saveScreenshot)
+	{
+		// Create RT and RTV
+		createTexture(2560, 1377, device.Get(), texture_screenshot.GetAddressOf());
+		this->device->CreateRenderTargetView(texture_screenshot.Get(), NULL, rtv_Screenshot.GetAddressOf());
+		
+		// Create Depth Stencil and Depth Stencil View
+		createTexture(2560, 1377, device.Get(), depthStencilBuffer_Screenshot.GetAddressOf(), D3D11_BIND_DEPTH_STENCIL, { 4,0 }, DXGI_FORMAT_D24_UNORM_S8_UINT);
+		this->device->CreateDepthStencilView(this->depthStencilBuffer_Screenshot.Get(), NULL, this->depthStencilView_Screenshot.GetAddressOf());
+		this->deviceContext->ClearRenderTargetView(this->rtv_Screenshot.Get(), renderingOptions.bgColor);
+		this->deviceContext->ClearDepthStencilView(this->depthStencilView_Screenshot.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+		this->deviceContext->OMSetRenderTargets(1, this->rtv_Screenshot.GetAddressOf(), this->depthStencilView_Screenshot.Get());
+		this->deviceContext->OMSetDepthStencilState(this->depthStencilState.Get(), 0);
+
+	}
+	else
+	{
+		this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), renderingOptions.bgColor);
+		this->deviceContext->ClearDepthStencilView(this->depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+		this->deviceContext->OMSetDepthStencilState(this->depthStencilState.Get(), 0);
+		//this->deviceContext->OMSetRenderTargets(1, this->renderTargetView.GetAddressOf(), this->depthStencilView_Screenshot.Get());
+
+	}
 
 
-	this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), renderingOptions.bgColor);
-	this->deviceContext->ClearDepthStencilView(this->depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-	this->deviceContext->OMSetDepthStencilState(this->depthStencilState.Get(), 0);
 	this->mouseSpeed = this->renderingOptions.mouseSpeed;
 
 	/*
@@ -155,11 +172,7 @@ void Graphics::RenderFrame()
 	}
 
 
-
 	raycasting.show(&renderImGuiOptions);					// Raycasting 
-
-
-
 
 
 	if (this->renderImGuiOptions.showStreaklines)
@@ -186,8 +199,17 @@ void Graphics::RenderFrame()
 		}
 	}
 
-	streamlineRenderer.mainRTV = renderTargetView.Get();
-	streamlineRenderer.depthstencil = depthStencilView.Get();
+	if (renderImGuiOptions.saveScreenshot)
+	{
+		streamlineRenderer.mainRTV = rtv_Screenshot.Get();
+		streamlineRenderer.depthstencil = depthStencilView_Screenshot.Get();
+	}
+	else
+	{
+		streamlineRenderer.mainRTV = renderTargetView.Get();
+		streamlineRenderer.depthstencil = depthStencilView.Get();
+	}
+
 
 	if (this->renderImGuiOptions.showStreamlines)
 	{
@@ -207,8 +229,15 @@ void Graphics::RenderFrame()
 	}
 
 
+	if (renderImGuiOptions.saveScreenshot)
+	{
+		this->deviceContext->OMSetRenderTargets(1, this->rtv_Screenshot.GetAddressOf(), this->depthStencilView_Screenshot.Get());
+	}
+	else
+	{
+		this->deviceContext->OMSetRenderTargets(1, this->renderTargetView.GetAddressOf(), this->depthStencilView.Get());
+	}
 
-	this->deviceContext->OMSetRenderTargets(1, this->renderTargetView.GetAddressOf(), this->depthStencilView.Get());
 	this->deviceContext->OMSetDepthStencilState(this->depthStencilState.Get(), 0);
 
 
@@ -251,13 +280,29 @@ void Graphics::RenderFrame()
 	if (renderImGuiOptions.saveScreenshot)
 	{
 		std::string fullName = dispersionOptions.filePath + solverOptions.outputFileName + std::to_string(solverOptions.currentIdx) + std::string(".jpg");
-		this->saveTextureJPEG(getBackBuffer(), fullName);
+		//this->saveTextureJPEG(getBackBuffer(), fullName);
+		this->saveTextureJPEG(texture_screenshot.Get(), fullName);
+	}
+
+
+	/*
+##############################################################
+##															##
+##						Dear ImGui							##
+##															##
+##############################################################
+*/
+
+	if (renderImGuiOptions.saveScreenshot)
+	{
 		renderImGuiOptions.screenshotCounter++;
 
 		if (renderImGuiOptions.screenshotRange == renderImGuiOptions.screenshotCounter)
 		{
 			renderImGuiOptions.saveScreenshot = false;
 			renderImGuiOptions.screenshotCounter = 0;
+			releaseScreenshotResources();
+			resetRTV();
 		}
 		else if (solverOptions.lineRenderingMode == LineRenderingMode::STREAMLINES)
 		{
@@ -271,14 +316,6 @@ void Graphics::RenderFrame()
 	}
 
 
-	/*
-##############################################################
-##															##
-##						Dear ImGui							##
-##															##
-##############################################################
-*/
-
 	renderImGuiOptions.drawOptionWindows();		// Draw Options
 	if (!renderImGuiOptions.hideOptions)
 	{
@@ -288,8 +325,29 @@ void Graphics::RenderFrame()
 
 	// Present the backbuffer
 	this->swapchain->Present(1, NULL);
+
+	
+
+
 }
 
+void Graphics::resetRTV()
+{
+
+
+
+}
+
+void Graphics::releaseScreenshotResources()
+{
+	this->depthStencilView_Screenshot.Reset();
+	this->depthStencilBuffer_Screenshot.Reset();
+	this->depthStencilState_Screenshot.Reset();
+	this->texture_screenshot.Reset();
+	this->rtv_Screenshot.Reset();
+	
+
+}
 
 bool Graphics::InitializeDirectXResources()
 {
@@ -792,7 +850,7 @@ void Graphics::Resize(HWND hwnd)
 
 	// Create and bind the backbuffer
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> backbuffer;
-	hr = this->swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(backbuffer.ReleaseAndGetAddressOf()));
+	hr = this->swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(backbuffer.GetAddressOf()));
 	if (FAILED(hr))
 	{
 		ErrorLogger::Log(hr, "Failed to Get Back buffer");

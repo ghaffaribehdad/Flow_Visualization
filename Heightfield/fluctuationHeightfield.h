@@ -35,6 +35,8 @@ public:
 
 		// set the number of rays = number of pixels
 		this->rays = (*this->width) * (*this->height);	// Set number of rays based on the number of pixels
+
+		return false;
 	}
 
 	void setResources(

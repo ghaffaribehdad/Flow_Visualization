@@ -16,6 +16,7 @@ template __global__ void CudaIsoSurfacRenderer<struct FetchTextureSurface::Veloc
 template __global__ void CudaIsoSurfacRenderer<struct FetchTextureSurface::Channel_X>					(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, RaycastingOptions raycastingOptions);
 template __global__ void CudaIsoSurfacRenderer<struct FetchTextureSurface::Channel_Y>					(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, RaycastingOptions raycastingOptions);
 template __global__ void CudaIsoSurfacRenderer<struct FetchTextureSurface::Channel_Z>					(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, RaycastingOptions raycastingOptions);
+template __global__ void CudaIsoSurfacRenderer<struct FetchTextureSurface::Channel_W>					(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, RaycastingOptions raycastingOptions);
 template __global__ void CudaIsoSurfacRenderer<struct FetchTextureSurface::ShearStress>					(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, RaycastingOptions raycastingOptions);
 template __global__ void CudaIsoSurfacRenderer<struct FetchTextureSurface::TurbulentDiffusivity>		(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, RaycastingOptions raycastingOptions);
 template __global__ void CudaIsoSurfacRenderer_GradientBase< struct FetchTextureSurface::Lambda2 >		(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, RaycastingOptions raycastingOptions);
@@ -365,6 +366,37 @@ __host__ void Raycasting::rendering()
 		}
 		break;
 	}
+
+
+	case IsoMeasure::Velocity_W:
+	{
+
+		if (raycastingOptions->planarRaycasting)
+		{
+			int3 gridSize = Array2Int3(solverOptions->gridSize);
+			CudaIsoSurfacRenderer_float_PlaneColor<FetchTextureSurface::Channel_W> << < blocks, thread >> >
+				(
+					raycastingSurface.getSurfaceObject(),
+					this->volumeTexture.getTexture(),
+					int(this->rays),
+					gridSize,
+					*raycastingOptions,
+					*this->solverOptions
+					);
+		}
+		else
+		{
+			CudaIsoSurfacRenderer<FetchTextureSurface::Channel_W> << < blocks, thread >> >
+				(
+					this->raycastingSurface.getSurfaceObject(),
+					this->volumeTexture.getTexture(),
+					int(this->rays),
+					*this->raycastingOptions
+					);
+		}
+		break;
+	}
+
 
 	case IsoMeasure::ShearStress:
 	{

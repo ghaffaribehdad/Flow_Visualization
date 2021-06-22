@@ -204,9 +204,9 @@ void RenderImGuiOptions::drawSolverOptions()
 		}
 		if (ImGui::Button("Optical Flow"))
 		{
-			solverOptions->velocityScalingFactor[0] = solverOptions->gridDiameter[0]/solverOptions->gridDiameter[1]; // 20 pixel padding
-			solverOptions->velocityScalingFactor[1] = 1.0f; // 20 pixel padding
-			solverOptions->velocityScalingFactor[2] = solverOptions->gridDiameter[2]/ solverOptions->gridDiameter[1]; // 20 pixel padding
+			solverOptions->velocityScalingFactor[0] = (1.0f / solverOptions->gridSize[0]) * solverOptions->gridDiameter[0]; // 20 pixel padding
+			solverOptions->velocityScalingFactor[1] = (1.0f / solverOptions->gridSize[1]) * solverOptions->gridDiameter[1]; // 20 pixel padding
+			solverOptions->velocityScalingFactor[2] = (1.0f / solverOptions->gridSize[2]) * solverOptions->gridDiameter[2]; // 20 pixel padding
 
 			this->updatePathlines = true;
 			this->updateStreamlines = true;

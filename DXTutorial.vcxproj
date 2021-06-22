@@ -273,6 +273,7 @@
     <ClInclude Include="Cuda\Cuda_helper_math_host.h" />
     <ClInclude Include="Cuda\ParticleTracingHelper.h" />
     <ClInclude Include="Cuda\StreaklineSolver.h" />
+    <ClInclude Include="Graphics\GraphicsHelper.h" />
     <ClInclude Include="Graphics\PlaneRenderer.h" />
     <ClInclude Include="Graphics\StreaklineRenderer.h" />
     <ClInclude Include="Graphics\StreamlineRenderer.h" />

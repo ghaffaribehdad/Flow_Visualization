@@ -174,6 +174,13 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilState>		depthStencilState;
 
 
+	Microsoft::WRL::ComPtr<ID3D11Texture2D>				texture_screenshot;
+	Microsoft::WRL::ComPtr<ID3D11RenderTargetView>		rtv_Screenshot;
+	Microsoft::WRL::ComPtr<ID3D11Texture2D>				depthStencilBuffer_Screenshot;
+	Microsoft::WRL::ComPtr<ID3D11DepthStencilState>		depthStencilState_Screenshot;
+	Microsoft::WRL::ComPtr<ID3D11DepthStencilView>		depthStencilView_Screenshot;
+	void resetRTV(); // set back the rendertargerview to default
+	void releaseScreenshotResources();
 
 	// Pointer to the adapter
 	IDXGIAdapter* adapter;

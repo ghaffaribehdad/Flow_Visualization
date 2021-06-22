@@ -79,20 +79,37 @@ void  FluctuationHeightfield::generateTimeSpaceField3D(SpaceTimeOptions * timeSp
 	{
 		
 		// First Read the Compressed file and move it to GPU
-		TIMELAPSE(this->volume_IO.readVolume_Compressed(t + solverOptions->firstIdx, Array2Int3(solverOptions->gridSize)), "read volume compress");
+		if (solverOptions->Compressed)
+		{
+			TIMELAPSE(this->volume_IO.readVolume_Compressed(t + solverOptions->firstIdx, Array2Int3(solverOptions->gridSize)), "read volume compress");
+			std::printf("\n\n");
 
-		std::printf("\n\n");
+			// Copy the device pointer
+			float * h_VelocityField = this->volume_IO.getField_float_GPU();
 
-		// Copy the device pointer
-		float * h_VelocityField = this->volume_IO.getField_float_GPU();
+			// Bind and copy device pointer to texture
+			volumeTexture.setField(h_VelocityField);
 
-		// Bind and copy device pointer to texture
-		volumeTexture.setField(h_VelocityField);
+			TIMELAPSE(volumeTexture.initialize_devicePointer(Array2Int3(solverOptions->gridSize), false, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder), "initialize texture takes");
 
-		TIMELAPSE(volumeTexture.initialize_devicePointer(Array2Int3(solverOptions->gridSize), false, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder),"initialize texture takes");
+			cudaFree(h_VelocityField);
+
+		}
+		else
+		{
+			TIMELAPSE(this->volume_IO.readVolume(t + solverOptions->firstIdx), "read volume compress");
+			// Copy the device pointer
+			float * h_VelocityField = this->volume_IO.getField_float();
+
+			// Bind and copy device pointer to texture
+			volumeTexture.setField(h_VelocityField);
+			TIMELAPSE(volumeTexture.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder), "initialize texture takes");
+		}
+
+
 		
 		// Release the device pointer
-		cudaFree(h_VelocityField);
+		
 		
 		// Copy from texture to surface
 		copyTextureToSurface<FetchTextureSurface::Channel_X, FetchTextureSurface::Channel_Y, FetchTextureSurface::Channel_Z, FetchTextureSurface::Channel_W> << < blocks, thread >> >
