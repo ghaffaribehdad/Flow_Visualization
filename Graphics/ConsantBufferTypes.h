@@ -58,6 +58,10 @@ struct CB_pixelShader
 	int viewportWidth;
 	int viewportHeight;
 	bool condition;
+	float Ka;
+	float Kd;
+	float Ks;
+	float shininessVal;
 };
 
 

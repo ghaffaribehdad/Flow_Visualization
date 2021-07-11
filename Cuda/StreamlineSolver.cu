@@ -69,6 +69,7 @@ __host__ bool StreamlineSolver::solve()
 	int blocks = BLOCK_THREAD(solverOptions->lines_count);
 	timer.Start();
 	ParticleTracing::TracingStream << <blocks, thread >> > (this->d_Particles, volumeTexture.getTexture(), *solverOptions, reinterpret_cast<Vertex*>(this->p_VertexBuffer));
+	cudaDeviceSynchronize();
 	timer.Stop();
 	std::printf("time to trace particles takes %f ms \n", timer.GetMilisecondsElapsed());
 

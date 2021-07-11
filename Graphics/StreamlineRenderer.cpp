@@ -501,6 +501,10 @@ void StreamlineRenderer::updateConstantBuffer(Camera & camera)
 	PS_constantBuffer.data.condition = solverOptions->usingTransparency;
 	PS_constantBuffer.data.viewportWidth = width;
 	PS_constantBuffer.data.viewportHeight = height;
+	PS_constantBuffer.data.Ka = renderingOptions->Ka;
+	PS_constantBuffer.data.Kd = renderingOptions->Kd;
+	PS_constantBuffer.data.Ks = renderingOptions->Ks;
+	PS_constantBuffer.data.shininessVal = renderingOptions->shininessVal;
 
 
 		// Update Constant Buffer

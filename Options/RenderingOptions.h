@@ -50,13 +50,21 @@ struct RenderingOptions
 {
 	float mouseSpeed = 0.005f;
 	float tubeRadius = 0.01f;
-	float minColor[4] = 
-	{ 
-		178.0f/255.0f,
-		136.0f / 255.0f,
-		103.0f/ 255.0f,
+	//float minColor[4] = 
+	//{ 
+	//	178.0f/255.0f,
+	//	136.0f / 255.0f,
+	//	103.0f/ 255.0f,
+	//	1.0f
+	//};	
+
+	float minColor[4] =
+	{
+		255.0f / 255.0f,
+		237.0f / 255.0f,
+		160.0f / 255.0f,
 		1.0f
-	};	
+	};
 	//float minColor[4] = 
 	//{ 
 	//	217.0f/255.0f,
@@ -71,11 +79,19 @@ struct RenderingOptions
 	//	119.0f / 255.0f,
 	//	1.0f
 	//};
+	//float maxColor[4] =
+	//{
+	//27.0f / 255.0f,
+	//158.0f / 255.0f,
+	//119.0f / 255.0f,
+	//1.0f
+	//};
+
 	float maxColor[4] =
 	{
-	27.0f / 255.0f,
-	158.0f / 255.0f,
-	119.0f / 255.0f,
+	189.0f / 255.0f,
+	0.0f / 255.0f,
+	39.0f / 255.0f,
 	1.0f
 	};
 
@@ -97,5 +113,10 @@ struct RenderingOptions
 
 	float boxRadius = 0.005f;
 	int lineLength = 1;
+
+	float Ka = 0.2f;
+	float Kd = 0.76f;
+	float Ks = 0.34f;
+	float shininessVal = 20;
 
 };

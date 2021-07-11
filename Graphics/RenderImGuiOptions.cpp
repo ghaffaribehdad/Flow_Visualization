@@ -629,6 +629,18 @@ void RenderImGuiOptions::drawSolverOptions()
 
 		}
 
+		if (ImGui::Button("Top Zoom", ImVec2(80, 25)))
+		{
+			this->camera->SetPosition(0, 1, 0);
+			this->camera->SetLookAtPos({ 0, -1.0, 0 });
+
+			this->updateRaycasting = true;
+			this->updateDispersion = true;
+			this->updatefluctuation = true;
+			this->updateFTLE = true;
+
+		}
+
 
 
 		ImGui::End();
@@ -813,6 +825,27 @@ void RenderImGuiOptions::drawLineRenderingOptions()
 			this->updateOIT = true;
 		}
 		if (ImGui::InputFloat("Max Value", (float*)& renderingOptions->maxMeasure, 0.1f))
+		{
+			this->updateOIT = true;
+		}
+
+
+		if (ImGui::SliderFloat("Specular", &renderingOptions->Ks, 0.0f, 1, "%.2f"))
+		{
+			this->updateOIT = true;
+		}
+
+		if (ImGui::SliderFloat("Diffuse", &renderingOptions->Kd, 0.0f, 1, "%.2f"))
+		{
+			this->updateOIT = true;
+		}
+
+		if (ImGui::SliderFloat("Ambient", &renderingOptions->Ka, 0.0f,1, "%.2f"))
+		{
+			this->updateOIT = true;
+		}
+
+		if (ImGui::SliderFloat("Shininess", &renderingOptions->shininessVal, 1.0f, 100, "%.1f"))
 		{
 			this->updateOIT = true;
 		}
@@ -1704,14 +1737,15 @@ void RenderImGuiOptions::drawDataset()
 			case Dataset::Dataset::KIT3_FLUC:
 			{
 				this->solverOptions->fileName = "FieldP";
-				this->solverOptions->filePath = "F:\\KIT3\\Fluc\\";
+				this->solverOptions->filePath = "Y:\\KIT3\\FLUC\\";
 
 
 				setArray<float>(&this->solverOptions->gridDiameter[0], 0.4f, 2.0f, 7.0f);
 				setArray<float>(&this->solverOptions->seedBox[0], 0.4f, 2.0f, 7.0f);
 				setArray<float>(&this->raycastingOptions->clipBox[0], 0.4f, 2.0f, 7.0f);
 				setArray<int>(&this->solverOptions->gridSize[0], 64,503,2048);
-
+				this->solverOptions->firstIdx = 500;
+				this->solverOptions->lastIdx = 1000;
 
 
 				this->solverOptions->dt = 0.001f;

@@ -62,7 +62,10 @@ cbuffer PS_CBuffer
 	int viewportWidth;
 	int viewportHeight;
 	bool condition; // In this case transparency
-	
+	float Ka;
+	float Kd;
+	float Ks;
+	float shininessVal;
 };
 
 
@@ -93,29 +96,39 @@ float4 main(PS_INPUT input) : SV_TARGET
 	if (condition)
 	{
 
-		rgb = float4(maxColor.xyz, 1);
+		//rgb = float4(maxColor.xyz, 1);
+		rgb = colorcoding(minColor.xyz, maxColor.xyz, measure, minMeasure, maxMeasure); // color coding
 	}
 	else
 	{
 		rgb = colorcoding(minColor.xyz, maxColor.xyz, measure, minMeasure, maxMeasure); // color coding
 	}
 
-	
-	// Compute shading
-	float diffuse = max(dot(normalize(input.outNormal), input.outLightDir), 0);
-	float3 reflection = 2.0 * dot(input.outNormal, input.outLightDir) * input.outNormal - input.outLightDir;
-	reflection = normalize(reflection);
-	float cos_angle = dot(reflection, input.outLightDir);
-	cos_angle = clamp(cos_angle, 0.0, 1.0);
-	float u_Shininess = 0.1f;
-	cos_angle = pow(cos_angle, u_Shininess);
-	float4 specular = { 0.0f,0.0f,0.0f,0.0f };
-	if (cos_angle > 0.0f)
-	{
-		float4 specular = float4(1.0, 1.0f, 1.0f, 1.0f) * cos_angle;
-	}
-	rgb = rgb * diffuse;
-	rgb += specular;
+
+
+	float3 L = normalize(input.outLightDir);
+	float3 N = normalize(input.outNormal);
+	float3 R = normalize(2.0 * dot(N, L) * N - L);
+	float3 V = normalize(-L); // Vector to viewer
+	float specAngle = max(dot(R, V), 0.0);
+	float specular = pow(specAngle, shininessVal);
+	float lambertian = max(dot(N, L), 0.0);
+
+
+	rgb.xyz = Ka * float3(1, 1, 1) + Kd * lambertian * float3(1.0f, 237.0f / 255.0f, 160.0f / 255.0f) +
+		Ks * specular * float3(1, 1, 1);
+
+	//float cos_angle = dot(reflection, input.outLightDir);
+	//cos_angle = clamp(cos_angle, 0.0, 1.0);
+	//float u_Shininess = 0.1f;
+	//cos_angle = pow(cos_angle, u_Shininess);
+	//float4 specular = { 0.0f,0.0f,0.0f,0.0f };
+	//if (cos_angle > 0.0f)
+	//{
+	//	float4 specular = float4(1.0, 1.0f, 1.0f, 1.0f) * cos_angle;
+	//}
+	//rgb = rgb * lambertian;
+	//rgb += specular;
 
 
 	if (condition)

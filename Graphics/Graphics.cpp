@@ -140,19 +140,19 @@ void Graphics::RenderFrame()
 	*/
 	if (renderingOptions.showVolumeBox)
 	{
-		this->volumeBox.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_LINELIST);
+		this->volumeBox.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
 	}
 
 	if (renderingOptions.showSeedBox)
 	{
-		this->seedBox.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_LINELIST);
+		this->seedBox.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
 
 	}
 
 
 	if (renderingOptions.showStreakBox)
 	{
-		this->streakBox.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_LINELIST);
+		this->streakBox.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
 
 	}
 
@@ -160,14 +160,14 @@ void Graphics::RenderFrame()
 
 	if (renderingOptions.showClipBox)
 	{
-		this->clipBox.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_LINELIST);
+		this->clipBox.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
 
 	}
 
 
 	if (renderingOptions.showStreakPlane)
 	{
-		this->streakPlane.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		this->streakPlane.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	}
 

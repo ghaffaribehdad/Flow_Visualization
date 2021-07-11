@@ -95,7 +95,7 @@ struct DispersionOptions
 	bool forward = true;
 	bool backward = false;
 
-	bool timeNormalization = true;
+	bool timeNormalization = false;
 	float scale = 0.005f;
 
 };
