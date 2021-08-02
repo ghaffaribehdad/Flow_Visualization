@@ -14,9 +14,10 @@ A tool to visualize velocity fields, especially for fluid simulation results.
 8. Add "DirectXTex" teture processing library to /Libs/
 
 # Prerequisites:
-1. Nvidia Graphic Card vit sufficient memory (dependes on the size of dataset)
-2. CUDA Computing Toolkit
-3. Direct3D11
+1. Visual Studio (tested on VS2017 and VS2019)
+2. Nvidia Graphic Card vit sufficient memory (dependes on the size of dataset)
+3. CUDA Computing Toolkit
+4. Direct3D11
 
 
 # External Links:
