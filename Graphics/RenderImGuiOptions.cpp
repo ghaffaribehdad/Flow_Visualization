@@ -55,7 +55,7 @@ void RenderImGuiOptions::drawSolverOptions()
 
 
 		}
-		if (ImGui::InputText("Name", _strdup(solverOptions->outputFileName.c_str()), 100 * sizeof(char)))
+		if (ImGui::InputText("Name", &solverOptions->outputFileName[0], 100 * sizeof(char)))
 		{
 		}
 
@@ -69,11 +69,11 @@ void RenderImGuiOptions::drawSolverOptions()
 		}
 
 
-		if (ImGui::InputText("File Path", _strdup(solverOptions->filePath.c_str()), 100 * sizeof(char)))
+		if (ImGui::InputText("File Path", &solverOptions->filePath[0], 100 * sizeof(char)))
 		{
 		}
 
-		if (ImGui::InputText("File Name", _strdup(solverOptions->fileName.c_str()), 100 * sizeof(char)))
+		if (ImGui::InputText("File Name", &solverOptions->fileName[0], 100 * sizeof(char)))
 		{
 		}
 
@@ -434,7 +434,7 @@ void RenderImGuiOptions::drawSolverOptions()
 			}
 		}
 
-		if (ImGui::Combo("Color Mode", &solverOptions->colorMode, ColorMode::ColorModeList, ColorMode::ColorMode::COUNT))
+		if (ImGui::Combo("Color\\Transparency Mode", &solverOptions->colorMode, ColorMode::ColorModeList, ColorMode::ColorMode::COUNT))
 		{
 			this->updateStreamlines = true;
 			this->updatePathlines = true;
@@ -2275,19 +2275,28 @@ void RenderImGuiOptions::drawDataset()
 			}
 			case Dataset::Dataset::TEST_FIELD:
 			{
-				this->solverOptions->fileName = "refined_fluc";
-				this->solverOptions->filePath = "F:\\CheckAverageOperator\\";
 
+
+				//TCHAR pwd[MAX_PATH];
+				//GetCurrentDirectory(MAX_PATH, pwd);
+				//MessageBox(NULL, pwd, pwd, 0);
+
+
+				this->solverOptions->fileName = "Comp_FieldP";
+				this->solverOptions->filePath = ".\\testData\\";
+
+
+				setArray<float>(&this->solverOptions->gridDiameter[0], 7.854f, 2.0f, 3.1415f);
+				setArray<float>(&this->solverOptions->seedBox[0], 7.854f, 2.0f, 3.1415f);
+				setArray<float>(&this->raycastingOptions->clipBox[0], 7.854f, 2.0f, 3.1415f);
+				setArray<int>(&this->solverOptions->gridSize[0], 192, 192, 192);
 
 				this->solverOptions->dt = 0.001f;
-				this->solverOptions->periodic = true;
-				this->solverOptions->Compressed = false;
-
-
-				setArray<float>(&this->solverOptions->gridDiameter[0], 0.4f, 2.0f, 8.0f);
-				setArray<float>(&this->solverOptions->seedBox[0], 0.4f, 2.0f, 8.0f);
-				setArray<float>(&this->raycastingOptions->clipBox[0], 0.4f, 2.0f, 8.0f);
-				setArray<int>(&this->solverOptions->gridSize[0], 64, 503, 2048);
+				this->solverOptions->firstIdx = 1;
+				this->solverOptions->lastIdx = 20;
+				this->solverOptions->Compressed = true;
+				this->solverOptions->maxSize = 9000000;
+				break;
 
 				break;
 

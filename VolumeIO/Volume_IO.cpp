@@ -8,10 +8,9 @@
 #include <iterator>
 #include <string>
 #include <vector>
-
+#include <iostream>
 #include "Compression.h"
 #include "../Timer/Timer.h"
-
 
 // Read a velocity volume
 bool VolumeIO::Volume_IO::readVolume(const unsigned int & idx)
@@ -172,7 +171,6 @@ bool VolumeIO::Volume_IO::Read()
 bool VolumeIO::Volume_IO::Read_Compressed(int3 _gridSize)
 {
 
-		
 	std::ifstream myFile;
 	myFile = std::ifstream(this->fullName, std::ios::binary);
 
