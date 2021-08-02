@@ -195,6 +195,7 @@ public:
 			{
 				this->release();
 				this->volume_IO.release();
+				this->solverOptions->compressResourceInitialized = false;
 				this->initialize(cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
 				this->raycastingOptions->resize = false;
 			}
@@ -234,6 +235,15 @@ __global__ void CudaIsoSurfacRenderer
 	RaycastingOptions raycastingOptions
 );
 
+
+template <typename Observable>
+__global__ void CudaIsoSurfacRendererAnalytic
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field1,
+	int rays,
+	RaycastingOptions raycastingOptions
+);
 
 __global__ void CudaIsoSurfacRenderer_lambda2_velocityX
 (

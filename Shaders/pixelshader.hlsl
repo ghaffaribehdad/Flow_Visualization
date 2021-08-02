@@ -7,7 +7,11 @@ cbuffer PS_CBuffer
 	float maxMeasure;
 	int viewportWidth;
 	int viewportHeight;
-	bool saturation;
+	bool condition; // In this case transparency
+	float Ka;
+	float Kd;
+	float Ks;
+	float shininessVal;
 };
 
 
@@ -51,60 +55,18 @@ float4 main(PS_INPUT input) : SV_TARGET
 	float4 rgb = { 0.0f,0.0f,0.0f,0.0f };
 	float measure = input.outMeasure;
 
-	// If saturation is needed
-	if (saturation)
+	// calculate color coding
+	if (condition)
 	{
-		//else the color gradient
-		float4 rgb_compl_max = float4(1.0f, 1.0f, 1.0, 1.0f) - maxColor;
 
-		float Projection = maxMeasure == 0 ? saturate(measure / (maxMeasure  + .00001f)) : saturate(measure / maxMeasure);
-
-
-
-		rgb = (Projection )* rgb_compl_max + maxColor;
-
-		float diffuse = max(dot(normalize(input.outNormal), input.outLightDir), 0);
-		float3 reflection = 2.0 * dot(input.outNormal, input.outLightDir) * input.outNormal - input.outLightDir;
-		reflection = normalize(reflection);
-		float cos_angle = dot(reflection, input.outLightDir);
-		cos_angle = clamp(cos_angle, 0.0, 1.0);
-		float u_Shininess = 0.1f;
-		cos_angle = pow(cos_angle, u_Shininess);
-		float4 specular = { 0.0f,0.0f,0.0f,0.0f };
-		if (cos_angle > 0.0f)
-		{
-			float4 specular = float4(1.0, 1.0f, 1.0f, 1.0f) * cos_angle;
-		}
-		rgb = rgb * diffuse;
-		rgb += specular;
-		rgb.w = 1;
-
-		return rgb;
+		//rgb = float4(maxColor.xyz, 1);
+		rgb = colorcoding(minColor.xyz, maxColor.xyz, measure, minMeasure, maxMeasure); // color coding
+	}
+	else
+	{
+		rgb = colorcoding(minColor.xyz, maxColor.xyz, measure, minMeasure, maxMeasure); // color coding
 	}
 
-
-	//rgb = colorcoding(minColor.xyz, maxColor.xyz, measure, minMeasure, maxMeasure); // color coding
-
-	//float diffuse = max(dot(normalize(input.outNormal), input.outLightDir), 0);
-	//float3 reflection = 2.0 * dot(input.outNormal, input.outLightDir) * input.outNormal - input.outLightDir;
-	//reflection = normalize(reflection);
-	//float cos_angle = dot(reflection, input.outLightDir);
-	//cos_angle = clamp(cos_angle, 0.0, 1.0);
-	//float u_Shininess = 0.1f;
-	//cos_angle = pow(cos_angle, u_Shininess);
-	////float4 specular = { 0.0f,0.0f,0.0f,0.0f };
-	//if (cos_angle > 0.0f)
-	//{
-	//	float4 specular = float4(1.0, 1.0f, 1.0f, 1.0f) * cos_angle;
-	//}
-	//rgb = rgb * diffuse;
-	//rgb += specular;
-
-
-	float Ka = 0.2f;
-	float Kd = 0.76f;
-	float Ks = 0.34;
-	float shininessVal = 15;
 
 	float3 L = normalize(input.outLightDir);
 	float3 N = normalize(input.outNormal);
@@ -115,8 +77,9 @@ float4 main(PS_INPUT input) : SV_TARGET
 	float lambertian = max(dot(N, L), 0.0);
 
 
-	rgb.xyz = Ka * float3(1, 1, 1) + Kd * lambertian * float3(1.0f, 237.0f / 255.0f, 160.0f / 255.0f) +
+	rgb.xyz = Ka * float3(1, 1, 1) + Kd * lambertian * rgb.xyz +
 		Ks * specular * float3(1, 1, 1);
+
 
 
 	rgb.w = 1;

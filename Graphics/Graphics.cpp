@@ -165,11 +165,6 @@ void Graphics::RenderFrame()
 	}
 
 
-	if (renderingOptions.showStreakPlane)
-	{
-		this->streakPlane.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	}
 
 
 	raycasting.show(&renderImGuiOptions);					// Raycasting 
@@ -241,6 +236,11 @@ void Graphics::RenderFrame()
 	this->deviceContext->OMSetDepthStencilState(this->depthStencilState.Get(), 0);
 
 
+	if (renderingOptions.showStreakPlane)
+	{
+		this->streakPlane.draw(camera, D3D11_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	}
 
 
 	/*

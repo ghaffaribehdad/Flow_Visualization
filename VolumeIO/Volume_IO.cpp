@@ -240,10 +240,11 @@ void VolumeIO::Volume_IO::Initialize(SolverOptions* _solverOptions)
 	m_filePath = _solverOptions->filePath;
 	m_compressed = _solverOptions->Compressed;
 
-	if (m_compressed)
+	if (m_compressed && !_solverOptions->compressResourceInitialized)
 	{
 		TIMELAPSE((this->buffer_compressed).resize(_solverOptions->maxSize), "Resizing Buffer");
 		this->decompressResources.initializeDecompressionResources(_solverOptions, reinterpret_cast<uint*>(&(buffer_compressed.at(0))));
+		_solverOptions->compressResourceInitialized = true;
 		
 	};
 

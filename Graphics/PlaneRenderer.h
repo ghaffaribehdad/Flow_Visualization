@@ -18,6 +18,7 @@ public:
 		}
 		else
 		{
+			*center = *center + 0.01f;
 			this->updateScene(diamter, center);
 		}
 

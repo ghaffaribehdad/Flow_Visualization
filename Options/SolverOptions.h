@@ -121,6 +121,7 @@ public:
 	bool shutdown = false;
 	bool usingTransparency = false;
 	bool usingThreshold = false;
+	bool compressResourceInitialized = false;
 	float transparencyThreshold = 0.4f;
 
 	SolverOptions() {};

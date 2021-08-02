@@ -126,6 +126,7 @@ void  FluctuationHeightfield::generateTimeSpaceField3D(SpaceTimeOptions * timeSp
 		
 	}
 	volume_IO.release();
+	solverOptions->compressResourceInitialized = false;
 }
 
 

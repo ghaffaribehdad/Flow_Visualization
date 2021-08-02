@@ -50,21 +50,21 @@ struct RenderingOptions
 {
 	float mouseSpeed = 0.005f;
 	float tubeRadius = 0.01f;
-	//float minColor[4] = 
-	//{ 
-	//	178.0f/255.0f,
-	//	136.0f / 255.0f,
-	//	103.0f/ 255.0f,
-	//	1.0f
-	//};	
-
-	float minColor[4] =
-	{
-		255.0f / 255.0f,
-		237.0f / 255.0f,
-		160.0f / 255.0f,
+	float minColor[4] = 
+	{ 
+		178.0f/255.0f,
+		136.0f / 255.0f,
+		103.0f/ 255.0f,
 		1.0f
-	};
+	};	
+
+	//float minColor[4] =
+	//{
+	//	255.0f / 255.0f,
+	//	237.0f / 255.0f,
+	//	160.0f / 255.0f,
+	//	1.0f
+	//};
 	//float minColor[4] = 
 	//{ 
 	//	217.0f/255.0f,
@@ -79,21 +79,21 @@ struct RenderingOptions
 	//	119.0f / 255.0f,
 	//	1.0f
 	//};
-	//float maxColor[4] =
-	//{
-	//27.0f / 255.0f,
-	//158.0f / 255.0f,
-	//119.0f / 255.0f,
-	//1.0f
-	//};
-
 	float maxColor[4] =
 	{
-	189.0f / 255.0f,
-	0.0f / 255.0f,
-	39.0f / 255.0f,
+	27.0f / 255.0f,
+	158.0f / 255.0f,
+	119.0f / 255.0f,
 	1.0f
 	};
+
+	//float maxColor[4] =
+	//{
+	//189.0f / 255.0f,
+	//0.0f / 255.0f,
+	//39.0f / 255.0f,
+	//1.0f
+	//};
 
 	int renderingMode = RenderingMode::RenderingMode::TUBES;
 	int drawMode = DrawMode::DrawMode::FULL;

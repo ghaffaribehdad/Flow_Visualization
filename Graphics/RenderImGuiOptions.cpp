@@ -348,6 +348,7 @@ void RenderImGuiOptions::drawSolverOptions()
 			this->solverOptions->fileChanged = true;
 
 			this->updateTimeSpaceField = true;
+			this->updateRaycasting = true;
 			this->raycastingOptions->fileChanged = true;
 			this->crossSectionOptions->updateTime = true;
 			this->updatefluctuation = true;
@@ -641,6 +642,17 @@ void RenderImGuiOptions::drawSolverOptions()
 
 		}
 
+		if (ImGui::Button("Edge View Positive", ImVec2(80, 25)))
+		{
+			this->camera->SetPosition(-5.18f, 5.71f, -8.42f);
+			this->camera->SetLookAtPos({ 0.75f,-0.35f,0.55f });
+
+			this->updateRaycasting = true;
+			this->updateDispersion = true;
+			this->updatefluctuation = true;
+			this->updateFTLE = true;
+
+		}
 
 
 		ImGui::End();
@@ -1243,7 +1255,7 @@ void RenderImGuiOptions::drawTimeSpaceOptions()
 
 		ImGui::Begin("Time-Space Rendering");
 
-		if (ImGui::DragFloat("Light color", (float*)& fluctuationOptions->brightness))
+		if (ImGui::DragFloat("Light color", (float*)& fluctuationOptions->brightness,0.01,1,3))
 		{
 			this->updateRaycasting = true;
 			this->updateTimeSpaceField = true;
@@ -1398,9 +1410,13 @@ void RenderImGuiOptions::drawTimeSpaceOptions()
 		}
 
 
-		if (ImGui::DragFloat("height scale", &fluctuationOptions->height_scale, 0.01f, 0, 10.0f))
+		if (ImGui::DragFloat("height scale", &fluctuationOptions->height_scale,0.001f,0,0.14f))
 		{
+
+			if (fluctuationOptions->height_scale > 0.0f)
+				this->fluctuationOptions->shading = true;
 			this->updatefluctuation = true;
+			
 
 		}
 
@@ -1849,7 +1865,30 @@ void RenderImGuiOptions::drawDataset()
 				break;
 
 			}
+			case Dataset::Dataset::KIT3_OF_COMPRESSED:
+			{
+				this->solverOptions->fileName = "Comp_OF_";
+				this->solverOptions->filePath = "Y:\\KIT3\\Comp_OF\\";
 
+
+				this->solverOptions->firstIdx = 500;
+				this->solverOptions->lastIdx = 999;
+				this->solverOptions->currentIdx = 500;
+
+				setArray<float>(&this->solverOptions->gridDiameter[0], 0.4f, 2.0f, 7.0f);
+				setArray<float>(&this->solverOptions->seedBox[0], 0.4f, 2.0f, 7.0f);
+				setArray<float>(&this->raycastingOptions->clipBox[0], 0.4f, 2.0f, 7.0f);
+				setArray<int>(&this->solverOptions->gridSize[0], 64, 503, 2048);
+
+
+				this->solverOptions->dt = 0.001f;
+				this->solverOptions->periodic = true;
+				this->solverOptions->Compressed = true;
+				this->solverOptions->maxSize = 46000000;
+
+				break;
+
+			}
 			case Dataset::Dataset::KIT3_OF_COMPRESSED_FAST:
 			{
 				this->solverOptions->fileName = "OF_AVG_COMP_";

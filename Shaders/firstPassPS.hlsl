@@ -3,14 +3,66 @@
 
 struct Fragment_And_Link_Buffer_STRUCT
 {
-	uint    uPixelColor;
-	float   uDepthAndCoverage;       // Coverage is only used in the MSAA case
-	uint	coverage;
+	uint    Color;
+	uint	Coverage;       // Coverage is only used in the MSAA case
+	float	Depth;
 	uint    uNext;
 };
 
 RWByteAddressBuffer StartOffsetBuffer  										:register(u1);
 RWStructuredBuffer<Fragment_And_Link_Buffer_STRUCT> FragmentAndLinkBuffer	:register(u2);
+
+
+
+uint PackFloat4IntoUint(float4 vValue)
+{
+	return (((uint)(vValue.x * 255)) << 24) | (((uint)(vValue.y * 255)) << 16) | (((uint)(vValue.z * 255)) << 8) | (uint)(vValue.w * 255);
+}
+
+float4 UnpackUintIntoFloat4(uint uValue)
+{
+	return float4(((uValue & 0xFF000000) >> 24) / 255.0, ((uValue & 0x00FF0000) >> 16) / 255.0, ((uValue & 0x0000FF00) >> 8) / 255.0, ((uValue & 0x000000FF)) / 255.0);
+}
+
+// Pack depth into 24 MSBs
+uint PackDepthIntoUint(float fDepth)
+{
+	return ((uint)(fDepth * MAX_24BIT_UINT)) << 8;
+}
+
+// Pack depth into 24 MSBs and coverage into 8 LSBs
+uint PackDepthAndCoverageIntoUint(float fDepth, uint uCoverage)
+{
+	return (((uint)(fDepth * MAX_24BIT_UINT)) << 8) | uCoverage;
+}
+
+uint UnpackDepthIntoUint(uint uDepthAndCoverage)
+{
+	return (uint)(uDepthAndCoverage >> 8);
+}
+
+uint UnpackCoverageIntoUint(uint uDepthAndCoverage)
+{
+	return (uDepthAndCoverage & 0xff);
+}
+
+uint PackNormalIntoUint(float3 n)
+{
+	uint3 i3 = (uint3) (n * 127.0f + 127.0f);
+	return i3.r + (i3.g << 8) + (i3.b << 16);
+}
+
+float3 UnpackNormalIntoFloat3(uint n)
+{
+	float3 n3 = float3(n & 0xff, (n >> 8) & 0xff, (n >> 16) & 0xff);
+	return (n3 - 127.0f) / 127.0f;
+}
+
+uint PackNormalAndCoverageIntoUint(float3 n, uint uCoverage)
+{
+	uint3 i3 = (uint3) (n * 127.0f + 127.0f);
+	return i3.r + (i3.g << 8) + (i3.b << 16) + (uCoverage << 24);
+}
 
 
 
@@ -115,20 +167,8 @@ float4 main(PS_INPUT input) : SV_TARGET
 	float lambertian = max(dot(N, L), 0.0);
 
 
-	rgb.xyz = Ka * float3(1, 1, 1) + Kd * lambertian * float3(1.0f, 237.0f / 255.0f, 160.0f / 255.0f) +
+	rgb.xyz = Ka * float3(1, 1, 1) + Kd * lambertian * rgb.xyz +
 		Ks * specular * float3(1, 1, 1);
-
-	//float cos_angle = dot(reflection, input.outLightDir);
-	//cos_angle = clamp(cos_angle, 0.0, 1.0);
-	//float u_Shininess = 0.1f;
-	//cos_angle = pow(cos_angle, u_Shininess);
-	//float4 specular = { 0.0f,0.0f,0.0f,0.0f };
-	//if (cos_angle > 0.0f)
-	//{
-	//	float4 specular = float4(1.0, 1.0f, 1.0f, 1.0f) * cos_angle;
-	//}
-	//rgb = rgb * lambertian;
-	//rgb += specular;
 
 
 	if (condition)
@@ -151,11 +191,12 @@ float4 main(PS_INPUT input) : SV_TARGET
 	StartOffsetBuffer.InterlockedExchange(linearindex, uPixelCount, uOldStartOffset);
 
 	Fragment_And_Link_Buffer_STRUCT Element;
-	Element.uPixelColor = (((uint)(rgb.x * 255)) << 24) | (((uint)(rgb.y * 255)) << 16) | (((uint)(rgb.z * 255)) << 8) | (uint)(rgb.w * 255);
-	//Element.uDepthAndCoverage = input.outPosition.z * MAX_24BIT_UINT));
-	Element.uDepthAndCoverage = input.outPosition.z;
+
+	Element.Color = PackFloat4IntoUint(rgb);
+	Element.Coverage = input.uCoverage;
+	Element.Depth = input.outPosition.z;
 	Element.uNext = uOldStartOffset;
-	Element.coverage = input.uCoverage;
+	//Element.coverage = input.uCoverage;
 	FragmentAndLinkBuffer[uPixelCount] = Element;
 
 

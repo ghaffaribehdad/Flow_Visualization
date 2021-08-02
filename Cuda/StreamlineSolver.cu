@@ -63,14 +63,15 @@ __host__ bool StreamlineSolver::releaseVolumeTexture()
 
 __host__ bool StreamlineSolver::solve()
 {
-	
+	timer.Start();
+
 	this->initializeParticles(static_cast<SeedingPattern>(solverOptions->seedingPattern));
+	timer.Stop();
 	dim3 thread = { maxBlockDim,maxBlockDim,1 };
 	int blocks = BLOCK_THREAD(solverOptions->lines_count);
-	timer.Start();
 	ParticleTracing::TracingStream << <blocks, thread >> > (this->d_Particles, volumeTexture.getTexture(), *solverOptions, reinterpret_cast<Vertex*>(this->p_VertexBuffer));
 	cudaDeviceSynchronize();
-	timer.Stop();
+	
 	std::printf("time to trace particles takes %f ms \n", timer.GetMilisecondsElapsed());
 
 	// No need for particles and volumeIO

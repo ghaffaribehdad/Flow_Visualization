@@ -63,7 +63,7 @@ private:
 	bool initializeOITRTV();
 	void releaseResources();
 	void updateBuffersSecondPass();
-	void initializeResources()
+	void initializeResourcesOIT()
 	{
 		initializeRasterizer();
 		initializeSampler();
@@ -89,7 +89,7 @@ public:
 		this->height = _height;
 
 		releaseResources();
-		initializeResources();
+		initializeResourcesOIT();
 
 	}
 
@@ -154,7 +154,7 @@ public:
 
 			if (solverOptions->fileLoaded)
 			{
-				this->streamlineSolver.releaseVolumeIO();
+				//this->streamlineSolver.releaseVolumeIO();
 				this->streamlineSolver.releaseVolumeTexture();
 
 			}
@@ -220,24 +220,26 @@ public:
 		pUAV[1] = NULL;
 		pSRV[0] = g_pStartOffsetBufferSRV;
 		pSRV[1] = g_pFragmentAndLinkStructuredBufferSRV;
+
 		//float rgb[4] = { 0,0,0,0 };
 		//deviceContext->ClearRenderTargetView(OITRenderTargetView.Get(), rgb); 
 		//deviceContext->OMSetRenderTargetsAndUnorderedAccessViews(1, OITRenderTargetView.GetAddressOf(), NULL, 1, 2,pUAV, initialCounts);
 		//deviceContext->OMSetRenderTargetsAndUnorderedAccessViews(1, &mainRTV, depthstencil, 1, 2,pUAV, initialCounts);
+
 		deviceContext->OMSetRenderTargetsAndUnorderedAccessViews(1, &mainRTV, depthstencil, 1, 2,pUAV, initialCounts);
 		this->deviceContext->PSSetShaderResources(0, 2, pSRV);
 		this->deviceContext->RSSetState(this->rasterizerstate.Get());
 
-		this->deviceContext->IASetInputLayout(this->vertexshaderSecondPass.GetInputLayout());		// Set the input layout
+		this->deviceContext->IASetInputLayout(this->vertexshaderSecondPass.GetInputLayout());				// Set the input layout
 		this->deviceContext->IASetPrimitiveTopology(Topology);
-		this->deviceContext->PSSetShader(pixelshaderSecondPass.GetShader(), NULL, 0);				// Pixel shader to blend
-		this->deviceContext->VSSetShader(vertexshaderSecondPass.GetShader(), NULL, 0);	// Vertex shader to sample the texture and send it to pixel shader
-		this->deviceContext->GSSetShader(NULL, NULL, NULL);								// Geometry shader is not needed
+		this->deviceContext->PSSetShader(pixelshaderSecondPass.GetShader(), NULL, 0);						// Pixel shader to blend
+		this->deviceContext->VSSetShader(vertexshaderSecondPass.GetShader(), NULL, 0);						// Vertex shader to sample the texture and send it to pixel shader
+		this->deviceContext->GSSetShader(NULL, NULL, NULL);													// Geometry shader is not needed
 		UINT offset = 0;
 		this->deviceContext->IASetVertexBuffers(0, 1, this->vertexBufferQuadViewPlane.GetAddressOf(), this->vertexBufferQuadViewPlane.StridePtr(), &offset);
 		this->deviceContext->PSSetConstantBuffers(0, 1, this->PS_constantBufferSampler.GetAddressOf());
 		this->deviceContext->OMSetBlendState(g_pBlendStateNoBlend, NULL, 0xFFFFFFFF);
-		this->deviceContext->OMSetDepthStencilState(g_pDepthTestEnabledDSS, 0x00);			// Depth/Stencil
+		this->deviceContext->OMSetDepthStencilState(g_pDepthTestEnabledDSS, 0x00);							// Depth/Stencil
 		//this->deviceContext->OMSetDepthStencilState(g_pDepthTestEnabledStencilTestLessDSS, 0x00);			// Depth/Stencil
 		return true;
 	}
@@ -347,31 +349,65 @@ public:
 	{
 
 
-
-		if(solverOptions->viewChanged || updateOIT )
+		if (solverOptions->usingTransparency)
 		{
-			// First Pass
-			setBuffers();
-			updateConstantBuffer(camera);	// Parallel View
-			setShaders_firstPass(Topology);	// No RT
-			Draw_firstPass();				// Draw the streamlines and write them into startOffset and fragmenLinkedList buffers
-			solverOptions->viewChanged = false;
+			if (solverOptions->viewChanged || updateOIT)
+			{
+				// First Pass
+				setBuffers();
+				updateConstantBuffer(camera);	// Parallel View
+				setShaders_firstPass(Topology);	// No RT
+				Draw_firstPass();				// Draw the streamlines and write them into startOffset and fragmenLinkedList buffers
+				solverOptions->viewChanged = false;
+
+			}
+			// Second Pass
+			updateBuffersSecondPass();
+			setShaders_SecondPass(D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+
+			this->deviceContext->Draw(6, 0);
 
 		}
-		// Second Pass
-		updateBuffersSecondPass();
-		setShaders_SecondPass(D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		this->deviceContext->Draw(6, 0);
+		else
+		{
+			// First Pass
+			initializeRasterizer();
+			setShaders(Topology);
+			updateConstantBuffer(camera);	
+			setBuffers();
+			solverOptions->viewChanged = false;
+
+			
+
+			switch (renderingOptions->drawMode)
+			{
 
 
+			case DrawMode::DrawMode::FULL:
+			{
+				this->deviceContext->Draw(llInt(solverOptions->lineLength) * llInt(solverOptions->lines_count), 0);
+				break;
+			}
 
+			case DrawMode::DrawMode::CURRENT:
+			{
+				for (int i = 0; i < solverOptions->lines_count; i++)
+				{
+					this->deviceContext->Draw(renderingOptions->lineLength, i * solverOptions->lineLength + (
+						solverOptions->currentIdx - solverOptions->firstIdx - renderingOptions->lineLength + 1));
+				}
+				break;
+			}
 
-		//// Third pass
-		//updateConstantBufferSampler(camera);
-		//setShaders_ThirdPass(D3D11_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		//this->deviceContext->Draw(6, 0);
+			default:
+			{
+				this->deviceContext->Draw(llInt(solverOptions->lineLength) * llInt(solverOptions->lines_count), 0);
+				break;
+			}
 
-
+			}
+		}
 	}
 
 
@@ -421,7 +457,7 @@ public:
 			return false;
 		if (!this->streamlineSolver.release())
 			return false;
-
+		solverOptions->compressResourceInitialized = false;
 		return true;
 
 	}
