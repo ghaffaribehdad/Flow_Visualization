@@ -1,6 +1,5 @@
 # FLow Visualization Tool
-
-A tool to visualize velocity fields, especially for fluid simulation results.
+A visualization toolset for interactive analysis of volumetical flow fields
 
 
 # Installation 
