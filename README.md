@@ -15,7 +15,7 @@ A tool to visualize velocity fields, especially for fluid simulation results.
 
 # Prerequisites:
 1. Visual Studio (tested on VS2017 and VS2019)
-2. Nvidia Graphic Card vit sufficient memory (dependes on the size of dataset)
+2. Nvidia Graphic Card with sufficient memory (dependes on the size of dataset)
 3. CUDA Computing Toolkit
 4. Direct3D11
 
