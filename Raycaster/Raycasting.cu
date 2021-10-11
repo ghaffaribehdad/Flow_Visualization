@@ -7,18 +7,17 @@
 #include "..//Cuda/helper_math.h"
 #include "..//Cuda/Cuda_helper_math_host.h"
 
+
 __constant__	BoundingBox d_boundingBox; // constant memory variable
 __constant__	BoundingBox d_boundingBox_spacetime;
 
+
+
+
+
+
 // Explicit instantiation
 template __global__ void CudaIsoSurfacRendererSpaceTime<struct FetchTextureSurface::Channel_X>(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
-template __global__ void CudaIsoSurfacRenderer<struct FetchTextureSurface::Velocity_Magnitude>			(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, RaycastingOptions raycastingOptions);
-template __global__ void CudaIsoSurfacRenderer<struct FetchTextureSurface::Channel_X>					(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, RaycastingOptions raycastingOptions);
-template __global__ void CudaIsoSurfacRenderer<struct FetchTextureSurface::Channel_Y>					(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, RaycastingOptions raycastingOptions);
-template __global__ void CudaIsoSurfacRenderer<struct FetchTextureSurface::Channel_Z>					(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, RaycastingOptions raycastingOptions);
-template __global__ void CudaIsoSurfacRenderer<struct FetchTextureSurface::Channel_W>					(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, RaycastingOptions raycastingOptions);
-template __global__ void CudaIsoSurfacRenderer<struct FetchTextureSurface::ShearStress>					(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, RaycastingOptions raycastingOptions);
-template __global__ void CudaIsoSurfacRenderer<struct FetchTextureSurface::TurbulentDiffusivity>		(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, RaycastingOptions raycastingOptions);
 template __global__ void CudaIsoSurfacRenderer_GradientBase< struct FetchTextureSurface::Lambda2 >		(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, RaycastingOptions raycastingOptions);
 template __global__ void CudaTerrainRenderer_extra< struct FetchTextureSurface::Channel_X >				(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t heightField, cudaTextureObject_t extraField, int rays, float samplingRate, float IsosurfaceTolerance, DispersionOptions dispersionOptions, int traceTime);
 template __global__ void CudaTerrainRenderer_extra_fluctuation< struct FetchTextureSurface::Channel_X, struct FetchTextureSurface::Channel_Y >	(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t heightField, int rays, float samplingRate, float IsosurfaceTolerance, SpaceTimeOptions fluctuationOptions);
@@ -27,13 +26,6 @@ template __global__ void CudaTerrainRenderer_extra_fluctuation <struct FetchText
 template __global__ void CudaTerrainRenderer_extra_fluctuation_raycasting <struct FetchTextureSurface::Channel_X, struct FetchTextureSurface::Channel_Y>(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t heightField, cudaTextureObject_t isoSurface,int rays, float samplingRate, float IsosurfaceTolerance, SpaceTimeOptions fluctuationOptions, RaycastingOptions raycastingOptions);
 template __global__ void CudaTerrainRenderer_extra_fluctuation_raycasting <struct FetchTextureSurface::Channel_X, struct FetchTextureSurface::Channel_X>(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t heightField, cudaTextureObject_t isoSurface,int rays, float samplingRate, float IsosurfaceTolerance, SpaceTimeOptions fluctuationOptions, RaycastingOptions raycastingOptions);
 template __global__ void CudaTerrainRenderer_extra_fluctuation_raycasting <struct FetchTextureSurface::Channel_X, struct FetchTextureSurface::Channel_Z>(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t heightField, cudaTextureObject_t isoSurface,int rays, float samplingRate, float IsosurfaceTolerance, SpaceTimeOptions fluctuationOptions, RaycastingOptions raycastingOptions);
-template __global__ void CudaIsoSurfacRenderer_float_PlaneColor<struct FetchTextureSurface::Channel_X>(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, int3 gridSize, RaycastingOptions raycastingOptions, SolverOptions solverOptions);
-template __global__ void CudaIsoSurfacRenderer_float_PlaneColor<struct FetchTextureSurface::Channel_Y>(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, int3 gridSize, RaycastingOptions raycastingOptions, SolverOptions solverOptions);
-template __global__ void CudaIsoSurfacRenderer_float_PlaneColor<struct FetchTextureSurface::Channel_Z>(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, int3 gridSize, RaycastingOptions raycastingOptions, SolverOptions solverOptions);
-template __global__ void CudaIsoSurfacRenderer_float_PlaneColor<struct FetchTextureSurface::Channel_W>(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, int3 gridSize, RaycastingOptions raycastingOptions, SolverOptions solverOptions);
-template __global__ void CudaIsoSurfacRenderer_float_PlaneColor<struct FetchTextureSurface::ShearStress>(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, int3 gridSize, RaycastingOptions raycastingOptions, SolverOptions solverOptions);
-template __global__ void CudaIsoSurfacRenderer_float_PlaneColor<struct FetchTextureSurface::Velocity_Magnitude>(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, int3 gridSize, RaycastingOptions raycastingOptions, SolverOptions solverOptions);
-
 
 __host__ bool Raycasting::updateScene()
 {
@@ -69,21 +61,43 @@ void Raycasting::loadTexture
 )
 {
 	// Read current volume
-	this->volume_IO.readVolume(idx);
+	this->volume_IO_Primary.readVolume(idx);
 	// Return a pointer to volume
-	float * h_VelocityField = this->volume_IO.getField_float();
+	float * h_VelocityField = this->volume_IO_Primary.getField_float();
 	// set the pointer to the volume texture
 	volumeTexture.setField(h_VelocityField);
 	// initialize the volume texture
 	volumeTexture.initialize(Array2Int3(solverOptions->gridSize), false, addressModeX, addressModeY, addressModeZ);
 	// release host memory
-	volume_IO.release();
+	volume_IO_Primary.release();
+}
+
+void Raycasting::loadTexture
+(
+	int3 & gridSize,
+	VolumeTexture3D & volumeTexture,
+	const int & idx,
+	cudaTextureAddressMode addressModeX,
+	cudaTextureAddressMode addressModeY,
+	cudaTextureAddressMode addressModeZ
+)
+{
+	// Read current volume
+	this->volume_IO_Primary.readVolume(idx);
+	// Return a pointer to volume
+	float * h_VelocityField = this->volume_IO_Primary.getField_float();
+	// set the pointer to the volume texture
+	volumeTexture.setField(h_VelocityField);
+	// initialize the volume texture
+	volumeTexture.initialize(gridSize, false, addressModeX, addressModeY, addressModeZ);
+	// release host memory
+	volume_IO_Primary.release();
 }
 
 
 void Raycasting::loadTextureCompressed
 (
-	SolverOptions * solverOptions,
+	int3 & gridSize,
 	VolumeTexture3D & volumeTexture,
 	const int & idx,
 	cudaTextureAddressMode addressModeX,
@@ -94,36 +108,55 @@ void Raycasting::loadTextureCompressed
 	Timer timer;
 
 	// Read current volume
-	this->volume_IO.readVolume_Compressed(idx, Array2Int3(solverOptions->gridSize));
+	this->volume_IO_Primary.readVolume_Compressed(idx, gridSize);
 	// Return a pointer to volume
-	float * h_VelocityField = this->volume_IO.getField_float_GPU();
+	float * h_VelocityField = this->volume_IO_Primary.getField_float_GPU();
 	// set the pointer to the volume texture
 	volumeTexture.setField(h_VelocityField);
 	// initialize the volume texture
-	TIMELAPSE(volumeTexture.initialize_devicePointer(Array2Int3(solverOptions->gridSize), false, addressModeX, addressModeY, addressModeZ); , "Initialize Texture including DDCopy");
-	// release host memory
-	//volume_IO.release();
+	TIMELAPSE(volumeTexture.initialize_devicePointer(gridSize, false, addressModeX, addressModeY, addressModeZ);, "Initialize Texture including DDCopy");
+
 	cudaFree(h_VelocityField);
 }
 
-__host__ bool Raycasting::resize()
+
+void Raycasting::loadTextureCompressed_double
+(
+	int * gridSize0,
+	int * gridSize1,
+	VolumeTexture3D & volumeTexture_0,
+	VolumeTexture3D & volumeTexture_1,
+	const int & idx,
+	cudaTextureAddressMode addressModeX,
+	cudaTextureAddressMode addressModeY,
+	cudaTextureAddressMode addressModeZ
+)
 {
-	this->raycastingTexture->Release();
-	this->initializeRaycastingTexture();
 
-	this->raycastingSurface.destroySurface();
-	this->interoperatibility.release();
+	Timer timer;
 
-	this->initializeRaycastingInteroperability();
-	this->initializeCudaSurface();
-	this->initializeBoundingBox();
-	this->rendering();
-	this->interoperatibility.release();
+	// Read current volume
+	this->volume_IO_Primary.readVolume_Compressed(idx, Array2Int3(gridSize0));
+	float * h_VelocityField = this->volume_IO_Primary.getField_float_GPU();
+	// set the pointer to the volume texture
+	volumeTexture_0.setField(h_VelocityField);
+	// initialize the volume texture
+	TIMELAPSE(volumeTexture_0.initialize_devicePointer(Array2Int3(gridSize0), false, addressModeX, addressModeY, addressModeZ); , "Initialize Texture including DDCopy");
+	// Free host memory
+	cudaFree(h_VelocityField);
 
-	return true;
+
+	//Same procedure for the secondary dataset
+	this->volume_IO_Secondary.readVolume_Compressed(idx, Array2Int3(gridSize1));
+	h_VelocityField = this->volume_IO_Secondary.getField_float_GPU();
+	volumeTexture_1.setField(h_VelocityField);
+	TIMELAPSE(volumeTexture_1.initialize_devicePointer(Array2Int3(gridSize1), false, addressModeX, addressModeY, addressModeZ);, "Initialize Texture including DDCopy");
+	cudaFree(h_VelocityField);
 }
 
-__host__ bool Raycasting::initialize
+
+
+__host__ bool Raycasting::initialize_Single
 (
 	cudaTextureAddressMode addressMode_X,
 	cudaTextureAddressMode addressMode_Y,
@@ -140,31 +173,22 @@ __host__ bool Raycasting::initialize
 	// set the number of rays = number of pixels
 	this->rays = (*this->width) * (*this->height);	// Set number of rays based on the number of pixels
 
+	this->volume_IO_Primary.Initialize(this->solverOptions);
 
-	// For non-identical dataset the raycasting option is used to initialize the volumetric data
-	if (raycastingOptions->identicalDataset)
-	{
-		this->volume_IO.Initialize(this->solverOptions);
-	}
-	else
-	{
-		this->volume_IO.Initialize(this->raycastingOptions);
-	}
-
-
-	switch (solverOptions->Compressed)
+	switch (solverOptions->compressed)
 	{
 
 	case true: // Compressed Data
 	{
-		loadTextureCompressed(solverOptions, this->volumeTexture, solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
+		int3 gridSize = Array2Int3(solverOptions->gridSize);
+		loadTextureCompressed(gridSize, this->volumeTexture_0, solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
 
 		break;
 	}
 
 	case false: // Uncompressed Data
 	{
-		loadTexture(solverOptions, this->volumeTexture, solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
+		loadTexture(solverOptions, this->volumeTexture_0, solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
 		break;
 	}
 
@@ -172,288 +196,440 @@ __host__ bool Raycasting::initialize
 
 	
 	this->raycastingOptions->fileLoaded = true;
-	
-
-
-	//if (raycastingOptions->isoMeasure_0 == IsoMeasure::TURBULENT_DIFFUSIVITY)
-	//{
-	//	volume_IO.setFileName("AverageTemp.bin");
-	//	volume_IO.Read();
-	//	this->averageTemp = volume_IO.getField_float();
-	//	this->t_average_temp.setField(averageTemp);
-	//	this->t_average_temp.initialize(solverOptions->gridSize[2],false,cudaAddressModeBorder);
-	//}
-
+	this->b_initialized = true;
 
 	return true;
 
 }
 
 
-__host__ bool Raycasting::release()
-{
-	this->volumeTexture.release();
-	//this->volume_IO.release();
-	return true;
-}
 
-
-void Raycasting::updateFile
+__host__ bool Raycasting::initialize_Double
 (
 	cudaTextureAddressMode addressMode_X,
 	cudaTextureAddressMode addressMode_Y,
 	cudaTextureAddressMode addressMode_Z
 )
 {
-	this->volumeTexture.release();
+	if (!this->initializeRaycastingTexture())				// initilize texture (the texture we need to write to)
+		return false;
 
-	switch (solverOptions->Compressed)
+	if (!this->initializeBoundingBox())		// initialize the bounding box ( copy data to the constant memory of GPU about Bounding Box)
+		return false;
+
+	// set the number of rays = number of pixels
+	this->rays = (*this->width) * (*this->height);	// Set number of rays based on the number of pixels
+
+	
+	this->volume_IO_Primary.Initialize(this->solverOptions);
+	this->volume_IO_Secondary.Initialize(&fieldOptions[1]);
+
+
+	switch (solverOptions->compressed)
 	{
 
 	case true: // Compressed Data
 	{
-		loadTextureCompressed(solverOptions, this->volumeTexture, solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
+		int3 gridSize = ArrayInt2ToInt3(fieldOptions[0].gridSize);
+		loadTextureCompressed(gridSize, this->volumeTexture_0, solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
+		
+		gridSize = Array2Int3(fieldOptions[1].gridSize);
+		loadTextureCompressed(gridSize, this->volumeTexture_1, solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
+		break;
+	}
+
+	case false: // Uncompressed Data
+	{
+		int3 gridSize = ArrayInt2ToInt3(fieldOptions[0].gridSize);
+		loadTexture(gridSize, this->volumeTexture_0, solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
+
+		gridSize = Array2Int3(fieldOptions[1].gridSize);
+		loadTexture(gridSize, this->volumeTexture_1, solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
+		break;
+	}
+
+	}
+
+	this->raycastingOptions->fileLoaded = true;
+	this->b_initialized = true;
+
+	return true;
+
+}
+
+
+__host__ bool Raycasting::initialize_Multiscale
+(
+	cudaTextureAddressMode addressMode_X,
+	cudaTextureAddressMode addressMode_Y,
+	cudaTextureAddressMode addressMode_Z
+)
+{
+	if (!this->initializeRaycastingTexture())				// initilize texture (the texture we need to write to)
+		return false;
+
+	if (!this->initializeBoundingBox())		// initialize the bounding box ( copy data to the constant memory of GPU about Bounding Box)
+		return false;
+
+	// set the number of rays = number of pixels
+	this->rays = (*this->width) * (*this->height);	// Set number of rays based on the number of pixels
+	this->volume_IO_Primary.Initialize(this->solverOptions);
+	int3 gridSize = Array2Int3(fieldOptions[0].gridSize);
+
+	switch (solverOptions->compressed)
+	{
+
+	case true: // Compressed Data
+		
+		loadTextureCompressed(gridSize, this->volumeTexture_0, solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
+		break;
+
+	case false: // Uncompressed Data
+	
+		loadTexture(solverOptions,this->volumeTexture_0,solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
+		break;
+
+	}
+
+
+	initializeMipmapL1();
+	generateMipmapL1();
+	volumeTexture_L1.setArray(a_mipmap_L1.getArrayRef());
+	volumeTexture_L1.initialize_array(false, addressMode_X, addressMode_Y, addressMode_Z);
+
+	initializeMipmapL2();
+	generateMipmapL2();
+	volumeTexture_L2.setArray(a_mipmap_L2.getArrayRef());
+	volumeTexture_L2.initialize_array(false, addressMode_X, addressMode_Y, addressMode_Z);
+
+	this->raycastingOptions->fileLoaded = true;
+	this->b_initialized = true;
+
+	return true;
+
+}
+
+
+
+
+__host__ bool Raycasting::release()
+{
+	this->volumeTexture_0.release();
+	this->volumeTexture_L1.release();
+	this->volumeTexture_L2.release();
+
+	this->volume_IO_Primary.release();
+	this->volume_IO_Secondary.release();
+
+	this->a_mipmap_L1.release();
+	this->a_mipmap_L2.release();
+	
+	this->b_initialized = false;
+	return true;
+}
+
+
+void Raycasting::updateFile_Single
+(
+	cudaTextureAddressMode addressMode_X,
+	cudaTextureAddressMode addressMode_Y,
+	cudaTextureAddressMode addressMode_Z
+)
+{
+	this->volumeTexture_0.release();
+
+	switch (solverOptions->compressed)
+	{
+
+	case true: // Compressed Data
+	{
+
+		int3 gridSize = Array2Int3(solverOptions->gridSize);
+		loadTextureCompressed(gridSize, this->volumeTexture_0, solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
 
 		break;
 	}
 
 	case false: // Uncompressed Data
 	{
-		loadTexture(solverOptions, this->volumeTexture, solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
+		loadTexture(solverOptions, this->volumeTexture_0, solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
 		break;
 	}
 
 	}
+	this->raycastingOptions->fileChanged = false;
+}
 
+
+
+void Raycasting::updateFile_Mult
+(
+	cudaTextureAddressMode addressMode_X,
+	cudaTextureAddressMode addressMode_Y,
+	cudaTextureAddressMode addressMode_Z
+)
+{
+	this->volumeTexture_0.release();
+	this->volumeTexture_1.release();
+	int3 gridSize = Array2Int3(fieldOptions[0].gridSize);
+
+	switch (solverOptions->compressed)
+	{
+
+	case true: // Compressed Data
+		
+		loadTextureCompressed(gridSize, this->volumeTexture_0, solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
+
+		gridSize = Array2Int3(fieldOptions[1].gridSize);
+		loadTextureCompressed(gridSize, this->volumeTexture_0, solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
+		break;
+	
+	case false: // Uncompressed Data
+		loadTexture(solverOptions, this->volumeTexture_0, solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
+		break;
+	}
 
 	this->raycastingOptions->fileChanged = false;
 }
 
 
 
+
+void Raycasting::updateFile_MultiScale
+(
+	cudaTextureAddressMode addressMode_X,
+	cudaTextureAddressMode addressMode_Y,
+	cudaTextureAddressMode addressMode_Z
+)
+{
+	this->volumeTexture_0.release();
+	this->volumeTexture_1.release();
+	this->volumeTexture_L1.release();
+	this->volumeTexture_L2.release();
+
+
+	switch (solverOptions->compressed)
+	{
+
+	case true: // Compressed Data
+	{
+		loadTextureCompressed_double(fieldOptions[1].gridSize, fieldOptions[1].gridSize, this->volumeTexture_0, this->volumeTexture_1, solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
+
+		break;
+	}
+
+	case false: // Uncompressed Data
+	{
+		loadTexture(solverOptions, this->volumeTexture_0, solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
+		break;
+	}
+
+	}
+
+
+
+	generateMipmapL1();
+	volumeTexture_L1.setArray(a_mipmap_L1.getArrayRef());
+	volumeTexture_L1.initialize_array(false, addressMode_X, addressMode_Y, addressMode_Z);
+
+	generateMipmapL2();
+	volumeTexture_L2.setArray(a_mipmap_L2.getArrayRef());
+	volumeTexture_L2.initialize_array(false, addressMode_X, addressMode_Y, addressMode_Z);
+
+	this->raycastingOptions->fileChanged = false;
+}
+
 __host__ void Raycasting::rendering()
 {
 
 	this->deviceContext->PSSetSamplers(0, 1, this->samplerState.GetAddressOf());
-	this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), renderingOptions->bgColor);// Clear the target view
-
-	// Calculates the block and grid sizes
+	this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), renderingOptions->bgColor);
 	unsigned int blocks;
 	dim3 thread = { maxBlockDim,maxBlockDim,1 };
 	blocks = BLOCK_THREAD(rays);
-	
+	int3 gridSize = Array2Int3(solverOptions->gridSize);
 
 
 
-	// TODO:
-	// Alternatively use ENUM templates! 
-	switch (this->raycastingOptions->isoMeasure_0)
+	switch (raycastingOptions->raycastingMode)
 	{
-	case IsoMeasure::VelocityMagnitude:
-	{
-		if (raycastingOptions->planarRaycasting)
-		{
-			int3 gridSize = Array2Int3(solverOptions->gridSize);
-			CudaIsoSurfacRenderer_float_PlaneColor<FetchTextureSurface::Velocity_Magnitude> << < blocks, thread >> >
-				(
-					raycastingSurface.getSurfaceObject(),
-					this->volumeTexture.getTexture(),
-					int(this->rays),
-					gridSize,
-					*raycastingOptions,
-					*this->solverOptions
-					);
-		}
-		else
-		{
+	case RaycastingMode::Mode::SINGLE:
 
-			CudaIsoSurfacRenderer<FetchTextureSurface::Velocity_Magnitude> << < blocks, thread >> >
-				(
-					this->raycastingSurface.getSurfaceObject(),
-					this->volumeTexture.getTexture(),
-					int(this->rays),
-					*this->raycastingOptions
-					);
-		}
-		break;
-	}
-
-	case IsoMeasure::Velocity_X:
-	{
-		if (raycastingOptions->planarRaycasting)
-		{
-			int3 gridSize = Array2Int3(solverOptions->gridSize);
-			CudaIsoSurfacRenderer_float_PlaneColor<FetchTextureSurface::Channel_X> << < blocks, thread >> >
-				(
-					raycastingSurface.getSurfaceObject(),
-					this->volumeTexture.getTexture(),
-					int(this->rays),
-					gridSize,
-					*raycastingOptions,
-					*this->solverOptions
-					);
-		}
-		else
-		{
-			CudaIsoSurfacRenderer<FetchTextureSurface::Channel_X> << < blocks, thread >> >
-				(
-					this->raycastingSurface.getSurfaceObject(),
-					this->volumeTexture.getTexture(),
-					int(this->rays),
-					*this->raycastingOptions
-					);
-		}
-
-
-
-		break;
-
-	}
-
-	case IsoMeasure::Velocity_Y:
-	{
-		if (raycastingOptions->planarRaycasting)
-		{
-			int3 gridSize = Array2Int3(solverOptions->gridSize);
-			CudaIsoSurfacRenderer_float_PlaneColor<FetchTextureSurface::Channel_Y> << < blocks, thread >> >
-				(
-					raycastingSurface.getSurfaceObject(),
-					this->volumeTexture.getTexture(),
-					int(this->rays),
-					gridSize,
-					*raycastingOptions,
-					*this->solverOptions
-					);
-		}
-		else
-		{
-			CudaIsoSurfacRenderer<FetchTextureSurface::Channel_Y> << < blocks, thread >> >
-				(
-					this->raycastingSurface.getSurfaceObject(),
-					this->volumeTexture.getTexture(),
-					int(this->rays),
-					*this->raycastingOptions
-					);
-		}
-		break;
-	}
-
-	case IsoMeasure::Velocity_Z:
-	{
-
-		if (raycastingOptions->planarRaycasting)
-		{
-			int3 gridSize = Array2Int3(solverOptions->gridSize);
-			CudaIsoSurfacRenderer_float_PlaneColor<FetchTextureSurface::Channel_Z> << < blocks, thread >> >
-				(
-					raycastingSurface.getSurfaceObject(),
-					this->volumeTexture.getTexture(),
-					int(this->rays),
-					gridSize,
-					*raycastingOptions,
-					*this->solverOptions
-					);
-		}
-		else
-		{
-			CudaIsoSurfacRenderer<FetchTextureSurface::Channel_Z> << < blocks, thread >> >
-				(
-					this->raycastingSurface.getSurfaceObject(),
-					this->volumeTexture.getTexture(),
-					int(this->rays),
-					*this->raycastingOptions
-					);
-		}
-		break;
-	}
-
-
-	case IsoMeasure::Velocity_W:
-	{
-
-		if (raycastingOptions->planarRaycasting)
-		{
-			int3 gridSize = Array2Int3(solverOptions->gridSize);
-			CudaIsoSurfacRenderer_float_PlaneColor<FetchTextureSurface::Channel_W> << < blocks, thread >> >
-				(
-					raycastingSurface.getSurfaceObject(),
-					this->volumeTexture.getTexture(),
-					int(this->rays),
-					gridSize,
-					*raycastingOptions,
-					*this->solverOptions
-					);
-		}
-		else
-		{
-			CudaIsoSurfacRenderer<FetchTextureSurface::Channel_W> << < blocks, thread >> >
-				(
-					this->raycastingSurface.getSurfaceObject(),
-					this->volumeTexture.getTexture(),
-					int(this->rays),
-					*this->raycastingOptions
-					);
-		}
-		break;
-	}
-
-
-	case IsoMeasure::ShearStress:
-	{
-		if (raycastingOptions->planarRaycasting)
-		{
-			int3 gridSize = Array2Int3(solverOptions->gridSize);
-			CudaIsoSurfacRenderer_float_PlaneColor<FetchTextureSurface::ShearStress> << < blocks, thread >> >
-				(
-					raycastingSurface.getSurfaceObject(),
-					this->volumeTexture.getTexture(),
-					int(this->rays),
-					gridSize,
-					*raycastingOptions,
-					*this->solverOptions
-					);
-		}
-		else
-		{
-			CudaIsoSurfacRenderer<FetchTextureSurface::ShearStress> << < blocks, thread >> >
-				(
-					this->raycastingSurface.getSurfaceObject(),
-					this->volumeTexture.getTexture(),
-					int(this->rays),
-					*this->raycastingOptions
-					);
-		}
-
-		break;
-	}
-
-
-	case::IsoMeasure::LAMBDA2:
-	{
-		CudaIsoSurfacRenderer_GradientBase<FetchTextureSurface::Lambda2> << < blocks, thread >> >
+		CudaIsoSurfacRenderer_Single << < blocks, thread >> >
 			(
 				this->raycastingSurface.getSurfaceObject(),
-				this->volumeTexture.getTexture(),
+				this->volumeTexture_0.getTexture(),
+				int(this->rays),
+				*this->raycastingOptions
+				);
+
+		break;
+
+	case RaycastingMode::Mode::DOUBLE:
+
+
+		CudaIsoSurfacRenderer_Double << < blocks, thread >> >
+			(
+				this->raycastingSurface.getSurfaceObject(),
+				this->volumeTexture_0.getTexture(),
+				this->volumeTexture_1.getTexture(),
+				int(this->rays),
+				*this->raycastingOptions
+				);
+		break;
+
+	case RaycastingMode::Mode::MULTISCALE:
+
+		CudaIsoSurfacRenderer_Single << < blocks, thread >> >
+			(
+				this->raycastingSurface.getSurfaceObject(),
+				this->volumeTexture_0.getTexture(),
 				int(this->rays),
 				*this->raycastingOptions
 				);
 		break;
 	}
 
-	case::IsoMeasure::LAMBDA2_VELOCITY_X:
-	{
-		CudaIsoSurfacRenderer_lambda2_velocityX << < blocks, thread >> >
-			(
-				this->raycastingSurface.getSurfaceObject(),
-				this->volumeTexture.getTexture(),
-				int(this->rays),
-				*this->raycastingOptions
-				);
 
-		break;
-	}
 
-	}
+
+
+	//// TODO:
+	//// Alternatively use ENUM templates! 
+	//switch (this->raycastingOptions->isoMeasure_0)
+	//{
+	//case IsoMeasure::VelocityMagnitude:
+	//{
+	//	if (raycastingOptions->planarRaycasting)
+	//	{
+	//		CudaIsoSurfacRenderer_float_PlaneColor<FetchTextureSurface::Velocity_Magnitude> << < blocks, thread >> >
+	//			(
+	//				raycastingSurface.getSurfaceObject(),
+	//				this->volumeTexture_0.getTexture(),
+	//				int(this->rays),
+	//				gridSize,
+	//				*raycastingOptions,
+	//				*this->solverOptions
+	//				);
+	//	}
+	//	break;
+
+	//}
+
+	//case IsoMeasure::Velocity_X:
+	//{
+	//	if (raycastingOptions->planarRaycasting)
+	//	{
+	//		CudaIsoSurfacRenderer_float_PlaneColor<FetchTextureSurface::Channel_X> << < blocks, thread >> >
+	//			(
+	//				raycastingSurface.getSurfaceObject(),
+	//				this->volumeTexture_0.getTexture(),
+	//				int(this->rays),
+	//				gridSize,
+	//				*raycastingOptions,
+	//				*this->solverOptions
+	//				);
+	//	}
+
+
+	//	break;
+
+	//}
+
+	//case IsoMeasure::Velocity_Y:
+	//{
+	//	if (raycastingOptions->planarRaycasting)
+	//	{
+	//		CudaIsoSurfacRenderer_float_PlaneColor<FetchTextureSurface::Channel_Y> << < blocks, thread >> >
+	//			(
+	//				raycastingSurface.getSurfaceObject(),
+	//				this->volumeTexture_0.getTexture(),
+	//				int(this->rays),
+	//				gridSize,
+	//				*raycastingOptions,
+	//				*this->solverOptions
+	//				);
+	//	}
+
+	//	break;
+	//}
+
+	//case IsoMeasure::Velocity_Z:
+	//{
+
+	//	if (raycastingOptions->planarRaycasting)
+	//	{
+	//		CudaIsoSurfacRenderer_float_PlaneColor<FetchTextureSurface::Channel_Z> << < blocks, thread >> >
+	//			(
+	//				raycastingSurface.getSurfaceObject(),
+	//				this->volumeTexture_0.getTexture(),
+	//				int(this->rays),
+	//				gridSize,
+	//				*raycastingOptions,
+	//				*this->solverOptions
+	//				);
+	//	}
+
+
+	//	break;
+	//}
+
+
+	//case IsoMeasure::Velocity_W:
+	//{
+
+	//	if (raycastingOptions->planarRaycasting)
+	//	{
+	//		CudaIsoSurfacRenderer_float_PlaneColor<FetchTextureSurface::Channel_W> << < blocks, thread >> >
+	//			(
+	//				raycastingSurface.getSurfaceObject(),
+	//				this->volumeTexture_0.getTexture(),
+	//				int(this->rays),
+	//				gridSize,
+	//				*raycastingOptions,
+	//				*this->solverOptions
+	//				);
+	//	}
+
+	//	break;
+	//}
+
+
+	//case IsoMeasure::ShearStress:
+	//{
+	//	if (raycastingOptions->planarRaycasting)
+	//	{
+	//		CudaIsoSurfacRenderer_float_PlaneColor<FetchTextureSurface::ShearStress> << < blocks, thread >> >
+	//			(
+	//				raycastingSurface.getSurfaceObject(),
+	//				this->volumeTexture_0.getTexture(),
+	//				int(this->rays),
+	//				gridSize,
+	//				*raycastingOptions,
+	//				*this->solverOptions
+	//				);
+	//	}
+	//	else
+
+
+	//	break;
+	//}
+
+
+	//case::IsoMeasure::LAMBDA2:
+	//{
+	//	CudaIsoSurfacRenderer_GradientBase<FetchTextureSurface::Lambda2> << < blocks, thread >> >
+	//		(
+	//			this->raycastingSurface.getSurfaceObject(),
+	//			this->volumeTexture_0.getTexture(),
+	//			int(this->rays),
+	//			*this->raycastingOptions
+	//			);
+	//	break;
+	//}
+
+
+	//}
 
 
 
@@ -474,14 +650,20 @@ __host__ bool Raycasting::initializeBoundingBox()
 	h_boundingBox->constructEyeCoordinates
 	(
 		XMFloat3ToFloat3(camera->GetPositionFloat3()),
-		XMFloat3ToFloat3(camera->GetViewVector()), 
+		XMFloat3ToFloat3(camera->GetViewVector()),
 		XMFloat3ToFloat3(camera->GetUpVector())
 	);
+	
 
 	h_boundingBox->FOV = (this->FOV_deg / 360.0f)* XM_2PI;
 	h_boundingBox->distImagePlane = this->distImagePlane;
 	h_boundingBox->m_dimensions = ArrayToFloat3(solverOptions->gridDiameter);
 	gpuErrchk(cudaMemcpyToSymbol(d_boundingBox, h_boundingBox, sizeof(BoundingBox)));
+	//if (!gpuErrchk(cudaMemcpyToSymbol(reinterpret_cast<const void *>(d_boundingBox), h_boundingBox, sizeof(BoundingBox))))
+	//{
+	//	ErrorLogger::Log("Fail to Copy to Constant Memory");
+	//	return false;
+	//}
 
 	delete h_boundingBox;
 	
@@ -582,213 +764,6 @@ __global__ void CudaIsoSurfacRenderer_TurbulentDiffusivity
 
 
 }
-
-// Find the Enter and Exit points
-//float2 enterExit = findEnterExit(pixelPosition,dir,)
-
-//float x[3] = { 1,2,3 };
-//float y[8] = { 1,2,3,4,5,6,7,8 };
-//
-//
-	//rootsHyperbolic<float>(rgba, x);
-
-
-	
-//template <>
-//void CudaIsoSurfacRenderer_ENUM <IsoMeasure::IsoMeasureMode::Velocity_X, IsoMeasure::IsoMeasureMode::LAMBDA2>
-//(
-//	cudaSurfaceObject_t raycastingSurface,
-//	cudaTextureObject_t field1,
-//	int rays,
-//	RaycastingOptions raycastingOptions
-//)
-//{
-//	FetchTextureSurface::Channel_X channel_x;
-//	FetchTextureSurface::Lambda2 lambda2;
-//	int index = CUDA_INDEX;
-//
-//	if (index < rays)
-//	{
-//
-//		// determine pixel position based on the index of the thread
-//		int2 pixel = index2pixel(index, d_boundingBox.m_width);
-//		float3 pixelPos = pixelPosition(d_boundingBox, pixel.x, pixel.y);
-//		int3 gridInterval = make_int3(d_boundingBox.gridSize.x - 1, d_boundingBox.gridSize.y - 1, d_boundingBox.gridSize.z - 1);
-//		float3 cellSize = d_boundingBox.m_dimensions / gridInterval;
-//		float3 dir = normalize(pixelPos - d_boundingBox.m_eyePos);
-//		//float2 NearFar = findIntersections(pixelPos, d_boundingBox);
-//		float2 NearFar = findEnterExit(pixelPos, dir, d_boundingBox.boxFaces);
-//
-//		// if inside the bounding box
-//		if (NearFar.y != -1)
-//		{
-//
-//			float3 rayDir = normalize(pixelPos - d_boundingBox.m_eyePos);
-//
-//			// near and far plane
-//			float n = 0.1f;
-//			float f = 1000.0f;
-//
-//			// Add the offset to the eye position
-//			float3 eyePos = d_boundingBox.m_eyePos + d_boundingBox.m_dimensions / 2.0;
-//			float t = NearFar.x;
-//			while (t < NearFar.y)
-//			{
-//				// Position of the isosurface
-//				float3 position = pixelPos + (rayDir * t);
-//
-//				// Adds an offset to position while the center of the grid is at gridDiamter/2
-//				position += d_boundingBox.m_dimensions / 2.0;
-//
-//				//Relative position calculates the position of the point on the CUDA texture
-//				float3 relativePos = world2Tex(position, d_boundingBox.m_dimensions, d_boundingBox.gridSize);
-//
-//				float value = observable.ValueAtXYZ_Tex(field1, relativePos);
-//				float2 tEnterExit = { t,findExitPoint3D(position, dir, cellSize) };
-//
-//				//float4 factors = getFactors<float>(values, position, dir);
-//				// check if we have a hit 
-//				if (value > raycastingOptions.isoValue_0)
-//				{
-//
-//					position = binarySearch<Observable>(observable, field1, position, d_boundingBox.m_dimensions, d_boundingBox.gridSize, dir * t, raycastingOptions.isoValue_0, raycastingOptions.tolerance_0, 200);
-//					relativePos = world2Tex(position, d_boundingBox.m_dimensions, d_boundingBox.gridSize);
-//
-//					// calculates gradient
-//					float3 gradient = observable.GradientAtXYZ_Tex(field1, relativePos, d_boundingBox.m_dimensions, d_boundingBox.gridSize);
-//
-//
-//					// shading (no ambient)
-//					float diffuse = max(dot(normalize(gradient), d_boundingBox.m_viewDir), 0.0f);
-//					float3 raycastingColor = Array2Float3(raycastingOptions.color_0);
-//					float3 rgb = raycastingColor * diffuse;
-//
-//					float depth = depthfinder(position, eyePos, d_boundingBox.m_viewDir, f, n);
-//
-//					float4 rgba = { rgb.x, rgb.y, rgb.z, depth };
-//
-//					// write back color and depth into the texture (surface)
-//					// stride size of 4 * floats for each texel
-//					surf2Dwrite(rgba, raycastingSurface, 4 * sizeof(float) * pixel.x, pixel.y);
-//					break;
-//
-//				}
-//
-//				t = t + findExitPoint3D(position, dir, cellSize);
-//				//t = t + raycastingOptions.samplingRate_0;
-//			}
-//
-//
-//		}
-//
-//	}
-//
-//
-//}
-
-
-
-	
-	template <typename Observable>
-__global__ void CudaIsoSurfacRenderer
-(
-	cudaSurfaceObject_t raycastingSurface,
-	cudaTextureObject_t field1,
-	int rays, 
-	RaycastingOptions raycastingOptions
-)
-{
-
-	Observable observable;
-	int index = CUDA_INDEX;
-
-	if (index < rays)
-	{
-
-		// determine pixel position based on the index of the thread
-		int2 pixel = index2pixel(index, d_boundingBox.m_width);
-		float3 pixelPos = pixelPosition(d_boundingBox, pixel.x, pixel.y);
-		int3 gridInterval = make_int3(d_boundingBox.gridSize.x - 1, d_boundingBox.gridSize.y - 1, d_boundingBox.gridSize.z - 1);
-		float3 cellSize = d_boundingBox.m_dimensions / gridInterval;
-		float3 dir = normalize(pixelPos - d_boundingBox.m_eyePos);
-		//float2 NearFar = findIntersections(pixelPos, d_boundingBox);
-		float2 NearFar = findEnterExit(pixelPos,dir, d_boundingBox.boxFaces);
-
-		// if inside the bounding box
-		if (NearFar.y != -1)
-		{
-
-			float3 rayDir = normalize(pixelPos - d_boundingBox.m_eyePos);
-
-			// near and far plane
-			float n = 0.1f;
-			float f = 1000.0f;
-
-			// Add the offset to the eye position
-			float3 eyePos = d_boundingBox.m_eyePos + d_boundingBox.m_dimensions / 2.0;
-			float t = NearFar.x;
-			while ( t < NearFar.y)
-			{
-				// Position of the isosurface
-				float3 position = pixelPos + (rayDir * t);
-
-				// Adds an offset to position while the center of the grid is at gridDiamter/2
-				position += d_boundingBox.m_dimensions / 2.0;
-
-				//Relative position calculates the position of the point on the CUDA texture
-				float3 relativePos = world2Tex(position, d_boundingBox.m_dimensions, d_boundingBox.gridSize);
-
-				float value = observable.ValueAtXYZ_Tex(field1, relativePos);
-
-				//float4 factors = getFactors<float>(values, position, dir);
-				// check if we have a hit 
-				if (value > raycastingOptions.isoValue_0)
-				{
-
-					//position = binarySearch<Observable>(observable, field1, position, d_boundingBox.m_dimensions, d_boundingBox.gridSize, dir * t, raycastingOptions.isoValue_0, raycastingOptions.tolerance_0, 200);
-					relativePos = world2Tex(position, d_boundingBox.m_dimensions, d_boundingBox.gridSize);
-
-					// calculates gradient
-					float3 gradient = observable.GradientAtXYZ_Tex(field1, relativePos, d_boundingBox.m_dimensions,d_boundingBox.gridSize);
-
-
-					// shading (no ambient)
-					float diffuse = max(dot(normalize(gradient), d_boundingBox.m_viewDir), 0.0f);
-					float3 raycastingColor = Array2Float3(raycastingOptions.color_0)^raycastingOptions.brightness;
-					float3 rgb = raycastingColor * diffuse;
-
-					float depth = depthfinder(position, eyePos, d_boundingBox.m_viewDir, f, n);
-
-					float4 rgba = { rgb.x, rgb.y, rgb.z, depth };
-
-					// write back color and depth into the texture (surface)
-					// stride size of 4 * floats for each texel
-					surf2Dwrite(rgba, raycastingSurface, 4 * sizeof(float) * pixel.x, pixel.y);
-					break;
-
-				}
-
-				float gridStep = findExitPoint3D(position, dir, cellSize);
-				//if (gridStep < raycastingOptions.samplingRate_0 && raycastingOptions.adaptiveSampling)
-				if (raycastingOptions.adaptiveSampling)
-				{
-					t += gridStep;
-				}
-				else
-				{
-					t = t + raycastingOptions.samplingRate_0;
-				}
-			}
-
-
-		}
-
-	}
-
-
-}
-
-
 
 template <typename Observable>
 __global__ void CudaIsoSurfacRendererAnalytic
@@ -891,136 +866,6 @@ __global__ void CudaIsoSurfacRendererAnalytic
 
 
 
-__global__ void CudaIsoSurfacRenderer_lambda2_velocityX
-(
-	cudaSurfaceObject_t raycastingSurface,
-	cudaTextureObject_t field1,
-	int rays,
-	RaycastingOptions raycastingOptions
-)
-{
-
-	FetchTextureSurface::Lambda2 fetch_lambda2;
-	FetchTextureSurface::Channel_X fetch_velocity;
-
-	int index = CUDA_INDEX;
-
-	if (index < rays)
-	{
-
-		// determine pixel position based on the index of the thread
-		int2 pixel = index2pixel(index, d_boundingBox.m_width);
-		float3 pixelPos = pixelPosition(d_boundingBox, pixel.x, pixel.y);
-		int3 gridInterval = make_int3(d_boundingBox.gridSize.x - 1, d_boundingBox.gridSize.y - 1, d_boundingBox.gridSize.z - 1);
-		float3 cellSize = d_boundingBox.m_dimensions / gridInterval;
-		float3 dir = normalize(pixelPos - d_boundingBox.m_eyePos);
-		//float2 NearFar = findIntersections(pixelPos, d_boundingBox);
-		float2 NearFar = findEnterExit(pixelPos, dir, d_boundingBox.boxFaces);
-
-		// if inside the bounding box
-		if (NearFar.y != -1)
-		{
-
-			float3 rayDir = normalize(pixelPos - d_boundingBox.m_eyePos);
-
-			// near and far plane
-			float n = 0.1f;
-			float f = 1000.0f;
-
-			// Add the offset to the eye position
-			float3 eyePos = d_boundingBox.m_eyePos + d_boundingBox.m_dimensions / 2.0;
-			float t = NearFar.x;
-			while (t < NearFar.y)
-			{
-				// Position of the isosurface
-				float3 position = pixelPos + (rayDir * t);
-
-				// Adds an offset to position while the center of the grid is at gridDiamter/2
-				position += d_boundingBox.m_dimensions / 2.0;
-
-				//Relative position calculates the position of the point on the CUDA texture
-				float3 relativePos = world2Tex(position, d_boundingBox.m_dimensions, d_boundingBox.gridSize);
-
-				float value_lambda2 = fetch_lambda2.ValueAtXYZ_Tex_GradientBase(field1, relativePos, d_boundingBox.m_dimensions, d_boundingBox.gridSize);
-				float value_velocity = fetch_velocity.ValueAtXYZ_Tex(field1, relativePos);
-				float2 tEnterExit = { t,findExitPoint3D(position, dir, cellSize) };
-
-				//float4 factors = getFactors<float>(values, position, dir);
-				// check if we have a hit 
-				
-
-				if (value_velocity > raycastingOptions.isoValue_0)
-				{
-					position = binarySearch<FetchTextureSurface::Channel_X>(fetch_velocity, field1, position, d_boundingBox.m_dimensions, d_boundingBox.gridSize, dir * t, raycastingOptions.isoValue_0, raycastingOptions.tolerance_0, 200);
-					relativePos = world2Tex(position, d_boundingBox.m_dimensions, d_boundingBox.gridSize);
-
-					// calculates gradient
-					float3 gradient = fetch_velocity.GradientAtXYZ_Tex(field1, relativePos, d_boundingBox.m_dimensions, d_boundingBox.gridSize);
-
-
-					// shading (no ambient)
-					float diffuse = max(dot(normalize(gradient), d_boundingBox.m_viewDir), 0.0f);
-					float3 raycastingColor = Array2Float3(raycastingOptions.color_0);
-					float3 rgb = raycastingColor * diffuse;
-
-					float depth = depthfinder(position, eyePos, d_boundingBox.m_viewDir, f, n);
-
-					float4 rgba = { rgb.x, rgb.y, rgb.z, depth };
-
-					// write back color and depth into the texture (surface)
-					// stride size of 4 * floats for each texel
-					surf2Dwrite(rgba, raycastingSurface, 4 * sizeof(float) * pixel.x, pixel.y);
-					break;
-
-				}
-
-				if (value_lambda2 > raycastingOptions.isoValue_1)
-				{
-					//position = binarySearch_GradientBased<FetchTextureSurface::Lambda2>(fetch_lambda2, field1, position, d_boundingBox.m_dimensions, d_boundingBox.gridSize, dir * t, raycastingOptions.isoValue_1, raycastingOptions.tolerance_0, 200);
-					relativePos = world2Tex(position, d_boundingBox.m_dimensions, d_boundingBox.gridSize);
-
-					// calculates gradient
-					float3 gradient = fetch_lambda2.GradientAtXYZ_Tex_GradientBase(field1, relativePos, d_boundingBox.m_dimensions, d_boundingBox.gridSize);
-
-
-					// shading (no ambient)
-					float diffuse = max(dot(normalize(gradient), d_boundingBox.m_viewDir), 0.0f);
-					float3 raycastingColor = Array2Float3(raycastingOptions.color_1);
-					float3 rgb = raycastingColor * diffuse;
-
-					float depth = depthfinder(position, eyePos, d_boundingBox.m_viewDir, f, n);
-
-					float4 rgba = { rgb.x, rgb.y, rgb.z, depth };
-
-					// write back color and depth into the texture (surface)
-					// stride size of 4 * floats for each texel
-					surf2Dwrite(rgba, raycastingSurface, 4 * sizeof(float) * pixel.x, pixel.y);
-					break;
-
-				}
-
-				
-				float gridStep = findExitPoint3D(position, dir, cellSize);
-				if (gridStep < raycastingOptions.samplingRate_0 && raycastingOptions.adaptiveSampling)
-				{
-					t += gridStep;
-				}
-				else
-				{
-					t += raycastingOptions.samplingRate_0;
-				}
-			}
-
-
-		}
-
-	}
-
-
-}
-
-
-
 template <typename Observable>
 __global__ void CudaIsoSurfacRenderer_GradientBase
 (
@@ -1092,387 +937,6 @@ __global__ void CudaIsoSurfacRenderer_GradientBase
 					surf2Dwrite(rgba, raycastingSurface, 4 * sizeof(float) * pixel.x, pixel.y);
 					break;
 				}
-			}
-
-
-		}
-
-	}
-
-
-}
-
-
-
-
-
-//template <typename Observable>
-//__global__ void CudaIsoSurfacRenderer_float_PlaneColor
-//(
-//	cudaSurfaceObject_t raycastingSurface,
-//	cudaTextureObject_t field1,
-//	int rays,
-//	int3 gridSize,
-//	TimeSpace3DOptions timeSpace3DOptions
-//)
-//{
-//
-//
-//	int index = CUDA_INDEX;
-//	Observable observable;
-//	if (index < rays)
-//	{
-//
-//		// determine pixel position based on the index of the thread
-//		int2 pixel = index2pixel(index, d_boundingBox.m_width);
-//
-//		float3 pixelPos = pixelPosition(d_boundingBox, pixel.x, pixel.y);
-//		float2 NearFar = findIntersections(pixelPos, d_boundingBox);
-//
-//		// if inside the bounding box
-//		if (NearFar.y != -1)
-//		{
-//
-//			float3 rayDir = normalize(pixelPos - d_boundingBox.m_eyePos);
-//
-//			// near and far plane
-//			float n = 0.1f;
-//			float f = 1000.0f;
-//
-//			// Add the offset to the eye position
-//			float3 eyePos = d_boundingBox.m_eyePos + d_boundingBox.m_dimensions / 2.0;
-//
-//			for (float t = NearFar.x; t < NearFar.y; t = t + timeSpace3DOptions.samplingRate)
-//			{
-//				// Position of the isosurface
-//				float3 position = pixelPos + (rayDir * t);
-//
-//				// Adds an offset to position while the center of the grid is at gridDiamter/2
-//				position += d_boundingBox.m_dimensions / 2.0;
-//
-//				//Relative position calculates the position of the point on the CUDA texture
-//				float3 relativePos = world2Tex(position, d_boundingBox.m_dimensions, gridSize);
-//
-//
-//				// check if we have a hit 
-//				if (
-//					position.y < d_boundingBox.m_dimensions.y * timeSpace3DOptions.wallNormalClipping &&
-//					position.y > d_boundingBox.m_dimensions.y * timeSpace3DOptions.wallNormalClipping - timeSpace3DOptions.tolerance
-//					)
-//				{
-//
-//
-//
-//
-//					float value = observable.ValueAtXYZ_Tex(field1, relativePos);
-//					
-//					float depth = depthfinder(position, eyePos, d_boundingBox.m_viewDir, f, n);
-//
-//					float3 rgb_min =
-//					{
-//						timeSpace3DOptions.minColor[0],
-//						timeSpace3DOptions.minColor[1],
-//						timeSpace3DOptions.minColor[2],
-//					};
-//
-//					float3 rgb_max =
-//					{
-//						timeSpace3DOptions.maxColor[0],
-//						timeSpace3DOptions.maxColor[1],
-//						timeSpace3DOptions.maxColor[2],
-//					};
-//
-//					vorticity -= timeSpace3DOptions.isoValue;
-//					float y_saturated = 0.0f;
-//					float3 rgb = { 0,0,0 };
-//					if (vorticity > 0)
-//					{
-//						float3 rgb_min_complement = make_float3(1, 1, 1) - rgb_min;
-//						y_saturated = saturate(value / timeSpace3DOptions.maxVal);
-//						rgb = rgb_min_complement * (1 - y_saturated) + rgb_min;
-//					}
-//					else
-//					{
-//						float3 rgb_max_complement = make_float3(1, 1, 1) - rgb_max;
-//						y_saturated = saturate(fabs(vorticity / timeSpace3DOptions.minVal));
-//						rgb = rgb_max_complement * (1 - y_saturated) + rgb_max;
-//					}
-//
-//					float4 rgba = { rgb.x, rgb.y, rgb.z, depth };
-//
-//					// write back color and depth into the texture (surface)
-//					// stride size of 4 * floats for each texel
-//					surf2Dwrite(rgba, raycastingSurface, 4 * sizeof(float) * pixel.x, pixel.y);
-//					break;
-//				}
-//
-//
-//			}
-//
-//
-//		}
-//
-//	}
-//
-//
-//}
-
-template <typename Observable>
-__global__ void CudaIsoSurfacRenderer_float_PlaneColor
-(
-	cudaSurfaceObject_t raycastingSurface,
-	cudaTextureObject_t field1,
-	int rays,
-	int3 gridSize,
-	RaycastingOptions raycastingOptions,
-	SolverOptions solverOptions
-)
-{
-
-	Observable observable;
-	int index = CUDA_INDEX;
-
-	if (index < rays)
-	{
-
-		// determine pixel position based on the index of the thread
-		int2 pixel = index2pixel(index, d_boundingBox.m_width);
-
-		float3 pixelPos = pixelPosition(d_boundingBox, pixel.x, pixel.y);
-		float2 NearFar = findIntersections(pixelPos, d_boundingBox);
-
-		// if inside the bounding box
-		if (NearFar.y != -1)
-		{
-
-			float3 rayDir = normalize(pixelPos - d_boundingBox.m_eyePos);
-
-			// near and far plane
-			float n = 0.1f;
-			float f = 1000.0f;
-
-			// Add the offset to the eye position
-			float3 eyePos = d_boundingBox.m_eyePos + d_boundingBox.m_dimensions / 2.0;
-
-			for (float t = NearFar.x; t < NearFar.y; t = t + raycastingOptions.samplingRate_0)
-			{
-
-
-				// Position of the isosurface
-				float3 position = pixelPos + (rayDir * t);
-
-				// Adds an offset to position while the center of the grid is at gridDiamter/2
-				position += d_boundingBox.m_dimensions / 2.0;
-
-				//Relative position calculates the position of the point on the CUDA texture
-				
-
-
-				switch (raycastingOptions.projectionPlane)
-				{
-
-				case(IsoMeasure::ProjectionPlane::ZXPLANE):
-				{
-					if (
-						position.y < d_boundingBox.m_dimensions.y * raycastingOptions.wallNormalClipping &&
-						position.y > d_boundingBox.m_dimensions.y * raycastingOptions.wallNormalClipping - raycastingOptions.planeThinkness
-						)
-					{
-
-						float3 relativePos = world2Tex(position, d_boundingBox.m_dimensions, gridSize);
-						float value = observable.ValueAtXYZ_Tex(field1, relativePos);
-						float depth = depthfinder(position, eyePos, d_boundingBox.m_viewDir, f, n);
-
-						float3 rgb_min =
-						{
-							raycastingOptions.minColor[0],
-							raycastingOptions.minColor[1],
-							raycastingOptions.minColor[2],
-						};
-
-						float3 rgb_max =
-						{
-							raycastingOptions.maxColor[0],
-							raycastingOptions.maxColor[1],
-							raycastingOptions.maxColor[2],
-						};
-
-						float y_saturated = 0.0f;
-						float3 rgb = { 0,0,0 };
-						float3 rgb_complement = { 0,0,0 };
-
-
-						y_saturated = (value - raycastingOptions.minVal) / (raycastingOptions.maxVal - raycastingOptions.minVal);
-						y_saturated = saturate(y_saturated);
-
-						if (y_saturated > 0.5f)
-						{
-							rgb_complement = make_float3(1, 1, 1) - rgb_max;
-							rgb = rgb_complement * (1 - 2 * (y_saturated - 0.5)) + rgb_max;
-						}
-						else
-						{
-							rgb_complement = make_float3(1, 1, 1) - rgb_min;
-							rgb = rgb_complement * (2 * y_saturated) + rgb_min;
-						}
-
-
-
-						float4 rgba = { rgb.x, rgb.y, rgb.z, depth };
-
-						// write back color and depth into the texture (surface)
-						// stride size of 4 * floats for each texel
-						surf2Dwrite(rgba, raycastingSurface, 4 * sizeof(float) * pixel.x, pixel.y);
-						break;
-					}
-					break;
-				}
-
-				case(IsoMeasure::ProjectionPlane::XYPLANE):
-				{
-
-					if (
-						position.z < d_boundingBox.m_dimensions.z * raycastingOptions.wallNormalClipping &&
-						position.z > d_boundingBox.m_dimensions.z * raycastingOptions.wallNormalClipping - raycastingOptions.planeThinkness
-						)
-					{
-
-						float3 relativePos = world2Tex(position, d_boundingBox.m_dimensions, gridSize);
-
-						float value = observable.ValueAtXYZ_Tex(field1, relativePos);
-						float depth = depthfinder(position, eyePos, d_boundingBox.m_viewDir, f, n);
-
-						float3 rgb_min =
-						{
-							raycastingOptions.minColor[0],
-							raycastingOptions.minColor[1],
-							raycastingOptions.minColor[2],
-						};
-
-						float3 rgb_max =
-						{
-							raycastingOptions.maxColor[0],
-							raycastingOptions.maxColor[1],
-							raycastingOptions.maxColor[2],
-						};
-
-						float y_saturated = 0.0f;
-						float3 rgb = { 0,0,0 };
-						float3 rgb_complement = { 0,0,0 };
-
-
-						y_saturated = (value - raycastingOptions.minVal) / (raycastingOptions.maxVal - raycastingOptions.minVal);
-						y_saturated = saturate(y_saturated);
-
-						if (y_saturated > 0.5f)
-						{
-							rgb_complement = make_float3(1, 1, 1) - rgb_max;
-							rgb = rgb_complement * (1 - 2 * (y_saturated - 0.5)) + rgb_max;
-						}
-						else
-						{
-							rgb_complement = make_float3(1, 1, 1) - rgb_min;
-							rgb = rgb_complement * (2 * y_saturated) + rgb_min;
-						}
-
-
-
-						float4 rgba = { rgb.x, rgb.y, rgb.z, depth };
-
-						// write back color and depth into the texture (surface)
-						// stride size of 4 * floats for each texel
-						surf2Dwrite(rgba, raycastingSurface, 4 * sizeof(float) * pixel.x, pixel.y);
-						break;
-					}
-
-
-
-					break;
-				}
-
-				case(IsoMeasure::ProjectionPlane::YZPLANE):
-				{
-
-					float planePos = d_boundingBox.m_dimensions.x * raycastingOptions.wallNormalClipping;
-					if (solverOptions.projection == Projection::STREAK_PROJECTION)
-					{
-						planePos = planePos - (solverOptions.timeDim / 2) + (solverOptions.currentIdx - solverOptions.firstIdx) *(solverOptions.timeDim / (solverOptions.lastIdx - solverOptions.firstIdx));
-					}
-					if (
-						position.x < planePos &&
-						position.x > planePos - raycastingOptions.planeThinkness
-						)
-					{
-
-						float depth = depthfinder(position, eyePos, d_boundingBox.m_viewDir, f, n);
-
-						if (solverOptions.projection == Projection::STREAK_PROJECTION)
-						{
-							position.x = position.x + (solverOptions.timeDim / 2) - (solverOptions.currentIdx - solverOptions.firstIdx) *(solverOptions.timeDim / (solverOptions.lastIdx - solverOptions.firstIdx));
-						}
-
-						float3 relativePos = world2Tex(position, d_boundingBox.m_dimensions, gridSize);
-
-						float value = observable.ValueAtXYZ_Tex(field1, relativePos);
-
-
-						float3 rgb_min =
-						{
-							raycastingOptions.minColor[0],
-							raycastingOptions.minColor[1],
-							raycastingOptions.minColor[2],
-						};
-
-						float3 rgb_max =
-						{
-							raycastingOptions.maxColor[0],
-							raycastingOptions.maxColor[1],
-							raycastingOptions.maxColor[2],
-						};
-
-						float y_saturated = 0.0f;
-						float3 rgb = { 0,0,0 };
-						float3 rgb_complement = { 0,0,0 };
-
-
-						y_saturated = (value - raycastingOptions.minVal) / (raycastingOptions.maxVal - raycastingOptions.minVal);
-						y_saturated = saturate(y_saturated);
-
-						if (y_saturated > 0.5f)
-						{
-							rgb_complement = make_float3(1, 1, 1) - rgb_max;
-							rgb = rgb_complement * (1 - 2 * (y_saturated - 0.5)) + rgb_max;
-						}
-						else
-						{
-							rgb_complement = make_float3(1, 1, 1) - rgb_min;
-							rgb = rgb_complement * (2 * y_saturated) + rgb_min;
-						}
-
-
-
-						float4 rgba = { rgb.x, rgb.y, rgb.z, depth };
-
-						// write back color and depth into the texture (surface)
-						// stride size of 4 * floats for each texel
-						surf2Dwrite(rgba, raycastingSurface, 4 * sizeof(float) * pixel.x, pixel.y);
-						break;
-					}
-
-
-
-					break;
-				}
-
-				}
-
-
-
-
-				// check if we have a hit 
-				
-
-
 			}
 
 
@@ -2095,6 +1559,8 @@ bool Raycasting::initializeRaycastingInteroperability()
 	return this->interoperatibility.Initialize();
 }
 
+
+
 __host__ bool Raycasting::initializeCudaSurface()
 {
 
@@ -2144,6 +1610,37 @@ __host__ void Raycasting::setResources
 	this->device = _device;
 	this->pAdapter = _pAdapter;
 	this->deviceContext = _deviceContext;
+
+}
+
+
+__host__ void Raycasting::setResources
+(
+	Camera* _camera,
+	int* _width,
+	int* _height,
+	SolverOptions* _solverOption,
+	RaycastingOptions* _raycastingOptions,
+	RenderingOptions* _renderingOptions,
+	ID3D11Device* _device,
+	IDXGIAdapter* _pAdapter,
+	ID3D11DeviceContext* _deviceContext,
+	FieldOptions * _fieldOptions
+)
+{
+	this->camera = _camera;
+	this->FOV_deg = 30.0;
+	this->width = _width;
+	this->height = _height;
+
+	this->solverOptions = _solverOption;
+	this->raycastingOptions = _raycastingOptions;
+	this->renderingOptions = _renderingOptions;
+
+	this->device = _device;
+	this->pAdapter = _pAdapter;
+	this->deviceContext = _deviceContext;
+	this->fieldOptions = _fieldOptions;
 
 }
 
@@ -3500,11 +2997,6 @@ __global__ void CudaTerrainRenderer_Marching_extra_FTLE_Color
 				{
 					t = t + samplingRate;
 				}
-				//else
-				//{
-				//	t = t + fmin(samplingRate, findExitPoint(make_float2(position.x, position.z), make_float2(rayDir.x, rayDir.z), cellSize_XZ));
-
-				//}
 
 			}
 
@@ -3568,3 +3060,67 @@ __device__ float3 binarySearch_tex1D
 	return position;
 
 };
+
+
+
+void Raycasting::generateMipmapL1()
+{
+	int3 mipmapGridSize = Array2Int3(solverOptions->gridSize);
+	mipmapGridSize = mipmapGridSize / 2;
+
+	s_mipmapped.setInputArray(a_mipmap_L1.getArrayRef());
+	s_mipmapped.initializeSurface();
+
+	// Calculates the block and grid sizes
+
+	unsigned int blocks;
+	dim3 thread = { maxBlockDim,maxBlockDim,1 };
+	blocks = BLOCK_THREAD(mipmapGridSize.x * mipmapGridSize.y);
+
+	for (int z = 0; z < mipmapGridSize.z; z++)
+	{
+		mipmapped << < blocks, thread >> > (volumeTexture_0.getTexture(), s_mipmapped.getSurfaceObject(), mipmapGridSize, z);
+	}
+
+	s_mipmapped.destroySurface();
+
+}
+
+void Raycasting::initializeMipmapL1()
+{
+	a_mipmap_L1.release();
+	int3 mipmapGridSize = Array2Int3(solverOptions->gridSize);
+	mipmapGridSize = mipmapGridSize / 2;
+	a_mipmap_L1.initialize(mipmapGridSize.x, mipmapGridSize.y, mipmapGridSize.z);
+}
+
+void Raycasting::initializeMipmapL2()
+{
+	a_mipmap_L2.release();
+	int3 mipmapGridSize = Array2Int3(solverOptions->gridSize);
+	mipmapGridSize = mipmapGridSize / 4;
+	a_mipmap_L2.initialize(mipmapGridSize.x, mipmapGridSize.y, mipmapGridSize.z);
+}
+void Raycasting::generateMipmapL2()
+{
+	int3 mipmapGridSize = Array2Int3(solverOptions->gridSize);
+	mipmapGridSize = mipmapGridSize / 4;
+	s_mipmapped.setInputArray(a_mipmap_L2.getArrayRef());
+	s_mipmapped.initializeSurface();
+
+	// Calculates the block and grid sizes
+
+	unsigned int blocks;
+	dim3 thread = { maxBlockDim,maxBlockDim,1 };
+	blocks = BLOCK_THREAD(mipmapGridSize.x * mipmapGridSize.y);
+
+	for (int z = 0; z < mipmapGridSize.z; z++)
+	{
+		mipmapped << < blocks, thread >> > (volumeTexture_L1.getTexture(), s_mipmapped.getSurfaceObject(), mipmapGridSize, z);
+	}
+
+	s_mipmapped.destroySurface();
+}
+
+
+

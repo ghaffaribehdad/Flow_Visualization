@@ -2,15 +2,12 @@
 #include "..//ErrorLogger/ErrorLogger.h"
 #include "..//Raycaster/IsosurfaceHelperFunctions.h"
 #include <cuda_runtime.h>
-#include "..//Raycaster/Raycasting_Helper.h"
 
 
 //explicit instantiation
 
 bool FieldGenerator3D::retrace()
 {
-
-
 
 	// Initialize Height Field as an empty cuda array 3D
 	if (!this->generateVolumetricField())
@@ -38,7 +35,7 @@ bool FieldGenerator3D::initialize
 	// set the number of rays = number of pixels
 	this->rays = (*this->width) * (*this->height);
 
-	volume_IO.Initialize(this->solverOptions);
+	volume_IO_Primary.Initialize(this->solverOptions);
 
 	generateVolumetricField();
 

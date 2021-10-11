@@ -60,7 +60,7 @@ void scanArray(TOut* d_out, const TIn* d_in, size_t numElements, size_t numRows,
     dim3  threads(SCAN_CTA_SIZE, 1, 1);
 
     // make sure there are no CUDA errors before we start
-    cudaCheckMsg("scanArray before kernels");
+    //cudaCheckMsg("scanArray before kernels");
 
     uint traitsCode = 0;
     if (numBlocks > 1) traitsCode |= 1;
@@ -111,7 +111,7 @@ void scanArray(TOut* d_out, const TIn* d_in, size_t numElements, size_t numRows,
         break;
     }
 
-    cudaCheckMsg("prescan");
+    //cudaCheckMsg("prescan");
 
     if (numBlocks > 1)
     {
@@ -142,7 +142,7 @@ void scanArray(TOut* d_out, const TIn* d_in, size_t numElements, size_t numRows,
                                                  0, 0);
         }
        
-        cudaCheckMsg("vectorAddUniform");
+        //cudaCheckMsg("vectorAddUniform");
     }
 }
 

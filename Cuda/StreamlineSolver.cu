@@ -11,7 +11,7 @@
 
 __host__ bool StreamlineSolver::loadVolumeTexture()
 {
-	switch (solverOptions->Compressed)
+	switch (solverOptions->compressed)
 	{
 	case true: // Compressed
 	{

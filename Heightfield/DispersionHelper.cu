@@ -2,7 +2,7 @@
 #include "../Cuda/helper_math.h"
 #include "../Cuda/CudaHelperFunctions.h"
 #include "../Cuda/ParticleTracingHelper.h"
-
+#include "../Raycaster/IsosurfaceHelperFunctions.h"
 
 //Explicit Instantiation
 template __global__ void heightFieldGradient3D<struct FetchTextureSurface::Channel_X>\

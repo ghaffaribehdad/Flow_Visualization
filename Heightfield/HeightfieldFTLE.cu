@@ -55,20 +55,20 @@ void HeightfieldFTLE::trace3D_path_Single()
 		if (i == 0)
 		{
 			// Load i 'dx field in volume_IO into field
-			volume_IO.readVolume(solverOptions->currentIdx);
+			volume_IO_Primary.readVolume(solverOptions->currentIdx);
 			// Copy and initialize velocityfield texture
-			t_velocityField_0.setField(volume_IO.getField_float());
+			t_velocityField_0.setField(volume_IO_Primary.getField_float());
 			t_velocityField_0.initialize(Array2Int3(solverOptions->gridSize),false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
 			// Release the velocityfield from host (volume_IO)
-			volume_IO.release();
+			volume_IO_Primary.release();
 
 
 			// Same procedure for the second texture
-			volume_IO.readVolume(solverOptions->currentIdx + 1);
-			t_velocityField_1.setField(volume_IO.getField_float());
+			volume_IO_Primary.readVolume(solverOptions->currentIdx + 1);
+			t_velocityField_1.setField(volume_IO_Primary.getField_float());
 			t_velocityField_1.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
 			// Release the velocityfield from host (volume_IO)
-			volume_IO.release();
+			volume_IO_Primary.release();
 
 		}
 		else
@@ -78,12 +78,12 @@ void HeightfieldFTLE::trace3D_path_Single()
 			{
 
 				// Same procedure for the second texture
-				volume_IO.readVolume(i + solverOptions->currentIdx + 1);
+				volume_IO_Primary.readVolume(i + solverOptions->currentIdx + 1);
 				t_velocityField_1.release();
-				t_velocityField_1.setField(volume_IO.getField_float());
+				t_velocityField_1.setField(volume_IO_Primary.getField_float());
 				t_velocityField_1.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
 				// Release the velocityfield from host (volume_IO)
-				volume_IO.release();
+				volume_IO_Primary.release();
 
 				RK4Step = RK4STEP::EVEN;
 			}
@@ -91,12 +91,12 @@ void HeightfieldFTLE::trace3D_path_Single()
 			else
 			{
 				// Same procedure for the second texture
-				volume_IO.readVolume(i + solverOptions->currentIdx + 1);
+				volume_IO_Primary.readVolume(i + solverOptions->currentIdx + 1);
 				t_velocityField_0.release();
-				t_velocityField_0.setField(volume_IO.getField_float());
+				t_velocityField_0.setField(volume_IO_Primary.getField_float());
 				t_velocityField_0.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
 				// Release the velocityfield from host (volume_IO)
-				volume_IO.release();
+				volume_IO_Primary.release();
 
 				RK4Step = RK4STEP::ODD;
 
@@ -250,7 +250,7 @@ bool HeightfieldFTLE::singleSurfaceInitialization()
 {
 	
 	// initialize volume Input Output
-	volume_IO.Initialize(this->solverOptions);
+	volume_IO_Primary.Initialize(this->solverOptions);
 	gridSize = { dispersionOptions->gridSize_2D[0],	dispersionOptions->gridSize_2D[1],	solverOptions->lastIdx - solverOptions->firstIdx };
 
 	// Initialize Height Field as an empty cuda array 3D

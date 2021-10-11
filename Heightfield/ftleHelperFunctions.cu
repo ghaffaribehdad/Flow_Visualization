@@ -2,6 +2,7 @@
 #include "../Cuda/helper_math.h"
 #include "../Particle/Particle.h"
 #include "../Cuda/CudaHelperFunctions.h"
+#include "../Raycaster/IsosurfaceHelperFunctions.h"
 
 
 enum RK4STEP

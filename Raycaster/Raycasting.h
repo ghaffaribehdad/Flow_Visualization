@@ -28,6 +28,8 @@
 #include "..//Options/fluctuationheightfieldOptions.h"
 #include "../Options/CrossSectionOptions.h"
 #include "../Graphics/RenderImGuiOptions.h"
+#include "../Cuda/CudaArray.h"
+
 
 
 
@@ -38,13 +40,21 @@ class Raycasting
 
 protected:
 
-	VolumeTexture3D volumeTexture;
+	VolumeTexture3D volumeTexture_0;
+	VolumeTexture3D volumeTexture_1;
+
+	VolumeTexture3D volumeTexture_L1;
+	VolumeTexture3D volumeTexture_L2;
+	VolumeTexture3D volumeTexture_L3;
 
 	float* averageTemp = nullptr;
 	float* d_averageTemp = nullptr;
 	float FOV_deg = 30.0f;
 	float distImagePlane = 0.1f;
 	unsigned int maxBlockDim = 16;
+
+	bool b_initialized = false;
+	bool b_updateScene = false;
 
 	int* width = nullptr;
 	int* height = nullptr;
@@ -56,8 +66,11 @@ protected:
 	RaycastingOptions* raycastingOptions;
 	RenderingOptions* renderingOptions;
 
-	float* field = nullptr;
+	FieldOptions * fieldOptions;
 
+	float* field = nullptr;
+	CudaArray_3D<float4> a_mipmap_L1;
+	CudaArray_3D<float4> a_mipmap_L2;
 
 	VertexShader vertexshader;
 	PixelShader pixelshader;
@@ -78,9 +91,11 @@ protected:
 	Camera* camera = nullptr;
 
 	CudaSurface raycastingSurface;
+	CudaSurface s_mipmapped;
 	Interoperability interoperatibility;
 
-	Volume_IO_Z_Major volume_IO;
+	Volume_IO_Z_Major volume_IO_Primary;
+	Volume_IO_Z_Major volume_IO_Secondary;
 
 
 	__host__ virtual bool initializeBoundingBox(); // Create and copy a Boundingbox in the Device constant memory
@@ -96,12 +111,27 @@ protected:
 
 	__host__ bool initializeSamplerstate();
 	__host__ void setShaders();
-	__host__ void updateFile
+	__host__ void updateFile_Single
 	(
 		cudaTextureAddressMode addressMode_X = cudaAddressModeBorder,
 		cudaTextureAddressMode addressMode_Y = cudaAddressModeBorder,
 		cudaTextureAddressMode addressMode_Z = cudaAddressModeBorder
 	);
+
+	__host__ void updateFile_Mult
+	(
+		cudaTextureAddressMode addressMode_X = cudaAddressModeBorder,
+		cudaTextureAddressMode addressMode_Y = cudaAddressModeBorder,
+		cudaTextureAddressMode addressMode_Z = cudaAddressModeBorder
+	);
+
+	__host__ void updateFile_MultiScale
+	(
+		cudaTextureAddressMode addressMode_X = cudaAddressModeBorder,
+		cudaTextureAddressMode addressMode_Y = cudaAddressModeBorder,
+		cudaTextureAddressMode addressMode_Z = cudaAddressModeBorder
+	);
+
 
 
 	void loadTexture
@@ -114,9 +144,9 @@ protected:
 		cudaTextureAddressMode addressModeZ
 	);
 
-	void loadTextureCompressed
+	void loadTexture
 	(
-		SolverOptions * solverOptions,
+		int3 & gridSize,
 		VolumeTexture3D & volumeTexture,
 		const int & idx,
 		cudaTextureAddressMode addressModeX,
@@ -124,14 +154,59 @@ protected:
 		cudaTextureAddressMode addressModeZ
 	);
 
+	void loadTextureCompressed
+	(
+		int3 & gridSize,
+		VolumeTexture3D & volumeTexture,
+		const int & idx,
+		cudaTextureAddressMode addressModeX,
+		cudaTextureAddressMode addressModeY,
+		cudaTextureAddressMode addressModeZ
+	);
+
+	void loadTextureCompressed_double
+	(
+		int * gridSize_0,
+		int * gridSize_1,
+		VolumeTexture3D & volumeTexture_0,
+		VolumeTexture3D & volumeTexture_1,
+		const int & idx,
+		cudaTextureAddressMode addressModeX,
+		cudaTextureAddressMode addressModeY,
+		cudaTextureAddressMode addressModeZ
+	);
+
+	void generateMipmapL1();
+	void initializeMipmapL1();
+	void initializeMipmapL2();
+	void generateMipmapL2();
+
 public:
 
-	__host__ virtual bool initialize
+
+	
+
+	__host__ virtual bool initialize_Single
 	(
 		cudaTextureAddressMode addressMode_X = cudaAddressModeBorder,
 		cudaTextureAddressMode addressMode_Y = cudaAddressModeBorder,
 		cudaTextureAddressMode addressMode_Z = cudaAddressModeBorder
 	);
+
+	__host__ virtual bool initialize_Double
+	(
+		cudaTextureAddressMode addressMode_X = cudaAddressModeBorder,
+		cudaTextureAddressMode addressMode_Y = cudaAddressModeBorder,
+		cudaTextureAddressMode addressMode_Z = cudaAddressModeBorder
+	);
+
+	__host__ virtual bool initialize_Multiscale
+	(
+		cudaTextureAddressMode addressMode_X = cudaAddressModeBorder,
+		cudaTextureAddressMode addressMode_Y = cudaAddressModeBorder,
+		cudaTextureAddressMode addressMode_Z = cudaAddressModeBorder
+	);
+
 	__host__ virtual bool release();
 	__host__ virtual void rendering();
 	__host__ virtual bool updateScene();
@@ -154,7 +229,6 @@ public:
 		return true;
 	}
 
-	__host__ bool resize();
 	__host__  void draw();
 	//__host__ void saveTexture();
 
@@ -178,62 +252,136 @@ public:
 
 	);
 
+	__host__ void setResources
+	(
+		Camera* _camera,
+		int * _width,
+		int * _height,
+		SolverOptions* _solverOption,
+		RaycastingOptions* _raycastingOptions,
+		RenderingOptions* _renderingOptions,
+		ID3D11Device* _device,
+		IDXGIAdapter* _pAdapter,
+		ID3D11DeviceContext* _deviceContext,
+		FieldOptions * fieldOptions
+
+	);
+
+
+
+	__host__ bool resize()
+	{
+		this->raycastingTexture->Release();
+		this->initializeRaycastingTexture();
+
+		this->raycastingSurface.destroySurface();
+		this->interoperatibility.release();
+
+		this->initializeRaycastingInteroperability();
+		this->initializeCudaSurface();
+		this->initializeBoundingBox();
+		this->rendering();
+		this->interoperatibility.release();
+
+		return true;
+	}
+
 	__host__ virtual void show(RenderImGuiOptions* renderImGuiOptions)
 	{
 		if (renderImGuiOptions->showRaycasting)
 		{
 
-
-
-			if (!this->raycastingOptions->initialized)
+			switch (raycastingOptions->raycastingMode)
 			{
-				this->initialize(cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
-				this->raycastingOptions->initialized = true;
+			case RaycastingMode::Mode::SINGLE:
+
+				if (!b_initialized)
+				{
+					this->initialize_Single();
+				}
+
+				if (raycastingOptions->fileChanged || renderImGuiOptions->fileChanged)
+				{
+					this->updateFile_Single();
+					renderImGuiOptions->fileChanged = false;
+				}
+				if (renderImGuiOptions->updateRaycasting)
+				{
+					this->updateScene();
+					renderImGuiOptions->updateRaycasting = false;
+
+				}
+
+				this->draw();
+
+				break;
+
+			case RaycastingMode::Mode::DOUBLE:
+
+				if (this->raycastingOptions->resize)
+				{
+					release();
+					this->raycastingOptions->resize = false;
+				}
+				else
+				{
+					if (!b_initialized)
+					{
+						this->initialize_Double();
+					}
+
+					this->draw();
+					if (renderImGuiOptions->updateRaycasting)
+					{
+						this->updateScene();
+						renderImGuiOptions->updateRaycasting = false;
+
+					}
+					if (raycastingOptions->fileChanged || renderImGuiOptions->fileChanged)
+					{
+						this->updateFile_Single();
+						this->updateScene();
+						renderImGuiOptions->fileChanged = false;
+					}
+				}
+				break;
+
+			case  RaycastingMode::Mode::MULTISCALE:
+				if (this->raycastingOptions->resize)
+				{
+					release();
+					this->raycastingOptions->resize = false;
+				}
+				else
+				{
+					if (!b_initialized)
+					{
+						this->initialize_Multiscale();
+					}
+
+					this->draw();
+					if (renderImGuiOptions->updateRaycasting)
+					{
+						this->updateScene();
+						renderImGuiOptions->updateRaycasting = false;
+
+					}
+					if (raycastingOptions->fileChanged || renderImGuiOptions->fileChanged)
+					{
+						this->updateFile_Single();
+						this->updateScene();
+						renderImGuiOptions->fileChanged = false;
+					}
+				}
+				break;
+
+
 			}
-
-			if (this->raycastingOptions->resize)
-			{
-				this->release();
-				this->volume_IO.release();
-				this->solverOptions->compressResourceInitialized = false;
-				this->initialize(cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
-				this->raycastingOptions->resize = false;
-			}
-
-
-			this->draw();
-
-			if (renderImGuiOptions->updateRaycasting)
-			{
-
-				this->updateScene();
-				renderImGuiOptions->updateRaycasting = false;
-
-			}
-			if (raycastingOptions->fileChanged || renderImGuiOptions->fileChanged)
-			{
-				this->updateFile();
-				this->updateScene();
-				renderImGuiOptions->fileChanged = false;
-			}
-
-			
 		}
 	}
-
-
-
 };
 
 
-template <typename Observable>
-__global__ void CudaIsoSurfacRenderer
-(
-	cudaSurfaceObject_t raycastingSurface,
-	cudaTextureObject_t field1,
-	int rays,
-	RaycastingOptions raycastingOptions
-);
 
 
 template <typename Observable>
@@ -245,22 +393,8 @@ __global__ void CudaIsoSurfacRendererAnalytic
 	RaycastingOptions raycastingOptions
 );
 
-__global__ void CudaIsoSurfacRenderer_lambda2_velocityX
-(
-	cudaSurfaceObject_t raycastingSurface,
-	cudaTextureObject_t field1,
-	int rays,
-	RaycastingOptions raycastingOptions
-);
 
-template <IsoMeasure::IsoMeasureMode iso1, IsoMeasure::IsoMeasureMode iso2>
-__global__ void CudaIsoSurfacRenderer_ENUM
-(
-	cudaSurfaceObject_t raycastingSurface,
-	cudaTextureObject_t field1,
-	int rays,
-	RaycastingOptions raycastingOptions
-);
+
 
 
 
@@ -273,55 +407,6 @@ __global__ void CudaIsoSurfacRenderer_GradientBase
 	RaycastingOptions raycastingOptions
 );
 
-
-__global__ void CudaIsoSurfacRenderer_float
-(
-	cudaSurfaceObject_t raycastingSurface,
-	cudaTextureObject_t field1,
-	int rays,
-	int3 gridSize,
-	TimeSpace3DOptions timeSpace3DOptions
-);
-
-//__global__ void CudaIsoSurfacRenderer_float_PlaneColor
-//(
-//	cudaSurfaceObject_t raycastingSurface,
-//	cudaTextureObject_t field1,
-//	int rays,
-//	int3 gridSize,
-//	TimeSpace3DOptions timeSpace3DOptions
-//);
-
-//template <typename Observable>
-//__global__ void CudaIsoSurfacRenderer_float_PlaneColor
-//(
-//	cudaSurfaceObject_t raycastingSurface,
-//	cudaTextureObject_t field1,
-//	int rays,
-//	int3 gridSize,
-//	TimeSpace3DOptions timeSpace3DOptions
-//);
-//
-//template <typename Observable>
-//__global__ void CudaIsoSurfacRenderer_float_PlaneColor
-//(
-//	cudaSurfaceObject_t raycastingSurface,
-//	cudaTextureObject_t field1,
-//	int rays,
-//	int3 gridSize,
-//	RaycastingOptions raycastingOptions
-//);
-
-template <typename Observable>
-__global__ void CudaIsoSurfacRenderer_float_PlaneColor
-(
-	cudaSurfaceObject_t raycastingSurface,
-	cudaTextureObject_t field1,
-	int rays,
-	int3 gridSize,
-	RaycastingOptions raycastingOptions,
-	SolverOptions solverOptions
-);
 
 __global__ void CudaIsoSurfacRenderer_TurbulentDiffusivity
 (
@@ -494,3 +579,15 @@ __device__ float3 binarySearch_tex1D
 	float& tolerance,
 	int maxIteration
 );
+
+
+
+//template <typename Observable1, typename Observable2>
+//__global__ void CudaIsoSurfacRenderer_Multi
+//(
+//	cudaSurfaceObject_t raycastingSurface,
+//	cudaTextureObject_t field1,
+//	cudaTextureObject_t field2,
+//	int rays,
+//	RaycastingOptions raycastingOptions
+//);

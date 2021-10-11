@@ -6,6 +6,7 @@
 #include <cuda_profiler_api.h>
 #include "../Cuda/helper_math.h"
 #include "../Options/SolverOptions.h"
+#include "../Options/FieldOptions.h"
 #include <vector>
 
 #include <cuda_runtime.h>
@@ -100,6 +101,41 @@ void DecompressResources::initializeDecompressionResources(SolverOptions * solve
 	//this->allocateAndRegister();
 	this->pHost = _pHost;
 	this->pinHostMemory(solverOption->maxSize);
+}
+
+
+void DecompressResources::initializeDecompressionResources(FieldOptions * fieldOptions, unsigned int * _pHost)
+{
+	gridSize = Array2Int3(fieldOptions->gridSize);
+	gridSize.x = gridSize.x * 4; // Since there are 4 channels;
+
+
+	this->config = CompressVolumeResources::getRequiredResources(gridSize.x, gridSize.y, gridSize.z, 1, huffmanBits);
+	this->shared.create(config);
+	this->res.create(shared.getConfig());
+
+
+	//this->allocateAndRegister();
+	this->pHost = _pHost;
+	this->pinHostMemory(fieldOptions->fileSizeMaxByte);
+}
+
+
+
+void DecompressResources::initializeDecompressionResources(std::size_t & _maxSize, int * _gridSize, unsigned int * _pHost)
+{
+	gridSize = Array2Int3(_gridSize);
+	gridSize.x = gridSize.x * 4; // Since there are 4 channels;
+
+
+	this->config = CompressVolumeResources::getRequiredResources(gridSize.x, gridSize.y, gridSize.z, 1, huffmanBits);
+	this->shared.create(config);
+	this->res.create(shared.getConfig());
+
+
+	//this->allocateAndRegister();
+	this->pHost = _pHost;
+	this->pinHostMemory(_maxSize);
 }
 
 void DecompressResources::releaseDecompressionResources()

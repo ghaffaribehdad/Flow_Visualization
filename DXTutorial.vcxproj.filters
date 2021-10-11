@@ -607,6 +607,12 @@
     <ClInclude Include="Graphics\GraphicsHelper.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
+    <ClInclude Include="Options\FieldOptions.h">
+      <Filter>Header Files\Options</Filter>
+    </ClInclude>
+    <ClInclude Include="Raycaster\CallerFunctions.h">
+      <Filter>Source Files\Raycasting</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\geometryshaderLineTube.hlsl">
@@ -759,6 +765,9 @@
     </CudaCompile>
     <CudaCompile Include="Cuda\ParticleTracingHelper.cu">
       <Filter>Source Files\Cuda</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Raycaster\CallerFunctions.cu">
+      <Filter>Source Files\Raycasting</Filter>
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>

@@ -5,6 +5,310 @@
 
 typedef unsigned char uchar;
 
+__global__ void CudaIsoSurfacRenderer_Single
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field0,
+	int rays,
+	RaycastingOptions raycastingOptions
+)
+{
+	int index = CUDA_INDEX;
+
+	if (index < rays)
+	{
+
+		// determine pixel position based on the index of the thread
+		int2 pixel = index2pixel(index, d_boundingBox.m_width);
+		float3 pixelPos = pixelPosition(d_boundingBox, pixel.x, pixel.y);
+		int3 gridInterval = make_int3(d_boundingBox.gridSize.x - 1, d_boundingBox.gridSize.y - 1, d_boundingBox.gridSize.z - 1);
+		float3 cellSize = d_boundingBox.m_dimensions / gridInterval;
+		float3 dir = normalize(pixelPos - d_boundingBox.m_eyePos);
+		//float2 NearFar = findIntersections(pixelPos, d_boundingBox);
+		float2 NearFar = findEnterExit(pixelPos, dir, d_boundingBox.boxFaces);
+
+		// if inside the bounding box
+		if (NearFar.y != -1)
+		{
+
+			float3 rayDir = normalize(pixelPos - d_boundingBox.m_eyePos);
+
+			// near and far plane
+			float n = 0.1f;
+			float f = 1000.0f;
+
+			// Add the offset to the eye position
+			float3 eyePos = d_boundingBox.m_eyePos + d_boundingBox.m_dimensions / 2.0;
+			float t = NearFar.x;
+			while (t < NearFar.y)
+			{
+				// Position of the isosurface
+				float3 position = pixelPos + (rayDir * t);
+
+				// Adds an offset to position while the center of the grid is at gridDiamter/2
+				position += d_boundingBox.m_dimensions / 2.0;
+
+				//Relative position calculates the position of the point on the CUDA texture
+				float3 relativePos = world2Tex(position, d_boundingBox.m_dimensions, d_boundingBox.gridSize);
+
+
+				//if (callerValueAtTex(raycastingOptions.isoMeasure_0, field0, relativePos) > raycastingOptions.isoValue_0)
+				if (tex3D<float4>(field0, relativePos.x, relativePos.y, relativePos.z).x > raycastingOptions.isoValue_0)
+				{
+
+					//position = binarySearch<Observable>(observable, field1, position, d_boundingBox.m_dimensions, d_boundingBox.gridSize, dir * t, raycastingOptions.isoValue_0, raycastingOptions.tolerance_0, 200);
+					//relativePos = world2Tex(position, d_boundingBox.m_dimensions, d_boundingBox.gridSize);
+
+					// calculates gradient
+					float3 gradient = callerGradientAtTex(raycastingOptions.isoMeasure_0, field0, relativePos, d_boundingBox.m_dimensions, d_boundingBox.gridSize);
+
+
+					// shading (no ambient)
+					float diffuse = max(dot(normalize(gradient), d_boundingBox.m_viewDir), 0.0f);
+					float3 raycastingColor = Array2Float3(raycastingOptions.color_0) ^ raycastingOptions.brightness;
+					//float3 rgb = raycastingColor * diffuse;
+					float3 rgb = raycastingColor;
+					float depth = depthfinder(position, eyePos, d_boundingBox.m_viewDir, f, n);
+
+					float4 rgba = { rgb.x, rgb.y, rgb.z, depth };
+
+					// write back color and depth into the texture (surface)
+					// stride size of 4 * floats for each texel
+					surf2Dwrite(rgba, raycastingSurface, 4 * sizeof(float) * pixel.x, pixel.y);
+					break;
+
+				}
+
+				if (raycastingOptions.adaptiveSampling)
+				{
+					float gridStep = findExitPoint3D(position, dir, cellSize);
+					t += gridStep;
+				}
+				else
+				{
+					t = t + raycastingOptions.samplingRate_0;
+				}
+			}
+
+
+		}
+
+	}
+
+
+}
+
+
+__global__ void CudaIsoSurfacRenderer_Double
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field0,
+	cudaTextureObject_t field1,
+	int rays,
+	RaycastingOptions raycastingOptions
+)
+{
+	int index = CUDA_INDEX;
+	if (index < rays)
+	{
+
+		// determine pixel position based on the index of the thread
+		int2 pixel = index2pixel(index, d_boundingBox.m_width);
+		float3 pixelPos = pixelPosition(d_boundingBox, pixel.x, pixel.y);
+		int3 gridInterval = make_int3(d_boundingBox.gridSize.x - 1, d_boundingBox.gridSize.y - 1, d_boundingBox.gridSize.z - 1);
+		float3 cellSize = d_boundingBox.m_dimensions / gridInterval;
+		float3 dir = normalize(pixelPos - d_boundingBox.m_eyePos);
+		float2 NearFar = findEnterExit(pixelPos, dir, d_boundingBox.boxFaces);
+
+
+		// if inside the bounding box
+		if (NearFar.y != -1)
+		{
+
+			float3 rayDir = normalize(pixelPos - d_boundingBox.m_eyePos);
+			// near and far plane
+			float n = 0.1f;
+			float f = 1000.0f;
+
+			// Add the offset to the eye position
+			float3 eyePos = d_boundingBox.m_eyePos + d_boundingBox.m_dimensions / 2.0;
+			float t = NearFar.x;
+
+			while (t < NearFar.y)
+			{
+				// Position of the isosurface
+				float3 position = pixelPos + (rayDir * t);
+
+				// Adds an offset to position while the center of the grid is at gridDiamter/2
+				position += d_boundingBox.m_dimensions / 2.0;
+				float3 texPos = world2Tex(position, d_boundingBox.m_dimensions, d_boundingBox.gridSize);
+
+				if (callerValueAtTex(raycastingOptions.isoMeasure_0, field0, texPos) > raycastingOptions.isoValue_0)
+				{
+					// calculates gradient
+					float3 gradient0 = callerGradientAtTex(raycastingOptions.isoMeasure_0, field0, texPos, d_boundingBox.m_dimensions, d_boundingBox.gridSize);
+
+					float diffuse = max(dot(normalize(gradient0), d_boundingBox.m_viewDir), 0.0f);
+					float3 rgb = { 1,1,1 };
+					rgb = rgb * raycastingOptions.transparecny + (Array2Float3(raycastingOptions.color_0) ^ raycastingOptions.brightness) * diffuse*(1 - raycastingOptions.transparecny);
+					float depth = depthfinder(position, eyePos, d_boundingBox.m_viewDir, f, n);
+					float4 rgba = { rgb.x, rgb.y, rgb.z, depth };
+
+					while (t < NearFar.y && callerValueAtTex(raycastingOptions.isoMeasure_0, field0, texPos) > raycastingOptions.isoValue_0)
+					{
+						// Position of the isosurface
+						float3 position = pixelPos + (rayDir * t);
+						position += d_boundingBox.m_dimensions / 2.0;
+						//Relative position calculates the position of the point on the CUDA texture
+						texPos = world2Tex(position, d_boundingBox.m_dimensions, d_boundingBox.gridSize);
+
+						// it true then we have the second hit
+						if (callerValueAtTex(raycastingOptions.isoMeasure_1, field1, texPos) > raycastingOptions.isoValue_1)
+						{
+
+							float3 gradient1 = callerGradientAtTex(raycastingOptions.isoMeasure_1, field1, texPos, d_boundingBox.m_dimensions, d_boundingBox.gridSize);
+							float3 rgb1 = (Array2Float3(raycastingOptions.color_1) ^ raycastingOptions.brightness) * max(dot(normalize(gradient1), d_boundingBox.m_viewDir), 0.0f);
+							float depth1 = depthfinder(position, eyePos, d_boundingBox.m_viewDir, f, n);
+
+							rgb = rgb1 * raycastingOptions.transparecny + (1 - raycastingOptions.transparecny)*rgb;
+							rgba = { rgb.x, rgb.y, rgb.z, depth1 };
+							break;
+						}
+
+						if (raycastingOptions.adaptiveSampling)
+						{
+							t += findExitPoint3D(position, dir, cellSize);;
+						}
+						else
+						{
+							t = t + raycastingOptions.samplingRate_0;
+						}
+					}
+
+					surf2Dwrite(rgba, raycastingSurface, 4 * sizeof(float) * pixel.x, pixel.y);
+					break;
+
+				}
+
+
+				if (raycastingOptions.adaptiveSampling)
+				{
+					t += findExitPoint3D(position, dir, cellSize);;
+				}
+				else
+				{
+					t = t + raycastingOptions.samplingRate_0;
+				}
+			}
+
+
+		}
+
+	}
+
+
+}
+
+
+__global__ void CudaIsoSurfacRenderer_Multiscale
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field0,
+	cudaTextureObject_t field1,
+	cudaTextureObject_t field2,
+	int rays,
+	RaycastingOptions raycastingOptions
+)
+{
+	int index = CUDA_INDEX;
+
+	if (index < rays)
+	{
+
+		// determine pixel position based on the index of the thread
+		int2 pixel = index2pixel(index, d_boundingBox.m_width);
+		float3 pixelPos = pixelPosition(d_boundingBox, pixel.x, pixel.y);
+		int3 gridInterval = make_int3(d_boundingBox.gridSize.x - 1, d_boundingBox.gridSize.y - 1, d_boundingBox.gridSize.z - 1);
+		float3 cellSize = d_boundingBox.m_dimensions / gridInterval;
+		float3 dir = normalize(pixelPos - d_boundingBox.m_eyePos);
+		//float2 NearFar = findIntersections(pixelPos, d_boundingBox);
+		float2 NearFar = findEnterExit(pixelPos, dir, d_boundingBox.boxFaces);
+
+		// if inside the bounding box
+		if (NearFar.y != -1)
+		{
+
+			float3 rayDir = normalize(pixelPos - d_boundingBox.m_eyePos);
+
+			// near and far plane
+			float n = 0.1f;
+			float f = 1000.0f;
+
+			// Add the offset to the eye position
+			float3 eyePos = d_boundingBox.m_eyePos + d_boundingBox.m_dimensions / 2.0;
+			float t = NearFar.x;
+			while (t < NearFar.y)
+			{
+				// Position of the isosurface
+				float3 position = pixelPos + (rayDir * t);
+
+				// Adds an offset to position while the center of the grid is at gridDiamter/2
+				position += d_boundingBox.m_dimensions / 2.0;
+
+				//Relative position calculates the position of the point on the CUDA texture
+				float3 relativePos = world2Tex(position, d_boundingBox.m_dimensions, d_boundingBox.gridSize);
+
+				float value = callerValueAtTex(raycastingOptions.isoMeasure_0, field1, relativePos);
+
+				//float4 factors = getFactors<float>(values, position, dir);
+				// check if we have a hit 
+				if (value > raycastingOptions.isoValue_0)
+				{
+
+					//position = binarySearch<Observable>(observable, field1, position, d_boundingBox.m_dimensions, d_boundingBox.gridSize, dir * t, raycastingOptions.isoValue_0, raycastingOptions.tolerance_0, 200);
+					relativePos = world2Tex(position, d_boundingBox.m_dimensions, d_boundingBox.gridSize);
+
+					// calculates gradient
+					float3 gradient = callerGradientAtTex(raycastingOptions.isoMeasure_0, field1, relativePos, d_boundingBox.m_dimensions, d_boundingBox.gridSize);
+
+
+					// shading (no ambient)
+					float diffuse = max(dot(normalize(gradient), d_boundingBox.m_viewDir), 0.0f);
+					float3 raycastingColor = Array2Float3(raycastingOptions.color_0) ^ raycastingOptions.brightness;
+					float3 rgb = raycastingColor * diffuse;
+
+					float depth = depthfinder(position, eyePos, d_boundingBox.m_viewDir, f, n);
+
+					float4 rgba = { rgb.x, rgb.y, rgb.z, depth };
+
+					// write back color and depth into the texture (surface)
+					// stride size of 4 * floats for each texel
+					surf2Dwrite(rgba, raycastingSurface, 4 * sizeof(float) * pixel.x, pixel.y);
+					break;
+
+				}
+
+				float gridStep = findExitPoint3D(position, dir, cellSize);
+				//if (gridStep < raycastingOptions.samplingRate_0 && raycastingOptions.adaptiveSampling)
+				if (raycastingOptions.adaptiveSampling)
+				{
+					t += gridStep;
+				}
+				else
+				{
+					t = t + raycastingOptions.samplingRate_0;
+				}
+			}
+
+
+		}
+
+	}
+
+
+}
+
+
 
 
 // return the far and near intersection with bounding box
@@ -304,3 +608,6 @@ __device__ uchar4 rgbaFloatToUChar(float4 rgba)
 	rgba.w = __saturatef(rgba.w);
 	return make_uchar4(uchar(rgba.x * 255.0f), uchar(rgba.y * 255.0f), uchar(rgba.z * 255.0f), uchar(rgba.w * 255.0f));
 }    
+
+
+

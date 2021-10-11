@@ -41,7 +41,7 @@ __host__ bool PathlineSolver::solve()
 	{
 		// First Step
 
-		switch (solverOptions->Compressed)
+		switch (solverOptions->compressed)
 		{
 
 			case true: // Compressed Data
@@ -141,7 +141,7 @@ __host__ bool PathlineSolver::solveRealtime(int & pathCounter)
 
 	// First Step
 
-	switch (solverOptions->Compressed)
+	switch (solverOptions->compressed)
 	{
 
 	case true: // Compressed Data

@@ -1,4 +1,5 @@
 #include "cudaSurface.h"
+#include "../ErrorLogger/ErrorLogger.h"
 
 bool CudaSurface::initializeSurface()
 {
@@ -10,7 +11,7 @@ bool CudaSurface::initializeSurface()
 	// Create the surface objects
 	resDesc.res.array.array = this->cuInputArray;
 
-	cudaCreateSurfaceObject(&surfaceObject, &resDesc);
+	gpuErrchk(cudaCreateSurfaceObject(&surfaceObject, &resDesc));
 
 	return true;
 }
@@ -20,7 +21,7 @@ bool CudaSurface::destroySurface()
 {
 
 	// Destroy surface objects
-	cudaDestroySurfaceObject(surfaceObject);
+	gpuErrchk(cudaDestroySurfaceObject(surfaceObject));
 
 	
 

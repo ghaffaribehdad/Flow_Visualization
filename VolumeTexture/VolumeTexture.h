@@ -8,6 +8,11 @@
 class VolumeTexture3D
 {
 
+
+private:
+
+	bool internalArray = false;
+	bool initialized = false;
 public:
 
 	// setter functions
@@ -206,6 +211,10 @@ template <typename T>
 class VolumeTexture3D_T
 {
 
+
+private:
+	bool internalArray = false;
+
 public:
 
 	// setter functions
@@ -262,3 +271,80 @@ private:
 
 
 };
+
+
+
+
+//class VolumeTexture3D_Mipmap
+//{
+//
+//public:
+//
+//	// setter functions
+//	void setField(float* _h_field)
+//	{
+//		this->h_field = _h_field;
+//	}
+//
+//
+//	void setArray(cudaTextureObject_t& _cudaMMPArray)
+//	{
+//		this->cudaMMPArray = _cudaMMPArray;
+//	}
+//
+//
+//
+//	bool initialize
+//	(
+//		const int3 & dimension,
+//		bool normalizedCoords = false,
+//		cudaTextureAddressMode addressMode_x = cudaAddressModeWrap,
+//		cudaTextureAddressMode addressMode_y = cudaAddressModeBorder,
+//		cudaTextureAddressMode addressMode_z = cudaAddressModeWrap,
+//		cudaTextureFilterMode _cudaTextureFilterMode = cudaFilterModeLinear
+//	);
+//
+//	bool initialize_devicePointer
+//	(
+//		const int3 & dimension,
+//		bool normalizedCoords = false,
+//		cudaTextureAddressMode addressMode_x = cudaAddressModeWrap,
+//		cudaTextureAddressMode addressMode_y = cudaAddressModeBorder,
+//		cudaTextureAddressMode addressMode_z = cudaAddressModeWrap,
+//		cudaTextureFilterMode _cudaTextureFilterMode = cudaFilterModeLinear
+//	);
+//
+//	// If the cuda array has been set directly 
+//	bool initialize_array
+//	(
+//		bool normalizedCoords = false,
+//		cudaTextureAddressMode addressMode_x = cudaAddressModeWrap,
+//		cudaTextureAddressMode addressMode_y = cudaAddressModeBorder,
+//		cudaTextureAddressMode addressMode_z = cudaAddressModeWrap,
+//		cudaTextureFilterMode _cudaTextureFilterMode = cudaFilterModeLinear
+//
+//	);
+//
+//	void release();
+//	void destroyTexture()
+//	{
+//		gpuErrchk(cudaDestroyTextureObject(this->t_field));
+//	}
+//	cudaTextureObject_t getTexture()
+//	{
+//		return this->t_field;
+//	}
+//
+//
+//private:
+//	
+//	cudaTextureObject_t t_field = NULL;
+//	cudaMipmappedArray_t cudaMMPArray = NULL;
+//	cudaArray_t cuArray_velocity = NULL;
+//	float* h_field = nullptr;
+//	float3 gridDiameter;
+//	unsigned int nlevel = 0;
+//
+//
+//
+//};

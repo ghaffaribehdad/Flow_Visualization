@@ -1,5 +1,4 @@
 #include "RenderImGuiOptions.h"
-#include "..//Raycaster/Raycasting_Helper.h"
 #include "..//Cuda/Cuda_helper_math_host.h"
 
 
@@ -50,7 +49,7 @@ void RenderImGuiOptions::drawSolverOptions()
 		}
 
 
-		if (ImGui::Checkbox("Compressed Data", &solverOptions->Compressed))
+		if (ImGui::Checkbox("Compressed Data", &solverOptions->compressed))
 		{
 
 
@@ -876,37 +875,31 @@ void RenderImGuiOptions::drawRaycastingOptions()
 
 		ImGui::Begin("Raycasting Options");
 
-		if (ImGui::Checkbox("Identical Data", &this->raycastingOptions->identicalDataset))
+
+
+
+		if (ImGui::Checkbox("Enable Raycasintg", &this->showRaycasting))
 		{
+			this->renderingOptions->isRaycasting = this->showRaycasting;
+			this->updateRaycasting = true;
 		}
 
+		if (ImGui::Combo("Mode", &raycastingOptions->raycastingMode, RaycastingMode::modeList, RaycastingMode::Mode::COUNT))
+		{
+			this->updateRaycasting = true;
+		}
+
+
+		if (ImGui::Checkbox("Planar raycasting", &this->raycastingOptions->planarRaycasting))
+		{
+			this->updateRaycasting = true;
+		}
 
 		if (ImGui::SliderFloat("Brightness", &raycastingOptions->brightness, 0.2f, 2))
 		{
 			this->updateRaycasting = true;
 			this->updateTimeSpaceField = true;
 
-
-		}
-
-		if (!raycastingOptions->identicalDataset)
-		{
-			//if (ImGui::InputText("File Path", solverOptions->filePath, sizeof(raycastingOptions->filePath)))
-			//{
-			//}
-
-			//if (ImGui::InputText("File Name", solverOptions->fileName, sizeof(raycastingOptions->fileName)))
-			//{
-			//}
-		}
-		if (ImGui::Checkbox("Enable Raycasintg", &this->showRaycasting))
-		{
-			this->renderingOptions->isRaycasting = this->showRaycasting;
-			this->updateRaycasting = true;
-		}
-		if (ImGui::Checkbox("Planar raycasting", &this->raycastingOptions->planarRaycasting))
-		{
-			this->updateRaycasting = true;
 		}
 
 		if (ImGui::Checkbox("Enable Adaptive Sampling", &this->raycastingOptions->adaptiveSampling))
@@ -921,7 +914,6 @@ void RenderImGuiOptions::drawRaycastingOptions()
 
 		}
 
-		if (ImGui::DragFloat("Transparency", &raycastingOptions->transparecny, 0.01f, 0, 1.0f))
 		if (ImGui::DragFloat("Transparency", &raycastingOptions->transparecny, 0.01f, 0, 1.0f))
 		{
 			this->updateRaycasting = true;
@@ -1255,7 +1247,7 @@ void RenderImGuiOptions::drawTimeSpaceOptions()
 
 		ImGui::Begin("Time-Space Rendering");
 
-		if (ImGui::DragFloat("Light color", (float*)& fluctuationOptions->brightness,0.01,1,3))
+		if (ImGui::DragFloat("Light color", (float*)& fluctuationOptions->brightness,0.01f,1,3))
 		{
 			this->updateRaycasting = true;
 			this->updateTimeSpaceField = true;
@@ -1609,24 +1601,7 @@ void RenderImGuiOptions::drawDataset()
 
 	ImGui::Begin("Datasets");
 
-	if (!raycastingOptions->identicalDataset)
-	{
-
-		if (ImGui::Combo("Raycasting Dataset", reinterpret_cast<int*>(&this->raycastyingDataset), Dataset::datasetList, Dataset::Dataset::COUNT))
-		{
-
-			this->updateStreamlines = true;
-			this->updatePathlines = true;
-			this->updateStreaklines = true;
-			this->updateRaycasting = true;
-
-			this->solverOptions->fileChanged = true;
-			solverOptions->loadNewfile = true;
-			this->solverOptions->fileChanged = true;
-		}
-	}
-
-	if (ImGui::Combo("Dataset", reinterpret_cast<int*>(&this->dataset_0),Dataset::datasetList, Dataset::Dataset::COUNT))
+	if (ImGui::Combo("Dataset 0", reinterpret_cast<int*>(&this->dataset_0),Dataset::datasetList, Dataset::Dataset::COUNT))
 	{
 		this->updateStreamlines = true;
 		this->updatePathlines = true;
@@ -1656,7 +1631,7 @@ void RenderImGuiOptions::drawDataset()
 				this->solverOptions->dt = 0.001f;
 				this->solverOptions->firstIdx = 1;
 				this->solverOptions->lastIdx = 1000;
-				this->solverOptions->Compressed = true;
+				this->solverOptions->compressed = true;
 				this->solverOptions->maxSize = 7000000;
 				break;			
 			}
@@ -1674,7 +1649,7 @@ void RenderImGuiOptions::drawDataset()
 				this->solverOptions->dt = 0.001f;
 				this->solverOptions->firstIdx = 1;
 				this->solverOptions->lastIdx = 1000;
-				this->solverOptions->Compressed = true;
+				this->solverOptions->compressed = true;
 				this->solverOptions->maxSize = 7000000;
 				break;			
 			}
@@ -1708,7 +1683,7 @@ void RenderImGuiOptions::drawDataset()
 				this->solverOptions->dt = 0.001f;
 				this->solverOptions->firstIdx = 1;
 				this->solverOptions->lastIdx = 1000;
-				this->solverOptions->Compressed = true;
+				this->solverOptions->compressed = true;
 				this->solverOptions->maxSize = 9000000;
 				break;
 			}
@@ -1723,7 +1698,7 @@ void RenderImGuiOptions::drawDataset()
 				setArray<float>(&this->raycastingOptions->clipBox[0], 7.854f, 2.0f, 3.1415f);
 				setArray<int>(&this->solverOptions->gridSize[0], 192, 192, 192);
 
-				this->solverOptions->Compressed = true;
+				this->solverOptions->compressed = true;
 				this->solverOptions->dt = 0.001f;
 				this->solverOptions->firstIdx = 1;
 				this->solverOptions->lastIdx = 1000;
@@ -1788,7 +1763,7 @@ void RenderImGuiOptions::drawDataset()
 				this->solverOptions->currentIdx = 500;
 				this->solverOptions->dt = 0.00012f;
 				this->solverOptions->periodic = true;
-				this->solverOptions->Compressed = true;
+				this->solverOptions->compressed = true;
 				this->solverOptions->maxSize = 69000000;
 				break;
 
@@ -1811,7 +1786,7 @@ void RenderImGuiOptions::drawDataset()
 				this->solverOptions->currentIdx = 500;
 				this->solverOptions->dt = 0.001f;
 				this->solverOptions->periodic = true;
-				this->solverOptions->Compressed = true;
+				this->solverOptions->compressed = true;
 				this->solverOptions->maxSize = 64000000;
 				break;
 
@@ -1836,7 +1811,7 @@ void RenderImGuiOptions::drawDataset()
 
 				this->solverOptions->dt = 0.001f;
 				this->solverOptions->periodic = true;
-				this->solverOptions->Compressed = true;
+				this->solverOptions->compressed = true;
 				this->solverOptions->maxSize = 96000000;
 
 				break;
@@ -1859,7 +1834,7 @@ void RenderImGuiOptions::drawDataset()
 
 				this->solverOptions->dt = 0.001f;
 				this->solverOptions->periodic = true;
-				this->solverOptions->Compressed = true;
+				this->solverOptions->compressed = true;
 				this->solverOptions->maxSize = 125000000;
 
 				break;
@@ -1883,7 +1858,7 @@ void RenderImGuiOptions::drawDataset()
 
 				this->solverOptions->dt = 0.001f;
 				this->solverOptions->periodic = true;
-				this->solverOptions->Compressed = true;
+				this->solverOptions->compressed = true;
 				this->solverOptions->maxSize = 46000000;
 
 				break;
@@ -1907,7 +1882,7 @@ void RenderImGuiOptions::drawDataset()
 
 				this->solverOptions->dt = 0.001f;
 				this->solverOptions->periodic = true;
-				this->solverOptions->Compressed = true;
+				this->solverOptions->compressed = true;
 				this->solverOptions->maxSize = 96000000;
 
 				break;
@@ -1930,7 +1905,7 @@ void RenderImGuiOptions::drawDataset()
 				this->solverOptions->currentIdx = 500;
 				this->solverOptions->dt = 0.001f;
 				this->solverOptions->periodic = true;
-				this->solverOptions->Compressed = true;
+				this->solverOptions->compressed = true;
 				this->solverOptions->maxSize = 70000000;
 
 				break;
@@ -1953,7 +1928,7 @@ void RenderImGuiOptions::drawDataset()
 				this->solverOptions->currentIdx = 500;
 				this->solverOptions->dt = 0.001f;
 				this->solverOptions->periodic = true;
-				this->solverOptions->Compressed = true;
+				this->solverOptions->compressed = true;
 				this->solverOptions->maxSize = 70000000;
 
 				break;
@@ -1976,7 +1951,7 @@ void RenderImGuiOptions::drawDataset()
 				this->solverOptions->currentIdx = 500;
 				this->solverOptions->dt = 0.001f;
 				this->solverOptions->periodic = true;
-				this->solverOptions->Compressed = true;
+				this->solverOptions->compressed = true;
 				this->solverOptions->maxSize = 70000000;
 
 				break;
@@ -2022,7 +1997,7 @@ void RenderImGuiOptions::drawDataset()
 
 				this->solverOptions->dt = 0.001f;
 				this->solverOptions->periodic = true;
-				this->solverOptions->Compressed = false;
+				this->solverOptions->compressed = false;
 
 				break;
 
@@ -2044,7 +2019,7 @@ void RenderImGuiOptions::drawDataset()
 
 				this->solverOptions->dt = 0.001f;
 				this->solverOptions->periodic = true;
-				this->solverOptions->Compressed = false;
+				this->solverOptions->compressed = false;
 
 				break;
 
@@ -2066,7 +2041,7 @@ void RenderImGuiOptions::drawDataset()
 
 				this->solverOptions->dt = 0.01f;
 				this->solverOptions->periodic = false;
-				this->solverOptions->Compressed = false;
+				this->solverOptions->compressed = false;
 
 				break;
 
@@ -2087,7 +2062,7 @@ void RenderImGuiOptions::drawDataset()
 
 				this->solverOptions->dt = 0.01f;
 				this->solverOptions->periodic = false;
-				this->solverOptions->Compressed = false;
+				this->solverOptions->compressed = false;
 
 				break;
 
@@ -2107,7 +2082,7 @@ void RenderImGuiOptions::drawDataset()
 
 				this->solverOptions->dt = 0.01f;
 				this->solverOptions->periodic = false;
-				this->solverOptions->Compressed = false;
+				this->solverOptions->compressed = false;
 
 				break;
 
@@ -2127,7 +2102,7 @@ void RenderImGuiOptions::drawDataset()
 
 				this->solverOptions->dt = 0.01f;
 				this->solverOptions->periodic = false;
-				this->solverOptions->Compressed = false;
+				this->solverOptions->compressed = false;
 
 				break;
 
@@ -2147,7 +2122,7 @@ void RenderImGuiOptions::drawDataset()
 
 				this->solverOptions->dt = 0.01f;
 				this->solverOptions->periodic = false;
-				this->solverOptions->Compressed = false;
+				this->solverOptions->compressed = false;
 
 				break;
 
@@ -2167,7 +2142,7 @@ void RenderImGuiOptions::drawDataset()
 
 				this->solverOptions->dt = 0.01f;
 				this->solverOptions->periodic = false;
-				this->solverOptions->Compressed = false;
+				this->solverOptions->compressed = false;
 
 				break;
 
@@ -2187,7 +2162,7 @@ void RenderImGuiOptions::drawDataset()
 
 				this->solverOptions->dt = 0.01f;
 				this->solverOptions->periodic = false;
-				this->solverOptions->Compressed = false;
+				this->solverOptions->compressed = false;
 
 				break;
 
@@ -2207,7 +2182,7 @@ void RenderImGuiOptions::drawDataset()
 
 				this->solverOptions->dt = 0.01f;
 				this->solverOptions->periodic = false;
-				this->solverOptions->Compressed = false;
+				this->solverOptions->compressed = false;
 
 				break;
 
@@ -2227,7 +2202,7 @@ void RenderImGuiOptions::drawDataset()
 
 				this->solverOptions->dt = 0.01f;
 				this->solverOptions->periodic = false;
-				this->solverOptions->Compressed = false;
+				this->solverOptions->compressed = false;
 
 				break;
 
@@ -2248,7 +2223,7 @@ void RenderImGuiOptions::drawDataset()
 
 				this->solverOptions->dt = 0.01f;
 				this->solverOptions->periodic = false;
-				this->solverOptions->Compressed = false;
+				this->solverOptions->compressed = false;
 
 				break;
 
@@ -2268,7 +2243,7 @@ void RenderImGuiOptions::drawDataset()
 
 				this->solverOptions->dt = 0.01f;
 				this->solverOptions->periodic = false;
-				this->solverOptions->Compressed = false;
+				this->solverOptions->compressed = false;
 
 				break;
 
@@ -2294,7 +2269,7 @@ void RenderImGuiOptions::drawDataset()
 				this->solverOptions->dt = 0.001f;
 				this->solverOptions->firstIdx = 1;
 				this->solverOptions->lastIdx = 20;
-				this->solverOptions->Compressed = true;
+				this->solverOptions->compressed = true;
 				this->solverOptions->maxSize = 9000000;
 				break;
 
@@ -2304,6 +2279,41 @@ void RenderImGuiOptions::drawDataset()
 
 
 		}
+	}
+
+	if (ImGui::Combo("Dataset 1", reinterpret_cast<int*>(&this->dataset_1), Dataset::datasetList, Dataset::Dataset::COUNT))
+	{
+		this->updateStreamlines = true;
+		this->updatePathlines = true;
+		this->updateStreaklines = true;
+		this->updateRaycasting = true;
+
+		this->solverOptions->fileChanged = true;
+		solverOptions->loadNewfile = true;
+		this->solverOptions->fileChanged = true;
+
+
+		switch (dataset_1)
+		{
+
+			case Dataset::Dataset::KIT2OW_COMP:
+			{
+				this->fieldOptions[1].fileName = "Comp_FieldP";
+				this->fieldOptions[1].filePath = "G:\\KIT2\\Comp_OW\\";
+
+				setArray<float>(&this->fieldOptions[1].gridDiameter[0], 7.854f, 2.0f, 3.1415f);
+				setArray<int>(&this->fieldOptions[1].gridSize[0], 192, 192, 192);
+
+				this->fieldOptions[1].dt = 0.001f;
+				this->fieldOptions[1].firstIdx = 1;
+				this->fieldOptions[1].lastIdx = 1000;
+				this->fieldOptions[1].compressed = true;
+				this->fieldOptions[1].fileSizeMaxByte = 7000000;
+				break;
+			}
+		}
+
+
 	}
 
 

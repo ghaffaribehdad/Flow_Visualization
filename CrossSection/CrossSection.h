@@ -60,7 +60,7 @@ public:
 		cudaTextureAddressMode addressMode_X,
 		cudaTextureAddressMode addressMode_Y,
 		cudaTextureAddressMode addressMode_Z
-	)  override;
+	) ;
 
 	void setResources
 	(

@@ -156,22 +156,22 @@ void Heightfield::trace3D_path_Single()
 		{
 			
 			// Load i 'dx field in volume_IO into field
-			volume_IO.readVolume(i + solverOptions->currentIdx);
+			volume_IO_Primary.readVolume(i + solverOptions->currentIdx);
 			// Copy and initialize velocityfield texture
-			t_velocityField_0.setField(volume_IO.getField_float());
+			t_velocityField_0.setField(volume_IO_Primary.getField_float());
 			t_velocityField_0.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
 			// Release the velocityfield from host (volume_IO)
-			volume_IO.release();
+			volume_IO_Primary.release();
 
 
 
 			// Same procedure for the second texture
-			volume_IO.readVolume(i + solverOptions->currentIdx + 1);
+			volume_IO_Primary.readVolume(i + solverOptions->currentIdx + 1);
 			
-			t_velocityField_1.setField(volume_IO.getField_float());
+			t_velocityField_1.setField(volume_IO_Primary.getField_float());
 			t_velocityField_1.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
 			// Release the velocityfield from host (volume_IO)
-			volume_IO.release();
+			volume_IO_Primary.release();
 
 		}
 		else
@@ -180,21 +180,21 @@ void Heightfield::trace3D_path_Single()
 			if (i % 2 == 0)
 			{
 				
-				volume_IO.readVolume(solverOptions->currentIdx + i + 1);
+				volume_IO_Primary.readVolume(solverOptions->currentIdx + i + 1);
 				t_velocityField_1.release();
-				t_velocityField_1.setField(volume_IO.getField_float());
+				t_velocityField_1.setField(volume_IO_Primary.getField_float());
 				t_velocityField_1.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
-				volume_IO.release();
+				volume_IO_Primary.release();
 
 				RK4Step = RK4STEP::EVEN;
 			}
 			else
 			{
-				volume_IO.readVolume(solverOptions->currentIdx + i +1);
+				volume_IO_Primary.readVolume(solverOptions->currentIdx + i +1);
 				t_velocityField_0.release();
-				t_velocityField_0.setField(volume_IO.getField_float());
+				t_velocityField_0.setField(volume_IO_Primary.getField_float());
 				t_velocityField_0.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
-				volume_IO.release();
+				volume_IO_Primary.release();
 
 				RK4Step = RK4STEP::ODD;
 
@@ -307,7 +307,7 @@ void Heightfield::gradient3D_Single()
 bool Heightfield::singleSurfaceInitialization()
 {
 	// initialize volume Input Output
-	volume_IO.Initialize(this->solverOptions);
+	volume_IO_Primary.Initialize(this->solverOptions);
 
 
 

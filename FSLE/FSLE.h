@@ -16,7 +16,7 @@ private:
 
 public:
 
-	virtual bool initialize(cudaTextureAddressMode, cudaTextureAddressMode, cudaTextureAddressMode) override;
+	virtual bool initialize(cudaTextureAddressMode, cudaTextureAddressMode, cudaTextureAddressMode);
 	__host__ virtual bool release() override;
 	__host__ virtual void rendering() override;
 	__host__ virtual bool updateScene() override;

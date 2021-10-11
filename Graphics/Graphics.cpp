@@ -108,7 +108,7 @@ void Graphics::RenderFrame()
 ##############################################################
 ##															##
 ##						Show Scene							##
-##															##
+##									 						##
 ##############################################################
 
 */
@@ -167,7 +167,7 @@ void Graphics::RenderFrame()
 
 
 
-	raycasting.show(&renderImGuiOptions);					// Raycasting 
+	//raycasting.show(&renderImGuiOptions);					// Raycasting 
 
 
 	if (this->renderImGuiOptions.showStreaklines)
@@ -536,7 +536,8 @@ bool Graphics::InitializeResources()
 		&this->renderingOptions,
 		this->device.Get(),
 		this->adapter,
-		this ->deviceContext.Get()
+		this ->deviceContext.Get(),
+		fieldOptions
 	);
 
 	crossSection.setResources
@@ -813,7 +814,8 @@ bool Graphics::InitializeImGui(HWND hwnd)
 			&spaceTimeOptions,
 			&crossSectionOptions,
 			&turbulentMixingOptions,
-			&timeSpace3DOptions
+			&timeSpace3DOptions,
+			fieldOptions
 		);
 
 

@@ -45,7 +45,6 @@ public:
 
 	std::string  fileName ="FieldP";
 	std::string  filePath = "G:\\KIT3MipMapL1\\";
-
 	bool usingOIT = true;
 
 	float seedWallNormalDist = 0.1f;
@@ -55,6 +54,7 @@ public:
 
 	char filePath_out[100] = "D:\\copy\\bf\\Binary_z_Major\\Padded\\";
 	char fileName_out[100] = "Lineset";
+	
 	int counter;
 	int fileCounter = 0;
 	int fileToSave = 1000;
@@ -134,7 +134,7 @@ public:
 
 	bool periodic = false;
 
-	bool Compressed = false;
+	bool compressed = false;
 
 	bool drawComplete = false;
 
@@ -143,16 +143,3 @@ public:
 	float timeDim = 5;
 };
 
-struct FieldOptions
-{
-	char	filePath_out[100] = "D:\\copy\\bf\\Binary_z_Major\\Padded\\";
-	float	gridDiameter[3] = { 0.4f,2.0f,7.0f };								//KIT3
-	int		gridSize[3] = { 64,503,2048 };										//KIT3
-	float	dt = 0.001f;
-	int		firstIdx = 1;
-	int		lastIdx = 600;
-	int		currentIdx = 1;
-	size_t	maxSize = 64000000;
-	bool	periodic = false;
-	bool	Compressed = false;
-};

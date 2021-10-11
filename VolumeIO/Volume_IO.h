@@ -28,6 +28,7 @@ namespace VolumeIO
 		std::string m_filePath = "";
 		std::string fullName = "";
 		bool m_compressed = false;
+		bool compressResourceInitialized = false;
 		DecompressResources decompressResources;
 		std::vector<unsigned int> index;
 		std::vector<char> buffer;
@@ -66,7 +67,15 @@ namespace VolumeIO
 		// Setter and getter functions
 
 		void Initialize(SolverOptions* _solverOptions);
-		void Initialize(RaycastingOptions* _raycastingOptions);
+		void Initialize(FieldOptions * _fieldOptions);
+		void Initialize( 
+			std::string & _fileName,
+			std::string & _filePath,
+			bool & _compressed,
+			bool & _compressResourceInitialized,
+			std::size_t & _maxSize,
+			int * gridSize
+		);
 		void InitializeBufferRealTime(SolverOptions* _solverOptions);
 
 		void setFileName(std::string _fileName);

@@ -6,7 +6,8 @@
 #define I_3X3_D dMat3X3(1.0,0,0,0,1.0,0,0,0,1.0)
 #define safeAcos(x) acos(fmax(-1.0, fmin(1.0, (x))))
 #define safeSqrt(x) sqrt(fmax(0.0, (x)))
-#define maxBlockDim (uint)16
+#define maxBlockDim (uint)32
+typedef unsigned int uint;
 
 #include "cuda_runtime.h"
 #include <corecrt_math.h>
@@ -160,6 +161,17 @@ inline __host__ __device__ float3 operator*(float3 a, int3 b)
 		a.z * (float)b.z
 	);
 }
+
+inline __host__ __device__ int3 operator/(int3 a, int b)
+{
+	return make_int3
+	(
+		a.x / b,
+		a.y / b,
+		a.z / b
+	);
+}
+
 
 inline __host__ __device__ float4 operator/(float4 a, float4 b)
 {

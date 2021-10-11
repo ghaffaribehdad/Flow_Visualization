@@ -226,7 +226,7 @@ bool huffmanDecode(Instance* pInstance, const HuffmanGPUStreamInfo* pStreamInfos
     } else {
         huffmanDecodeKernel<Symbol16><<<blockCount, blockSize, 0, pInstance->m_stream>>>(dpStreamInfos, codingBlockSize);
     }
-    cudaCheckMsg("huffmanDecodeKernel execution failed");
+    //cudaCheckMsg("huffmanDecodeKernel execution failed");
 
     timer("Transpose");
 
@@ -269,7 +269,7 @@ bool huffmanDecode(Instance* pInstance, const HuffmanGPUStreamInfo* pStreamInfos
                 assert(false);
         }
     }
-    cudaCheckMsg("huffmanDecodeTransposeKernel execution failed");
+    //cudaCheckMsg("huffmanDecodeTransposeKernel execution failed");
 
     timer();
 

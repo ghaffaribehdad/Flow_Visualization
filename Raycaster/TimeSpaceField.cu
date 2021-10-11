@@ -76,20 +76,20 @@ bool TimeSpaceField::generateVolumetricField(
 
 	for (int i = 0; i < generatedFieldSize.z; i++)
 	{
-		volume_IO.readVolume(timeSpace3DOptions->t_first + i);
-		volumeTexture.setField(volume_IO.getField_float());
-		volumeTexture.initialize(Array2Int3(solverOptions->gridSize), true, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
+		volume_IO_Primary.readVolume(timeSpace3DOptions->t_first + i);
+		volumeTexture_0.setField(volume_IO_Primary.getField_float());
+		volumeTexture_0.initialize(Array2Int3(solverOptions->gridSize), true, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
 
 		generateVorticityFieldSpaceTime << < blocks, thread >> >
 			(
 				cudaSurface.getSurfaceObject(),
-				volumeTexture.getTexture(),
+				volumeTexture_0.getTexture(),
 				*solverOptions,
 				*timeSpace3DOptions,
 				i,
 				generatedFieldSize
 			);
-		volumeTexture.release();
+		volumeTexture_0.release();
 	}
 
 	traced = true;

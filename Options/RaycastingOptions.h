@@ -49,6 +49,27 @@ namespace IsoMeasure
 }
 
 
+namespace RaycastingMode
+{
+	enum Mode
+	{
+		SINGLE = 0,
+		DOUBLE,
+		MULTISCALE,
+		COUNT
+
+	};
+
+	static const char* const modeList[] =
+	{
+		"Single",
+		"Double",
+		"Multi-scale"
+	};
+}
+
+
+
 struct RaycastingOptions
 {
 public:
@@ -57,6 +78,7 @@ public:
 	float tolerance_0 = 0.001f;
 	float isoValue_0 = 10.0f;
 	float isoValue_1 = 10.0f;
+	float isoValue_2 = 10.0f;
 
 	float planeThinkness = 0.002f;
 
@@ -65,11 +87,14 @@ public:
 	bool Raycasting = false;
 	bool initialized = false;
 	bool planarRaycasting = false;
+	bool multiScaleRaycasting = false;
+	bool doubleIso = false;
 
 	int projectionPlane = IsoMeasure::ProjectionPlane::YZPLANE;
 	int isoMeasure_0 = IsoMeasure::VelocityMagnitude;
 	int isoMeasure_1 = IsoMeasure::VelocityMagnitude;
 	int isoMeasure_2 = IsoMeasure::VelocityMagnitude;
+	//int isoMeasure_2 = IsoMeasure::VelocityMagnitude;
 	float brightness = 0.8f;
 
 	float clipBox[3] = { 1.0f,1.0f,1.0f };
@@ -86,12 +111,12 @@ public:
 	float minVal = -1.0f;
 	float maxVal = +1.0f;
 	float transparecny = 1.0f;
-	bool identicalDataset = true;
 	bool adaptiveSampling = false;
 	bool resize = false;
 
 	char fileName[100] = "timespaceOFstreamwise";
 	char filePath[100] = "F:\\Dataset\\KIT3\\binary_fluc_z_major\\OpticalFlowPaddedStreamwise\\";
 	int timestep = 1;
+	int raycastingMode = RaycastingMode::Mode::SINGLE;
 
 };

@@ -156,7 +156,7 @@ __host__ bool StreaklineSolver::solveRealtime(int & streakCounter)
 
 	// First Step
 
-	switch (solverOptions->Compressed)
+	switch (solverOptions->compressed)
 	{
 
 	case true: // Compressed Data

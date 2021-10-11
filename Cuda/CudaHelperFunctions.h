@@ -5,7 +5,7 @@
 #include "../Options/SolverOptions.h"
 #include "../Options/fluctuationheightfieldOptions.h"
 #include "..//Graphics/Vertex.h"
-#include "..//Raycaster/IsosurfaceHelperFunctions.h"
+#include "..//Cuda/helper_math.h"
 #include "cuda_runtime.h"
 
 __device__ float3 RK4

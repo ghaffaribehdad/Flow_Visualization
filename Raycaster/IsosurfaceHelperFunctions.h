@@ -1,6 +1,8 @@
 #pragma once
+
 #include <cuda_runtime.h>
 #include "../Cuda/helper_math.h"
+#include "../Options/RaycastingOptions.h"
 
 __device__ float4 ValueAtXYZ_Surface_float4(cudaSurfaceObject_t surf, int3 gridPos);
 __device__ float4 ValueAtXYZ_float4(cudaTextureObject_t tex, float3 position);
@@ -14,10 +16,11 @@ namespace FetchTextureSurface
 	
 	struct Measure
 	{
+
+
 		//Return the texel at XYZ of the Texture (Boundaries are controlled by the cudaTextureAddressMode
 		__device__	virtual	float 		ValueAtXYZ_Tex(cudaTextureObject_t tex, const float3 & position) { return 0; };
 		__device__	virtual	float		ValueAtXYZ_Tex_GradientBase(cudaTextureObject_t tex, const float3 & position, const float3 & gridDiamter, const int3 & gridSize) { return 1; };
-
 
 
 		__device__	virtual	float		ValueAtXYZ_Surf(cudaSurfaceObject_t surf, const int3 & position) { return 0; };
@@ -60,7 +63,7 @@ namespace FetchTextureSurface
 
 	struct Channel_W : public Measure
 	{
-		__device__	virtual	float ValueAtXYZ_Tex(cudaTextureObject_t tex, const float3 & position) override;
+		__device__	virtual	float ValueAtXYZ_Tex(cudaTextureObject_t tex, const float3 & position);
 		__device__	virtual	float ValueAtXYZ_Surf(cudaSurfaceObject_t tex, const int3 & position) override;
 
 	};
@@ -130,3 +133,135 @@ namespace FetchTextureSurface
 	};
 
 }
+
+
+
+// The Curiously Recurring Template Pattern (CRTP)
+template <class T>
+struct Measure
+{
+	// methods within Base can use template to access members of Derived
+	__device__	static	float  ValueAtXYZ(cudaTextureObject_t tex, const float3 & position)
+	{
+		return T::ValueAtXYZ_derived(tex, position);
+	};
+
+	__device__ static float ValueAtXYZ(cudaTextureObject_t tex, const float3 & position, const float3 & gridDiameter, const int3 & gridSize)
+	{
+		return T::ValueAtXYZ_derived(tex, position, gridDiameter, gridSize);
+	};
+
+	__device__ static float3 GradientAtXYZ_Tex(cudaTextureObject_t tex, const float3 & position, const float3 & gridDiameter, const int3 & gridSize)
+	{
+				
+		float3 h = gridDiameter / gridSize;
+		float3 gradient = { 0,0,0 };
+
+
+		gradient.x += T::ValueAtXYZ_derived(tex, make_float3(position.x + 1, position.y, position.z));
+		gradient.y += T::ValueAtXYZ_derived(tex, make_float3(position.x, position.y + 1, position.z));
+		gradient.z += T::ValueAtXYZ_derived(tex, make_float3(position.x, position.y, position.z + 1));
+
+		gradient.x -= T::ValueAtXYZ_derived(tex, make_float3(position.x - 1, position.y, position.z));
+		gradient.y -= T::ValueAtXYZ_derived(tex, make_float3(position.x, position.y - 1, position.z));
+		gradient.z -= T::ValueAtXYZ_derived(tex, make_float3(position.x, position.y, position.z - 1));
+
+		return  gradient / (2.0f * h);
+	}
+
+};
+
+struct Channel_X : public Measure<Channel_X>
+{
+	__device__ static float ValueAtXYZ_derived(cudaTextureObject_t tex, const float3 & position)
+	{
+		return tex3D<float4>(tex, position.x, position.y, position.z).x;
+
+	}
+};
+
+struct Channel_Y : public Measure<Channel_Y>
+{
+	__device__ static float ValueAtXYZ_derived(cudaTextureObject_t tex, const float3 & position)
+	{
+		return tex3D<float4>(tex, position.x, position.y, position.z).y;
+
+	}
+};
+
+struct Channel_Z : public Measure<Channel_Z>
+{
+	__device__ static float ValueAtXYZ_derived(cudaTextureObject_t tex, const float3 & position)
+	{
+		return tex3D<float4>(tex, position.x, position.y, position.z).z;
+
+	}
+};
+
+struct Channel_W : public Measure<Channel_W>
+{
+	__device__ static float ValueAtXYZ_derived(cudaTextureObject_t tex, const float3 & position)
+	{
+		return tex3D<float4>(tex, position.x, position.y, position.z).w;
+
+	}
+};
+
+
+struct Velocity_Magnitude : public Measure<Velocity_Magnitude>
+{
+	__device__ static float ValueAtXYZ_derived(cudaTextureObject_t tex, const float3 & position)
+	{
+		float4 data = tex3D<float4>(tex, position.x, position.y, position.z);
+		float3 velocity = make_float3(data.x, data.y, data.z);
+
+		return magnitude(velocity);
+
+	}
+};
+
+
+struct ShearStress : public Measure<ShearStress>
+{
+	__device__ static float ValueAtXYZ_derived(cudaTextureObject_t tex, const float3 & position)
+	{
+		float4 dV_dY = tex3D<float4>(tex, position.x, position.y + 1, position.z);
+
+		dV_dY -= tex3D<float4>(tex, position.x, position.y - 1, position.z);
+
+		float2 ShearStress = make_float2(dV_dY.x / 2.0f, dV_dY.z / 2.0f);
+
+		return fabsf(sqrtf(dot(ShearStress, ShearStress)));
+
+	}
+};
+
+struct Lambda2 : public Measure<Lambda2>
+{
+	__device__ static float ValueAtXYZ_derived(cudaTextureObject_t tex, const float3 & position, const float3 & gridDiameter, const int3 & gridSize)
+	{
+		return lambda2(tex, gridDiameter, gridSize, position);
+	}
+
+	__device__ static float3 GradientAtXYZ_Tex(cudaTextureObject_t tex, const float3 & position, const float3 & gridDiameter, const int3 & gridSize) 
+	{
+		float3 h = gridDiameter / gridSize;
+		float3 gradient = { 0,0,0 };
+
+
+		gradient.x += ValueAtXYZ_derived(tex, make_float3(position.x + 1, position.y, position.z), gridDiameter, gridSize);
+		gradient.y += ValueAtXYZ_derived(tex, make_float3(position.x, position.y + 1, position.z), gridDiameter, gridSize);
+		gradient.z += ValueAtXYZ_derived(tex, make_float3(position.x, position.y, position.z + 1), gridDiameter, gridSize);
+
+		gradient.x -= ValueAtXYZ_derived(tex, make_float3(position.x - 1, position.y, position.z), gridDiameter, gridSize);
+		gradient.y -= ValueAtXYZ_derived(tex, make_float3(position.x, position.y - 1, position.z), gridDiameter, gridSize);
+		gradient.z -= ValueAtXYZ_derived(tex, make_float3(position.x, position.y, position.z - 1), gridDiameter, gridSize);
+
+		return  gradient / (2.0f * h);
+	}
+};
+
+
+
+__global__ void mipmapped(cudaTextureObject_t tex, cudaSurfaceObject_t surf, int3 gridSize, int z);
+

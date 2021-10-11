@@ -154,7 +154,6 @@ public:
 
 			if (solverOptions->fileLoaded)
 			{
-				//this->streamlineSolver.releaseVolumeIO();
 				this->streamlineSolver.releaseVolumeTexture();
 
 			}

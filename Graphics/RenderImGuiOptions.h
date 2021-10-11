@@ -15,6 +15,7 @@
 #include "../Options/CrossSectionOptions.h"
 #include "../Options/TurbulentMixingOptions.h"
 #include "../Options/TimeSpace3DOptions.h"
+#include "../Options/FieldOptions.h"
 
 #include "Camera.h"
 #include "../Timer/Timer.h"
@@ -35,6 +36,7 @@ private:
 
 	// Pointers to the Option structures
 	SolverOptions*					solverOptions;
+	FieldOptions *					fieldOptions;
 	RenderingOptions*				renderingOptions;
 	RaycastingOptions*				raycastingOptions;
 	DispersionOptions*				dispersionOptions;
@@ -68,7 +70,8 @@ public:
 		SpaceTimeOptions * _fluctuationheightfieldOptions,
 		CrossSectionOptions * _crossSectionOptions,
 		TurbulentMixingOptions* _turbulentMixingOptions,
-		TimeSpace3DOptions * _timeSpace3DOptions
+		TimeSpace3DOptions * _timeSpace3DOptions,
+		FieldOptions * _fieldOptions
 	)
 	{
 		this->camera	= _camera;
@@ -82,6 +85,7 @@ public:
 		this->crossSectionOptions	= _crossSectionOptions;
 		this->turbulentMixingOptions = _turbulentMixingOptions;
 		this->timeSpace3DOptions = _timeSpace3DOptions;
+		this->fieldOptions = _fieldOptions;
 	}
 
 	bool updateRaycasting		= false;

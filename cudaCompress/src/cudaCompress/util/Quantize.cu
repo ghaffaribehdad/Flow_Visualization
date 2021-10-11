@@ -155,7 +155,7 @@ void unquantizeFromSymbols(float* dpData, const Symbol* dpQuant, uint sizeX, uin
         CASE(QUANTIZE_UNIFORM);
     }
     #undef CASE
-    cudaCheckMsg("unquantizeFromSymbolsKernel execution failed");
+    //cudaCheckMsg("unquantizeFromSymbolsKernel execution failed");
 }
 
 

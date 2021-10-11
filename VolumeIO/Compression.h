@@ -3,6 +3,7 @@
 #include <vector>
 #include "../cudaCompress/src/examples/CompressVolume.h"
 #include "../Options/SolverOptions.h"
+#include "../Options/FieldOptions.h"
 
 typedef unsigned int uint;
 
@@ -26,6 +27,8 @@ public:
 	CompressVolumeResources res;
 	uint huffmanBits = 0;
 	void initializeDecompressionResources(SolverOptions * solverOption, unsigned int * _pHost);
+	void initializeDecompressionResources(FieldOptions * fieldOptions, unsigned int * _pHost);
+	void initializeDecompressionResources(std::size_t & _maxSize, int * _gridSize, unsigned int * _pHost);
 	void releaseDecompressionResources();
 	void pinHostMemory(size_t & maxSize);
 	void unpinHostMemory();

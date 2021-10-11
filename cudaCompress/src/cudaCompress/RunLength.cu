@@ -291,7 +291,7 @@ bool runLengthDecode(Instance* pInstance, const Symbol* dpSymbolsCompact, const 
             if(elemCount > 0) {
                 uint offset = streamStart * stride;
                 scanArray<Symbol, uint, false>(dpValidSymbolIndices + offset, dpZeroCounts + offset, elemCount, streamEnd - streamStart, stride, pInstance->m_pScanPlan, pInstance->m_stream);
-                cudaCheckMsg("runLengthDecode: Error in scanArray");
+                //cudaCheckMsg("runLengthDecode: Error in scanArray");
             }
 
             streamStart = streamEnd;
@@ -319,7 +319,7 @@ bool runLengthDecode(Instance* pInstance, const Symbol* dpSymbolsCompact, const 
         dim3 blockCount(min((symbolCountCompactMax + blockSize - 1) / blockSize, 256u), streamCount);
 
         runLengthDecodeMultiScatterKernel<<<blockCount, blockSize, 0, pInstance->m_stream>>>(dpSymbolsCompact, stride, dpValidSymbolIndices, stride, dpSymbolCountCompact, dppSymbols);
-        cudaCheckMsg("runLengthDecodeMultiScatterKernel execution failed");
+        //cudaCheckMsg("runLengthDecodeMultiScatterKernel execution failed");
     }
 
     pInstance->releaseBuffers(2);

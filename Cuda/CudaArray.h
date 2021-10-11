@@ -5,6 +5,8 @@
 template <typename T>
 class CudaArray_2D
 {
+
+
 public:
 
 	bool initialize()
@@ -75,8 +77,8 @@ public:
 		// Allocate 3D Array
 		gpuErrchk(cudaMalloc3DArray(&this->cuArray, &channelFormatDesc, extent))
 
-			// set initialization status to true
-			this->initialized = true;
+		// set initialization status to true
+		this->initialized = true;
 
 		return true;
 	}
@@ -121,7 +123,9 @@ public:
 
 	void release()
 	{
-		gpuErrchk(cudaFreeArray(this->cuArray));
+		if(this->initialized)
+			gpuErrchk(cudaFreeArray(this->cuArray));
+		initialized = false;
 	}
 
 };

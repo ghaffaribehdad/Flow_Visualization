@@ -39,7 +39,7 @@ bool FluctuationHeightfield::initialize
 	this->rays = (*this->width) * (*this->height);				// Set number of rays based on the number of pixels
 
 	// initialize volume Input Output
-	this->volume_IO.Initialize(this->solverOptions);
+	this->volume_IO_Primary.Initialize(this->solverOptions);
 
 
 	// Initialize Height Field as an empty CUDA array 3D
@@ -79,31 +79,31 @@ void  FluctuationHeightfield::generateTimeSpaceField3D(SpaceTimeOptions * timeSp
 	{
 		
 		// First Read the Compressed file and move it to GPU
-		if (solverOptions->Compressed)
+		if (solverOptions->compressed)
 		{
-			TIMELAPSE(this->volume_IO.readVolume_Compressed(t + solverOptions->firstIdx, Array2Int3(solverOptions->gridSize)), "read volume compress");
+			TIMELAPSE(this->volume_IO_Primary.readVolume_Compressed(t + solverOptions->firstIdx, Array2Int3(solverOptions->gridSize)), "read volume compress");
 			std::printf("\n\n");
 
 			// Copy the device pointer
-			float * h_VelocityField = this->volume_IO.getField_float_GPU();
+			float * h_VelocityField = this->volume_IO_Primary.getField_float_GPU();
 
 			// Bind and copy device pointer to texture
-			volumeTexture.setField(h_VelocityField);
+			volumeTexture_0.setField(h_VelocityField);
 
-			TIMELAPSE(volumeTexture.initialize_devicePointer(Array2Int3(solverOptions->gridSize), false, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder), "initialize texture takes");
+			TIMELAPSE(volumeTexture_0.initialize_devicePointer(Array2Int3(solverOptions->gridSize), false, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder), "initialize texture takes");
 
 			cudaFree(h_VelocityField);
 
 		}
 		else
 		{
-			TIMELAPSE(this->volume_IO.readVolume(t + solverOptions->firstIdx), "read volume compress");
+			TIMELAPSE(this->volume_IO_Primary.readVolume(t + solverOptions->firstIdx), "read volume compress");
 			// Copy the device pointer
-			float * h_VelocityField = this->volume_IO.getField_float();
+			float * h_VelocityField = this->volume_IO_Primary.getField_float();
 
 			// Bind and copy device pointer to texture
-			volumeTexture.setField(h_VelocityField);
-			TIMELAPSE(volumeTexture.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder), "initialize texture takes");
+			volumeTexture_0.setField(h_VelocityField);
+			TIMELAPSE(volumeTexture_0.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder), "initialize texture takes");
 		}
 
 
@@ -117,15 +117,15 @@ void  FluctuationHeightfield::generateTimeSpaceField3D(SpaceTimeOptions * timeSp
 				solverOptions->projectPos, //		Streamwise Pos
 				t, //		Timestep
 				*solverOptions,
-				volumeTexture.getTexture(),
+				volumeTexture_0.getTexture(),
 				s_HeightSurface.getSurfaceObject()
 				);
 
 		// Release the volume texture
-		volumeTexture.release();
+		volumeTexture_0.release();
 		
 	}
-	volume_IO.release();
+	volume_IO_Primary.release();
 	solverOptions->compressResourceInitialized = false;
 }
 
@@ -185,21 +185,22 @@ __host__ void FluctuationHeightfield::rendering()
 		{
 			spaceTimeOptions->additionalLoading = false;
 
-			this->volume_IO.Initialize(this->solverOptions);
+			this->volume_IO_Primary.Initialize(this->solverOptions);
 
-			switch (solverOptions->Compressed)
+			switch (solverOptions->compressed)
 			{
 
 			case true: // Compressed Data
 			{
-				loadTextureCompressed(solverOptions, this->volumeTexture, solverOptions->currentIdx, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
+				int3 gridSize = Array2Int3(solverOptions->gridSize);
+				loadTextureCompressed(gridSize, this->volumeTexture_0, solverOptions->currentIdx, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
 
 				break;
 			}
 
 			case false: // Uncompressed Data
 			{
-				loadTexture(solverOptions, this->volumeTexture, solverOptions->currentIdx, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
+				loadTexture(solverOptions, this->volumeTexture_0, solverOptions->currentIdx, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
 				break;
 			}
 
@@ -215,7 +216,7 @@ __host__ void FluctuationHeightfield::rendering()
 				(
 					this->raycastingSurface.getSurfaceObject(),
 					this->volumeTexture3D_height.getTexture(),
-					volumeTexture.getTexture(),
+					volumeTexture_0.getTexture(),
 					int(this->rays),
 					this->spaceTimeOptions->samplingRate_0,
 					this->raycastingOptions->tolerance_0,
@@ -230,7 +231,7 @@ __host__ void FluctuationHeightfield::rendering()
 				(
 					this->raycastingSurface.getSurfaceObject(),
 					this->volumeTexture3D_height.getTexture(),
-					volumeTexture.getTexture(),
+					volumeTexture_0.getTexture(),
 					int(this->rays),
 					this->spaceTimeOptions->samplingRate_0,
 					this->raycastingOptions->tolerance_0,
@@ -245,7 +246,7 @@ __host__ void FluctuationHeightfield::rendering()
 				(
 					this->raycastingSurface.getSurfaceObject(),
 					this->volumeTexture3D_height.getTexture(),
-					volumeTexture.getTexture(),
+					volumeTexture_0.getTexture(),
 					int(this->rays),
 					this->spaceTimeOptions->samplingRate_0,
 					this->raycastingOptions->tolerance_0,
