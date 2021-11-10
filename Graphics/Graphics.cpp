@@ -166,8 +166,8 @@ void Graphics::RenderFrame()
 
 
 
+	raycasting.show(&renderImGuiOptions);					// Raycasting 
 
-	//raycasting.show(&renderImGuiOptions);					// Raycasting 
 
 
 	if (this->renderImGuiOptions.showStreaklines)
@@ -324,7 +324,7 @@ void Graphics::RenderFrame()
 
 
 	// Present the backbuffer
-	this->swapchain->Present(1, NULL);
+	this->swapchain->Present(2, NULL);
 
 	
 
@@ -410,7 +410,7 @@ bool Graphics::InitializeDirectXResources()
 	ZeroMemory(&depthstencildesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
 	depthstencildesc.DepthEnable = true;
 	depthstencildesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK::D3D11_DEPTH_WRITE_MASK_ALL;
-	depthstencildesc.DepthFunc = D3D11_COMPARISON_FUNC::D3D11_COMPARISON_LESS;
+	depthstencildesc.DepthFunc = D3D11_COMPARISON_FUNC::D3D11_COMPARISON_LESS_EQUAL;
 
 	// Create depth stencil state
 	hr = this->device->CreateDepthStencilState(&depthstencildesc, this->depthStencilState.GetAddressOf());

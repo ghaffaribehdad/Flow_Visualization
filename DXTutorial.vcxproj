@@ -301,6 +301,7 @@
     <ClInclude Include="Raycaster\TimeSpaceField.h" />
     <ClInclude Include="Timer\dummy.h" />
     <ClInclude Include="Timer\Timer.h" />
+    <ClInclude Include="TopologyFieldGen.h" />
     <ClInclude Include="TurbulentMixing\TurbulentMixing.h" />
     <ClInclude Include="TurbulentMixing\TurbulentMixingHelper.h" />
     <ClInclude Include="VolumeIO\BinaryWriter.h" />

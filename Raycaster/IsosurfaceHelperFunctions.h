@@ -240,7 +240,7 @@ struct Lambda2 : public Measure<Lambda2>
 {
 	__device__ static float ValueAtXYZ_derived(cudaTextureObject_t tex, const float3 & position, const float3 & gridDiameter, const int3 & gridSize)
 	{
-		return lambda2(tex, gridDiameter, gridSize, position);
+		return lambda2(tex, position, gridDiameter, gridSize);
 	}
 
 	__device__ static float3 GradientAtXYZ_Tex(cudaTextureObject_t tex, const float3 & position, const float3 & gridDiameter, const int3 & gridSize) 

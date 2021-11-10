@@ -281,13 +281,14 @@ inline __device__ __host__ float depthfinder(const float3& position, const float
 {
 
 	// calculates the z-value
-	float z_dist = abs(dot(viwDir, position - eyePos));
-
+	double z_dist = abs(dot(viwDir, position - eyePos));
+	double d_f = f;
+	double d_n = n;
 	// calculate non-linear depth between 0 to 1
-	float depth = (f) / (f - n);
-	depth += (-1.0f / z_dist) * (f * n) / (f - n);
+	double depth = (d_f) / (d_f - d_n);
+	depth += (-1.0 / z_dist) * (d_f * d_n) / (d_f - d_n);
 
-	return depth;
+	return static_cast<float>(depth);
 };
 
 __device__ inline float getTemperature(float* temp, float pos, int size, int offset)

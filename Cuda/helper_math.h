@@ -6,7 +6,7 @@
 #define I_3X3_D dMat3X3(1.0,0,0,0,1.0,0,0,0,1.0)
 #define safeAcos(x) acos(fmax(-1.0, fmin(1.0, (x))))
 #define safeSqrt(x) sqrt(fmax(0.0, (x)))
-#define maxBlockDim (uint)32
+#define maxBlockDim (uint)16
 typedef unsigned int uint;
 
 #include "cuda_runtime.h"
@@ -1055,6 +1055,7 @@ inline __device__  float3 world2Tex(float3 position, float3 dimension, const int
 		return (position / dimension);
 	}
 	float3 pos = (position / dimension) * make_int3(size.x - 1, size.y - 1, size.z - 1) + make_float3(0.5f, 0.5f, 0.5f);
+	//float3 pos = (position / dimension) * make_int3(size.x, size.y, size.z);
 
 
 	if (particleTracing)
@@ -1172,7 +1173,7 @@ inline __device__ float4 cubicTex3DSimple(cudaTextureObject_t tex, float3 coord)
 }
 
 
-inline __device__ dMat3X3 jacobian(cudaTextureObject_t t_VelocityField, const float3& relativePos, const float3& h)
+inline __device__ dMat3X3 jacobian(cudaTextureObject_t t_VelocityField, const float3& relativePos,  float3& h)
 {
 	dMat3X3 jac = { 0,0,0,0,0,0,0,0,0 };
 	
@@ -1223,11 +1224,10 @@ inline __device__ fMat3X3 fjacobian(cudaTextureObject_t t_VelocityField, const f
 	dVz = 0.5 * dVz / h.z;
 
 
-	jac =
-	{
+	jac = {
 		dVx.x,dVx.y,dVx.z,
 		dVy.x,dVy.y,dVy.z,
-		dVz.x,dVz.y,dVz.z,
+		dVz.x,dVz.y,dVz.z
 	};
 
 	return jac;
@@ -1236,15 +1236,16 @@ inline __device__ fMat3X3 fjacobian(cudaTextureObject_t t_VelocityField, const f
 
 
 
-inline __device__  float lambda2(cudaTextureObject_t tex, const float3 & gridDiamter, const int3 & gridSize, const float3 & position)
+inline __device__  float lambda2(cudaTextureObject_t tex, const float3 & position, const float3 & gridDiameter, const int3 & gridSize)
 {
 	fMat3X3 f_s = fMat3X3(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);	// S Matrix
-	fMat3X3 f_omega = fMat3X3(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);	// S Matrix
+	fMat3X3 f_omega = fMat3X3(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);	// Omega Matrix
 	fMat3X3 f_Jacobian(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);	// Jacobian Matrix
 
-	float3 h = gridDiamter / gridSize;
-	f_Jacobian = fjacobian(tex, position, h);
 
+	float3 h = gridDiameter / gridSize;
+	f_Jacobian = fjacobian(tex, position, h);
+	
 	f_s =  f_Jacobian + transpose(f_Jacobian);
 	f_omega = f_Jacobian - transpose(f_Jacobian);
 	
@@ -1258,9 +1259,6 @@ inline __device__  float lambda2(cudaTextureObject_t tex, const float3 & gridDia
 	f_s = f_omega + f_s;
 
 	return -eigenValue2(f_s);
-
-
-
 }
 
 
@@ -1435,19 +1433,20 @@ __device__  inline float3 colorCode(const float* minColor, const float*maxColor,
 	};
 
 	float3 rgb = { 0,0,0 };
-	float y_saturated = 0.0f;
+	float val_saturated = 0.0f;
+	float avg = (max_val + min_val) * 0.5f;
 
-	if (value < 0)
+	if (value < avg)
 	{
 		float3 rgb_min_complement = make_float3(1, 1, 1) - rgb_min;
-		y_saturated = saturate(abs(value / min_val));
-		rgb = rgb_min_complement * (1 - y_saturated) + rgb_min;
+		val_saturated = saturate((value - avg) / (min_val - avg));
+		rgb = rgb_min_complement * (1 - val_saturated) + rgb_min;
 	}
 	else
 	{
 		float3 rgb_max_complement = make_float3(1, 1, 1) - rgb_max;
-		y_saturated = saturate(value / max_val);
-		rgb = rgb_max_complement * (1 - y_saturated) + rgb_max;
+		val_saturated = saturate((value - avg) / (max_val - avg));
+		rgb = rgb_max_complement * (1 - val_saturated) + rgb_max;
 	}
 
 	return rgb;

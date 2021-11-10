@@ -18,7 +18,6 @@ __constant__	BoundingBox d_boundingBox_spacetime;
 
 // Explicit instantiation
 template __global__ void CudaIsoSurfacRendererSpaceTime<struct FetchTextureSurface::Channel_X>(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, float isoValue, float samplingRate, float IsosurfaceTolerance);
-template __global__ void CudaIsoSurfacRenderer_GradientBase< struct FetchTextureSurface::Lambda2 >		(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t field1, int rays, RaycastingOptions raycastingOptions);
 template __global__ void CudaTerrainRenderer_extra< struct FetchTextureSurface::Channel_X >				(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t heightField, cudaTextureObject_t extraField, int rays, float samplingRate, float IsosurfaceTolerance, DispersionOptions dispersionOptions, int traceTime);
 template __global__ void CudaTerrainRenderer_extra_fluctuation< struct FetchTextureSurface::Channel_X, struct FetchTextureSurface::Channel_Y >	(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t heightField, int rays, float samplingRate, float IsosurfaceTolerance, SpaceTimeOptions fluctuationOptions);
 template __global__ void CudaTerrainRenderer_extra_fluctuation <struct FetchTextureSurface::Channel_X, struct FetchTextureSurface::Channel_Z>(cudaSurfaceObject_t raycastingSurface, cudaTextureObject_t heightField, int rays, float samplingRate, float IsosurfaceTolerance, SpaceTimeOptions fluctuationOptions);
@@ -44,7 +43,10 @@ __host__ bool Raycasting::updateScene()
 	if (!this->raycastingSurface.destroySurface())
 		return false;
 
+	
+
 	this->interoperatibility.release();
+
 
 	return true;
 
@@ -119,6 +121,31 @@ void Raycasting::loadTextureCompressed
 	cudaFree(h_VelocityField);
 }
 
+void Raycasting::loadTextureCompressed
+(
+	int3 & gridSize,
+	VolumeTexture3D & volumeTexture,
+	Volume_IO_Z_Major & volumeIO,
+	const int & idx,
+	cudaTextureAddressMode addressModeX,
+	cudaTextureAddressMode addressModeY,
+	cudaTextureAddressMode addressModeZ)
+{
+
+	Timer timer;
+
+	// Read current volume
+	volumeIO.readVolume_Compressed(idx, gridSize);
+	// Return a pointer to volume
+	float * h_VelocityField = this->volume_IO_Primary.getField_float_GPU();
+	// set the pointer to the volume texture
+	volumeTexture.setField(h_VelocityField);
+	// initialize the volume texture
+	TIMELAPSE(volumeTexture.initialize_devicePointer(gridSize, false, addressModeX, addressModeY, addressModeZ); , "Initialize Texture including DDCopy");
+
+	cudaFree(h_VelocityField);
+}
+
 
 void Raycasting::loadTextureCompressed_double
 (
@@ -163,38 +190,35 @@ __host__ bool Raycasting::initialize_Single
 	cudaTextureAddressMode addressMode_Z 
 )
 {
-	if (!this->initializeRaycastingTexture())				// initilize texture (the texture we need to write to)
+	if (!this->initializeRaycastingTexture())				
 		return false;
 
 
-	if (!this->initializeBoundingBox())		// initialize the bounding box ( copy data to the constant memory of GPU about Bounding Box)
+	if (!this->initializeBoundingBox())		
 		return false;
 
-	// set the number of rays = number of pixels
-	this->rays = (*this->width) * (*this->height);	// Set number of rays based on the number of pixels
+	this->rays = (*this->width) * (*this->height);	
 
 	this->volume_IO_Primary.Initialize(this->solverOptions);
+	int3 gridSize = Array2Int3(solverOptions->gridSize);
 
 	switch (solverOptions->compressed)
 	{
 
 	case true: // Compressed Data
-	{
-		int3 gridSize = Array2Int3(solverOptions->gridSize);
-		loadTextureCompressed(gridSize, this->volumeTexture_0, solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
-
+	
+		loadTextureCompressed(gridSize, this->volumeTexture_0, volume_IO_Primary, solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
 		break;
-	}
+	
 
 	case false: // Uncompressed Data
-	{
+	
 		loadTexture(solverOptions, this->volumeTexture_0, solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
 		break;
-	}
-
-	}
-
 	
+
+	}
+
 	this->raycastingOptions->fileLoaded = true;
 	this->b_initialized = true;
 
@@ -211,42 +235,34 @@ __host__ bool Raycasting::initialize_Double
 	cudaTextureAddressMode addressMode_Z
 )
 {
-	if (!this->initializeRaycastingTexture())				// initilize texture (the texture we need to write to)
+	if (!this->initializeRaycastingTexture())
 		return false;
 
-	if (!this->initializeBoundingBox())		// initialize the bounding box ( copy data to the constant memory of GPU about Bounding Box)
+
+	if (!this->initializeBoundingBox())
 		return false;
 
-	// set the number of rays = number of pixels
-	this->rays = (*this->width) * (*this->height);	// Set number of rays based on the number of pixels
+	this->rays = (*this->width) * (*this->height);
 
-	
 	this->volume_IO_Primary.Initialize(this->solverOptions);
 	this->volume_IO_Secondary.Initialize(&fieldOptions[1]);
-
 
 	switch (solverOptions->compressed)
 	{
 
 	case true: // Compressed Data
-	{
-		int3 gridSize = ArrayInt2ToInt3(fieldOptions[0].gridSize);
-		loadTextureCompressed(gridSize, this->volumeTexture_0, solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
-		
-		gridSize = Array2Int3(fieldOptions[1].gridSize);
-		loadTextureCompressed(gridSize, this->volumeTexture_1, solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
+
+		int3 gridSize = Array2Int3(solverOptions->gridSize);
+		loadTextureCompressed(gridSize, this->volumeTexture_0, volume_IO_Primary, solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
+		loadTextureCompressed(gridSize, this->volumeTexture_1, volume_IO_Secondary, solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
 		break;
-	}
+
 
 	case false: // Uncompressed Data
-	{
-		int3 gridSize = ArrayInt2ToInt3(fieldOptions[0].gridSize);
-		loadTexture(gridSize, this->volumeTexture_0, solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
 
-		gridSize = Array2Int3(fieldOptions[1].gridSize);
-		loadTexture(gridSize, this->volumeTexture_1, solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
+		loadTexture(solverOptions, this->volumeTexture_0, solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
 		break;
-	}
+
 
 	}
 
@@ -274,14 +290,14 @@ __host__ bool Raycasting::initialize_Multiscale
 	// set the number of rays = number of pixels
 	this->rays = (*this->width) * (*this->height);	// Set number of rays based on the number of pixels
 	this->volume_IO_Primary.Initialize(this->solverOptions);
-	int3 gridSize = Array2Int3(fieldOptions[0].gridSize);
+	int3 gridSize = Array2Int3(solverOptions->gridSize);
 
 	switch (solverOptions->compressed)
 	{
 
 	case true: // Compressed Data
 		
-		loadTextureCompressed(gridSize, this->volumeTexture_0, solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
+		loadTextureCompressed(gridSize, this->volumeTexture_0, volume_IO_Primary, solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
 		break;
 
 	case false: // Uncompressed Data
@@ -315,6 +331,7 @@ __host__ bool Raycasting::initialize_Multiscale
 __host__ bool Raycasting::release()
 {
 	this->volumeTexture_0.release();
+	this->volumeTexture_1.release();
 	this->volumeTexture_L1.release();
 	this->volumeTexture_L2.release();
 
@@ -362,7 +379,7 @@ void Raycasting::updateFile_Single
 
 
 
-void Raycasting::updateFile_Mult
+void Raycasting::updateFile_Double
 (
 	cudaTextureAddressMode addressMode_X,
 	cudaTextureAddressMode addressMode_Y,
@@ -371,17 +388,15 @@ void Raycasting::updateFile_Mult
 {
 	this->volumeTexture_0.release();
 	this->volumeTexture_1.release();
-	int3 gridSize = Array2Int3(fieldOptions[0].gridSize);
+	int3 gridSize = Array2Int3(solverOptions->gridSize);
 
 	switch (solverOptions->compressed)
 	{
 
 	case true: // Compressed Data
 		
-		loadTextureCompressed(gridSize, this->volumeTexture_0, solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
-
-		gridSize = Array2Int3(fieldOptions[1].gridSize);
-		loadTextureCompressed(gridSize, this->volumeTexture_0, solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
+		loadTextureCompressed(gridSize, this->volumeTexture_0, volume_IO_Primary, solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
+		loadTextureCompressed(gridSize, this->volumeTexture_1, volume_IO_Secondary,solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
 		break;
 	
 	case false: // Uncompressed Data
@@ -403,7 +418,6 @@ void Raycasting::updateFile_MultiScale
 )
 {
 	this->volumeTexture_0.release();
-	this->volumeTexture_1.release();
 	this->volumeTexture_L1.release();
 	this->volumeTexture_L2.release();
 
@@ -413,8 +427,8 @@ void Raycasting::updateFile_MultiScale
 
 	case true: // Compressed Data
 	{
-		loadTextureCompressed_double(fieldOptions[1].gridSize, fieldOptions[1].gridSize, this->volumeTexture_0, this->volumeTexture_1, solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
-
+		int3 gridSize = Array2Int3(solverOptions->gridSize);
+		loadTextureCompressed(gridSize, this->volumeTexture_0, volume_IO_Primary, solverOptions->currentIdx, addressMode_X, addressMode_Y, addressMode_Z);
 		break;
 	}
 
@@ -460,7 +474,8 @@ __host__ void Raycasting::rendering()
 				this->raycastingSurface.getSurfaceObject(),
 				this->volumeTexture_0.getTexture(),
 				int(this->rays),
-				*this->raycastingOptions
+				*this->raycastingOptions,
+				*this->renderingOptions
 				);
 
 		break;
@@ -474,164 +489,51 @@ __host__ void Raycasting::rendering()
 				this->volumeTexture_0.getTexture(),
 				this->volumeTexture_1.getTexture(),
 				int(this->rays),
-				*this->raycastingOptions
+				*this->raycastingOptions,
+				*this->renderingOptions
+				);
+		break;
+
+	case RaycastingMode::Mode::DOUBLE_SEPARATE:
+
+
+		CudaIsoSurfacRenderer_Double_Separate << < blocks, thread >> >
+			(
+				this->raycastingSurface.getSurfaceObject(),
+				this->volumeTexture_0.getTexture(),
+				this->volumeTexture_1.getTexture(),
+				int(this->rays),
+				*this->raycastingOptions,
+				*this->renderingOptions
 				);
 		break;
 
 	case RaycastingMode::Mode::MULTISCALE:
 
-		CudaIsoSurfacRenderer_Single << < blocks, thread >> >
+		CudaIsoSurfacRenderer_Multiscale << < blocks, thread >> >
+			(
+				this->raycastingSurface.getSurfaceObject(),
+				this->volumeTexture_0.getTexture(),
+				this->volumeTexture_L1.getTexture(),
+				this->volumeTexture_L2.getTexture(),
+				int(this->rays),
+				*this->raycastingOptions,
+				*this->renderingOptions
+				);
+		break;
+
+	case RaycastingMode::Mode::PLANAR:
+
+		CudaIsoSurfacRenderer_Planar << <blocks, thread >> >
 			(
 				this->raycastingSurface.getSurfaceObject(),
 				this->volumeTexture_0.getTexture(),
 				int(this->rays),
-				*this->raycastingOptions
+				*this->raycastingOptions,
+				*this->renderingOptions
 				);
 		break;
 	}
-
-
-
-
-
-	//// TODO:
-	//// Alternatively use ENUM templates! 
-	//switch (this->raycastingOptions->isoMeasure_0)
-	//{
-	//case IsoMeasure::VelocityMagnitude:
-	//{
-	//	if (raycastingOptions->planarRaycasting)
-	//	{
-	//		CudaIsoSurfacRenderer_float_PlaneColor<FetchTextureSurface::Velocity_Magnitude> << < blocks, thread >> >
-	//			(
-	//				raycastingSurface.getSurfaceObject(),
-	//				this->volumeTexture_0.getTexture(),
-	//				int(this->rays),
-	//				gridSize,
-	//				*raycastingOptions,
-	//				*this->solverOptions
-	//				);
-	//	}
-	//	break;
-
-	//}
-
-	//case IsoMeasure::Velocity_X:
-	//{
-	//	if (raycastingOptions->planarRaycasting)
-	//	{
-	//		CudaIsoSurfacRenderer_float_PlaneColor<FetchTextureSurface::Channel_X> << < blocks, thread >> >
-	//			(
-	//				raycastingSurface.getSurfaceObject(),
-	//				this->volumeTexture_0.getTexture(),
-	//				int(this->rays),
-	//				gridSize,
-	//				*raycastingOptions,
-	//				*this->solverOptions
-	//				);
-	//	}
-
-
-	//	break;
-
-	//}
-
-	//case IsoMeasure::Velocity_Y:
-	//{
-	//	if (raycastingOptions->planarRaycasting)
-	//	{
-	//		CudaIsoSurfacRenderer_float_PlaneColor<FetchTextureSurface::Channel_Y> << < blocks, thread >> >
-	//			(
-	//				raycastingSurface.getSurfaceObject(),
-	//				this->volumeTexture_0.getTexture(),
-	//				int(this->rays),
-	//				gridSize,
-	//				*raycastingOptions,
-	//				*this->solverOptions
-	//				);
-	//	}
-
-	//	break;
-	//}
-
-	//case IsoMeasure::Velocity_Z:
-	//{
-
-	//	if (raycastingOptions->planarRaycasting)
-	//	{
-	//		CudaIsoSurfacRenderer_float_PlaneColor<FetchTextureSurface::Channel_Z> << < blocks, thread >> >
-	//			(
-	//				raycastingSurface.getSurfaceObject(),
-	//				this->volumeTexture_0.getTexture(),
-	//				int(this->rays),
-	//				gridSize,
-	//				*raycastingOptions,
-	//				*this->solverOptions
-	//				);
-	//	}
-
-
-	//	break;
-	//}
-
-
-	//case IsoMeasure::Velocity_W:
-	//{
-
-	//	if (raycastingOptions->planarRaycasting)
-	//	{
-	//		CudaIsoSurfacRenderer_float_PlaneColor<FetchTextureSurface::Channel_W> << < blocks, thread >> >
-	//			(
-	//				raycastingSurface.getSurfaceObject(),
-	//				this->volumeTexture_0.getTexture(),
-	//				int(this->rays),
-	//				gridSize,
-	//				*raycastingOptions,
-	//				*this->solverOptions
-	//				);
-	//	}
-
-	//	break;
-	//}
-
-
-	//case IsoMeasure::ShearStress:
-	//{
-	//	if (raycastingOptions->planarRaycasting)
-	//	{
-	//		CudaIsoSurfacRenderer_float_PlaneColor<FetchTextureSurface::ShearStress> << < blocks, thread >> >
-	//			(
-	//				raycastingSurface.getSurfaceObject(),
-	//				this->volumeTexture_0.getTexture(),
-	//				int(this->rays),
-	//				gridSize,
-	//				*raycastingOptions,
-	//				*this->solverOptions
-	//				);
-	//	}
-	//	else
-
-
-	//	break;
-	//}
-
-
-	//case::IsoMeasure::LAMBDA2:
-	//{
-	//	CudaIsoSurfacRenderer_GradientBase<FetchTextureSurface::Lambda2> << < blocks, thread >> >
-	//		(
-	//			this->raycastingSurface.getSurfaceObject(),
-	//			this->volumeTexture_0.getTexture(),
-	//			int(this->rays),
-	//			*this->raycastingOptions
-	//			);
-	//	break;
-	//}
-
-
-	//}
-
-
 
 }
 
@@ -655,115 +557,20 @@ __host__ bool Raycasting::initializeBoundingBox()
 	);
 	
 
-	h_boundingBox->FOV = (this->FOV_deg / 360.0f)* XM_2PI;
+	h_boundingBox->FOV = static_cast<float>(((double)renderingOptions->FOV_deg / 360.0)* (double)XM_2PI);
 	h_boundingBox->distImagePlane = this->distImagePlane;
 	h_boundingBox->m_dimensions = ArrayToFloat3(solverOptions->gridDiameter);
 	gpuErrchk(cudaMemcpyToSymbol(d_boundingBox, h_boundingBox, sizeof(BoundingBox)));
-	//if (!gpuErrchk(cudaMemcpyToSymbol(reinterpret_cast<const void *>(d_boundingBox), h_boundingBox, sizeof(BoundingBox))))
-	//{
-	//	ErrorLogger::Log("Fail to Copy to Constant Memory");
-	//	return false;
-	//}
 
 	delete h_boundingBox;
 	
+
 	return true;
 }
 
 
 
-__global__ void CudaIsoSurfacRenderer_TurbulentDiffusivity
-(
-	cudaSurfaceObject_t raycastingSurface,
-	cudaTextureObject_t field1,
-	cudaTextureObject_t t_avg_temp,
-	int rays, float isoValue,
-	float samplingRate,
-	float IsosurfaceTolerance,
-	float * avg_temp
-)
-{
-	int index = CUDA_INDEX;
 
-	if (index < rays)
-	{
-		int2 pixel = index2pixel(index, d_boundingBox.m_width);				// determine pixel position based on the index of the thread
-		float3 pixelPos = pixelPosition(d_boundingBox, pixel.x, pixel.y);	// Find the position of pixel on the view plane
-		float2 NearFar = findIntersections(pixelPos, d_boundingBox);		// find Enter and Exit point of the Ray
-
-		// if inside the bounding box
-		if (NearFar.y != -1)
-		{
-
-			float3 rayDir = normalize(pixelPos - d_boundingBox.m_eyePos);
-
-			// near and far plane
-			float n = 0.1f;
-			float f = 1000.0f;
-
-			// Add the offset to the eye position
-			float3 eyePos = d_boundingBox.m_eyePos + d_boundingBox.m_dimensions / 2.0;
-
-			for (float t = NearFar.x; t < NearFar.y; t = t + samplingRate)
-			{
-				// Position of the isosurface
-				float3 position = pixelPos + (rayDir * t);
-
-				// Adds an offset to position while the center of the grid is at gridDiamter/2
-				position += d_boundingBox.m_dimensions / 2.0;
-
-				//Relative position calculates the position of the point on the CUDA texture
-				float3 relativePos = (position / d_boundingBox.m_dimensions);
-				FetchTextureSurface::TurbulentDiffusivity turbulentDiff;
-
-				float value = turbulentDiff.ValueAtXYZ_avgtemp(field1, relativePos, d_boundingBox.gridSize, t_avg_temp);
-				float3 dir = rayDir * t ;
-
-				// check if we have a hit 
-				if (value > isoValue)
-				{
-
-					position = turbulentDiff.binarySearch_avgtemp(
-							field1,
-							t_avg_temp,
-							d_boundingBox.gridSize,
-							position,
-							d_boundingBox.m_dimensions,
-							dir,
-							isoValue,
-							IsosurfaceTolerance, 
-							50
-						);
-					relativePos = (position / d_boundingBox.m_dimensions);
-
-					// calculates gradient
-					float3 gradient = turbulentDiff.GradientAtGrid_AvgTemp(field1, relativePos, d_boundingBox.gridSize, t_avg_temp);
-
-					// shading (no ambient)
-					float diffuse = max(dot(normalize(gradient), d_boundingBox.m_viewDir), 0.0f);
-
-					float3 rgb = make_float3(1,1,1) * diffuse;
-
-					float depth = depthfinder(position, eyePos, d_boundingBox.m_viewDir, f, n);
-
-					float4 rgba = { rgb.x, rgb.y, rgb.z, depth };
-
-					// write back color and depth into the texture (surface)
-					// stride size of 4 * floats for each texel
-					surf2Dwrite(rgba, raycastingSurface, 4 * sizeof(float) * pixel.x, pixel.y);
-					break;
-				}
-
-
-			}
-
-
-		}
-
-	}
-
-
-}
 
 template <typename Observable>
 __global__ void CudaIsoSurfacRendererAnalytic
@@ -852,90 +659,6 @@ __global__ void CudaIsoSurfacRendererAnalytic
 				else
 				{
 					t = t + raycastingOptions.samplingRate_0;
-				}
-			}
-
-
-		}
-
-	}
-
-
-}
-
-
-
-
-template <typename Observable>
-__global__ void CudaIsoSurfacRenderer_GradientBase
-(
-	cudaSurfaceObject_t raycastingSurface,
-	cudaTextureObject_t field1,
-	int rays,
-	RaycastingOptions raycastingOptions
-)
-{
-
-	Observable observable;
-
-	int index = CUDA_INDEX;
-
-	if (index < rays)
-	{
-
-		// determine pixel position based on the index of the thread
-		int2 pixel = index2pixel(index, d_boundingBox.m_width);
-
-		float3 pixelPos = pixelPosition(d_boundingBox, pixel.x, pixel.y);
-		float2 NearFar = findIntersections(pixelPos, d_boundingBox);
-
-		// if inside the bounding box
-		if (NearFar.y != -1)
-		{
-
-			float3 rayDir = normalize(pixelPos - d_boundingBox.m_eyePos);
-
-			// near and far plane
-			float n = 0.1f;
-			float f = 1000.0f;
-
-			// Add the offset to the eye position
-			float3 eyePos = d_boundingBox.m_eyePos + d_boundingBox.m_dimensions / 2.0;
-
-			for (float t = NearFar.x; t < NearFar.y; t = t + raycastingOptions.samplingRate_0)
-			{
-				// Position of the isosurface
-				float3 position = pixelPos + (rayDir * t);
-
-				// Adds an offset to position while the center of the grid is at gridDiamter/2
-				position += d_boundingBox.m_dimensions / 2.0;
-
-				//Relative position calculates the position of the point on the CUDA texture
-				float3 relativePos = world2Tex(position, d_boundingBox.m_dimensions, d_boundingBox.gridSize);
-
-				float3 box = relativePos / d_boundingBox.gridSize;
-		   
-					// check if we have a hit 
-				if (observable.ValueAtXYZ_Tex_GradientBase(field1, relativePos,d_boundingBox.m_dimensions,d_boundingBox.gridSize) > raycastingOptions.isoValue_0)
-				{
-
-
-					// calculates gradient
-					float3 gradient = observable.GradientAtXYZ_Tex_GradientBase(field1, relativePos, d_boundingBox.m_dimensions, d_boundingBox.gridSize);
-
-					// shading (no ambient)
-					float diffuse = max(dot(normalize(gradient), d_boundingBox.m_viewDir), 0.0f);
-					float3 raycastingColor = Array2Float3(raycastingOptions.color_0);
-					float3 rgb = raycastingColor * diffuse;
-
-					float depth = depthfinder(position, eyePos, d_boundingBox.m_viewDir, f, n);
-
-					float4 rgba = { rgb.x, rgb.y, rgb.z, depth };
-
-					// write back color and depth into the texture (surface)
-					// stride size of 4 * floats for each texel
-					surf2Dwrite(rgba, raycastingSurface, 4 * sizeof(float) * pixel.x, pixel.y);
-					break;
 				}
 			}
 
@@ -1549,7 +1272,6 @@ bool Raycasting::initializeRaycastingInteroperability()
 	interoperability_desc.flag = cudaGraphicsRegisterFlagsSurfaceLoadStore;
 	interoperability_desc.p_adapter = this->pAdapter;
 	interoperability_desc.p_device = this->device;
-	//interoperability_desc.size = sizeof(float) * static_cast<size_t>(*this->width) * static_cast<size_t>(*this->height);
 	interoperability_desc.size = (size_t)4.0 * sizeof(float) * static_cast<size_t>(*this->width) * static_cast<size_t>(*this->height);
 	interoperability_desc.pD3DResource = this->raycastingTexture.Get();
 
@@ -1573,7 +1295,6 @@ __host__ bool Raycasting::initializeCudaSurface()
 	// Pass this cuda Array to the raycasting Surface
 	this->raycastingSurface.setInputArray(pCudaArray);
 
-	//this->raycastingSurface.setDimensions(*this->width, *this->height);
 
 	// Create cuda surface 
 	if (!this->raycastingSurface.initializeSurface())
@@ -1744,10 +1465,9 @@ bool Raycasting::createRaycastingShaderResourceView()
 		shader_resource_view_desc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
 		shader_resource_view_desc.Texture2D.MipLevels = 1;
 		shader_resource_view_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-	
 
 		HRESULT hr = this->device->CreateShaderResourceView(
-			this->getTexture(),
+			this->raycastingTexture.Get(),
 			&shader_resource_view_desc,
 			shaderResourceView.GetAddressOf()
 		);

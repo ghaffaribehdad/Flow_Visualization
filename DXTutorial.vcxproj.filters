@@ -141,6 +141,12 @@
     <Filter Include="cudaCompress\util">
       <UniqueIdentifier>{2c2328e4-1927-49b4-91ce-dd189e8f41cc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Topology">
+      <UniqueIdentifier>{c0044710-2d69-43b7-85cd-8955a2ec0384}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Topology">
+      <UniqueIdentifier>{ccff015f-93e0-443a-bb14-bcd84937becd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -612,6 +618,9 @@
     </ClInclude>
     <ClInclude Include="Raycaster\CallerFunctions.h">
       <Filter>Source Files\Raycasting</Filter>
+    </ClInclude>
+    <ClInclude Include="TopologyFieldGen.h">
+      <Filter>Header Files\Topology</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

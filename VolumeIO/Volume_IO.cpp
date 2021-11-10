@@ -55,7 +55,7 @@ float* VolumeIO::Volume_IO::getField_float_GPU()
 
 void VolumeIO::Volume_IO::release()
 {
-	if (m_compressed)
+	if (m_compressed )
 	{
 		this->decompressResources.releaseDecompressionResources();
 		this->compressResourceInitialized = false;

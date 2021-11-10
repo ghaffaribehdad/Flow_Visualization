@@ -58,6 +58,10 @@ namespace Dataset
 		RBC_AVG_OF_600,
 		RBC_AVG500,
 		TEST_FIELD,
+		TUM,
+		TUM_MEAN_REAMOVED,
+		TUM_L1,
+		TUM_L2,
 		COUNT
 	};
 
@@ -94,7 +98,11 @@ namespace Dataset
 		"RBC OF",
 		"RBC_AVG_OF_600",
 		"RBC_AVG500",
-		"Test Field"
+		"Test Field",
+		"TUM",
+		"TUM Fluc",
+		"TUM L1",
+		"TUM L2"
 	};
 
 }

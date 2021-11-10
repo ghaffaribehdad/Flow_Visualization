@@ -43,14 +43,15 @@ protected:
 	VolumeTexture3D volumeTexture_0;
 	VolumeTexture3D volumeTexture_1;
 
+
 	VolumeTexture3D volumeTexture_L1;
 	VolumeTexture3D volumeTexture_L2;
-	VolumeTexture3D volumeTexture_L3;
+	
 
 	float* averageTemp = nullptr;
 	float* d_averageTemp = nullptr;
-	float FOV_deg = 30.0f;
-	float distImagePlane = 0.1f;
+	double FOV_deg = 40.0;
+	float distImagePlane = 0.01f;
 	unsigned int maxBlockDim = 16;
 
 	bool b_initialized = false;
@@ -118,7 +119,7 @@ protected:
 		cudaTextureAddressMode addressMode_Z = cudaAddressModeBorder
 	);
 
-	__host__ void updateFile_Mult
+	__host__ void updateFile_Double
 	(
 		cudaTextureAddressMode addressMode_X = cudaAddressModeBorder,
 		cudaTextureAddressMode addressMode_Y = cudaAddressModeBorder,
@@ -158,6 +159,17 @@ protected:
 	(
 		int3 & gridSize,
 		VolumeTexture3D & volumeTexture,
+		const int & idx,
+		cudaTextureAddressMode addressModeX,
+		cudaTextureAddressMode addressModeY,
+		cudaTextureAddressMode addressModeZ
+	);
+
+	void loadTextureCompressed
+	(
+		int3 & gridSize,
+		VolumeTexture3D & volumeTexture,
+		Volume_IO_Z_Major & volumeIO,
 		const int & idx,
 		cudaTextureAddressMode addressModeX,
 		cudaTextureAddressMode addressModeY,
@@ -288,6 +300,15 @@ public:
 
 	__host__ virtual void show(RenderImGuiOptions* renderImGuiOptions)
 	{
+		if (b_initialized && !renderImGuiOptions->showRaycasting)
+		{
+			this->volumeTexture_0.release();
+			this->volumeTexture_1.release();
+			this->raycastingTexture.Reset();
+			this->volume_IO_Primary.release();
+			this->volume_IO_Secondary.release();
+			this->b_initialized = false;
+		}
 		if (renderImGuiOptions->showRaycasting)
 		{
 
@@ -318,61 +339,96 @@ public:
 
 			case RaycastingMode::Mode::DOUBLE:
 
-				if (this->raycastingOptions->resize)
+				if (!b_initialized)
 				{
-					release();
-					this->raycastingOptions->resize = false;
+					this->initialize_Double();
 				}
-				else
+
+				if (raycastingOptions->fileChanged || renderImGuiOptions->fileChanged)
 				{
-					if (!b_initialized)
-					{
-						this->initialize_Double();
-					}
-
-					this->draw();
-					if (renderImGuiOptions->updateRaycasting)
-					{
-						this->updateScene();
-						renderImGuiOptions->updateRaycasting = false;
-
-					}
-					if (raycastingOptions->fileChanged || renderImGuiOptions->fileChanged)
-					{
-						this->updateFile_Single();
-						this->updateScene();
-						renderImGuiOptions->fileChanged = false;
-					}
+					this->updateFile_Double();
+					renderImGuiOptions->fileChanged = false;
 				}
+				if (renderImGuiOptions->updateRaycasting)
+				{
+					this->updateScene();
+					renderImGuiOptions->updateRaycasting = false;
+
+				}
+
+				this->draw();
+
+				break;
+
+
+			case RaycastingMode::Mode::DOUBLE_SEPARATE:
+
+				if (!b_initialized)
+				{
+					this->initialize_Double();
+				}
+
+				if (raycastingOptions->fileChanged || renderImGuiOptions->fileChanged)
+				{
+					this->updateFile_Double();
+					renderImGuiOptions->fileChanged = false;
+				}
+				if (renderImGuiOptions->updateRaycasting)
+				{
+					this->updateScene();
+					renderImGuiOptions->updateRaycasting = false;
+
+				}
+
+				this->draw();
+
 				break;
 
 			case  RaycastingMode::Mode::MULTISCALE:
-				if (this->raycastingOptions->resize)
-				{
-					release();
-					this->raycastingOptions->resize = false;
-				}
-				else
-				{
-					if (!b_initialized)
-					{
-						this->initialize_Multiscale();
-					}
 
-					this->draw();
-					if (renderImGuiOptions->updateRaycasting)
-					{
-						this->updateScene();
-						renderImGuiOptions->updateRaycasting = false;
-
-					}
-					if (raycastingOptions->fileChanged || renderImGuiOptions->fileChanged)
-					{
-						this->updateFile_Single();
-						this->updateScene();
-						renderImGuiOptions->fileChanged = false;
-					}
+				if (!b_initialized)
+				{
+					this->initialize_Multiscale();
 				}
+
+				if (raycastingOptions->fileChanged || renderImGuiOptions->fileChanged)
+				{
+					this->updateFile_MultiScale();
+					renderImGuiOptions->fileChanged = false;
+				}
+				if (renderImGuiOptions->updateRaycasting)
+				{
+					this->updateScene();
+					renderImGuiOptions->updateRaycasting = false;
+
+				}
+
+				this->draw();
+
+				break;
+
+
+			case  RaycastingMode::Mode::PLANAR:
+
+				if (!b_initialized)
+				{
+					this->initialize_Single();
+				}
+
+				if (raycastingOptions->fileChanged || renderImGuiOptions->fileChanged)
+				{
+					this->updateFile_Single();
+					renderImGuiOptions->fileChanged = false;
+				}
+				if (renderImGuiOptions->updateRaycasting)
+				{
+					this->updateScene();
+					renderImGuiOptions->updateRaycasting = false;
+
+				}
+
+				this->draw();
+
 				break;
 
 
@@ -393,32 +449,6 @@ __global__ void CudaIsoSurfacRendererAnalytic
 	RaycastingOptions raycastingOptions
 );
 
-
-
-
-
-
-template <typename Observable>
-__global__ void CudaIsoSurfacRenderer_GradientBase
-(
-	cudaSurfaceObject_t raycastingSurface,
-	cudaTextureObject_t field1,
-	int rays,
-	RaycastingOptions raycastingOptions
-);
-
-
-__global__ void CudaIsoSurfacRenderer_TurbulentDiffusivity
-(
-	cudaSurfaceObject_t raycastingSurface,
-	cudaTextureObject_t field1,
-	cudaTextureObject_t t_avg_temp,
-	int rays,
-	float isoValue,
-	float samplingRate,
-	float IsosurfaceTolerance,
-	float * avg_temp
-);
 
 
 
@@ -581,13 +611,3 @@ __device__ float3 binarySearch_tex1D
 );
 
 
-
-//template <typename Observable1, typename Observable2>
-//__global__ void CudaIsoSurfacRenderer_Multi
-//(
-//	cudaSurfaceObject_t raycastingSurface,
-//	cudaTextureObject_t field1,
-//	cudaTextureObject_t field2,
-//	int rays,
-//	RaycastingOptions raycastingOptions
-//);

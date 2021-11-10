@@ -49,7 +49,9 @@ namespace DrawMode
 struct RenderingOptions
 {
 	float mouseSpeed = 0.005f;
-	float tubeRadius = 0.01f;
+	float tubeRadius = 0.005f;
+	float nearField = 0.001f;
+	float farField = 100;
 	float minColor[4] = 
 	{ 
 		178.0f/255.0f,
@@ -57,28 +59,8 @@ struct RenderingOptions
 		103.0f/ 255.0f,
 		1.0f
 	};	
+	float FOV_deg = 30.0f;
 
-	//float minColor[4] =
-	//{
-	//	255.0f / 255.0f,
-	//	237.0f / 255.0f,
-	//	160.0f / 255.0f,
-	//	1.0f
-	//};
-	//float minColor[4] = 
-	//{ 
-	//	217.0f/255.0f,
-	//	95.0f / 255.0f,
-	//	2.0f / 255.0f,
-	//	1.0f
-	//};	
-	//float minColor[4] = 
-	//{ 
-	//	27.0f/255.0f,
-	//	158.0f / 255.0f,
-	//	119.0f / 255.0f,
-	//	1.0f
-	//};
 	float maxColor[4] =
 	{
 	27.0f / 255.0f,
@@ -86,14 +68,6 @@ struct RenderingOptions
 	119.0f / 255.0f,
 	1.0f
 	};
-
-	//float maxColor[4] =
-	//{
-	//189.0f / 255.0f,
-	//0.0f / 255.0f,
-	//39.0f / 255.0f,
-	//1.0f
-	//};
 
 	int renderingMode = RenderingMode::RenderingMode::TUBES;
 	int drawMode = DrawMode::DrawMode::FULL;

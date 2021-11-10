@@ -383,10 +383,7 @@ __device__ float FetchTextureSurface::ShearStress::ValueAtXYZ_Tex(cudaTextureObj
 
 
 
-__device__	float FetchTextureSurface::Lambda2::ValueAtXYZ_Tex_GradientBase(cudaTextureObject_t tex, const float3 & position, const float3 & gridDiamter, const int3 & gridSize)
-{
-	return lambda2(tex, gridDiamter, gridSize, position);
-}
+
 
 
 __device__  float4 ValueAtXYZ_Surface_float4(cudaSurfaceObject_t surf, int3 gridPos)
