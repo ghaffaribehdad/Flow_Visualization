@@ -521,65 +521,12 @@ bool VolumeTexture3D_T<T>::initialize_array
 
 }
 
-template<typename T>
-void VolumeTexture3D_T<T>::release()
-{
-	if(!internalArray)
-		cudaFreeArray(this->cuArray_velocity);
-	cudaDestroyTextureObject(this->t_field);
-
-}
-
-//bool VolumeTexture3D_Mipmap::initialize
-//(
-//	const int3 & dimension,
-//	bool normalizedCoords,
-//	cudaTextureAddressMode addressMode_x,
-//	cudaTextureAddressMode addressMode_y,
-//	cudaTextureAddressMode addressMode_z,
-//	cudaTextureFilterMode _cudaTextureFilterMode
-//)
+//template<typename T>
+//void VolumeTexture3D_T<T>::release()
 //{
-//
-//	cudaExtent extent = make_cudaExtent(dimension.x, dimension.y, dimension.z);
-//	cudaChannelFormatDesc channelFormatDesc = cudaCreateChannelDesc<float4>();
-//	gpuErrchk(cudaMallocMipmappedArray(&this->cudaMMPArray, &channelFormatDesc, extent, static_cast<int>(this->nlevel)));
-//
-//
-//	for (int i = 0; i < nlevel; i++)
-//	{
-//		cudaMemcpy3DParms cpyParams = { 0 };
-//		cpyParams.srcPtr = make_cudaPitchedPtr((void*)this->h_field, sizeof(float4) * dimension.x / powf(2, i),  dimension.x / powf(2, i), dimension.y / powf(2, i));
-//		extent = make_cudaExtent(dimension.x / powf(2,i), dimension.y / powf(2, i), dimension.z / powf(2, i));
-//		cpyParams.dstArray = this->cuArray_velocity;
-//		cpyParams.kind = cudaMemcpyHostToDevice;
-//		cpyParams.extent = extent;
-//		gpuErrchk(cudaMemcpy3D(&cpyParams));
-//
-//	}
-//
-//	cudaTextureDesc texDesc;
-//	cudaResourceDesc resDesc;
-//
-//	memset(&resDesc, 0, sizeof(resDesc));
-//	memset(&texDesc, 0, sizeof(texDesc));
-//
-//
-//	resDesc.resType = cudaResourceTypeArray;
-//	resDesc.res.array.array = this->cuArray_velocity;
-//
-//	// Texture Description
-//	texDesc.filterMode = _cudaTextureFilterMode;
-//	texDesc.normalizedCoords = normalizedCoords;
-//
-//	texDesc.addressMode[0] = addressMode_x;
-//	texDesc.addressMode[1] = addressMode_y;
-//	texDesc.addressMode[2] = addressMode_z;
-//	texDesc.readMode = cudaReadModeElementType;
-//
-//	// Create the texture and bind it to the array
-//	gpuErrchk(cudaCreateTextureObject(&this->t_field, &resDesc, &texDesc, NULL));
-//
-//	return true;
+//	if(!internalArray)
+//		cudaFreeArray(this->cuArray_velocity);
+//	cudaDestroyTextureObject(this->t_field);
 //
 //}
+

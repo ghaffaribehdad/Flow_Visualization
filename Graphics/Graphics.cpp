@@ -122,6 +122,7 @@ void Graphics::RenderFrame()
 
 
 
+
 	if (!renderImGuiOptions.pauseRendering)
 	{
 		streamlineRenderer.show(&renderImGuiOptions);		// Streamline rendering
@@ -166,7 +167,7 @@ void Graphics::RenderFrame()
 
 
 
-	raycasting.show(&renderImGuiOptions);					// Raycasting 
+
 
 
 
@@ -223,6 +224,7 @@ void Graphics::RenderFrame()
 		}
 	}
 
+	raycasting.show(&renderImGuiOptions);					// Raycasting 
 
 	if (renderImGuiOptions.saveScreenshot)
 	{

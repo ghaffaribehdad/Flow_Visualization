@@ -327,8 +327,8 @@ __host__ bool FluctuationHeightfield::initializeBoundingBox()
 	}
 
 	h_boundingBox->updateBoxFaces(clipBox, center);
-	h_boundingBox->m_dimensions = ArrayToFloat3(solverOptions->gridDiameter);
-	h_boundingBox->m_dimensions.x = solverOptions->timeDim;
+	h_boundingBox->gridDiameter = ArrayToFloat3(solverOptions->gridDiameter);
+	h_boundingBox->gridDiameter.x = solverOptions->timeDim;
 	h_boundingBox->updateAspectRatio(*width, *height);						
 	h_boundingBox->constructEyeCoordinates
 	(
@@ -359,7 +359,7 @@ __host__ bool FluctuationHeightfield::initializeBoundingBox()
 
 		h_boundingBox->FOV = (this->FOV_deg / 360.0f)* XM_2PI;
 		h_boundingBox->distImagePlane = this->distImagePlane;
-		h_boundingBox->m_dimensions = ArrayToFloat3(solverOptions->gridDiameter);
+		h_boundingBox->gridDiameter = ArrayToFloat3(solverOptions->gridDiameter);
 		gpuErrchk(cudaMemcpyToSymbol(d_boundingBox, h_boundingBox, sizeof(BoundingBox)));
 
 		delete h_boundingBox;

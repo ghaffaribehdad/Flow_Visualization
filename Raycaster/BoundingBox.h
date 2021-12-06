@@ -20,7 +20,7 @@ public:
 	float FOV;
 	float aspectRatio;
 	int3 gridSize;
-	float3 m_dimensions;
+	float3 gridDiameter;
 	float3 m_clipBox;
 	float boxFaces[6];
 

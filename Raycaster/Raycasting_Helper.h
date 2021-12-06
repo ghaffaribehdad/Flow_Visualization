@@ -46,6 +46,7 @@ __global__ void CudaIsoSurfacRenderer_Double
 	RenderingOptions renderingOptions
 );
 
+
 __global__ void CudaIsoSurfacRenderer_Double_Separate
 (
 	cudaSurfaceObject_t raycastingSurface,
@@ -68,6 +69,69 @@ __global__ void CudaIsoSurfacRenderer_Multiscale
 	RenderingOptions renderingOptions
 );
 
+
+__global__ void CudaIsoSurfacRenderer_Multiscale_Defect
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field0,
+	cudaTextureObject_t field1,
+	cudaTextureObject_t field2,
+	int rays,
+	RaycastingOptions raycastingOptions,
+	RenderingOptions renderingOptions
+);
+
+__global__ void CudaIsoSurfacRenderer_Double_Advanced
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field0,
+	cudaTextureObject_t field1,
+	int rays,
+	RaycastingOptions raycastingOptions,
+	RenderingOptions renderingOptions
+);
+
+__global__ void CudaIsoSurfacRenderer_Double_Transparency
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field0,
+	cudaTextureObject_t field1,
+	int rays,
+	RaycastingOptions raycastingOptions,
+	RenderingOptions renderingOptions
+);
+
+__global__ void CudaIsoSurfacRenderer_Double_Transparency_noglass
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field0,
+	cudaTextureObject_t field1,
+	int rays,
+	RaycastingOptions raycastingOptions,
+	RenderingOptions renderingOptions
+);
+
+
+
+__device__ float callerValueAtTexLOD
+(
+	int isoMeasure,
+	cudaTextureObject_t & field_0, cudaTextureObject_t & field_1, cudaTextureObject_t & field_2,
+	float3 & texPos_L0, float3 & texPos_L1, float3 & texPos_L2,
+	float3 & gridDiameter,
+	int3 & gridSize_L0, int3 & gridSize_L1, int3 & gridSize_L2,
+	int level
+);
+
+__device__ float3 callerGradientAtTexLOD
+(
+	int &isoMeasure,
+	cudaTextureObject_t & field_0, cudaTextureObject_t & field_1, cudaTextureObject_t & field_2,
+	float3 & texPos_L0, float3 & texPos_L1, float3 & texPos_L2,
+	float3 & gridDiameter,
+	int3 & gridSize_L0, int3 & gridSize_L1, int3 & gridSize_L2,
+	int & level
+);
 
 
 __global__ void CudaIsoSurfacRenderer_Planar
@@ -93,4 +157,7 @@ __device__ float3 binarySearch
 	float & tolerance,
 	int & maxIteration
 );
+
+
+__device__ float3 gradientTrilinear(int isoMeasure, float3 texPos, cudaTextureObject_t field0, int3 & gridSize, float3 & gridDiameter);
 

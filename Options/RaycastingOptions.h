@@ -42,6 +42,21 @@ namespace IsoMeasure
 		"ZX Plane"
 	};
 
+	enum FieldLevel
+	{
+		L0 = 0,
+		L1,
+		L2,
+		COUNT_LEVEL
+	};
+
+	static const char* const FieldLevelList[] =
+	{
+		"L0",
+		"L1",
+		"L2"
+	};
+
 }
 
 
@@ -52,7 +67,10 @@ namespace RaycastingMode
 		SINGLE = 0,
 		DOUBLE,
 		DOUBLE_SEPARATE,
+		DOUBLE_ADVANCED,
+		DOUBLE_TRANSPARENCY,
 		MULTISCALE,
+		MULTISCALE_DEFECT,
 		PLANAR,
 		COUNT
 
@@ -63,9 +81,14 @@ namespace RaycastingMode
 		"Single",
 		"Double",
 		"Double Separate",
+		"Double Advanced",
+		"Double Transparency",
 		"Multi-scale",
+		"Multi-scale Defect",
 		"Planar"
 	};
+
+
 }
 
 
@@ -74,13 +97,13 @@ struct RaycastingOptions
 {
 public:
 
-	float samplingRate_0 = 0.0001f;
-	float samplingRate_1 = 0.001f;
-	float tolerance_0 = 0.0001f;
-	float isoValue_0 = 10.0f;
-	float isoValue_1 = 10.0f;
+	float samplingRate_0 = 0.005f;
+	float samplingRate_1 = 0.005f;
+	float tolerance_0 = 0.00001f;
+	float isoValue_0 = 0.2f;
+	float isoValue_1 = 0.2f;
 	float isoValue_2 = 10.0f;
-
+		
 	float planeThinkness = 0.008f;
 
 	bool fileLoaded = false;
@@ -97,6 +120,15 @@ public:
 	int isoMeasure_0 = IsoMeasure::VelocityMagnitude;
 	int isoMeasure_1 = IsoMeasure::VelocityMagnitude;
 	int isoMeasure_2 = IsoMeasure::VelocityMagnitude;
+
+	int fieldLevel_0 = IsoMeasure::FieldLevel::L0;
+	int fieldLevel_1 = IsoMeasure::FieldLevel::L1;
+	int fieldLevel_2 = IsoMeasure::FieldLevel::L2;
+
+	float specularCoefficient = 0.06f;
+	float reflectionCoefficient = 0.8f;
+	float shininess = 2.0f;
+
 	//int isoMeasure_2 = IsoMeasure::VelocityMagnitude;
 	float brightness = 0.8f;
 
@@ -113,13 +145,15 @@ public:
 
 	float minVal = 0.0f;
 	float maxVal = +1.0f;
-	float transparecny = 0.5f;
+
+	float transparency_0 = 0.0f;
+	float transparency_1 = 0.3f;
+
 	bool adaptiveSampling = false;
+	bool insideOnly = false;
 	bool resize = false;
 
-	char fileName[100] = "timespaceOFstreamwise";
-	char filePath[100] = "F:\\Dataset\\KIT3\\binary_fluc_z_major\\OpticalFlowPaddedStreamwise\\";
 	int timestep = 1;
-	int raycastingMode = RaycastingMode::Mode::PLANAR;
+	int raycastingMode = RaycastingMode::Mode::DOUBLE_TRANSPARENCY;
 
 };

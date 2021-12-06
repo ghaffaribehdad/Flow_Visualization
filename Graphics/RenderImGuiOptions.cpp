@@ -858,19 +858,34 @@ void RenderImGuiOptions::drawLineRenderingOptions()
 		}
 
 
-		if (ImGui::SliderFloat("Specular", &renderingOptions->Ks, 0.0f, 1, "%.2f"))
+		if (ImGui::SliderFloat("Specular0", &renderingOptions->Ks, 0.0f, 2, "%.2f"))
 		{
 			this->updateOIT = true;
+			this->updateRaycasting = true;
 		}
 
-		if (ImGui::SliderFloat("Diffuse", &renderingOptions->Kd, 0.0f, 1, "%.2f"))
+		if (ImGui::SliderFloat("Specular1", &renderingOptions->Ks1, 0.0f, 2, "%.2f"))
 		{
 			this->updateOIT = true;
+			this->updateRaycasting = true;
+		}
+
+		if (ImGui::SliderFloat("Diffuse0", &renderingOptions->Kd, 0.0f, 1, "%.2f"))
+		{
+			this->updateOIT = true;
+			this->updateRaycasting = true;
+
+		}
+		if (ImGui::SliderFloat("Diffuse1", &renderingOptions->Kd1, 0.0f, 1, "%.2f"))
+		{
+			this->updateOIT = true;
+			this->updateRaycasting = true;
 		}
 
 		if (ImGui::SliderFloat("Ambient", &renderingOptions->Ka, 0.0f,1, "%.2f"))
 		{
 			this->updateOIT = true;
+			this->updateRaycasting = true;
 		}
 
 		if (ImGui::SliderFloat("Shininess", &renderingOptions->shininessVal, 1.0f, 100, "%.1f"))
@@ -924,19 +939,51 @@ void RenderImGuiOptions::drawRaycastingOptions()
 
 		}
 
-		if (ImGui::Checkbox("Enable Adaptive Sampling", &this->raycastingOptions->adaptiveSampling))
-		{
-			this->renderingOptions->isRaycasting = this->showRaycasting;
-			this->updateRaycasting = true;
-		}
-		if (ImGui::Combo("Isosurface Measure 0", &raycastingOptions->isoMeasure_0,IsoMeasure::IsoMeasureModes, (int)IsoMeasure::COUNT))
+		if (ImGui::SliderFloat("Shininess", &raycastingOptions->shininess, 0,10))
 		{
 			this->updateRaycasting = true;
 			this->updateTimeSpaceField = true;
 
 		}
 
-		if (raycastingOptions->raycastingMode == RaycastingMode::DOUBLE || raycastingOptions->raycastingMode == RaycastingMode::MULTISCALE || raycastingOptions->raycastingMode == RaycastingMode::DOUBLE_SEPARATE)
+		if (ImGui::SliderFloat("Specular Coefficient", &raycastingOptions->specularCoefficient, 0, 2.0f))
+		{
+			this->updateRaycasting = true;
+			this->updateTimeSpaceField = true;
+
+		}
+
+		if (ImGui::SliderFloat("Reflection Coefficient", &raycastingOptions->reflectionCoefficient, 0, 2.0f))
+		{
+			this->updateRaycasting = true;
+			this->updateTimeSpaceField = true;
+
+		}
+		if (ImGui::Checkbox("Inside only", &this->raycastingOptions->insideOnly))
+		{
+			this->renderingOptions->isRaycasting = this->showRaycasting;
+			this->updateRaycasting = true;
+		}
+
+		if (ImGui::Checkbox("Enable Adaptive Sampling", &this->raycastingOptions->adaptiveSampling))
+		{
+			this->renderingOptions->isRaycasting = this->showRaycasting;
+			this->updateRaycasting = true;
+		}
+		if (ImGui::Combo("Isosurface Measure 0", &raycastingOptions->isoMeasure_0, IsoMeasure::IsoMeasureModes, (int)IsoMeasure::COUNT))
+		{
+			this->updateRaycasting = true;
+			this->updateTimeSpaceField = true;
+
+		}
+
+		if (raycastingOptions->raycastingMode == RaycastingMode::DOUBLE ||
+			raycastingOptions->raycastingMode == RaycastingMode::MULTISCALE ||
+			raycastingOptions->raycastingMode == RaycastingMode::DOUBLE_SEPARATE ||
+			raycastingOptions->raycastingMode == RaycastingMode::DOUBLE_ADVANCED ||
+			raycastingOptions->raycastingMode == RaycastingMode::DOUBLE_TRANSPARENCY||
+			raycastingOptions->raycastingMode == RaycastingMode::MULTISCALE_DEFECT
+			)
 		{
 			if (ImGui::Combo("Isosurface Measure 1", &raycastingOptions->isoMeasure_1, IsoMeasure::IsoMeasureModes, (int)IsoMeasure::COUNT))
 			{
@@ -947,8 +994,36 @@ void RenderImGuiOptions::drawRaycastingOptions()
 
 		}
 
+		if (raycastingOptions->raycastingMode == RaycastingMode::MULTISCALE ||
+			raycastingOptions->raycastingMode == RaycastingMode::MULTISCALE_DEFECT)
+		{
+			if (ImGui::Combo("Field Level Isosurface0", &raycastingOptions->fieldLevel_0, IsoMeasure::FieldLevelList, (int)IsoMeasure::COUNT_LEVEL))
+			{
+				this->updateRaycasting = true;
+				this->updateTimeSpaceField = true;
+			}	
+			if (ImGui::Combo("Field Level Isosurface1", &raycastingOptions->fieldLevel_1, IsoMeasure::FieldLevelList, (int)IsoMeasure::COUNT_LEVEL))
+			{
+				this->updateRaycasting = true;
+				this->updateTimeSpaceField = true;
+			}
+			if (ImGui::Combo("Field Level Isosurface2", &raycastingOptions->fieldLevel_2, IsoMeasure::FieldLevelList, (int)IsoMeasure::COUNT_LEVEL))
+			{
+				this->updateRaycasting = true;
+				this->updateTimeSpaceField = true;
+			}
 
-		if (ImGui::DragFloat("Transparency", &raycastingOptions->transparecny, 0.01f, 0, 1.0f))
+
+		}
+
+
+
+
+		if (ImGui::SliderFloat("Transparency 0", &raycastingOptions->transparency_0,0,1.0f))
+		{
+			this->updateRaycasting = true;
+		}
+		if (ImGui::SliderFloat("Transparency 1", &raycastingOptions->transparency_1, 0, 1.0f))
 		{
 			this->updateRaycasting = true;
 		}
@@ -983,7 +1058,7 @@ void RenderImGuiOptions::drawRaycastingOptions()
 			this->updateFTLE = true;
 		}
 
-		if (ImGui::DragInt("max iteration", &raycastingOptions->maxIteration,10,1,10000))
+		if (ImGui::DragInt("max iteration", &raycastingOptions->maxIteration,10,1,100))
 		{
 			this->updateRaycasting = true;
 			this->updateDispersion = true;
@@ -1022,7 +1097,7 @@ void RenderImGuiOptions::drawRaycastingOptions()
 		}
 
 
-		if (ImGui::DragFloat("Tolerance 0", &raycastingOptions->tolerance_0, 0.00001f, 0.0001f, 5, "%5f"))
+		if (ImGui::DragFloat("Tolerance 0", &raycastingOptions->tolerance_0, 0.000001f, 0.0001f, 5, "%5f"))
 		{
 			this->updateRaycasting = true;
 			this->updateDispersion = true;
@@ -2470,6 +2545,63 @@ void RenderImGuiOptions::drawDataset()
 				this->fieldOptions[1].periodic = true;
 				this->fieldOptions[1].compressed = true;
 				this->fieldOptions[1].fileSizeMaxByte = 64000000;
+				break;
+
+			case Dataset::Dataset::RBC_AVG_20:
+			
+				this->fieldOptions[1].fileName = "FieldAVG_20_";
+				this->fieldOptions[1].filePath = "Y:\\RBC\\AVG20\\";
+
+
+				setArray<float>(&this->fieldOptions[1].gridDiameter[0], 5.0f, 0.2f, 5.0f);
+				setArray<int>(&this->fieldOptions[1].gridSize[0], 1024, 32, 1024);
+
+
+				this->fieldOptions[1].firstIdx = 1;
+				this->fieldOptions[1].lastIdx = 50;
+				this->fieldOptions[1].dt = 0.001f;
+				this->fieldOptions[1].periodic = true;
+				this->fieldOptions[1].compressed = false;
+
+				break;
+
+			
+
+			case Dataset::Dataset::RBC_AVG_50:
+			
+				this->fieldOptions[1].fileName = "FieldAVG_50_";
+				this->fieldOptions[1].filePath = "Y:\\RBC\\AVG50\\";
+
+
+				setArray<float>(&this->fieldOptions[1].gridDiameter[0], 5.0f, 0.2f, 5.0f);
+				setArray<int>(&this->fieldOptions[1].gridSize[0], 1024, 32, 1024);
+
+
+				this->fieldOptions[1].firstIdx = 1;
+				this->fieldOptions[1].lastIdx = 50;
+				this->fieldOptions[1].dt = 0.001f;
+				this->fieldOptions[1].periodic = true;
+				this->fieldOptions[1].compressed = false;
+
+				break;
+
+			
+
+			case Dataset::Dataset::RBC_AVG_100:
+			
+				this->fieldOptions[1].fileName = "FieldAVG_100_";
+				this->fieldOptions[1].filePath = "Y:\\RBC\\AVG100\\";
+
+
+				setArray<float>(&this->fieldOptions[1].gridDiameter[0], 5.0f, 0.2f, 5.0f);
+				setArray<int>(&this->fieldOptions[1].gridSize[0], 1024, 32, 1024);
+
+
+				this->fieldOptions[1].firstIdx = 1;
+				this->fieldOptions[1].lastIdx = 50;
+				this->fieldOptions[1].dt = 0.001f;
+				this->fieldOptions[1].periodic = true;
+				this->fieldOptions[1].compressed = false;
 				break;
 
 			

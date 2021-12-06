@@ -29,8 +29,8 @@ PS_OUT main(PS_INPUT input)
 	float4 color = objTexture.Sample(objSamplerState, input.inTexCoord);
 
 
-	//output.color = float4(color.xyz, transparency);
-	output.color = float4(color.xyz, 1);
+	output.color = float4(color.xyz, 1- transparency);
+	//output.color = float4(color.xyz, 1);
 	output.depth = color.w;
 
 

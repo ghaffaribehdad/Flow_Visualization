@@ -619,7 +619,7 @@
     <ClInclude Include="Raycaster\CallerFunctions.h">
       <Filter>Source Files\Raycasting</Filter>
     </ClInclude>
-    <ClInclude Include="TopologyFieldGen.h">
+    <ClInclude Include="TopologicalAnalysis\TopologyFieldGen.h">
       <Filter>Header Files\Topology</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1055,7 +1055,6 @@ inline __device__  float3 world2Tex(float3 position, float3 dimension, const int
 		return (position / dimension);
 	}
 	float3 pos = (position / dimension) * make_int3(size.x - 1, size.y - 1, size.z - 1) + make_float3(0.5f, 0.5f, 0.5f);
-	//float3 pos = (position / dimension) * make_int3(size.x, size.y, size.z);
 
 
 	if (particleTracing)
@@ -1171,6 +1170,36 @@ inline __device__ float4 cubicTex3DSimple(cudaTextureObject_t tex, float3 coord)
 	}
 	return result;
 }
+
+
+
+
+template <typename T>
+inline __device__ T trilinearInterpolation(
+	T * values, // 8  values at the corners
+	float3 coord // position in the texture
+)
+{
+
+	float x_d = (coord.z  -(floor(coord.z - 0.5)+0.5));
+	float y_d = (coord.y - (floor(coord.y - 0.5)+0.5));
+	float z_d = (coord.x - (floor(coord.x - 0.5)+0.5));
+
+	T c00 = values[0] * (1 - x_d) + values[4] * x_d;
+	T c01 = values[1] * (1 - x_d) + values[5] * x_d;
+	T c10 = values[2] * (1 - x_d) + values[6] * x_d;
+	T c11 = values[3] * (1 - x_d) + values[7] * x_d;
+
+	T c0 = c00 * (1 - y_d) + c10 * y_d;
+	T c1 = c01 * (1 - y_d) + c11 * y_d;
+	
+	return c0 * (1 - z_d) + c1 * z_d;
+}
+
+
+
+
+
 
 
 inline __device__ dMat3X3 jacobian(cudaTextureObject_t t_VelocityField, const float3& relativePos,  float3& h)

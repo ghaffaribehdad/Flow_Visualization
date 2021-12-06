@@ -90,7 +90,9 @@ struct RenderingOptions
 
 	float Ka = 0.2f;
 	float Kd = 0.76f;
+	float Kd1 = 0.76f;
 	float Ks = 0.34f;
+	float Ks1 = 0.34f;
 	float shininessVal = 20;
 
 };

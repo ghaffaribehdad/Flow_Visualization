@@ -145,10 +145,22 @@ protected:
 		cudaTextureAddressMode addressModeZ
 	);
 
+
 	void loadTexture
 	(
 		int3 & gridSize,
 		VolumeTexture3D & volumeTexture,
+		const int & idx,
+		cudaTextureAddressMode addressModeX,
+		cudaTextureAddressMode addressModeY,
+		cudaTextureAddressMode addressModeZ
+	);
+
+	void loadTexture
+	(
+		int3 & gridSize,
+		VolumeTexture3D & volumeTexture,
+		Volume_IO_Z_Major & volumeIO,
 		const int & idx,
 		cudaTextureAddressMode addressModeX,
 		cudaTextureAddressMode addressModeY,
@@ -224,7 +236,7 @@ public:
 	__host__ virtual bool updateScene();
 	__host__ bool updateconstantBuffer()
 	{
-		PS_constantBuffer.data.transparency = raycastingOptions->transparecny;
+		PS_constantBuffer.data.transparency = raycastingOptions->transparency_0;
 		PS_constantBuffer.ApplyChanges();
 
 		return true;
@@ -338,30 +350,9 @@ public:
 				break;
 
 			case RaycastingMode::Mode::DOUBLE:
-
-				if (!b_initialized)
-				{
-					this->initialize_Double();
-				}
-
-				if (raycastingOptions->fileChanged || renderImGuiOptions->fileChanged)
-				{
-					this->updateFile_Double();
-					renderImGuiOptions->fileChanged = false;
-				}
-				if (renderImGuiOptions->updateRaycasting)
-				{
-					this->updateScene();
-					renderImGuiOptions->updateRaycasting = false;
-
-				}
-
-				this->draw();
-
-				break;
-
-
 			case RaycastingMode::Mode::DOUBLE_SEPARATE:
+			case RaycastingMode::Mode::DOUBLE_ADVANCED:
+			case RaycastingMode::Mode::DOUBLE_TRANSPARENCY:
 
 				if (!b_initialized)
 				{
@@ -385,6 +376,30 @@ public:
 				break;
 
 			case  RaycastingMode::Mode::MULTISCALE:
+
+				if (!b_initialized)
+				{
+					this->initialize_Multiscale();
+				}
+
+				if (raycastingOptions->fileChanged || renderImGuiOptions->fileChanged)
+				{
+					this->updateFile_MultiScale();
+					renderImGuiOptions->fileChanged = false;
+				}
+				if (renderImGuiOptions->updateRaycasting)
+				{
+					this->updateScene();
+					renderImGuiOptions->updateRaycasting = false;
+
+				}
+
+				this->draw();
+
+				break;
+
+
+			case  RaycastingMode::Mode::MULTISCALE_DEFECT:
 
 				if (!b_initialized)
 				{
