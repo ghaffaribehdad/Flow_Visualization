@@ -504,7 +504,7 @@ void StreamlineRenderer::updateConstantBuffer(Camera & camera)
 	PS_constantBuffer.data.Ka = renderingOptions->Ka;
 	PS_constantBuffer.data.Kd = renderingOptions->Kd;
 	PS_constantBuffer.data.Ks = renderingOptions->Ks;
-	PS_constantBuffer.data.shininessVal = renderingOptions->shininessVal;
+	PS_constantBuffer.data.shininessVal = renderingOptions->shininess;
 
 
 		// Update Constant Buffer

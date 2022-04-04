@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Heightfield.h"
-#include "..//Options/fluctuationheightfieldOptions.h"
+#include "..//Options/SpaceTimeOptions.h"
 #include "..//Raycaster/BoundingBox.h"
 
 struct size_t3
@@ -23,6 +23,13 @@ public:
 	) override;
 
 
+	__host__ virtual bool updateconstantBuffer() override
+	{
+		PS_constantBuffer.data.transparency = 0;
+		PS_constantBuffer.ApplyChanges();
+
+		return true;
+	}
 
 	bool initializeRaycasting()
 	{
@@ -50,7 +57,8 @@ public:
 		IDXGIAdapter* _pAdapter,
 		ID3D11DeviceContext* _deviceContext,
 		DispersionOptions* _dispersionOptions,
-		SpaceTimeOptions* _spaceTimeOptions
+		SpaceTimeOptions* _spaceTimeOptions,
+		FieldOptions * _fieldOptions
 	)
 	{
 		this->camera = _camera;
@@ -67,6 +75,7 @@ public:
 		this->deviceContext = _deviceContext;
 		this->dispersionOptions = _dispersionOptions;
 		this->spaceTimeOptions = _spaceTimeOptions;
+		this->fieldOptions = _fieldOptions;
 	}
 
 	virtual void show(RenderImGuiOptions* renderImGuiOptions) override
@@ -121,6 +130,7 @@ private:
 
 	virtual bool initializeBoundingBox() override;
 	virtual bool InitializeHeightSurface3D(cudaArray_t cudaArray);
+	bool loadRaycastingTexture(FieldOptions * fieldOptions, int idx);
 
 
 };

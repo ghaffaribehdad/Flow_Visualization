@@ -209,7 +209,7 @@ bool VolumeIO::Volume_IO::Read_Compressed(int3 _gridSize)
 	// close the file
 	myFile.close();
 
-	int3 gridSize = { _gridSize.x * 4,_gridSize.y,_gridSize.z };
+	//int3 gridSize = { _gridSize.x ,_gridSize.y * 4,_gridSize.z };
 
 	decompressResources.decompress(reinterpret_cast<uint*>(&(buffer_compressed.at(0))), 0.01f, buffer_size);
 	//decompressResources.decompress(0.01f, buffer_size);

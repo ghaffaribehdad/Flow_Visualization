@@ -1,13 +1,15 @@
 #pragma once
 #include "RaycastingOptions.h"
 
-namespace TimeSpaceRendering
+namespace SpaceTimeRendering
 {
 	enum HeightMode
 	{
 		V_X_FLUCTUATION = 0,
 		V_Y_FLUCTUATION,
 		V_Z_FLUCTUATION,
+		SHEAR_STRESS,
+		KINETIC_ENERGY,
 		COUNT
 	};
 
@@ -16,6 +18,8 @@ namespace TimeSpaceRendering
 		"Vx",
 		"Vy",
 		"Vz",
+		"Shear Stress",
+		"Kinetic Energy"
 	};
 
 }
@@ -50,18 +54,22 @@ struct SpaceTimeOptions
 	float brightness = 1.0f;
 	float hegiht_tolerance = 0.01f;
 	int wallNoramlPos = 9;
+	int timePosition = 2;
+	float isoValue = 1;
+	float samplingRatio_t =0.01f;
 	float heightLimit = 0.5f;
 	int spanwisePos = 0;
 
 	// Color Coding
 	//int colorCode = static_cast<int>(TimeSpaceRendering::fluctuationColorCode::NONE);
-	float max_val = 1.0f;
-	float min_val = 1.0f;
+	float max_val = 0.2f;
+	float min_val = -.2f;
 	float height_scale = 0.0f;
 	float offset = 0.0f;
 
-	float shiftProjectionPlane = 0.0f;
+	bool shifSpaceTime = false;
 	bool shiftProjection = false;
+	float projectionPlanePos = 0.0f;
 
 	float minColor[4] = { 117 / 255.0f,112 / 255.0f,179 / 255.0f };
 	float maxColor[4] = { 217 / 255.0f,95 / 255.0f,2 / 255.0f };
@@ -92,10 +100,11 @@ struct SpaceTimeOptions
 	int sliderBackground = SliderBackground::SliderBackground::NONE;
 	int bandSize = 10;
 
-	int heightMode = TimeSpaceRendering::HeightMode::V_Y_FLUCTUATION;
+	int heightMode = SpaceTimeRendering::HeightMode::V_Y_FLUCTUATION;
 
 	bool additionalRaycasting = false;
 	bool additionalLoading = true;
+	bool volumeLoaded = false;
 
 
 };

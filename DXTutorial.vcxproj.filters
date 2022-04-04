@@ -418,9 +418,6 @@
     <ClInclude Include="Cuda\CudaArray.h">
       <Filter>Header Files\Cuda</Filter>
     </ClInclude>
-    <ClInclude Include="Options\fluctuationheightfieldOptions.h">
-      <Filter>Header Files\Options</Filter>
-    </ClInclude>
     <ClInclude Include="Options\RenderingOptions.h">
       <Filter>Header Files\Options</Filter>
     </ClInclude>
@@ -616,11 +613,14 @@
     <ClInclude Include="Options\FieldOptions.h">
       <Filter>Header Files\Options</Filter>
     </ClInclude>
-    <ClInclude Include="Raycaster\CallerFunctions.h">
-      <Filter>Source Files\Raycasting</Filter>
-    </ClInclude>
     <ClInclude Include="TopologicalAnalysis\TopologyFieldGen.h">
       <Filter>Header Files\Topology</Filter>
+    </ClInclude>
+    <ClInclude Include="Raycaster\CallerFunctions.h">
+      <Filter>Header Files\Raycasting</Filter>
+    </ClInclude>
+    <ClInclude Include="Options\SpaceTimeOptions.h">
+      <Filter>Header Files\Options</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

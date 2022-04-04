@@ -7,12 +7,13 @@ namespace IsoMeasure
 {
 	enum IsoMeasureMode
 	{
-		VelocityMagnitude = 0,
-		Velocity_X,
-		Velocity_Y,
-		Velocity_Z,
-		Velocity_W,
-		ShearStress,
+		VELOCITY_MAGNITUDE = 0,
+		VELOCITY_X,
+		VELOCITY_Y,
+		VELOCITY_Z,
+		VELOCITY_W,
+		SHEAR_STRESS,
+		KINETIC_ENERGY,
 		LAMBDA2,
 		COUNT
 	};
@@ -25,6 +26,7 @@ namespace IsoMeasure
 		"Velocity Z",
 		"Velocity W",
 		"Shear Stress",
+		"Kinetic Energy",
 		"lambda2"
 	};
 
@@ -70,8 +72,13 @@ namespace RaycastingMode
 		DOUBLE_ADVANCED,
 		DOUBLE_TRANSPARENCY,
 		MULTISCALE,
+		MULTISCALE_TEMP,
 		MULTISCALE_DEFECT,
 		PLANAR,
+		PROJECTION_FORWARD,
+		PROJECTION_BACKWARD,
+		PROJECTION_AVERAGE,
+		PROJECTION_LENGTH,
 		COUNT
 
 	};
@@ -84,8 +91,13 @@ namespace RaycastingMode
 		"Double Advanced",
 		"Double Transparency",
 		"Multi-scale",
+		"Multi-scale-temp",
 		"Multi-scale Defect",
-		"Planar"
+		"Planar",
+		"Projection Forward",
+		"Projection Backward",
+		"Projection Average",
+		"Projection Length"
 	};
 
 
@@ -99,6 +111,7 @@ public:
 
 	float samplingRate_0 = 0.005f;
 	float samplingRate_1 = 0.005f;
+	float samplingRate_projection = 0.5f;
 	float tolerance_0 = 0.00001f;
 	float isoValue_0 = 0.2f;
 	float isoValue_1 = 0.2f;
@@ -117,17 +130,16 @@ public:
 
 	int maxIteration = 10;
 	int projectionPlane = IsoMeasure::ProjectionPlane::YZPLANE;
-	int isoMeasure_0 = IsoMeasure::VelocityMagnitude;
-	int isoMeasure_1 = IsoMeasure::VelocityMagnitude;
-	int isoMeasure_2 = IsoMeasure::VelocityMagnitude;
+	int isoMeasure_0 = IsoMeasure::VELOCITY_MAGNITUDE;
+	int isoMeasure_1 = IsoMeasure::VELOCITY_MAGNITUDE;
+	int isoMeasure_2 = IsoMeasure::VELOCITY_MAGNITUDE;
 
 	int fieldLevel_0 = IsoMeasure::FieldLevel::L0;
 	int fieldLevel_1 = IsoMeasure::FieldLevel::L1;
 	int fieldLevel_2 = IsoMeasure::FieldLevel::L2;
 
-	float specularCoefficient = 0.06f;
+
 	float reflectionCoefficient = 0.8f;
-	float shininess = 2.0f;
 
 	//int isoMeasure_2 = IsoMeasure::VelocityMagnitude;
 	float brightness = 0.8f;
@@ -136,6 +148,7 @@ public:
 	float clipBoxCenter[3] = { 0.0f,0.0f,0.0f };
 
 	float planeProbePosition = 0.5f;
+	float projectionPlanePos = 32.0f;
 
 	float color_0[3] = { 117 / 255.0f,112 / 255.0f,179 / 255.0f };
 	float color_1[3] = { 217 / 255.0f,95 / 255.0f,2 / 255.0f };
@@ -152,6 +165,8 @@ public:
 	bool adaptiveSampling = false;
 	bool insideOnly = false;
 	bool resize = false;
+	bool normalCurves = false;
+	bool secondaryOnly = false;
 
 	int timestep = 1;
 	int raycastingMode = RaycastingMode::Mode::DOUBLE_TRANSPARENCY;

@@ -57,8 +57,8 @@ bool FluctuationHeightfield::initialize
 	// Destroy the surface
 	this->s_HeightSurface.destroySurface();
 
-
 	volumeTexture3D_height.setArray(a_HeightArray3D.getArrayRef());
+
 	this->volumeTexture3D_height.initialize_array(false, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
 
 	return true;
@@ -125,6 +125,7 @@ void  FluctuationHeightfield::generateTimeSpaceField3D(SpaceTimeOptions * timeSp
 		volumeTexture_0.release();
 		
 	}
+
 	volume_IO_Primary.release();
 	solverOptions->compressResourceInitialized = false;
 }
@@ -169,7 +170,7 @@ __host__ void FluctuationHeightfield::rendering()
 	init_pos += (current - firstIdx) * (timeDim / (lastIdx - firstIdx));
 
 
-	this->spaceTimeOptions->shiftProjectionPlane = init_pos;
+	this->spaceTimeOptions->projectionPlanePos = init_pos;
 	this->deviceContext->ClearRenderTargetView(this->renderTargetView.Get(), renderingOptions->bgColor);// Clear the target view
 
 	// Calculates the block and grid sizes
@@ -181,134 +182,28 @@ __host__ void FluctuationHeightfield::rendering()
 
 	if (spaceTimeOptions->additionalRaycasting)
 	{
-		if (spaceTimeOptions->additionalLoading)
+		if (!spaceTimeOptions->volumeLoaded)
 		{
-			spaceTimeOptions->additionalLoading = false;
-
-			this->volume_IO_Primary.Initialize(this->solverOptions);
-
-			switch (solverOptions->compressed)
-			{
-
-			case true: // Compressed Data
-			{
-				int3 gridSize = Array2Int3(solverOptions->gridSize);
-				loadTextureCompressed(gridSize, this->volumeTexture_0, solverOptions->currentIdx, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
-
-				break;
-			}
-
-			case false: // Uncompressed Data
-			{
-				loadTexture(solverOptions, this->volumeTexture_0, solverOptions->currentIdx, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
-				break;
-			}
-
-			}
-
-		}
-
-		switch (spaceTimeOptions->heightMode)
-		{
-		case TimeSpaceRendering::HeightMode::V_X_FLUCTUATION:
-		{
-			CudaTerrainRenderer_extra_fluctuation_raycasting<FetchTextureSurface::Channel_X, FetchTextureSurface::Channel_X> << < blocks, thread >> >
-				(
-					this->raycastingSurface.getSurfaceObject(),
-					this->volumeTexture3D_height.getTexture(),
-					volumeTexture_0.getTexture(),
-					int(this->rays),
-					this->spaceTimeOptions->samplingRate_0,
-					this->raycastingOptions->tolerance_0,
-					*spaceTimeOptions,
-					*raycastingOptions
-					);
-			break;
-		}
-		case TimeSpaceRendering::HeightMode::V_Y_FLUCTUATION:
-		{
-			CudaTerrainRenderer_extra_fluctuation_raycasting<FetchTextureSurface::Channel_X, FetchTextureSurface::Channel_Y> << < blocks, thread >> >
-				(
-					this->raycastingSurface.getSurfaceObject(),
-					this->volumeTexture3D_height.getTexture(),
-					volumeTexture_0.getTexture(),
-					int(this->rays),
-					this->spaceTimeOptions->samplingRate_0,
-					this->raycastingOptions->tolerance_0,
-					*spaceTimeOptions,
-					*raycastingOptions
-					);
-			break;
-		}
-		case TimeSpaceRendering::HeightMode::V_Z_FLUCTUATION:
-		{
-			CudaTerrainRenderer_extra_fluctuation_raycasting<FetchTextureSurface::Channel_X, FetchTextureSurface::Channel_Z> << < blocks, thread >> >
-				(
-					this->raycastingSurface.getSurfaceObject(),
-					this->volumeTexture3D_height.getTexture(),
-					volumeTexture_0.getTexture(),
-					int(this->rays),
-					this->spaceTimeOptions->samplingRate_0,
-					this->raycastingOptions->tolerance_0,
-					*spaceTimeOptions,
-					*raycastingOptions
-					);
-			break;
-		}
-		default:
-			break;
-		}
-
-
-	}
-	else
-	{
-
-		switch (spaceTimeOptions->heightMode)
-		{
-		case TimeSpaceRendering::HeightMode::V_X_FLUCTUATION:
-		{
-			CudaTerrainRenderer_extra_fluctuation<FetchTextureSurface::Channel_X, FetchTextureSurface::Channel_X> << < blocks, thread >> >
-				(
-					this->raycastingSurface.getSurfaceObject(),
-					this->volumeTexture3D_height.getTexture(),
-					int(this->rays),
-					this->spaceTimeOptions->samplingRate_0,
-					this->raycastingOptions->tolerance_0,
-					*spaceTimeOptions
-					);
-			break;
-		}
-		case TimeSpaceRendering::HeightMode::V_Y_FLUCTUATION:
-		{
-			CudaTerrainRenderer_extra_fluctuation<FetchTextureSurface::Channel_X, FetchTextureSurface::Channel_Y> << < blocks, thread >> >
-				(
-					this->raycastingSurface.getSurfaceObject(),
-					this->volumeTexture3D_height.getTexture(),
-					int(this->rays),
-					this->spaceTimeOptions->samplingRate_0,
-					this->raycastingOptions->tolerance_0,
-					*spaceTimeOptions
-					);
-			break;
-		}
-		case TimeSpaceRendering::HeightMode::V_Z_FLUCTUATION:
-		{
-			CudaTerrainRenderer_extra_fluctuation<FetchTextureSurface::Channel_X, FetchTextureSurface::Channel_Z> << < blocks, thread >> >
-				(
-					this->raycastingSurface.getSurfaceObject(),
-					this->volumeTexture3D_height.getTexture(),
-					int(this->rays),
-					this->spaceTimeOptions->samplingRate_0,
-					this->raycastingOptions->tolerance_0,
-					*spaceTimeOptions
-					);
-			break;
-		}
-		default:
-			break;
+			loadRaycastingTexture(&fieldOptions[1], solverOptions->currentIdx);
+			spaceTimeOptions->volumeLoaded = true;
+			volume_IO_Primary.release();
 		}
 	}
+
+
+	CudaTerrainRenderer_height_isoProjection << < blocks, thread >> >
+	(
+		this->raycastingSurface.getSurfaceObject(),
+		this->volumeTexture3D_height.getTexture(),
+		this->volumeTexture3D_height_extra.getTexture(),
+		int(this->rays),
+		this->spaceTimeOptions->samplingRate_0,
+		this->raycastingOptions->tolerance_0,
+		*spaceTimeOptions,
+		*renderingOptions
+	);
+
+	
 }
 
 
@@ -320,9 +215,9 @@ __host__ bool FluctuationHeightfield::initializeBoundingBox()
 	float3 center = Array2Float3(raycastingOptions->clipBoxCenter);
 	float3 clipBox = Array2Float3(raycastingOptions->clipBox);
 
-	if (spaceTimeOptions->shiftProjection)
+	if (spaceTimeOptions->shifSpaceTime)
 	{
-		center.x -= spaceTimeOptions->shiftProjectionPlane;
+		center.x -= spaceTimeOptions->projectionPlanePos;
 		//clipBox.x += timeSpaceRenderingOptions->shiftProjectionPlane;
 	}
 
@@ -336,7 +231,7 @@ __host__ bool FluctuationHeightfield::initializeBoundingBox()
 		XMFloat3ToFloat3(camera->GetViewVector()),
 		XMFloat3ToFloat3(camera->GetUpVector())
 	);					
-	h_boundingBox->FOV = (this->FOV_deg / 360.0f) * XM_2PI;
+	h_boundingBox->FOV =static_cast<float>((renderingOptions->FOV_deg / 360.0f) * XM_2PI);
 	h_boundingBox->distImagePlane = this->distImagePlane;
 
 	gpuErrchk(cudaMemcpyToSymbol(d_boundingBox_spacetime, h_boundingBox, sizeof(BoundingBox)));
@@ -357,7 +252,7 @@ __host__ bool FluctuationHeightfield::initializeBoundingBox()
 			XMFloat3ToFloat3(camera->GetUpVector())
 		);
 
-		h_boundingBox->FOV = (this->FOV_deg / 360.0f)* XM_2PI;
+		h_boundingBox->FOV = static_cast<float>((this->FOV_deg / 360.0f)* XM_2PI);
 		h_boundingBox->distImagePlane = this->distImagePlane;
 		h_boundingBox->gridDiameter = ArrayToFloat3(solverOptions->gridDiameter);
 		gpuErrchk(cudaMemcpyToSymbol(d_boundingBox, h_boundingBox, sizeof(BoundingBox)));
@@ -377,6 +272,21 @@ __host__ bool FluctuationHeightfield::InitializeHeightSurface3D(cudaArray_t pCud
 	this->s_HeightSurface.setInputArray(pCudaArray);
 	if (!this->s_HeightSurface.initializeSurface())
 		return false;
+
+	return true;
+}
+
+
+__host__ bool FluctuationHeightfield::loadRaycastingTexture(FieldOptions * fieldOptions,int idx)
+{
+	volume_IO_Primary.Initialize(fieldOptions);
+	volume_IO_Primary.readVolume_Compressed(idx,Array2Int3(fieldOptions->gridSize));
+	volumeTexture3D_height_extra.release();
+	float * h_VelocityField = this->volume_IO_Primary.getField_float_GPU();
+
+	// Bind and copy device pointer to texture
+	volumeTexture3D_height_extra.setField(h_VelocityField);
+	volumeTexture3D_height_extra.initialize_devicePointer(Array2Int3(fieldOptions->gridSize), false, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);
 
 	return true;
 }

@@ -39,8 +39,8 @@ void RenderImGuiOptions::drawSolverOptions()
 			}
 		}
 
-		if (solverOptions->lineRenderingMode == LineRenderingMode::LineRenderingMode::PATHLINES)
-			//|| solverOptions->lineRenderingMode == LineRenderingMode::lineRenderingMode::STREAKLINES)
+		if (solverOptions->lineRenderingMode == LineRenderingMode::LineRenderingMode::PATHLINES
+			|| solverOptions->lineRenderingMode == LineRenderingMode::LineRenderingMode::STREAKLINES)
 		{
 			if (ImGui::Combo("Computation Mode", &solverOptions->computationMode, ComputationMode::ComputationModeList, ComputationMode::ComputationMode::COUNT))
 			{
@@ -81,73 +81,35 @@ void RenderImGuiOptions::drawSolverOptions()
 			this->updateOIT = true;
 		}
 
+
+
+		solverOptions->streakBoxPos[0] = 0;
 		if (solverOptions->projection == Projection::Projection::STREAK_PROJECTION)
 		{
-			switch (solverOptions->lineRenderingMode)
-			{
-			case(LineRenderingMode::LineRenderingMode::STREAMLINES):
-			{
-				float init_pos = -1 * (solverOptions->gridDiameter[0] / solverOptions->gridSize[0]) * (solverOptions->projectPos - solverOptions->gridSize[0] / 2.0f);
-				init_pos -= solverOptions->timeDim / 2;
-				init_pos += (solverOptions->currentIdx - solverOptions->firstIdx) * (solverOptions->timeDim / (solverOptions->lastIdx - solverOptions->firstIdx));
-				solverOptions->streakBoxPos[0] = init_pos;
-				break;
-			}
-			case(LineRenderingMode::LineRenderingMode::PATHLINES):
-			{
 
-				float init_pos = -1 * (solverOptions->gridDiameter[0] / solverOptions->gridSize[0]) * (solverOptions->projectPos - solverOptions->gridSize[0] / 2.0f);
-				init_pos -= solverOptions->timeDim / 2;
-				init_pos += (solverOptions->currentIdx - solverOptions->firstIdx) * (solverOptions->timeDim / (solverOptions->lastIdx - solverOptions->firstIdx));
-				solverOptions->streakBoxPos[0] = init_pos;
+			float init_pos = -1 * (solverOptions->gridDiameter[0] / solverOptions->gridSize[0]) * (solverOptions->projectPos - solverOptions->gridSize[0] / 2.0f);
+			init_pos -= solverOptions->timeDim / 2;
+			init_pos += (solverOptions->currentIdx - solverOptions->firstIdx) * (solverOptions->timeDim / (solverOptions->lastIdx - solverOptions->firstIdx));
+			solverOptions->streakBoxPos[0] = init_pos;
+			solverOptions->streakBox[0] = 0;
 
-				break;
-			}
-			case(LineRenderingMode::LineRenderingMode::STREAKLINES):
-			{
-				float init_pos = -1 * (solverOptions->gridDiameter[0] / solverOptions->gridSize[0]) * (solverOptions->projectPos - solverOptions->gridSize[0] / 2.0f);
-				init_pos -= solverOptions->timeDim / 2;
-				init_pos += (solverOptions->currentIdx - solverOptions->firstIdx) * (solverOptions->timeDim / (solverOptions->lastIdx - solverOptions->firstIdx));
-				solverOptions->streakBoxPos[0] = init_pos;
-			}
-			default:
-				break;
-			} 
+		}
+		else if (solverOptions->projection == Projection::Projection::STREAK_PROJECTION_FIX)
+		{
+			solverOptions->streakBox[0] = 0;
+		}
+		else
+		{
+			solverOptions->streakBox[0] = solverOptions->gridDiameter[0];
 		}
 
-
-		if (solverOptions->projection == Projection::Projection::STREAK_PROJECTION_FIX)
+		if (raycastingOptions->raycastingMode == RaycastingMode::PROJECTION_FORWARD		||
+			raycastingOptions->raycastingMode == RaycastingMode::PROJECTION_BACKWARD	||
+			raycastingOptions->raycastingMode == RaycastingMode::PROJECTION_AVERAGE		||
+			raycastingOptions->raycastingMode == RaycastingMode::PROJECTION_LENGTH
+			)
 		{
-			switch (solverOptions->lineRenderingMode)
-			{
-			case(LineRenderingMode::LineRenderingMode::STREAMLINES):
-			{
-				float init_pos = -1 * (solverOptions->gridDiameter[0] / solverOptions->gridSize[0]) * (solverOptions->projectPos - solverOptions->gridSize[0] / 2.0f);
-				init_pos -= solverOptions->timeDim / 2;
-				//init_pos += (solverOptions->currentIdx - solverOptions->firstIdx) * (solverOptions->timeDim / (solverOptions->lastIdx - solverOptions->firstIdx));
-				solverOptions->streakBoxPos[0] = 0;
-				break;
-			}
-			case(LineRenderingMode::LineRenderingMode::PATHLINES):
-			{
-
-				float init_pos = -1 * (solverOptions->gridDiameter[0] / solverOptions->gridSize[0]) * (solverOptions->projectPos - solverOptions->gridSize[0] / 2.0f);
-				init_pos -= solverOptions->timeDim / 2;
-				init_pos += (solverOptions->currentIdx - solverOptions->firstIdx) * (solverOptions->timeDim / (solverOptions->lastIdx - solverOptions->firstIdx));
-				solverOptions->streakBoxPos[0] = 0;
-
-				break;
-			}
-			case(LineRenderingMode::LineRenderingMode::STREAKLINES):
-			{
-				float init_pos = -1 * (solverOptions->gridDiameter[0] / solverOptions->gridSize[0]) * (solverOptions->projectPos - solverOptions->gridSize[0] / 2.0f);
-				init_pos -= solverOptions->timeDim / 2;
-				init_pos += (solverOptions->currentIdx - solverOptions->firstIdx) * (solverOptions->timeDim / (solverOptions->lastIdx - solverOptions->firstIdx));
-				solverOptions->streakBoxPos[0] = 0;
-			}
-			default:
-				break;
-			}
+			solverOptions->streakBoxPos[0] = (raycastingOptions->projectionPlanePos - solverOptions->gridSize[0]/2) * (solverOptions->gridDiameter[0] / (solverOptions->gridSize[0]));
 		}
 
 		if (ImGui::InputFloat("Time Dim", &solverOptions->timeDim))
@@ -354,6 +316,7 @@ void RenderImGuiOptions::drawSolverOptions()
 			this->updateCrossSection = true;
 			this->updateOIT = true;
 			this->saved = false;
+			this->spaceTimeOptions->volumeLoaded = false;
 		}
 
 
@@ -839,22 +802,36 @@ void RenderImGuiOptions::drawLineRenderingOptions()
 
 		ImGui::Text("Color Coding:");
 
+		if (ImGui::ColorEdit4("Light Color", (float*)&renderingOptions->lightColor))
+		{
+			this->updateOIT = true;
+			this->updateRaycasting = true;
+		}
+
 		if (ImGui::ColorEdit4("Minimum", (float*)&renderingOptions->minColor))
 		{
 			this->updateOIT = true;
+			this->updateRaycasting = true;
+
 		}
 		if (ImGui::InputFloat("Min Value", (float*)& renderingOptions->minMeasure, 0.1f))
 		{
 			this->updateOIT = true;
+			this->updateRaycasting = true;
+
 		}
 
 		if (ImGui::ColorEdit4("Maximum", (float*)&renderingOptions->maxColor))
 		{
 			this->updateOIT = true;
+			this->updateRaycasting = true;
+
 		}
 		if (ImGui::InputFloat("Max Value", (float*)& renderingOptions->maxMeasure, 0.1f))
 		{
 			this->updateOIT = true;
+			this->updateRaycasting = true;
+
 		}
 
 
@@ -888,9 +865,10 @@ void RenderImGuiOptions::drawLineRenderingOptions()
 			this->updateRaycasting = true;
 		}
 
-		if (ImGui::SliderFloat("Shininess", &renderingOptions->shininessVal, 1.0f, 100, "%.1f"))
+		if (ImGui::SliderFloat("Shininess", &renderingOptions->shininess, 1.0f, 10, "%.1f"))
 		{
 			this->updateOIT = true;
+			this->updateRaycasting = true;
 		}
 
 		ImGui::End();
@@ -939,19 +917,13 @@ void RenderImGuiOptions::drawRaycastingOptions()
 
 		}
 
-		if (ImGui::SliderFloat("Shininess", &raycastingOptions->shininess, 0,10))
+		if (ImGui::SliderFloat("Projection Plane Pos", &raycastingOptions->projectionPlanePos,0.0f, (float)solverOptions->gridSize[0]))
 		{
 			this->updateRaycasting = true;
 			this->updateTimeSpaceField = true;
 
 		}
 
-		if (ImGui::SliderFloat("Specular Coefficient", &raycastingOptions->specularCoefficient, 0, 2.0f))
-		{
-			this->updateRaycasting = true;
-			this->updateTimeSpaceField = true;
-
-		}
 
 		if (ImGui::SliderFloat("Reflection Coefficient", &raycastingOptions->reflectionCoefficient, 0, 2.0f))
 		{
@@ -961,15 +933,34 @@ void RenderImGuiOptions::drawRaycastingOptions()
 		}
 		if (ImGui::Checkbox("Inside only", &this->raycastingOptions->insideOnly))
 		{
-			this->renderingOptions->isRaycasting = this->showRaycasting;
 			this->updateRaycasting = true;
 		}
 
 		if (ImGui::Checkbox("Enable Adaptive Sampling", &this->raycastingOptions->adaptiveSampling))
 		{
-			this->renderingOptions->isRaycasting = this->showRaycasting;
 			this->updateRaycasting = true;
 		}
+
+		if (ImGui::Checkbox("Enable Normal Curves", &this->raycastingOptions->normalCurves))
+		{
+			this->updateRaycasting = true;
+		}
+
+		if (ImGui::Checkbox("Secondary Only", &this->raycastingOptions->secondaryOnly))
+		{
+			this->updateRaycasting = true;
+		}
+
+		//if (this->raycastingOptions->normalCurves)
+		//{
+		//	if (ImGui::SliderFloat("Distance to Primary", &raycastingOptions->distanceToPrimary, 0, 0.1f,"%6f"))
+		//	{
+		//		this->updateRaycasting = true;
+		//		this->updateTimeSpaceField = true;
+
+		//	}
+		//}
+
 		if (ImGui::Combo("Isosurface Measure 0", &raycastingOptions->isoMeasure_0, IsoMeasure::IsoMeasureModes, (int)IsoMeasure::COUNT))
 		{
 			this->updateRaycasting = true;
@@ -979,10 +970,12 @@ void RenderImGuiOptions::drawRaycastingOptions()
 
 		if (raycastingOptions->raycastingMode == RaycastingMode::DOUBLE ||
 			raycastingOptions->raycastingMode == RaycastingMode::MULTISCALE ||
+			raycastingOptions->raycastingMode == RaycastingMode::MULTISCALE_TEMP ||
 			raycastingOptions->raycastingMode == RaycastingMode::DOUBLE_SEPARATE ||
 			raycastingOptions->raycastingMode == RaycastingMode::DOUBLE_ADVANCED ||
-			raycastingOptions->raycastingMode == RaycastingMode::DOUBLE_TRANSPARENCY||
+			raycastingOptions->raycastingMode == RaycastingMode::DOUBLE_TRANSPARENCY ||
 			raycastingOptions->raycastingMode == RaycastingMode::MULTISCALE_DEFECT
+
 			)
 		{
 			if (ImGui::Combo("Isosurface Measure 1", &raycastingOptions->isoMeasure_1, IsoMeasure::IsoMeasureModes, (int)IsoMeasure::COUNT))
@@ -1028,6 +1021,17 @@ void RenderImGuiOptions::drawRaycastingOptions()
 			this->updateRaycasting = true;
 		}
 
+
+		if (ImGui::DragFloat("Sampling Rate Projection", &raycastingOptions->samplingRate_projection, 0.001f, 0.001f, 1.0f, "%.3f"))
+		{
+
+			this->updateRaycasting = true;
+			this->updateDispersion = true;
+			this->updateFTLE = true;
+
+
+
+		}
 
 		if (ImGui::DragFloat("Sampling Rate 0", &raycastingOptions->samplingRate_0, 0.00001f, 0.0001f, 1.0f, "%.5f"))
 		{
@@ -1379,30 +1383,30 @@ void RenderImGuiOptions::drawTimeSpaceOptions()
 
 		ImGui::Begin("Time-Space Rendering");
 
-		if (ImGui::DragFloat("Light color", (float*)& fluctuationOptions->brightness,0.01f,1,3))
+		if (ImGui::DragFloat("Light color", (float*)& spaceTimeOptions->brightness,0.01f,1,3))
 		{
 			this->updateRaycasting = true;
 			this->updateTimeSpaceField = true;
 			this->updatefluctuation = true;
 		}
 
-		if (ImGui::Checkbox("Gaussin Filtering", &fluctuationOptions->gaussianFilter))
+		if (ImGui::Checkbox("Gaussin Filtering", &spaceTimeOptions->gaussianFilter))
 		{
 			this->updateRaycasting = true;
 			this->updateTimeSpaceField = true;
 			this->updatefluctuation = true;
 		}
 
-		if (fluctuationOptions->gaussianFilter)
+		if (spaceTimeOptions->gaussianFilter)
 		{
-			if (ImGui::DragInt("filter size", &fluctuationOptions->filterSize, 1, 1, 50))
+			if (ImGui::DragInt("filter size", &spaceTimeOptions->filterSize, 1, 1, 50))
 			{
 				this->updateRaycasting = true;
 				this->updateTimeSpaceField = true;
 				this->updatefluctuation = true;
 			}
 
-			if (ImGui::DragFloat("Standard Deviation ", &fluctuationOptions->std,0.5f,0.5f,50.0f))
+			if (ImGui::DragFloat("Standard Deviation ", &spaceTimeOptions->std,0.5f,0.5f,50.0f))
 			{
 				this->updateRaycasting = true;
 				this->updateTimeSpaceField = true;
@@ -1410,23 +1414,23 @@ void RenderImGuiOptions::drawTimeSpaceOptions()
 			}
 		}
 
-		if (ImGui::Checkbox("Gaussin Filtering Height", &fluctuationOptions->gaussianFilterHeight))
+		if (ImGui::Checkbox("Gaussin Filtering Height", &spaceTimeOptions->gaussianFilterHeight))
 		{
 			this->updateRaycasting = true;
 			this->updateTimeSpaceField = true;
 			this->updatefluctuation = true;
 		}
 
-		if (fluctuationOptions->gaussianFilterHeight)
+		if (spaceTimeOptions->gaussianFilterHeight)
 		{
-			if (ImGui::DragInt("filter size Height", &fluctuationOptions->filterSizeHeight, 1, 1, 50))
+			if (ImGui::DragInt("filter size Height", &spaceTimeOptions->filterSizeHeight, 1, 1, 50))
 			{
 				this->updateRaycasting = true;
 				this->updateTimeSpaceField = true;
 				this->updatefluctuation = true;
 			}
 
-			if (ImGui::DragFloat("Standard Deviation Height", &fluctuationOptions->stdHeight, 0.5f, 0.5f, 50.0f))
+			if (ImGui::DragFloat("Standard Deviation Height", &spaceTimeOptions->stdHeight, 0.5f, 0.5f, 50.0f))
 			{
 				this->updateRaycasting = true;
 				this->updateTimeSpaceField = true;
@@ -1445,75 +1449,90 @@ void RenderImGuiOptions::drawTimeSpaceOptions()
 			}
 		}
 
-		if (ImGui::Checkbox("Shift time-space", &fluctuationOptions->shiftProjection))
+		if (ImGui::Checkbox("Shift projection plane", &spaceTimeOptions->shiftProjection))
 		{
 			this->updatefluctuation = true;
 		}
 
-
-		if (ImGui::Checkbox("Render Isosurfaces", &fluctuationOptions->additionalRaycasting))
+		if (ImGui::Checkbox("Shift space-time", &spaceTimeOptions->shifSpaceTime))
+		{
+			this->updatefluctuation = true;
+		}
+			   
+		if (ImGui::Checkbox("Render Isosurfaces", &spaceTimeOptions->additionalRaycasting))
 		{
 			this->updatefluctuation = true;
 		}
 
-		if (ImGui::Combo("Height Mode", &fluctuationOptions->heightMode, TimeSpaceRendering::HeightModeList, TimeSpaceRendering::HeightMode::COUNT))
+		if (ImGui::Combo("Height Mode", &spaceTimeOptions->heightMode, SpaceTimeRendering::HeightModeList, SpaceTimeRendering::HeightMode::COUNT))
 		{
 			this->updatefluctuation=true;
 		}
-		if (ImGui::Checkbox("Shading", &fluctuationOptions->shading))
+		if (ImGui::Checkbox("Shading", &spaceTimeOptions->shading))
 		{
 			this->updatefluctuation = true;
 		}
 
 
-		if (ImGui::Combo("Slider Background", &fluctuationOptions->sliderBackground, SliderBackground::SliderBackgroundList, SliderBackground::SliderBackground::COUNT))
+		if (ImGui::Combo("Slider Background", &spaceTimeOptions->sliderBackground, SliderBackground::SliderBackgroundList, SliderBackground::SliderBackground::COUNT))
 		{
 			this->updatefluctuation = true;
 		}
 
-		if (fluctuationOptions->sliderBackground == SliderBackground::SliderBackground::BAND)
+		if (spaceTimeOptions->sliderBackground == SliderBackground::SliderBackground::BAND)
 		{
-			if (ImGui::InputInt("Band Layers", &fluctuationOptions->bandSize,1,2))
+			if (ImGui::InputInt("Band Layers", &spaceTimeOptions->bandSize,1,2))
 			{
 				this->updatefluctuation = true;
 			}
 
 		}
 
-		if (ImGui::InputInt("Number of Slices", &fluctuationOptions->streamwiseSlice, 1, 1))
+		if(ImGui::InputFloat("Time Dimenstion",&solverOptions->timeDim,0.1f,0.2f))
+
+
+		if (ImGui::InputInt("Number of Slices", &spaceTimeOptions->streamwiseSlice, 1, 1))
 		{
 			this->updatefluctuation = true;
 		}
 
-		if (ImGui::DragFloat("Slice Position", &fluctuationOptions->streamwiseSlicePos, 0.1f, 0))
+		if (ImGui::DragFloat("Slice Position", &spaceTimeOptions->streamwiseSlicePos, 0.1f, 0))
 		{
 			this->updatefluctuation = true;
 		}
 
-		if (ImGui::DragFloat("Height Tolerance", &fluctuationOptions->hegiht_tolerance, 0.0001f, 0.0001f, 1, "%8f"))
+		if (ImGui::DragFloat("Height Tolerance", &spaceTimeOptions->hegiht_tolerance, 0.0001f, 0.0001f, 1, "%8f"))
 		{
 			this->updatefluctuation = true;
 		}
 
+		if (ImGui::DragFloat("sampling ration time", &spaceTimeOptions->samplingRatio_t, 0.001f, 0.001f, 5, "%4f"))
+		{
+			this->updatefluctuation = true;
+		}
 
+		if (ImGui::DragFloat("isovalue", &spaceTimeOptions->isoValue, 0.001f, 0.001f, 5, "%4f"))
+		{
+			this->updatefluctuation = true;
+		}
 
 		ImGui::Text("Color Coding:");
 
-		if (ImGui::ColorEdit4("Minimum", (float*)& fluctuationOptions->minColor))
+		if (ImGui::ColorEdit4("Minimum", (float*)& spaceTimeOptions->minColor))
 		{
 			updatefluctuation = true;
 		}
-		if (ImGui::InputFloat("Min Value", (float*)& fluctuationOptions->min_val, 0.1f))
-		{
-			updatefluctuation = true;
-		}
-
-		if (ImGui::ColorEdit4("Maximum", (float*)& fluctuationOptions->maxColor))
+		if (ImGui::InputFloat("Min Value", (float*)& spaceTimeOptions->min_val, 0.1f))
 		{
 			updatefluctuation = true;
 		}
 
-		if (ImGui::InputFloat("Max Value", (float*)& fluctuationOptions->max_val, 0.1f))
+		if (ImGui::ColorEdit4("Maximum", (float*)& spaceTimeOptions->maxColor))
+		{
+			updatefluctuation = true;
+		}
+
+		if (ImGui::InputFloat("Max Value", (float*)& spaceTimeOptions->max_val, 0.1f))
 		{
 			updatefluctuation = true;
 		}
@@ -1522,45 +1541,49 @@ void RenderImGuiOptions::drawTimeSpaceOptions()
 
 
 
-		if (ImGui::InputInt("wall-normal", &fluctuationOptions->wallNoramlPos, 1, 5))
+		if (ImGui::InputInt("wall-normal", &spaceTimeOptions->wallNoramlPos, 1, 5))
+		{
+			this->updatefluctuation = true;
+		}
+		if (ImGui::InputInt("time-position", &spaceTimeOptions->timePosition, 1, 5))
 		{
 			this->updatefluctuation = true;
 		}
 
 
-		if (ImGui::Checkbox("Absolute Value", &fluctuationOptions->usingAbsolute))
+		if (ImGui::Checkbox("Absolute Value", &spaceTimeOptions->usingAbsolute))
 		{
 			this->updatefluctuation = true;
 		}
 
 
-		if (ImGui::DragFloat("height scale", &fluctuationOptions->height_scale,0.001f,0,0.14f))
+		if (ImGui::DragFloat("height scale", &spaceTimeOptions->height_scale,0.001f,0,0.14f))
 		{
 
-			if (fluctuationOptions->height_scale > 0.0f)
-				this->fluctuationOptions->shading = true;
+			if (spaceTimeOptions->height_scale > 0.0f)
+				this->spaceTimeOptions->shading = true;
 			this->updatefluctuation = true;
 			
 
 		}
 
-		if (ImGui::DragFloat("height offset", &fluctuationOptions->offset, 0.01f, 0, 10.0f))
+		if (ImGui::DragFloat("height offset", &spaceTimeOptions->offset, 0.01f, 0, 10.0f))
 		{
 			this->updatefluctuation = true;
 
 		}
 
-		if (ImGui::DragFloat("height clamp", &fluctuationOptions->heightLimit, 0.01f, 0, 5.0f))
+		if (ImGui::DragFloat("height clamp", &spaceTimeOptions->heightLimit, 0.01f, 0, 5.0f))
 		{
 			this->updatefluctuation = true;
 
 		}
 
-		if (ImGui::DragFloat("Sampling Rate 0", &fluctuationOptions->samplingRate_0, 0.00001f, 0.00001f, 1.0f, "%.5f"))
+		if (ImGui::DragFloat("Sampling Rate 0", &spaceTimeOptions->samplingRate_0, 0.00001f, 0.00001f, 1.0f, "%.5f"))
 		{
-			if (fluctuationOptions->samplingRate_0 < 0.0001f)
+			if (spaceTimeOptions->samplingRate_0 < 0.0001f)
 			{
-				fluctuationOptions->samplingRate_0 = 0.0001f;
+				spaceTimeOptions->samplingRate_0 = 0.0001f;
 			}
 
 			this->updatefluctuation = true;
@@ -1860,7 +1883,7 @@ void RenderImGuiOptions::drawDataset()
 			case Dataset::Dataset::KIT3_FLUC:
 			{
 				this->solverOptions->fileName = "FieldP";
-				this->solverOptions->filePath = "Y:\\KIT3\\FLUC\\";
+				this->solverOptions->filePath = "F:\\KIT3\\Fluc\\";
 
 
 				setArray<float>(&this->solverOptions->gridDiameter[0], 0.4f, 2.0f, 7.0f);
@@ -2420,6 +2443,99 @@ void RenderImGuiOptions::drawDataset()
 
 				break;
 			}	
+
+			case Dataset::Dataset::KIT4_L1:
+			{
+
+				this->solverOptions->fileName = "KIT4_mipmap";
+				this->solverOptions->filePath = "Y:\\KIT4\\TimeResolved\\Initial\\";
+
+				setArray<float>(&this->solverOptions->gridDiameter[0], 5.2409267f, .2f, 2.51204753716f);
+				setArray<float>(&this->solverOptions->seedBox[0], 5.2409267f, .2f, 2.51204753716f);
+				setArray<float>(&this->raycastingOptions->clipBox[0], 5.2409267f, .2f, 2.51204753716f);
+				setArray<int>(&this->solverOptions->gridSize[0], 1023, 124, 1024);
+
+				this->solverOptions->dt = 0.001f;
+				this->solverOptions->firstIdx = 1;
+				this->solverOptions->lastIdx = 20;
+				this->solverOptions->compressed = false;
+
+				break;
+			}
+			case Dataset::Dataset::KIT4_L1_FLUCTUATION:
+			{
+
+				this->solverOptions->fileName = "KIT4_mipmap_fluc_";
+				this->solverOptions->filePath = "Y:\\KIT4\\TimeResolved\\Fluctuation\\";
+
+				setArray<float>(&this->solverOptions->gridDiameter[0], 5.2409267f, .2f, 2.51204753716f);
+				setArray<float>(&this->solverOptions->seedBox[0], 5.2409267f, .2f, 2.51204753716f);
+				setArray<float>(&this->raycastingOptions->clipBox[0], 5.2409267f, .2f, 2.51204753716f);
+				setArray<int>(&this->solverOptions->gridSize[0], 1023, 124, 1024);
+
+				this->solverOptions->dt = 0.001f;
+				this->solverOptions->firstIdx = 1;
+				this->solverOptions->lastIdx = 20;
+				this->solverOptions->compressed = false;
+
+				break;
+			}
+			case Dataset::Dataset::KIT4_L1_TIME_AVG_20:
+			{
+
+				this->solverOptions->fileName = "KIT4_mipmap_avg20_";
+				this->solverOptions->filePath = "Y:\\KIT4\\TimeResolved\\time-averaged_20\\";
+
+				setArray<float>(&this->solverOptions->gridDiameter[0], 5.2409267f, .2f, 2.51204753716f);
+				setArray<float>(&this->solverOptions->seedBox[0], 5.2409267f, .2f, 2.51204753716f);
+				setArray<float>(&this->raycastingOptions->clipBox[0], 5.2409267f, .2f, 2.51204753716f);
+				setArray<int>(&this->solverOptions->gridSize[0], 1023, 124, 1024);
+
+				this->solverOptions->dt = 0.001f;
+				this->solverOptions->firstIdx = 1;
+				this->solverOptions->lastIdx = 20;
+				this->solverOptions->compressed = false;
+
+				break;
+			}			
+			case Dataset::Dataset::KIT4_L1_TIME_AVG_20_FLUC:
+			{
+
+				this->solverOptions->fileName = "KIT4_mipmap_fluc_avg20_";
+				this->solverOptions->filePath = "Y:\\KIT4\\TimeResolved\\time-averaged_20_Fluc\\";
+
+				setArray<float>(&this->solverOptions->gridDiameter[0], 5.2409267f, .2f, 2.51204753716f);
+				setArray<float>(&this->solverOptions->seedBox[0], 5.2409267f, .2f, 2.51204753716f);
+				setArray<float>(&this->raycastingOptions->clipBox[0], 5.2409267f, .2f, 2.51204753716f);
+				setArray<int>(&this->solverOptions->gridSize[0], 1023, 124, 1024);
+
+				this->solverOptions->dt = 0.001f;
+				this->solverOptions->firstIdx = 1;
+				this->solverOptions->lastIdx = 20;
+				this->solverOptions->compressed = false;
+
+				break;
+			}	
+			case Dataset::Dataset::KIT4_L1_INITIAL_COMP:
+			{
+
+				this->solverOptions->fileName = "KIT4_mipmap_Comp";
+				this->solverOptions->filePath = "G:\\KIT4\\Initial_Comp\\";
+
+				setArray<float>(&this->solverOptions->gridDiameter[0], 5.2409267f, .2f, 2.51204753716f);
+				setArray<float>(&this->solverOptions->seedBox[0], 5.2409267f, .2f, 2.51204753716f);
+				setArray<float>(&this->raycastingOptions->clipBox[0], 5.2409267f, .2f, 2.51204753716f);
+				setArray<int>(&this->solverOptions->gridSize[0], 1023, 124, 1024);
+
+				this->solverOptions->dt = 0.001f;
+				this->solverOptions->firstIdx = 1;
+				this->solverOptions->lastIdx = 32;
+				this->solverOptions->compressed = true;
+				this->solverOptions->maxSize = 250000000;
+
+				break;
+			}
+
 			case Dataset::Dataset::TUM_MEAN_REAMOVED:
 			{
 
@@ -2457,6 +2573,8 @@ void RenderImGuiOptions::drawDataset()
 
 				break;
 			}
+
+
 
 			case Dataset::Dataset::TUM_L2:
 			{

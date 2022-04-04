@@ -6,24 +6,6 @@ typedef unsigned char uchar;
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 __global__ void CudaIsoSurfacRenderer_Single
 (
 	cudaSurfaceObject_t raycastingSurface,
@@ -93,6 +75,7 @@ __global__ void CudaIsoSurfacRenderer_Single
 
 					// calculates gradient
 					float3 gradient = gradientTrilinear(raycastingOptions.isoMeasure_0,texPos,field0,gridSize,gridDiameter);
+					//float3 gradient = callerGradientAtTex(raycastingOptions.isoMeasure_0, field0, texPos,gridDiameter, gridSize);
 
 
 					// shading (no ambient)
@@ -127,6 +110,584 @@ __global__ void CudaIsoSurfacRenderer_Single
 
 	}
 
+
+}
+
+
+
+__global__ void CudaIsoSurfacRenderer_Projection
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field0,
+	int rays,
+	RaycastingOptions raycastingOptions,
+	RenderingOptions renderingOptions
+)
+{
+	int index = CUDA_INDEX;
+
+	if (index < rays)
+	{
+
+		// determine pixel position based on the index of the thread
+		int2 pixel = index2pixel(index, d_boundingBox.m_width);
+		float3 pixelPos = pixelPosition(d_boundingBox, pixel.x, pixel.y);
+		int3 gridInterval = make_int3(d_boundingBox.gridSize.x - 1, d_boundingBox.gridSize.y - 1, d_boundingBox.gridSize.z - 1);
+		float3 cellSize = d_boundingBox.gridDiameter / gridInterval;
+		float3 dir = normalize(pixelPos - d_boundingBox.m_eyePos);
+		float2 NearFar = findEnterExit(pixelPos, dir, d_boundingBox.boxFaces);
+
+		float3 position;
+
+		// if inside the bounding box
+		if (NearFar.y != -1)
+		{
+
+			float3 rayDir = normalize(pixelPos - d_boundingBox.m_eyePos);
+			float3 gridDiameter = d_boundingBox.gridDiameter;
+			int3 gridSize = d_boundingBox.gridSize;
+
+			// near and far plane
+			float n = renderingOptions.nearField;
+			float f = renderingOptions.farField;
+
+			// Add the offset to the eye position
+			float3 eyePos = d_boundingBox.m_eyePos + gridDiameter / 2.0;
+	
+
+			// Projection of isosurfaces
+			float t_x = -gridDiameter.x / 2.0;
+			t_x = t_x + (12.0f * gridDiameter.x / (gridSize.x - 1));
+			t_x = t_x - pixelPos.x;
+			t_x = t_x / rayDir.x;
+
+			if (t_x >= NearFar.x && t_x <= NearFar.y)
+			{
+				position = pixelPos + (rayDir * t_x);
+				position = position + gridDiameter / 2.0;
+
+
+				float3 texPos = world2Tex(position, gridDiameter, gridSize);
+
+				int nStep_x = 0;
+				float distance = 0;
+
+				while (true)
+				{
+					float value = callerValueAtTex(
+						raycastingOptions.isoMeasure_0,
+						field0,
+						make_float3(texPos.x + raycastingOptions.samplingRate_projection * nStep_x, texPos.y, texPos.z),
+						gridDiameter,
+						gridSize
+					);
+
+					if (value < raycastingOptions.isoValue_0)
+					{
+						break;
+					}
+
+					nStep_x++;
+
+					if (texPos.x + raycastingOptions.samplingRate_projection * nStep_x > gridSize.x)
+					{
+						break;
+					}
+
+
+				}
+
+				distance = nStep_x * raycastingOptions.samplingRate_projection;
+				float3 rgb = colorCodeRange(renderingOptions.minColor, renderingOptions.maxColor, distance, renderingOptions.minMeasure, renderingOptions.maxMeasure);
+				float depth = depthfinder(position, eyePos, d_boundingBox.m_viewDir, f, n);
+
+				float4 rgba = { rgb.x , rgb.y, rgb.z, depth };
+				surf2Dwrite(rgba, raycastingSurface, sizeof(float4) * pixel.x, pixel.y);
+
+
+			}
+
+		}
+
+
+
+	}
+
+}
+
+
+
+
+__global__ void CudaIsoSurfacRenderer_Projection_Backward
+	(
+		cudaSurfaceObject_t raycastingSurface,
+		cudaTextureObject_t field0,
+		int rays,
+		RaycastingOptions raycastingOptions,
+		RenderingOptions renderingOptions
+	)
+{
+		int index = CUDA_INDEX;
+
+		if (index < rays)
+		{
+
+			// determine pixel position based on the index of the thread
+			int2 pixel = index2pixel(index, d_boundingBox.m_width);
+			float3 pixelPos = pixelPosition(d_boundingBox, pixel.x, pixel.y);
+			int3 gridInterval = make_int3(d_boundingBox.gridSize.x - 1, d_boundingBox.gridSize.y - 1, d_boundingBox.gridSize.z - 1);
+			float3 cellSize = d_boundingBox.gridDiameter / gridInterval;
+			float3 dir = normalize(pixelPos - d_boundingBox.m_eyePos);
+			float2 NearFar = findEnterExit(pixelPos, dir, d_boundingBox.boxFaces);
+
+			float3 position;
+
+			// if inside the bounding box
+			if (NearFar.y != -1)
+			{
+
+				float3 rayDir = normalize(pixelPos - d_boundingBox.m_eyePos);
+				float3 gridDiameter = d_boundingBox.gridDiameter;
+				int3 gridSize = d_boundingBox.gridSize;
+
+				// near and far plane
+				float n = renderingOptions.nearField;
+				float f = renderingOptions.farField;
+
+				// Add the offset to the eye position
+				float3 eyePos = d_boundingBox.m_eyePos + gridDiameter / 2.0;
+
+
+				// Projection of isosurfaces
+				float t_x = -gridDiameter.x / 2.0;
+				t_x = t_x + (raycastingOptions.projectionPlanePos * gridDiameter.x / (gridSize.x - 1));
+				t_x = t_x - pixelPos.x;
+				t_x = t_x / rayDir.x;
+
+				if (t_x >= NearFar.x && t_x <= NearFar.y)
+				{
+					position = pixelPos + (rayDir * t_x);
+					position = position + gridDiameter / 2.0;
+
+
+					float3 texPos = world2Tex(position, gridDiameter, gridSize);
+
+					int nStep_x = 0;
+					float distance = 0;
+
+					while (true)
+					{
+						float value = callerValueAtTex(
+							raycastingOptions.isoMeasure_0,
+							field0,
+							make_float3(texPos.x - raycastingOptions.samplingRate_projection * nStep_x, texPos.y, texPos.z),
+							gridDiameter,
+							gridSize
+						);
+
+						if (value < raycastingOptions.isoValue_0)
+						{
+							break;
+						}
+
+
+						nStep_x++;
+
+						if (texPos.x - raycastingOptions.samplingRate_projection * nStep_x < 0)
+						{
+							break;
+						}
+
+
+					}
+
+					distance = nStep_x * raycastingOptions.samplingRate_projection;
+					float3 rgb = colorCodeRange(renderingOptions.minColor, renderingOptions.maxColor, distance, renderingOptions.minMeasure, renderingOptions.maxMeasure);
+
+					float depth = depthfinder(position, eyePos, d_boundingBox.m_viewDir, f, n);
+
+					float4 rgba = { rgb.x , rgb.y, rgb.z, depth };
+					surf2Dwrite(rgba, raycastingSurface, sizeof(float4) * pixel.x, pixel.y);
+
+
+				}
+
+			}
+
+
+
+		}
+
+}
+
+
+
+__global__ void CudaIsoSurfacRenderer_Projection_Average
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field0,
+	int rays,
+	RaycastingOptions raycastingOptions,
+	RenderingOptions renderingOptions
+)
+{
+	int index = CUDA_INDEX;
+
+	if (index < rays)
+	{
+
+		// determine pixel position based on the index of the thread
+		int2 pixel = index2pixel(index, d_boundingBox.m_width);
+		float3 pixelPos = pixelPosition(d_boundingBox, pixel.x, pixel.y);
+		int3 gridInterval = make_int3(d_boundingBox.gridSize.x - 1, d_boundingBox.gridSize.y - 1, d_boundingBox.gridSize.z - 1);
+		float3 cellSize = d_boundingBox.gridDiameter / gridInterval;
+		float3 dir = normalize(pixelPos - d_boundingBox.m_eyePos);
+		float2 NearFar = findEnterExit(pixelPos, dir, d_boundingBox.boxFaces);
+
+		float3 position;
+
+		// if inside the bounding box
+		if (NearFar.y != -1)
+		{
+
+			float3 rayDir = normalize(pixelPos - d_boundingBox.m_eyePos);
+			float3 gridDiameter = d_boundingBox.gridDiameter;
+			int3 gridSize = d_boundingBox.gridSize;
+
+			// near and far plane
+			float n = renderingOptions.nearField;
+			float f = renderingOptions.farField;
+
+			// Add the offset to the eye position
+			float3 eyePos = d_boundingBox.m_eyePos + gridDiameter / 2.0;
+
+
+			// Projection of isosurfaces
+			float t_x = -gridDiameter.x / 2.0;
+			t_x = t_x + (raycastingOptions.projectionPlanePos * gridDiameter.x / (gridSize.x - 1));
+			t_x = t_x - pixelPos.x;
+			t_x = t_x / rayDir.x;
+
+			if (t_x >= NearFar.x && t_x <= NearFar.y)
+			{
+				position = pixelPos + (rayDir * t_x);
+				position += gridDiameter / 2.0;
+
+
+				float3 texPos = world2Tex(position, gridDiameter, gridSize);
+
+				int nStep_x = 0;
+				float distance_forward = 0;
+				float distance_backward = 0;
+
+				while (true)
+				{
+					float value = callerValueAtTex(
+						raycastingOptions.isoMeasure_0,
+						field0,
+						make_float3(texPos.x - raycastingOptions.samplingRate_projection * nStep_x, texPos.y, texPos.z),
+						gridDiameter,
+						gridSize
+					);
+
+					if (value < raycastingOptions.isoValue_0)
+					{
+						break;
+					}
+
+
+					nStep_x++;
+
+					if (texPos.x - raycastingOptions.samplingRate_projection * nStep_x < 0)
+					{
+						break;
+					}
+
+
+				}
+
+				distance_backward = nStep_x * raycastingOptions.samplingRate_projection;
+				nStep_x = 0;
+
+				while (true)
+				{
+					float value = callerValueAtTex(
+						raycastingOptions.isoMeasure_0,
+						field0,
+						make_float3(texPos.x + raycastingOptions.samplingRate_projection * nStep_x, texPos.y, texPos.z),
+						gridDiameter,
+						gridSize
+					);
+
+					if (value < raycastingOptions.isoValue_0)
+					{
+						break;
+					}
+
+					nStep_x++;
+
+					if (texPos.x + raycastingOptions.samplingRate_projection * nStep_x > gridSize.x)
+					{
+						break;
+					}
+
+
+				}
+				distance_forward = nStep_x * raycastingOptions.samplingRate_projection;
+
+				float distance = 0.5f * (distance_backward + distance_forward);
+
+				float3 rgb = colorCodeRange(renderingOptions.minColor, renderingOptions.maxColor, distance, renderingOptions.minMeasure, renderingOptions.maxMeasure);
+				float depth = depthfinder(position, eyePos, d_boundingBox.m_viewDir, f, n);
+
+				float4 rgba = { rgb.x , rgb.y, rgb.z, depth };
+				surf2Dwrite(rgba, raycastingSurface, sizeof(float4) * pixel.x, pixel.y);
+
+
+			}
+
+		}
+
+
+
+	}
+
+}
+
+
+
+__global__ void CudaIsoSurfacRenderer_Projection_Length
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field0,
+	int rays,
+	RaycastingOptions raycastingOptions,
+	RenderingOptions renderingOptions
+)
+{
+	int index = CUDA_INDEX;
+
+	if (index < rays)
+	{
+
+		// determine pixel position based on the index of the thread
+		int2 pixel = index2pixel(index, d_boundingBox.m_width);
+		float3 pixelPos = pixelPosition(d_boundingBox, pixel.x, pixel.y);
+		int3 gridInterval = make_int3(d_boundingBox.gridSize.x - 1, d_boundingBox.gridSize.y - 1, d_boundingBox.gridSize.z - 1);
+		float3 cellSize = d_boundingBox.gridDiameter / gridInterval;
+		float3 dir = normalize(pixelPos - d_boundingBox.m_eyePos);
+		float2 NearFar = findEnterExit(pixelPos, dir, d_boundingBox.boxFaces);
+
+		float3 position;
+
+		// if inside the bounding box
+		if (NearFar.y != -1)
+		{
+
+			float3 rayDir = normalize(pixelPos - d_boundingBox.m_eyePos);
+			float3 gridDiameter = d_boundingBox.gridDiameter;
+			int3 gridSize = d_boundingBox.gridSize;
+
+		
+
+			// near and far plane
+			float n = renderingOptions.nearField;
+			float f = renderingOptions.farField;
+
+			// Add the offset to the eye position
+			float3 eyePos = d_boundingBox.m_eyePos + gridDiameter / 2.0;
+
+
+			// Projection of isosurfaces
+			float t_x = -gridDiameter.x / 2.0;
+			t_x = t_x + (raycastingOptions.projectionPlanePos * gridDiameter.x / (gridSize.x - 1));
+			t_x = t_x - pixelPos.x;
+			t_x = t_x / rayDir.x;
+
+			if (t_x >= NearFar.x && t_x <= NearFar.y)
+			{
+				position = pixelPos + (rayDir * t_x);
+				position += gridDiameter / 2.0;
+
+
+				float3 texPos = world2Tex(position, gridDiameter, gridSize);
+
+				int nStep_x = 0;
+				float distance_forward = 0;
+				float distance_backward = 0;
+
+				while (true)
+				{
+					float value = callerValueAtTex(
+						raycastingOptions.isoMeasure_0,
+						field0,
+						make_float3(texPos.x - raycastingOptions.samplingRate_projection * nStep_x, texPos.y, texPos.z),
+						gridDiameter,
+						gridSize
+					);
+
+					if (value > raycastingOptions.isoValue_0)
+					{
+						distance_backward++;
+					}
+					nStep_x++;
+
+					if (texPos.x - raycastingOptions.samplingRate_projection * nStep_x < 0)
+					{
+						break;
+					}
+
+
+				}
+
+				distance_backward = distance_backward * raycastingOptions.samplingRate_projection;
+				nStep_x = 0;
+
+				while (true)
+				{
+					float value = callerValueAtTex(
+						raycastingOptions.isoMeasure_0,
+						field0,
+						make_float3(texPos.x + raycastingOptions.samplingRate_projection * nStep_x, texPos.y, texPos.z),
+						gridDiameter,
+						gridSize
+					);
+
+					if (value > raycastingOptions.isoValue_0)
+					{
+						distance_forward++;
+					}
+
+					nStep_x++;
+
+					if (texPos.x + raycastingOptions.samplingRate_projection * nStep_x > gridSize.x)
+					{
+						break;
+					}
+
+
+				}
+				distance_forward = distance_forward * raycastingOptions.samplingRate_projection;
+
+				float distance = distance_backward + distance_forward;
+
+				float3 rgb = colorCodeRange(renderingOptions.minColor, renderingOptions.maxColor, distance, renderingOptions.minMeasure, renderingOptions.maxMeasure);
+				float depth = depthfinder(position, eyePos, d_boundingBox.m_viewDir, f, n);
+
+				float4 rgba = { rgb.x , rgb.y, rgb.z, depth };
+				surf2Dwrite(rgba, raycastingSurface, sizeof(float4) * pixel.x, pixel.y);
+
+
+			}
+
+		}
+
+
+
+	}
+
+}
+
+
+
+__global__ void CudaIsoSurfacRenderer_Projection_Forward
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field0,
+	int rays,
+	RaycastingOptions raycastingOptions,
+	RenderingOptions renderingOptions
+)
+{
+	int index = CUDA_INDEX;
+
+	if (index < rays)
+	{
+
+		// determine pixel position based on the index of the thread
+		int2 pixel = index2pixel(index, d_boundingBox.m_width);
+		float3 pixelPos = pixelPosition(d_boundingBox, pixel.x, pixel.y);
+		int3 gridInterval = make_int3(d_boundingBox.gridSize.x - 1, d_boundingBox.gridSize.y - 1, d_boundingBox.gridSize.z - 1);
+		float3 cellSize = d_boundingBox.gridDiameter / gridInterval;
+		float3 dir = normalize(pixelPos - d_boundingBox.m_eyePos);
+		float2 NearFar = findEnterExit(pixelPos, dir, d_boundingBox.boxFaces);
+
+		float3 position;
+
+		// if inside the bounding box
+		if (NearFar.y != -1)
+		{
+
+			float3 rayDir = normalize(pixelPos - d_boundingBox.m_eyePos);
+			float3 gridDiameter = d_boundingBox.gridDiameter;
+			int3 gridSize = d_boundingBox.gridSize;
+
+			// near and far plane
+			float n = renderingOptions.nearField;
+			float f = renderingOptions.farField;
+
+			// Add the offset to the eye position
+			float3 eyePos = d_boundingBox.m_eyePos + gridDiameter / 2.0;
+
+
+			// Projection of isosurfaces
+			float t_x = -gridDiameter.x / 2.0;
+			t_x = t_x + (raycastingOptions.projectionPlanePos * gridDiameter.x / (gridSize.x - 1));
+			t_x = t_x - pixelPos.x;
+			t_x = t_x / rayDir.x;
+
+			if (t_x >= NearFar.x && t_x <= NearFar.y)
+			{
+				position = pixelPos + (rayDir * t_x);
+				position += gridDiameter / 2.0;
+
+
+				float3 texPos = world2Tex(position, gridDiameter, gridSize);
+
+				int nStep_x = 0;
+				float distance = 0;
+
+				while (true)
+				{
+					float value = callerValueAtTex(
+						raycastingOptions.isoMeasure_0,
+						field0,
+						make_float3(texPos.x + raycastingOptions.samplingRate_projection * nStep_x, texPos.y, texPos.z),
+						gridDiameter,
+						gridSize
+					);
+
+					if (value < raycastingOptions.isoValue_0)
+					{
+						break;
+					}
+
+					nStep_x++;
+
+					if (texPos.x + raycastingOptions.samplingRate_projection * nStep_x > gridSize.x)
+					{
+						break;
+					}
+
+
+				}
+
+				
+				distance = nStep_x * raycastingOptions.samplingRate_projection;
+				float3 rgb = colorCodeRange(renderingOptions.minColor, renderingOptions.maxColor, distance, renderingOptions.minMeasure, renderingOptions.maxMeasure);
+				float depth = depthfinder(position, eyePos, d_boundingBox.m_viewDir, f, n);
+
+				float4 rgba = { rgb.x , rgb.y, rgb.z, depth };
+				surf2Dwrite(rgba, raycastingSurface, sizeof(float4) * pixel.x, pixel.y);
+
+
+			}
+
+		}
+
+
+
+	}
 
 }
 
@@ -598,6 +1159,202 @@ __global__ void CudaIsoSurfacRenderer_Multiscale
 
 }
 
+__global__ void CudaIsoSurfacRenderer_Multiscale_Triple
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field0,
+	cudaTextureObject_t field1,
+	cudaTextureObject_t field2,
+	int rays,
+	RaycastingOptions raycastingOptions,
+	RenderingOptions renderingOptions
+)
+{
+	int index = CUDA_INDEX;
+
+	if (index < rays)
+	{
+
+		// determine pixel position based on the index of the thread
+		int2 pixel = index2pixel(index, d_boundingBox.m_width);
+		float3 pixelPos = pixelPosition(d_boundingBox, pixel.x, pixel.y);
+		int3 gridInterval = make_int3(d_boundingBox.gridSize.x - 1, d_boundingBox.gridSize.y - 1, d_boundingBox.gridSize.z - 1);
+		float3 cellSize = d_boundingBox.gridDiameter / gridInterval;
+		float3 dir = normalize(pixelPos - d_boundingBox.m_eyePos);
+		float2 NearFar = findEnterExit(pixelPos, dir, d_boundingBox.boxFaces);
+
+
+		// if inside the bounding box
+		if (NearFar.y != -1)
+		{
+
+			float3 rayDir = normalize(pixelPos - d_boundingBox.m_eyePos);
+			// near and far plane
+			float n = renderingOptions.nearField;
+			float f = renderingOptions.farField;
+
+			// Add the offset to the eye position
+			float3 eyePos = d_boundingBox.m_eyePos + d_boundingBox.gridDiameter / 2.0;
+			float t = NearFar.x;
+
+			int3 gridSize_L0 = d_boundingBox.gridSize;
+			int3 gridSize_L1 = gridSize_L0 / 2;
+			int3 gridSize_L2 = gridSize_L1 / 2;
+			float3 position;
+			float value_hit0;
+			float value_hit1;
+
+
+
+			while (t < NearFar.y)
+			{
+				// Position of the isosurface
+				position = pixelPos + (rayDir * t);
+
+				// Adds an offset to position while the center of the grid is at gridDiamter/2
+				position += d_boundingBox.gridDiameter / 2.0;
+				float3 texPos_L0 = world2Tex(position, d_boundingBox.gridDiameter, gridSize_L0);
+				float3 texPos_L1 = world2Tex(position, d_boundingBox.gridDiameter, gridSize_L1);
+				float3 texPos_L2 = world2Tex(position, d_boundingBox.gridDiameter, gridSize_L2);
+
+				switch (raycastingOptions.fieldLevel_0)
+				{
+				case IsoMeasure::FieldLevel::L0:
+					value_hit0 = callerValueAtTex(raycastingOptions.isoMeasure_0, field0, texPos_L0, d_boundingBox.gridDiameter, gridSize_L0);
+					break;
+				case IsoMeasure::FieldLevel::L1:
+					value_hit0 = callerValueAtTex(raycastingOptions.isoMeasure_0, field1, texPos_L1, d_boundingBox.gridDiameter, gridSize_L1);
+					break;
+				case IsoMeasure::FieldLevel::L2:
+					value_hit0 = callerValueAtTex(raycastingOptions.isoMeasure_0, field2, texPos_L2, d_boundingBox.gridDiameter, gridSize_L2);
+					break;
+				}
+				if (value_hit0 > raycastingOptions.isoValue_0)
+				{
+					float3 gradient0;
+
+					switch (raycastingOptions.fieldLevel_0)
+					{
+					case IsoMeasure::FieldLevel::L0:
+						gradient0 = callerGradientAtTex(raycastingOptions.isoMeasure_0, field0, texPos_L0, d_boundingBox.gridDiameter, gridSize_L0);
+						break;
+					case IsoMeasure::FieldLevel::L1:
+						gradient0 = callerGradientAtTex(raycastingOptions.isoMeasure_0, field1, texPos_L1, d_boundingBox.gridDiameter, gridSize_L1);
+						break;
+					case IsoMeasure::FieldLevel::L2:
+						gradient0 = callerGradientAtTex(raycastingOptions.isoMeasure_0, field2, texPos_L2, d_boundingBox.gridDiameter, gridSize_L2);
+						break;
+					}
+					float diffuse = max(dot(normalize(gradient0), d_boundingBox.m_viewDir), 0.0f);
+					float3 rgb = { 1,1,1 };
+					rgb = rgb * raycastingOptions.transparency_0 + Array2Float3(raycastingOptions.color_0) * diffuse*(1 - raycastingOptions.transparency_0);
+					float depth = depthfinder(position, eyePos, d_boundingBox.m_viewDir, f, n);
+					float4 rgba = { rgb.x, rgb.y, rgb.z, depth };
+
+					while (t < NearFar.y && value_hit0 > raycastingOptions.isoValue_0)
+					{
+
+
+						// Position of the isosurface
+						float3 position = pixelPos + (rayDir * t);
+						position += d_boundingBox.gridDiameter / 2.0;
+						//Relative position calculates the position of the point on the CUDA texture
+
+						texPos_L0 = world2Tex(position, d_boundingBox.gridDiameter, d_boundingBox.gridSize);
+						texPos_L1 = world2Tex(position, d_boundingBox.gridDiameter, d_boundingBox.gridSize / 2);
+						texPos_L2 = world2Tex(position, d_boundingBox.gridDiameter, d_boundingBox.gridSize / 4);
+
+
+
+						// it true then we have the second hit (L1)
+						switch (raycastingOptions.fieldLevel_1)
+						{
+						case IsoMeasure::FieldLevel::L0:
+							value_hit1 = callerValueAtTex(raycastingOptions.isoMeasure_0, field0, texPos_L0, d_boundingBox.gridDiameter, gridSize_L0);
+							break;
+						case IsoMeasure::FieldLevel::L1:
+							value_hit1 = callerValueAtTex(raycastingOptions.isoMeasure_0, field1, texPos_L1, d_boundingBox.gridDiameter, gridSize_L1);
+							break;
+						case IsoMeasure::FieldLevel::L2:
+							value_hit1 = callerValueAtTex(raycastingOptions.isoMeasure_0, field2, texPos_L2, d_boundingBox.gridDiameter, gridSize_L2);
+							break;
+						}
+
+
+
+						if (value_hit1 > raycastingOptions.isoValue_1)
+						{
+
+							float3 gradient1;
+
+							switch (raycastingOptions.fieldLevel_1)
+							{
+							case IsoMeasure::FieldLevel::L0:
+								gradient1 = callerGradientAtTex(raycastingOptions.isoMeasure_0, field0, texPos_L0, d_boundingBox.gridDiameter, gridSize_L0);
+								break;
+							case IsoMeasure::FieldLevel::L1:
+								gradient1 = callerGradientAtTex(raycastingOptions.isoMeasure_0, field1, texPos_L1, d_boundingBox.gridDiameter, gridSize_L1);
+								break;
+							case IsoMeasure::FieldLevel::L2:
+								gradient1 = callerGradientAtTex(raycastingOptions.isoMeasure_0, field2, texPos_L2, d_boundingBox.gridDiameter, gridSize_L2);
+								break;
+							}
+
+
+							float angle = dot(gradient1, rayDir);
+							if (angle < 0)
+							{
+
+								break;
+							}
+							else
+							{
+								float3 rgb1 = (Array2Float3(raycastingOptions.color_1) ^ raycastingOptions.brightness) * max(dot(normalize(gradient1), d_boundingBox.m_viewDir), 0.0f);
+								float depth1 = depthfinder(position, eyePos, d_boundingBox.m_viewDir, f, n);
+								rgb = rgb1 * raycastingOptions.transparency_0 + (1 - raycastingOptions.transparency_0)*rgb;
+								rgba = { rgb.x, rgb.y, rgb.z, depth1 };
+								break;
+							}
+
+
+
+							break;
+						}
+
+						if (raycastingOptions.adaptiveSampling)
+						{
+							t += findExitPoint3D(position, dir, cellSize);;
+						}
+						else
+						{
+							t = t + raycastingOptions.samplingRate_1;
+						}
+					}
+
+					surf2Dwrite(rgba, raycastingSurface, 4 * sizeof(float) * pixel.x, pixel.y);
+					break;
+
+				}
+
+
+				if (raycastingOptions.adaptiveSampling)
+				{
+					t += findExitPoint3D(position, dir, cellSize);;
+				}
+				else
+				{
+					t = t + raycastingOptions.samplingRate_0;
+				}
+			}
+
+
+		}
+
+	}
+
+
+}
+
 
 __device__ float callerValueAtTexLOD
 (
@@ -651,8 +1408,6 @@ __device__ float3 callerGradientAtTexLOD
 
 	return value;
 }
-
-
 
 
 __global__ void CudaIsoSurfacRenderer_Multiscale_Defect
@@ -956,13 +1711,6 @@ __global__ void CudaIsoSurfacRenderer_Multiscale_Defect
 }
 
 
-
-
-
-
-
-
-
 __global__ void CudaIsoSurfacRenderer_Double_Advanced
 (
 	cudaSurfaceObject_t raycastingSurface,
@@ -997,7 +1745,6 @@ __global__ void CudaIsoSurfacRenderer_Double_Advanced
 			// Add the offset to the eye position
 			float3 eyePos = d_boundingBox.m_eyePos + d_boundingBox.gridDiameter / 2.0;
 			float t = NearFar.x;
-
 	
 			float alpha_primary = 1 - raycastingOptions.transparency_0;
 			float alpha_secondary = 1 - raycastingOptions.transparency_1; 
@@ -1023,9 +1770,6 @@ __global__ void CudaIsoSurfacRenderer_Double_Advanced
 			float3 rgb;
 			float depth;
 			
-			bool firstHit = false;
-			bool hitInsideSecondary = false;
-			bool secondHit = false;
 			bool firstHitOutsideSecondary = false;
 
 			while (t < NearFar.y)
@@ -1057,7 +1801,6 @@ __global__ void CudaIsoSurfacRenderer_Double_Advanced
 				// if the first hit
 				if (value_0 > raycastingOptions.isoValue_0)
 				{
-					firstHit = true;
 
 					if (raycastingOptions.binarySearch)
 					{
@@ -1167,259 +1910,259 @@ __global__ void CudaIsoSurfacRenderer_Double_Advanced
 
 
 
-__global__ void CudaIsoSurfacRenderer_Double_Transparency
-(
-	cudaSurfaceObject_t raycastingSurface,
-	cudaTextureObject_t field0,
-	cudaTextureObject_t field1,
-	int rays,
-	RaycastingOptions raycastingOptions,
-	RenderingOptions renderingOptions
-)
-{
-	int index = CUDA_INDEX;
-
-	if (index < rays)
-	{
-		// determine pixel position based on the index of the thread
-		int2 pixel = index2pixel(index, d_boundingBox.m_width);
-		float3 pixelPos = pixelPosition(d_boundingBox, pixel.x, pixel.y);
-		int3 gridInterval = make_int3(d_boundingBox.gridSize.x - 1, d_boundingBox.gridSize.y - 1, d_boundingBox.gridSize.z - 1);
-		float3 cellSize = d_boundingBox.gridDiameter / gridInterval;
-		float3 dir = normalize(pixelPos - d_boundingBox.m_eyePos);
-		float2 NearFar = findEnterExit(pixelPos, dir, d_boundingBox.boxFaces);
-
-
-		// if inside the bounding box
-		if (NearFar.y != -1)
-		{
-
-			float3 rayDir = normalize(pixelPos - d_boundingBox.m_eyePos);
-			// near and far plane
-			float n = renderingOptions.nearField;
-			float f = renderingOptions.farField;
-			// Add the offset to the eye position
-			float3 eyePos = d_boundingBox.m_eyePos + d_boundingBox.gridDiameter / 2.0;
-			float t_0 = NearFar.x;
-			float t_1 = NearFar.x;
-
-
-
-			int3 gridSize = d_boundingBox.gridSize;
-			float3 gridDiameter = d_boundingBox.gridDiameter;
-			float3 view = normalize(d_boundingBox.m_viewDir);
-
-			float value_0;
-			float value_1;
-
-			
-			float3 position_out;
-			float3 texPos_out;
-
-			float3 gradient0;
-			float3 gradient1;
-
-			float3 rgb0 = Array2Float3(raycastingOptions.color_0);
-			float3 rgb1 = Array2Float3(raycastingOptions.color_1);
-			float depth0;
-
-			float3 rgb = rgb0;
-			float4 rgba;
-			float depth;
-
-			float enter_0[4] = { 0,0,0,0};
-			float enter_R_0[4] = { 0,0,0,0 }; //Reflection
-
-			//
-			//float exit_0[4] = { NearFar.y,NearFar.y,NearFar.y,NearFar.y };
-			//float exit_R_0[4] = { 0,0,0,0 }; //Reflection
-
-			//float enter_1[4] = { 0,0,0,0 };
-			//float exit_1[4] = { 0,0,0,0 };
-
-			int hitLimit = 10;
-
-			int nHit_0 = 0;
-			int nHit_1 = 0;
-
-			float Reflection;
-			float Alpha = 0;
-
-			float3 texPos;
-			float3 initialPos = pixelPos + d_boundingBox.gridDiameter / 2.0;
-			float3 position = initialPos;
-			float3 firstHit;
-
-			float3 bgColor = Array2Float3(renderingOptions.bgColor);
-
-			bool insideStructure = false;
-		
-
-			while (t_0 < NearFar.y )
-			{
-				position = initialPos + (rayDir * t_0);
-				texPos = world2Tex(position, d_boundingBox.gridDiameter, gridSize);
-				value_0 = callerValueAtTex(raycastingOptions.isoMeasure_0, field0, texPos, gridDiameter, gridSize);
-				value_1 = callerValueAtTex(raycastingOptions.isoMeasure_1, field1, texPos, gridDiameter, gridSize);
-
-
-				// Check for outside hits of the secondary isosurface
-				if (value_1 > raycastingOptions.isoValue_1 && !raycastingOptions.insideOnly)
-				{
-					nHit_0++;
-					if (raycastingOptions.binarySearch)
-					{
-						float3 samplingVector = rayDir * raycastingOptions.samplingRate_0;
-						position_out = binarySearch(field1, position, gridDiameter, gridSize, raycastingOptions.isoValue_1, samplingVector, raycastingOptions.isoMeasure_1, raycastingOptions.tolerance_0, raycastingOptions.maxIteration);
-						texPos = world2Tex(position_out, d_boundingBox.gridDiameter, gridSize);
-					}
-		
-					gradient1 = callerGradientAtTex(raycastingOptions.isoMeasure_1, field1, texPos, gridDiameter, gridSize);
-					
-					rgb = rgb1 * max(dot(normalize(gradient1), d_boundingBox.m_viewDir), 0.0f) + (1, 1, 1) * powf(max(dot(normalize(gradient1), view),0.0f),raycastingOptions.shininess) * raycastingOptions.specularCoefficient;
-
-					firstHit = position;
-					break;
-
-					
-				}
-				
-				// inside the primary 
-				if (value_0 > raycastingOptions.isoValue_0)
-				{
-
-					if (raycastingOptions.binarySearch)
-					{
-						float3 samplingVector = rayDir * raycastingOptions.samplingRate_0;
-						position_out = binarySearch(field0, position, gridDiameter, gridSize, raycastingOptions.isoValue_0, samplingVector, raycastingOptions.isoMeasure_0, raycastingOptions.tolerance_0, raycastingOptions.maxIteration);
-						texPos = world2Tex(position_out, d_boundingBox.gridDiameter, gridSize);
-
-					}
-
-					if (nHit_0 == 0)
-						firstHit = position;
-
-					gradient0 = normalize(callerGradientAtTex(raycastingOptions.isoMeasure_0, field0, texPos, gridDiameter, gridSize));
-					Reflection = 1 - max(powf(fabsf(dot(gradient0, view)), raycastingOptions.reflectionCoefficient), 0.2f);
-					Alpha = Reflection + (1 - Reflection)*Alpha;
-					rgb = (1 - Alpha) * bgColor;
-					
-
-					
-					// Check for the second isosurface
-					while (value_0 > raycastingOptions.isoValue_0 && t_0 < NearFar.y)
-					{
-						nHit_0++;
-
-						value_0 = callerValueAtTex(raycastingOptions.isoMeasure_0, field0, texPos, gridDiameter, gridSize);
-						value_1 = callerValueAtTex(raycastingOptions.isoMeasure_1, field1, texPos, gridDiameter, gridSize);
-
-						
-						if (value_1 > raycastingOptions.isoValue_1)
-						{
-							if (raycastingOptions.binarySearch)
-							{
-								float3 samplingVector = rayDir * raycastingOptions.samplingRate_0;
-								position_out = binarySearch(field1, position, gridDiameter, gridSize, raycastingOptions.isoValue_1, samplingVector, raycastingOptions.isoMeasure_1, raycastingOptions.tolerance_0, raycastingOptions.maxIteration);
-								texPos = world2Tex(position_out, d_boundingBox.gridDiameter, gridSize);
-							}
-
-							gradient1 = callerGradientAtTex(raycastingOptions.isoMeasure_1, field1, texPos, gridDiameter, gridSize);
-							//float angle = dot(gradient1, rayDir);
-
-							//if (angle < 0)
-							//	break;
-							//else
-							//{
-								rgb1 = rgb1 * max(dot(normalize(gradient1), d_boundingBox.m_viewDir), 0.0f) + (1, 1, 1) * powf(max(dot(normalize(gradient1), view), 0.0f), raycastingOptions.shininess) * raycastingOptions.specularCoefficient;
-								rgb = (1 - Alpha) * rgb1 + Alpha * rgb;
-								insideStructure = true;
-								break;
-							//}
-						}
-	
-						if (raycastingOptions.adaptiveSampling)
-						{
-							t_0 += findExitPoint3D(position, dir, cellSize);;
-						}
-						else
-						{
-							t_0 += raycastingOptions.samplingRate_0;
-						}
-
-						position = initialPos + (rayDir * t_0);
-						texPos = world2Tex(position, d_boundingBox.gridDiameter, gridSize);
-
-					}
-
-					if (insideStructure)
-						break;
-
-					while (value_0 > raycastingOptions.isoValue_0 && t_0 < NearFar.y)
-					{
-
-						if (raycastingOptions.adaptiveSampling)
-						{
-							t_0 += findExitPoint3D(position, dir, cellSize);;
-						}
-						else
-						{
-							t_0 += raycastingOptions.samplingRate_0;
-						}
-
-						position = initialPos + (rayDir * t_0);
-						texPos = world2Tex(position, d_boundingBox.gridDiameter, gridSize);
-						value_0 = callerValueAtTex(raycastingOptions.isoMeasure_0, field0, texPos, gridDiameter, gridSize);
-
-					}
-
-					if (t_0 < NearFar.y)
-					{
-
-						if (raycastingOptions.binarySearch)
-						{
-							float3 samplingVector = rayDir * raycastingOptions.samplingRate_0;
-							position_out = binarySearch(field0, position, gridDiameter, gridSize, raycastingOptions.isoValue_0, samplingVector, raycastingOptions.isoMeasure_0, raycastingOptions.tolerance_0, raycastingOptions.maxIteration);
-							texPos = world2Tex(position_out, d_boundingBox.gridDiameter, gridSize);
-
-						}
-
-						gradient0 = normalize(callerGradientAtTex(raycastingOptions.isoMeasure_0, field0, texPos, gridDiameter, gridSize));
-						Reflection = 1 - max(powf(fabsf(dot(gradient0, view)), raycastingOptions.reflectionCoefficient), 0.2f);
-						Alpha = Reflection + (1 - Reflection)*Alpha;
-						rgb = (1 - Alpha) *bgColor;
-						
-
-					}
-
-
-				}
-
-				if (raycastingOptions.adaptiveSampling)
-				{
-					t_0 += findExitPoint3D(position, dir, cellSize);;
-				}
-				else
-				{
-					t_0 += raycastingOptions.samplingRate_0;
-				}
-
-			} 
-
-			if (nHit_0 != 0)
-			{
-
-				
-				depth0 = depthfinder(firstHit , eyePos, d_boundingBox.m_viewDir, f, n);
-
-				rgba = { rgb.x, rgb.y, rgb.z, depth0 };
-				surf2Dwrite(rgba, raycastingSurface, 4 * sizeof(float) * pixel.x, pixel.y);
-
-			}
-
-		}
-	}
-}
+//__global__ void CudaIsoSurfacRenderer_Double_Transparency
+//(
+//	cudaSurfaceObject_t raycastingSurface,
+//	cudaTextureObject_t field0,
+//	cudaTextureObject_t field1,
+//	int rays,
+//	RaycastingOptions raycastingOptions,
+//	RenderingOptions renderingOptions
+//)
+//{
+//	int index = CUDA_INDEX;
+//
+//	if (index < rays)
+//	{
+//		// determine pixel position based on the index of the thread
+//		int2 pixel = index2pixel(index, d_boundingBox.m_width);
+//		float3 pixelPos = pixelPosition(d_boundingBox, pixel.x, pixel.y);
+//		int3 gridInterval = make_int3(d_boundingBox.gridSize.x - 1, d_boundingBox.gridSize.y - 1, d_boundingBox.gridSize.z - 1);
+//		float3 cellSize = d_boundingBox.gridDiameter / gridInterval;
+//		float3 dir = normalize(pixelPos - d_boundingBox.m_eyePos);
+//		float2 NearFar = findEnterExit(pixelPos, dir, d_boundingBox.boxFaces);
+//
+//
+//		// if inside the bounding box
+//		if (NearFar.y != -1)
+//		{
+//
+//			float3 rayDir = normalize(pixelPos - d_boundingBox.m_eyePos);
+//			// near and far plane
+//			float n = renderingOptions.nearField;
+//			float f = renderingOptions.farField;
+//			// Add the offset to the eye position
+//			float3 eyePos = d_boundingBox.m_eyePos + d_boundingBox.gridDiameter / 2.0;
+//			float t_0 = NearFar.x;
+//			float t_1 = NearFar.x;
+//
+//
+//
+//			int3 gridSize = d_boundingBox.gridSize;
+//			float3 gridDiameter = d_boundingBox.gridDiameter;
+//			float3 view = normalize(d_boundingBox.m_viewDir);
+//
+//			float value_0;
+//			float value_1;
+//
+//			
+//			float3 position_out;
+//			float3 texPos_out;
+//
+//			float3 gradient0;
+//			float3 gradient1;
+//
+//			float3 rgb0 = Array2Float3(raycastingOptions.color_0);
+//			float3 rgb1 = Array2Float3(raycastingOptions.color_1);
+//			float3 lightColor = Array2Float3(renderingOptions.lightColor);
+//
+//
+//			float3 rgb = rgb0;
+//			float4 rgba;
+//			float depth;
+//
+//			float enter_0[4] = { 0,0,0,0};
+//			float enter_R_0[4] = { 0,0,0,0 }; //Reflection
+//
+//			//
+//			//float exit_0[4] = { NearFar.y,NearFar.y,NearFar.y,NearFar.y };
+//			//float exit_R_0[4] = { 0,0,0,0 }; //Reflection
+//
+//			//float enter_1[4] = { 0,0,0,0 };
+//			//float exit_1[4] = { 0,0,0,0 };
+//
+//			int hitLimit = 10;
+//
+//			int nHit_0 = 0;
+//			int nHit_1 = 0;
+//
+//			float Reflection;
+//			float Alpha = 0;
+//
+//			float3 texPos;
+//			float3 initialPos = pixelPos + d_boundingBox.gridDiameter / 2.0;
+//			float3 position = initialPos;
+//			float3 firstHit;
+//
+//			float3 bgColor = Array2Float3(renderingOptions.bgColor);
+//
+//			bool insideStructure = false;
+//		
+//
+//			while (t_0 < NearFar.y )
+//			{
+//				position = initialPos + (rayDir * t_0);
+//				texPos = world2Tex(position, d_boundingBox.gridDiameter, gridSize);
+//				value_0 = callerValueAtTex(raycastingOptions.isoMeasure_0, field0, texPos, gridDiameter, gridSize);
+//				value_1 = callerValueAtTex(raycastingOptions.isoMeasure_1, field1, texPos, gridDiameter, gridSize);
+//
+//
+//				// Check for outside hits of the secondary isosurface
+//				if (value_1 > raycastingOptions.isoValue_1 && !raycastingOptions.insideOnly)
+//				{
+//					nHit_0++;
+//					if (raycastingOptions.binarySearch)
+//					{
+//						float3 samplingVector = rayDir * raycastingOptions.samplingRate_0;
+//						position_out = binarySearch(field1, position, gridDiameter, gridSize, raycastingOptions.isoValue_1, samplingVector, raycastingOptions.isoMeasure_1, raycastingOptions.tolerance_0, raycastingOptions.maxIteration);
+//						texPos = world2Tex(position_out, d_boundingBox.gridDiameter, gridSize);
+//					}
+//		
+//					gradient1 = callerGradientAtTex(raycastingOptions.isoMeasure_1, field1, texPos, gridDiameter, gridSize);
+//					rgb = rgb1 * max(dot(normalize(gradient1), d_boundingBox.m_viewDir), 0.0f) + (1, 1, 1) * powf(max(dot(normalize(gradient1), view),0.0f),raycastingOptions.shininess) * raycastingOptions.specularCoefficient;
+//
+//					firstHit = position;
+//					break;
+//
+//					
+//				}
+//				
+//				// inside the primary 
+//				if (value_0 > raycastingOptions.isoValue_0)
+//				{
+//
+//					if (raycastingOptions.binarySearch)
+//					{
+//						float3 samplingVector = rayDir * raycastingOptions.samplingRate_0;
+//						position_out = binarySearch(field0, position, gridDiameter, gridSize, raycastingOptions.isoValue_0, samplingVector, raycastingOptions.isoMeasure_0, raycastingOptions.tolerance_0, raycastingOptions.maxIteration);
+//						texPos = world2Tex(position_out, d_boundingBox.gridDiameter, gridSize);
+//
+//					}
+//
+//					if (nHit_0 == 0)
+//						firstHit = position;
+//
+//					gradient0 = normalize(callerGradientAtTex(raycastingOptions.isoMeasure_0, field0, texPos, gridDiameter, gridSize));
+//					Reflection = 1 - max(powf(fabsf(dot(gradient0, view)), raycastingOptions.reflectionCoefficient), 0.2f);
+//					Alpha = Reflection + (1 - Reflection)*Alpha;
+//					rgb = (1 - Alpha) * bgColor;
+//					
+//
+//					
+//					// Check for the second isosurface
+//					while (value_0 > raycastingOptions.isoValue_0 && t_0 < NearFar.y)
+//					{
+//						nHit_0++;
+//
+//						value_0 = callerValueAtTex(raycastingOptions.isoMeasure_0, field0, texPos, gridDiameter, gridSize);
+//						value_1 = callerValueAtTex(raycastingOptions.isoMeasure_1, field1, texPos, gridDiameter, gridSize);
+//
+//						
+//						if (value_1 > raycastingOptions.isoValue_1)
+//						{
+//							if (raycastingOptions.binarySearch)
+//							{
+//								float3 samplingVector = rayDir * raycastingOptions.samplingRate_0;
+//								position_out = binarySearch(field1, position, gridDiameter, gridSize, raycastingOptions.isoValue_1, samplingVector, raycastingOptions.isoMeasure_1, raycastingOptions.tolerance_0, raycastingOptions.maxIteration);
+//								texPos = world2Tex(position_out, d_boundingBox.gridDiameter, gridSize);
+//							}
+//
+//							gradient1 = callerGradientAtTex(raycastingOptions.isoMeasure_1, field1, texPos, gridDiameter, gridSize);
+//							//float angle = dot(gradient1, rayDir);
+//
+//							//if (angle < 0)
+//							//	break;
+//							//else
+//							//{
+//								rgb1 = rgb1 * max(dot(normalize(gradient1), d_boundingBox.m_viewDir), 0.0f) + (1, 1, 1) * powf(max(dot(normalize(gradient1), view), 0.0f), raycastingOptions.shininess) * raycastingOptions.specularCoefficient;
+//								rgb = (1 - Alpha) * rgb1 + Alpha * rgb;
+//								insideStructure = true;
+//								break;
+//							//}
+//						}
+//	
+//						if (raycastingOptions.adaptiveSampling)
+//						{
+//							t_0 += findExitPoint3D(position, dir, cellSize);;
+//						}
+//						else
+//						{
+//							t_0 += raycastingOptions.samplingRate_0;
+//						}
+//
+//						position = initialPos + (rayDir * t_0);
+//						texPos = world2Tex(position, d_boundingBox.gridDiameter, gridSize);
+//
+//					}
+//
+//					if (insideStructure)
+//						break;
+//
+//					while (value_0 > raycastingOptions.isoValue_0 && t_0 < NearFar.y)
+//					{
+//
+//						if (raycastingOptions.adaptiveSampling)
+//						{
+//							t_0 += findExitPoint3D(position, dir, cellSize);;
+//						}
+//						else
+//						{
+//							t_0 += raycastingOptions.samplingRate_0;
+//						}
+//
+//						position = initialPos + (rayDir * t_0);
+//						texPos = world2Tex(position, d_boundingBox.gridDiameter, gridSize);
+//						value_0 = callerValueAtTex(raycastingOptions.isoMeasure_0, field0, texPos, gridDiameter, gridSize);
+//
+//					}
+//
+//					if (t_0 < NearFar.y)
+//					{
+//
+//						if (raycastingOptions.binarySearch)
+//						{
+//							float3 samplingVector = rayDir * raycastingOptions.samplingRate_0;
+//							position_out = binarySearch(field0, position, gridDiameter, gridSize, raycastingOptions.isoValue_0, samplingVector, raycastingOptions.isoMeasure_0, raycastingOptions.tolerance_0, raycastingOptions.maxIteration);
+//							texPos = world2Tex(position_out, d_boundingBox.gridDiameter, gridSize);
+//
+//						}
+//
+//						gradient0 = normalize(callerGradientAtTex(raycastingOptions.isoMeasure_0, field0, texPos, gridDiameter, gridSize));
+//						Reflection = 1 - max(powf(fabsf(dot(gradient0, view)), raycastingOptions.reflectionCoefficient), 0.2f);
+//						Alpha = Reflection + (1 - Reflection)*Alpha;
+//						rgb = (1 - Alpha) *bgColor;
+//						
+//
+//					}
+//
+//
+//				}
+//
+//				if (raycastingOptions.adaptiveSampling)
+//				{
+//					t_0 += findExitPoint3D(position, dir, cellSize);;
+//				}
+//				else
+//				{
+//					t_0 += raycastingOptions.samplingRate_0;
+//				}
+//
+//			} 
+//
+//			if (nHit_0 != 0)
+//			{
+//
+//				
+//				depth = depthfinder(firstHit , eyePos, d_boundingBox.m_viewDir, f, n);
+//
+//				rgba = { rgb.x, rgb.y, rgb.z, depth };
+//				surf2Dwrite(rgba, raycastingSurface, 4 * sizeof(float) * pixel.x, pixel.y);
+//
+//			}
+//
+//		}
+//	}
+//}
 
 
 
@@ -1457,7 +2200,7 @@ __global__ void CudaIsoSurfacRenderer_Double_Transparency_noglass
 			// Add the offset to the eye position
 			float3 eyePos = d_boundingBox.m_eyePos + d_boundingBox.gridDiameter / 2.0;
 			float t_0 = NearFar.x;
-			float t_1 = NearFar.x;
+
 
 
 
@@ -1468,33 +2211,22 @@ __global__ void CudaIsoSurfacRenderer_Double_Transparency_noglass
 			float value_0;
 			float value_1;
 
-
-			float3 position_out;
-			float3 texPos_out;
-
 			float3 gradient0;
 			float3 gradient1;
 
 			float3 rgb0 = Array2Float3(raycastingOptions.color_0);
 			float3 rgb1 = Array2Float3(raycastingOptions.color_1);
-			float depth0;
 
-			float3 bgColor = Array2Float3(renderingOptions.bgColor);
-
-			float3 rgb = bgColor;
-			float4 rgba;
 			float depth;
 
+			float3 bgColor = Array2Float3(renderingOptions.bgColor);
+			float3 lightColor = Array2Float3(renderingOptions.lightColor);
+			float3 rgb = bgColor;
 
+			float4 rgba;
 
-			int hitLimit = 10;
-
-			int nHit_0 = 0;
-			int nHit_1 = 0;
-
+			int nHit = 0;
 			float alpha_trans = raycastingOptions.transparency_1;
-
-			float Reflection;
 			float Alpha = 0;
 
 			float3 diffuse;
@@ -1503,12 +2235,13 @@ __global__ void CudaIsoSurfacRenderer_Double_Transparency_noglass
 			float3 texPos;
 			float3 initialPos = pixelPos + d_boundingBox.gridDiameter / 2.0;
 			float3 position = initialPos;
-			float3 firstHit;
+			float3 firstHitPosition;
+			float3 samplingVector = rayDir * raycastingOptions.samplingRate_0;
 
 
 
 			bool insideStructure = false;
-
+			float distanceToNormal = 0;
 
 			while (t_0 < NearFar.y)
 			{
@@ -1521,49 +2254,83 @@ __global__ void CudaIsoSurfacRenderer_Double_Transparency_noglass
 				 //Check for outside hits of the secondary isosurface
 				if (value_1 > raycastingOptions.isoValue_1 && !raycastingOptions.insideOnly)
 				{
-					nHit_0++;
+
 					if (raycastingOptions.binarySearch)
 					{
-						float3 samplingVector = rayDir * raycastingOptions.samplingRate_0;
-						position_out = binarySearch(field1, position, gridDiameter, gridSize, raycastingOptions.isoValue_1, samplingVector, raycastingOptions.isoMeasure_1, raycastingOptions.tolerance_0, raycastingOptions.maxIteration);
-						texPos = world2Tex(position_out, d_boundingBox.gridDiameter, gridSize);
+						position = binarySearch(field1, position, gridDiameter, gridSize, raycastingOptions.isoValue_1, samplingVector, raycastingOptions.isoMeasure_1, raycastingOptions.tolerance_0, raycastingOptions.maxIteration);
+						texPos = world2Tex(position, d_boundingBox.gridDiameter, gridSize);
 					}
 
-					gradient1  = gradientTrilinear(raycastingOptions.isoMeasure_1, texPos, field1, gridSize, gridDiameter);
-					diffuse = renderingOptions.Kd1 * rgb1 * max(dot(normalize(gradient1), d_boundingBox.m_viewDir), 0.0f);
-					specular = make_float3(1, 1, 1) * powf(max(dot(normalize(gradient1), view), 0.0f), raycastingOptions.shininess) * renderingOptions.Ks1;
-					rgb =  diffuse + specular;
-					firstHit = position;
-					Alpha = 1;
-					break;
+					if (raycastingOptions.normalCurves)
+					{
+						distanceToNormal = distanceToNormalCurves(
+							raycastingOptions.isoMeasure_0,
+							raycastingOptions.isoValue_0,
+							position,
+							field0,
+							gridSize,
+							gridDiameter,
+							raycastingOptions.samplingRate_1);
 
-
+						gradient1 = gradientTrilinear(raycastingOptions.isoMeasure_1, texPos, field1, gridSize, gridDiameter);
+						rgb1 = colorCodeRange(renderingOptions.minColor, renderingOptions.maxColor, distanceToNormal, renderingOptions.minMeasure, renderingOptions.maxMeasure);
+						diffuse = renderingOptions.Kd1 * rgb1 * max(dot(normalize(gradient1), d_boundingBox.m_viewDir), 0.0f);
+						specular = lightColor * powf(max(dot(normalize(gradient1), view), 0.0f), renderingOptions.shininess) * renderingOptions.Ks1;
+						rgb = diffuse + specular;
+						if(nHit == 0)
+							firstHitPosition = position;
+						Alpha = 1;
+						nHit++;
+						break;
+					}
+					else
+					{
+						gradient1 = gradientTrilinear(raycastingOptions.isoMeasure_1, texPos, field1, gridSize, gridDiameter);
+						diffuse = renderingOptions.Kd1 * rgb1 * max(dot(normalize(gradient1), d_boundingBox.m_viewDir), 0.0f);
+						specular = lightColor * powf(max(dot(normalize(gradient1), view), 0.0f), renderingOptions.shininess) * renderingOptions.Ks1;
+						rgb = diffuse + specular;
+						if (nHit == 0)
+							firstHitPosition = position;
+						Alpha = 1;
+						nHit++;
+						break;
+					}
 				}
-
+				if (raycastingOptions.secondaryOnly)
+				{
+					if (raycastingOptions.adaptiveSampling)
+					{
+						t_0 += findExitPoint3D(position, dir, cellSize);;
+					}
+					else
+					{
+						t_0 += raycastingOptions.samplingRate_0;
+					}
+					continue;
+				}
 				// inside the primary 
 				if (value_0 > raycastingOptions.isoValue_0 && Alpha < 1)
 				{
 
 					if (raycastingOptions.binarySearch)
 					{
-						float3 samplingVector = rayDir * raycastingOptions.samplingRate_0;
 						position = binarySearch(field0, position, gridDiameter, gridSize, raycastingOptions.isoValue_0, samplingVector, raycastingOptions.isoMeasure_0, raycastingOptions.tolerance_0, raycastingOptions.maxIteration);
 						texPos = world2Tex(position, gridDiameter, gridSize);
 					}
 
-					if (nHit_0 == 0)
-						firstHit = position;
+					if (nHit == 0)
+						firstHitPosition = position;
 
 
 					gradient0 = gradientTrilinear(raycastingOptions.isoMeasure_0, texPos, field0, gridSize, gridDiameter);
 					diffuse = renderingOptions.Kd *rgb0 * max(dot(normalize(gradient0), d_boundingBox.m_viewDir), 0.0f);
-					specular = make_float3(1, 1, 1) * powf(max(dot(normalize(gradient0), view), 0.0f), raycastingOptions.shininess) * renderingOptions.Ks;
+					specular = lightColor * powf(max(dot(normalize(gradient0), view), 0.0f), renderingOptions.shininess) * renderingOptions.Ks;
 
 
 					rgb = (1 - Alpha) * alpha_trans * (diffuse + specular) + Alpha * rgb;
 					Alpha = Alpha + (1 - Alpha)*alpha_trans;
 
-					nHit_0++;
+					nHit++;
 					
 
 					// Check for the second isosurface
@@ -1578,20 +2345,26 @@ __global__ void CudaIsoSurfacRenderer_Double_Transparency_noglass
 						{
 							if (raycastingOptions.binarySearch)
 							{
-								float3 samplingVector = rayDir * raycastingOptions.samplingRate_0;
-								position_out = binarySearch(field1, position, gridDiameter, gridSize, raycastingOptions.isoValue_1, samplingVector, raycastingOptions.isoMeasure_1, raycastingOptions.tolerance_0, raycastingOptions.maxIteration);
-								texPos = world2Tex(position_out, d_boundingBox.gridDiameter, gridSize);
+								position = binarySearch(field1, position, gridDiameter, gridSize, raycastingOptions.isoValue_1, samplingVector, raycastingOptions.isoMeasure_1, raycastingOptions.tolerance_0, raycastingOptions.maxIteration);
+								texPos = world2Tex(position, d_boundingBox.gridDiameter, gridSize);
 							}
+
+
 							gradient1 = gradientTrilinear(raycastingOptions.isoMeasure_1, texPos, field1, gridSize, gridDiameter);
-							diffuse = renderingOptions.Kd1 * rgb1 * max(dot(normalize(gradient1), d_boundingBox.m_viewDir), 0.0f);
-							specular = make_float3(1, 1, 1) * powf(max(dot(normalize(gradient1), view), 0.0f), raycastingOptions.shininess) * renderingOptions.Ks1;
 							
+							if (dot(normalize(gradient1), d_boundingBox.m_viewDir) > 0) // removes 
+							{
+								diffuse = renderingOptions.Kd1 * rgb1 * max(dot(normalize(gradient1), d_boundingBox.m_viewDir), 0.0f);
+								specular = lightColor * powf(max(dot(normalize(gradient1), view), 0.0f), renderingOptions.shininess) * renderingOptions.Ks1;
 
-							rgb = (1 - Alpha) * 1 * (diffuse + specular) + Alpha * rgb;
-							Alpha = 1;
 
-							insideStructure = true;
-							break;
+								rgb = (1 - Alpha) * 1 * (diffuse + specular) + Alpha * rgb;
+								Alpha = 1;
+
+								insideStructure = true;
+								break;
+							}
+
 						}
 
 						if (raycastingOptions.adaptiveSampling)
@@ -1632,23 +2405,20 @@ __global__ void CudaIsoSurfacRenderer_Double_Transparency_noglass
 					if (t_0 < NearFar.y && Alpha < 1)
 					{
 
-						//if (raycastingOptions.binarySearch)
-						//{
-						//	float3 samplingVector = rayDir * raycastingOptions.samplingRate_0;
-						//	position_out = binarySearch(field0, position, gridDiameter, gridSize, raycastingOptions.isoValue_0, samplingVector, raycastingOptions.isoMeasure_0, raycastingOptions.tolerance_0, raycastingOptions.maxIteration);
-						//	texPos = world2Tex(position_out, d_boundingBox.gridDiameter, gridSize);
+						if (raycastingOptions.binarySearch)
+						{
+							position = binarySearch(field0, position, gridDiameter, gridSize, raycastingOptions.isoValue_0, samplingVector, raycastingOptions.isoMeasure_0, raycastingOptions.tolerance_0, raycastingOptions.maxIteration);
+							texPos = world2Tex(position, d_boundingBox.gridDiameter, gridSize);
 
-						//}
+						}
 
 						gradient0 = gradientTrilinear(raycastingOptions.isoMeasure_0, texPos, field0, gridSize, gridDiameter);
 						float3 diffuse = renderingOptions.Kd * rgb0 * max(fabsf(dot(normalize(gradient0), d_boundingBox.m_viewDir)), 0.0f);
-						float3 specular = make_float3(1, 1, 1) * powf(max(dot(normalize(gradient0), view), 0.0f), raycastingOptions.shininess) * raycastingOptions.specularCoefficient;
+						float3 specular = lightColor * powf(max(dot(normalize(gradient0), view), 0.0f), renderingOptions.shininess) * renderingOptions.Ks;
 	
 						rgb = (1 - Alpha) * alpha_trans * (diffuse + specular) +  Alpha * rgb;
 						Alpha = Alpha + (1 - Alpha)*alpha_trans;
 					}
-
-
 				}
 
 				if (raycastingOptions.adaptiveSampling)
@@ -1662,11 +2432,12 @@ __global__ void CudaIsoSurfacRenderer_Double_Transparency_noglass
 
 			}
 
-			if (nHit_0 != 0)
+			if (nHit != 0)
 			{
+				// blend it with background
 				rgb = (1 - Alpha) * bgColor + Alpha * rgb;
-				depth0 = depthfinder(firstHit, eyePos, d_boundingBox.m_viewDir, f, n);
-				rgba = { rgb.x, rgb.y, rgb.z, depth0 };
+				depth = depthfinder(firstHitPosition, eyePos, d_boundingBox.m_viewDir, f, n);
+				rgba = { rgb.x, rgb.y, rgb.z, depth };
 				surf2Dwrite(rgba, raycastingSurface, 4 * sizeof(float) * pixel.x, pixel.y);
 
 			}
@@ -1676,6 +2447,290 @@ __global__ void CudaIsoSurfacRenderer_Double_Transparency_noglass
 }
 
 	
+
+__global__ void CudaIsoSurfacRenderer_Double_Transparency_noglass_multiLevel
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field0,
+	cudaTextureObject_t field1,
+	int rays,
+	RaycastingOptions raycastingOptions,
+	RenderingOptions renderingOptions
+)
+{
+	int index = CUDA_INDEX;
+
+	if (index < rays)
+	{
+		// determine pixel position based on the index of the thread
+		int2 pixel = index2pixel(index, d_boundingBox.m_width);
+		float3 pixelPos = pixelPosition(d_boundingBox, pixel.x, pixel.y);
+		int3 gridInterval = make_int3(d_boundingBox.gridSize.x - 1, d_boundingBox.gridSize.y - 1, d_boundingBox.gridSize.z - 1);
+		float3 cellSize = d_boundingBox.gridDiameter / gridInterval;
+		float3 dir = normalize(pixelPos - d_boundingBox.m_eyePos);
+		float2 NearFar = findEnterExit(pixelPos, dir, d_boundingBox.boxFaces);
+
+
+		// if inside the bounding box
+		if (NearFar.y != -1)
+		{
+
+			float3 rayDir = normalize(pixelPos - d_boundingBox.m_eyePos);
+			// near and far plane
+			float n = renderingOptions.nearField;
+			float f = renderingOptions.farField;
+			// Add the offset to the eye position
+			float3 eyePos = d_boundingBox.m_eyePos + d_boundingBox.gridDiameter / 2.0;
+			float t_0 = NearFar.x;
+
+
+
+
+			int3 gridSize = d_boundingBox.gridSize;
+			int3 gridSize_L1 = d_boundingBox.gridSize / 2.0f;
+			float3 gridDiameter = d_boundingBox.gridDiameter;
+			float3 view = normalize(d_boundingBox.m_viewDir);
+
+			float value_0;
+			float value_1;
+
+			float3 gradient0;
+			float3 gradient1;
+
+			float3 rgb0 = Array2Float3(raycastingOptions.color_0);
+			float3 rgb1 = Array2Float3(raycastingOptions.color_1);
+
+			float depth;
+
+			float3 bgColor = Array2Float3(renderingOptions.bgColor);
+			float3 lightColor = Array2Float3(renderingOptions.lightColor);
+			float3 rgb = bgColor;
+
+			float4 rgba;
+
+			int nHit = 0;
+			float alpha_trans = raycastingOptions.transparency_1;
+			float Alpha = 0;
+
+			float3 diffuse;
+			float3 specular;
+
+			float3 texPos;
+			float3 texPos_L1;
+			float3 initialPos = pixelPos + d_boundingBox.gridDiameter / 2.0;
+			float3 position = initialPos;
+			float3 firstHitPosition;
+			float3 samplingVector = rayDir * raycastingOptions.samplingRate_0;
+
+
+
+			bool insideStructure = false;
+			float distanceToNormal = 0;
+
+			while (t_0 < NearFar.y)
+			{
+				position = initialPos + (rayDir * t_0);
+				texPos = world2Tex(position, gridDiameter, gridSize);
+				texPos_L1 = world2Tex(position, gridDiameter, gridSize_L1);
+				value_0 = callerValueAtTex(raycastingOptions.isoMeasure_0, field0, texPos_L1, gridDiameter, gridSize_L1);
+				value_1 = callerValueAtTex(raycastingOptions.isoMeasure_1, field1, texPos, gridDiameter, gridSize);
+
+
+				//Check for outside hits of the secondary isosurface
+				if (value_1 > raycastingOptions.isoValue_1 && !raycastingOptions.insideOnly)
+				{
+
+					if (raycastingOptions.binarySearch)
+					{
+						position = binarySearch(field1, position, gridDiameter, gridSize, raycastingOptions.isoValue_1, samplingVector, raycastingOptions.isoMeasure_1, raycastingOptions.tolerance_0, raycastingOptions.maxIteration);
+						texPos = world2Tex(position, d_boundingBox.gridDiameter, gridSize);
+					}
+
+					if (raycastingOptions.normalCurves)
+					{
+						distanceToNormal = distanceToNormalCurves(
+							raycastingOptions.isoMeasure_0,
+							raycastingOptions.isoValue_0,
+							position,
+							field0,
+							gridSize,
+							gridDiameter,
+							raycastingOptions.samplingRate_1);
+
+						gradient1 = gradientTrilinear(raycastingOptions.isoMeasure_1, texPos, field1, gridSize, gridDiameter);
+						rgb1 = colorCodeRange(renderingOptions.minColor, renderingOptions.maxColor, distanceToNormal, renderingOptions.minMeasure, renderingOptions.maxMeasure);
+						diffuse = renderingOptions.Kd1 * rgb1 * max(dot(normalize(gradient1), d_boundingBox.m_viewDir), 0.0f);
+						specular = lightColor * powf(max(dot(normalize(gradient1), view), 0.0f), renderingOptions.shininess) * renderingOptions.Ks1;
+						rgb = diffuse + specular;
+						if (nHit == 0)
+							firstHitPosition = position;
+						Alpha = 1;
+						nHit++;
+						break;
+					}
+					else
+					{
+						gradient1 = gradientTrilinear(raycastingOptions.isoMeasure_1, texPos, field1, gridSize, gridDiameter);
+						diffuse = renderingOptions.Kd1 * rgb1 * max(dot(normalize(gradient1), d_boundingBox.m_viewDir), 0.0f);
+						specular = lightColor * powf(max(dot(normalize(gradient1), view), 0.0f), renderingOptions.shininess) * renderingOptions.Ks1;
+						rgb = diffuse + specular;
+						if (nHit == 0)
+							firstHitPosition = position;
+						Alpha = 1;
+						nHit++;
+						break;
+					}
+				}
+				if (raycastingOptions.secondaryOnly)
+				{
+					if (raycastingOptions.adaptiveSampling)
+					{
+						t_0 += findExitPoint3D(position, dir, cellSize);;
+					}
+					else
+					{
+						t_0 += raycastingOptions.samplingRate_0;
+					}
+					continue;
+				}
+				// inside the primary 
+				if (value_0 > raycastingOptions.isoValue_0 && Alpha < 1)
+				{
+
+					if (raycastingOptions.binarySearch)
+					{
+						position = binarySearch(field0, position, gridDiameter, gridSize_L1, raycastingOptions.isoValue_0, samplingVector, raycastingOptions.isoMeasure_0, raycastingOptions.tolerance_0, raycastingOptions.maxIteration);
+						texPos_L1 = world2Tex(position, gridDiameter, gridSize_L1);
+					}
+
+					if (nHit == 0)
+						firstHitPosition = position;
+
+
+					gradient0 = gradientTrilinear(raycastingOptions.isoMeasure_0, texPos_L1, field0, gridSize_L1, gridDiameter);
+					diffuse = renderingOptions.Kd *rgb0 * max(dot(normalize(gradient0), d_boundingBox.m_viewDir), 0.0f);
+					specular = lightColor * powf(max(dot(normalize(gradient0), view), 0.0f), renderingOptions.shininess) * renderingOptions.Ks;
+
+
+					rgb = (1 - Alpha) * alpha_trans * (diffuse + specular) + Alpha * rgb;
+					Alpha = Alpha + (1 - Alpha)*alpha_trans;
+
+					nHit++;
+
+
+					// Check for the second isosurface
+					while (value_0 > raycastingOptions.isoValue_0 && t_0 < NearFar.y && Alpha < 1)
+					{
+
+						value_0 = callerValueAtTex(raycastingOptions.isoMeasure_0, field0, texPos_L1, gridDiameter, gridSize_L1);
+						value_1 = callerValueAtTex(raycastingOptions.isoMeasure_1, field1, texPos, gridDiameter, gridSize);
+
+
+						if (value_1 > raycastingOptions.isoValue_1)
+						{
+							if (raycastingOptions.binarySearch)
+							{
+								position = binarySearch(field1, position, gridDiameter, gridSize, raycastingOptions.isoValue_1, samplingVector, raycastingOptions.isoMeasure_1, raycastingOptions.tolerance_0, raycastingOptions.maxIteration);
+								texPos = world2Tex(position, d_boundingBox.gridDiameter, gridSize);
+							}
+
+
+							gradient1 = gradientTrilinear(raycastingOptions.isoMeasure_1, texPos, field1, gridSize, gridDiameter);
+
+							if (dot(normalize(gradient1), d_boundingBox.m_viewDir) > 0) // removes 
+							{
+								diffuse = renderingOptions.Kd1 * rgb1 * max(dot(normalize(gradient1), d_boundingBox.m_viewDir), 0.0f);
+								specular = lightColor * powf(max(dot(normalize(gradient1), view), 0.0f), renderingOptions.shininess) * renderingOptions.Ks1;
+
+
+								rgb = (1 - Alpha) * 1 * (diffuse + specular) + Alpha * rgb;
+								Alpha = 1;
+
+								insideStructure = true;
+								break;
+							}
+
+						}
+
+						if (raycastingOptions.adaptiveSampling)
+						{
+							t_0 += findExitPoint3D(position, dir, cellSize);;
+						}
+						else
+						{
+							t_0 += raycastingOptions.samplingRate_0;
+						}
+
+						position = initialPos + (rayDir * t_0);
+						texPos = world2Tex(position, d_boundingBox.gridDiameter, gridSize);
+						texPos_L1 = world2Tex(position, d_boundingBox.gridDiameter, gridSize_L1);
+
+					}
+
+					if (insideStructure)
+						break;
+
+					while (value_0 > raycastingOptions.isoValue_0 && t_0 < NearFar.y && Alpha < 1)
+					{
+
+						if (raycastingOptions.adaptiveSampling)
+						{
+							t_0 += findExitPoint3D(position, dir, cellSize);;
+						}
+						else
+						{
+							t_0 += raycastingOptions.samplingRate_0;
+						}
+
+						position = initialPos + (rayDir * t_0);
+						texPos_L1 = world2Tex(position, d_boundingBox.gridDiameter, gridSize);
+						value_0 = callerValueAtTex(raycastingOptions.isoMeasure_0, field0, texPos_L1, gridDiameter, gridSize_L1);
+
+					}
+
+					if (t_0 < NearFar.y && Alpha < 1)
+					{
+
+						if (raycastingOptions.binarySearch)
+						{
+							position = binarySearch(field0, position, gridDiameter, gridSize_L1, raycastingOptions.isoValue_0, samplingVector, raycastingOptions.isoMeasure_0, raycastingOptions.tolerance_0, raycastingOptions.maxIteration);
+							texPos = world2Tex(position, d_boundingBox.gridDiameter, gridSize_L1);
+
+						}
+
+						gradient0 = gradientTrilinear(raycastingOptions.isoMeasure_0, texPos_L1, field0, gridSize, gridDiameter);
+						float3 diffuse = renderingOptions.Kd * rgb0 * max(fabsf(dot(normalize(gradient0), d_boundingBox.m_viewDir)), 0.0f);
+						float3 specular = lightColor * powf(max(dot(normalize(gradient0), view), 0.0f), renderingOptions.shininess) * renderingOptions.Ks;
+
+						rgb = (1 - Alpha) * alpha_trans * (diffuse + specular) + Alpha * rgb;
+						Alpha = Alpha + (1 - Alpha)*alpha_trans;
+					}
+				}
+
+				if (raycastingOptions.adaptiveSampling)
+				{
+					t_0 += findExitPoint3D(position, dir, cellSize);;
+				}
+				else
+				{
+					t_0 += raycastingOptions.samplingRate_0;
+				}
+
+			}
+
+			if (nHit != 0)
+			{
+				// blend it with background
+				rgb = (1 - Alpha) * bgColor + Alpha * rgb;
+				depth = depthfinder(firstHitPosition, eyePos, d_boundingBox.m_viewDir, f, n);
+				rgba = { rgb.x, rgb.y, rgb.z, depth };
+				surf2Dwrite(rgba, raycastingSurface, 4 * sizeof(float) * pixel.x, pixel.y);
+
+			}
+
+		}
+	}
+}
 
 
 
@@ -2142,4 +3197,44 @@ __device__ float3 binarySearch
 	}
 
 	return position;
+}
+
+
+
+__device__ float distanceToNormalCurves(
+	int & isoMeasure,
+	float & isoValue,
+	float3 position,
+	cudaTextureObject_t field0,
+	int3 gridSize,
+	float3 gridDiameter,
+	float samplingStep
+) {
+
+	float3 tempPos = position;
+	float3 texPos = world2Tex(tempPos, gridDiameter, gridSize);
+	float3 dir = normalize(gradientTrilinear(isoMeasure, texPos, field0, gridSize, gridDiameter));
+	float value = 0;
+	float distance = 0;
+
+	int iteration = 0;
+
+	while ( iteration < 1000 ) {
+
+		tempPos = tempPos + dir * samplingStep;
+		texPos = world2Tex(tempPos, gridDiameter, gridSize);
+		value = callerValueAtTex(isoMeasure, field0, texPos, gridDiameter, gridSize);
+		distance = magnitude(position - tempPos);
+		iteration++;
+
+		if (value > isoValue)
+		{
+			break;
+		}
+		dir = normalize(gradientTrilinear(isoMeasure, texPos, field0, gridSize, gridDiameter));
+
+	}
+
+	return iteration * samplingStep;
+
 }

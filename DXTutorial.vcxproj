@@ -289,7 +289,7 @@
     <ClInclude Include="Options\CrossSectionOptions.h" />
     <ClInclude Include="Options\DispresionOptions.h" />
     <ClInclude Include="Options\FieldOptions.h" />
-    <ClInclude Include="Options\fluctuationheightfieldOptions.h" />
+    <ClInclude Include="Options\SpaceTimeOptions.h" />
     <ClInclude Include="Options\FSLEOptions.h" />
     <ClInclude Include="Options\RenderingOptions.h" />
     <ClInclude Include="Options\TimeSpace3DOptions.h" />

@@ -80,8 +80,8 @@ float4 main(PS_INPUT input) : SV_TARGET
 	rgb.xyz = Ka * float3(1, 1, 1) + Kd * lambertian * rgb.xyz +
 		Ks * specular * float3(1, 1, 1);
 
+	
 
-
-	rgb.w = 1;
+	//rgb.w = 1;
 	return rgb;
 }

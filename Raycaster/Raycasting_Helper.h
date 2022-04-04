@@ -33,6 +33,53 @@ __global__ void CudaIsoSurfacRenderer_Single
 	RenderingOptions renderingOptions
 	);
 
+__global__ void CudaIsoSurfacRenderer_Projection
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field1,
+	int rays,
+	RaycastingOptions raycastingOptions,
+	RenderingOptions renderingOptions
+);
+
+
+__global__ void CudaIsoSurfacRenderer_Projection_Forward
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field1,
+	int rays,
+	RaycastingOptions raycastingOptions,
+	RenderingOptions renderingOptions
+);
+
+__global__ void CudaIsoSurfacRenderer_Projection_Backward
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field1,
+	int rays,
+	RaycastingOptions raycastingOptions,
+	RenderingOptions renderingOptions
+);
+
+__global__ void CudaIsoSurfacRenderer_Projection_Average
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field1,
+	int rays,
+	RaycastingOptions raycastingOptions,
+	RenderingOptions renderingOptions
+);
+
+__global__ void CudaIsoSurfacRenderer_Projection_Length
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field1,
+	int rays,
+	RaycastingOptions raycastingOptions,
+	RenderingOptions renderingOptions
+);
+
+
 
 
 
@@ -69,6 +116,17 @@ __global__ void CudaIsoSurfacRenderer_Multiscale
 	RenderingOptions renderingOptions
 );
 
+__global__ void CudaIsoSurfacRenderer_Multiscale_Triple
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field0,
+	cudaTextureObject_t field1,
+	cudaTextureObject_t field2,
+	int rays,
+	RaycastingOptions raycastingOptions,
+	RenderingOptions renderingOptions
+);
+
 
 __global__ void CudaIsoSurfacRenderer_Multiscale_Defect
 (
@@ -91,15 +149,15 @@ __global__ void CudaIsoSurfacRenderer_Double_Advanced
 	RenderingOptions renderingOptions
 );
 
-__global__ void CudaIsoSurfacRenderer_Double_Transparency
-(
-	cudaSurfaceObject_t raycastingSurface,
-	cudaTextureObject_t field0,
-	cudaTextureObject_t field1,
-	int rays,
-	RaycastingOptions raycastingOptions,
-	RenderingOptions renderingOptions
-);
+//__global__ void CudaIsoSurfacRenderer_Double_Transparency
+//(
+//	cudaSurfaceObject_t raycastingSurface,
+//	cudaTextureObject_t field0,
+//	cudaTextureObject_t field1,
+//	int rays,
+//	RaycastingOptions raycastingOptions,
+//	RenderingOptions renderingOptions
+//);
 
 __global__ void CudaIsoSurfacRenderer_Double_Transparency_noglass
 (
@@ -110,6 +168,17 @@ __global__ void CudaIsoSurfacRenderer_Double_Transparency_noglass
 	RaycastingOptions raycastingOptions,
 	RenderingOptions renderingOptions
 );
+
+__global__ void CudaIsoSurfacRenderer_Double_Transparency_noglass_multiLevel
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field0,
+	cudaTextureObject_t field1,
+	int rays,
+	RaycastingOptions raycastingOptions,
+	RenderingOptions renderingOptions
+);
+
 
 
 
@@ -161,3 +230,12 @@ __device__ float3 binarySearch
 
 __device__ float3 gradientTrilinear(int isoMeasure, float3 texPos, cudaTextureObject_t field0, int3 & gridSize, float3 & gridDiameter);
 
+__device__ float distanceToNormalCurves(
+	int & isoMeasure,
+	float & isoValue,
+	float3 position,
+	cudaTextureObject_t field0,
+	int3 gridSize,
+	float3 gridDiameter,
+	float samplingStep
+);

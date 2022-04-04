@@ -25,7 +25,7 @@
 #include "..//Graphics/Vertex.h"
 #include "..//Graphics/VertexBuffer.h"
 #include "..//Options/DispresionOptions.h"
-#include "..//Options/fluctuationheightfieldOptions.h"
+#include "..//Options/SpaceTimeOptions.h"
 #include "../Options/CrossSectionOptions.h"
 #include "../Graphics/RenderImGuiOptions.h"
 #include "../Cuda/CudaArray.h"
@@ -234,7 +234,7 @@ public:
 	__host__ virtual bool release();
 	__host__ virtual void rendering();
 	__host__ virtual bool updateScene();
-	__host__ bool updateconstantBuffer()
+	__host__ virtual bool updateconstantBuffer()
 	{
 		PS_constantBuffer.data.transparency = raycastingOptions->transparency_0;
 		PS_constantBuffer.ApplyChanges();
@@ -376,6 +376,7 @@ public:
 				break;
 
 			case  RaycastingMode::Mode::MULTISCALE:
+			case RaycastingMode::Mode::MULTISCALE_TEMP:
 
 				if (!b_initialized)
 				{
@@ -424,6 +425,10 @@ public:
 
 
 			case  RaycastingMode::Mode::PLANAR:
+			case RaycastingMode::Mode::PROJECTION_BACKWARD:   
+			case RaycastingMode::Mode::PROJECTION_FORWARD:   
+			case RaycastingMode::Mode::PROJECTION_AVERAGE:   
+			case RaycastingMode::Mode::PROJECTION_LENGTH:   
 
 				if (!b_initialized)
 				{
@@ -467,16 +472,16 @@ __global__ void CudaIsoSurfacRendererAnalytic
 
 
 
-template <typename Observable>
-__global__ void CudaIsoSurfacRendererSpaceTime
-(
-	cudaSurfaceObject_t raycastingSurface,
-	cudaTextureObject_t field1,
-	int rays,
-	float isoValue,
-	float samplingRate,
-	float IsosurfaceTolerance
-);
+//template <typename Observable>
+//__global__ void CudaIsoSurfacRendererSpaceTime
+//(
+//	cudaSurfaceObject_t raycastingSurface,
+//	cudaTextureObject_t field1,
+//	int rays,
+//	float isoValue,
+//	float samplingRate,
+//	float IsosurfaceTolerance
+//);
 
 
 
@@ -532,6 +537,7 @@ __global__ void CudaTerrainRenderer_Marching_extra
 	float samplingRate,
 	float IsosurfaceTolerance,
 	DispersionOptions dispersionOptions,
+	RenderingOptions renderingOptions,
 	int traceTime
 );
 
@@ -584,22 +590,27 @@ __global__ void CudaTerrainRenderer_extra_fluctuation
 	int rays,
 	float samplingRate,
 	float IsosurfaceTolerance,
-	SpaceTimeOptions fluctuationOptions
+	SpaceTimeOptions fluctuationOptions,
+	RenderingOptions renderingOptions
 );
 
 
-template <typename Observable1, typename Observable2>
-__global__ void CudaTerrainRenderer_extra_fluctuation_raycasting
+
+
+__global__ void CudaTerrainRenderer_height_isoProjection
 (
 	cudaSurfaceObject_t raycastingSurface,
-	cudaTextureObject_t t_heightField,
-	cudaTextureObject_t t_isosurface,
+	cudaTextureObject_t heightField,
+	cudaTextureObject_t field,
 	int rays,
 	float samplingRate,
 	float IsosurfaceTolerance,
 	SpaceTimeOptions fluctuationOptions,
-	RaycastingOptions
+	RenderingOptions renderingOptions
 );
+
+
+
 
 
 __global__ void CudaFilterExtremumX

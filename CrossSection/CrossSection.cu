@@ -140,15 +140,15 @@ __host__ void CrossSection::rendering()
 
 	else if (this->crossSectionOptions->mode == CrossSectionOptionsMode::SpanMode::VOL_3D)
 	{
-		CudaIsoSurfacRendererSpaceTime<FetchTextureSurface::Channel_X> << < blocks, thread >> >
-			(
-				this->raycastingSurface.getSurfaceObject(),
-				this->t_volumeTexture.getTexture(),
-				int(this->rays),
-				this->raycastingOptions->isoValue_0,
-				this->raycastingOptions->samplingRate_0,
-				this->raycastingOptions->tolerance_0
-				);
+		//CudaIsoSurfacRendererSpaceTime<FetchTextureSurface::Channel_X> << < blocks, thread >> >
+		//	(
+		//		this->raycastingSurface.getSurfaceObject(),
+		//		this->t_volumeTexture.getTexture(),
+		//		int(this->rays),
+		//		this->raycastingOptions->isoValue_0,
+		//		this->raycastingOptions->samplingRate_0,
+		//		this->raycastingOptions->tolerance_0
+		//		);
 	}
 
 

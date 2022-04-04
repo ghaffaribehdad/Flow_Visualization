@@ -221,20 +221,59 @@ struct Velocity_Magnitude : public Measure<Velocity_Magnitude>
 };
 
 
-struct ShearStress : public Measure<ShearStress>
+struct KineticEnergy : public Measure<KineticEnergy>
 {
 	__device__ static float ValueAtXYZ_derived(cudaTextureObject_t tex, const float3 & position)
 	{
+		float4 data = tex3D<float4>(tex, position.x, position.y, position.z);
+
+	
+		return 0.5f * (powf(data.x, 2.0f) + powf(data.y, 2.0f) + powf(data.z, 2.0f));
+
+	}
+};
+
+
+struct ShearStress : public Measure<ShearStress>
+{
+	__device__ static float ValueAtXYZ_derived(cudaTextureObject_t tex, const float3 & position, const float3 & gridDiameter, const int3 & gridSize)
+	{
+		float3 h = gridDiameter / gridSize;
+
 		float4 dV_dY = tex3D<float4>(tex, position.x, position.y + 1, position.z);
 
 		dV_dY -= tex3D<float4>(tex, position.x, position.y - 1, position.z);
 
-		float2 ShearStress = make_float2(dV_dY.x / 2.0f, dV_dY.z / 2.0f);
+		//float2 ShearStress = make_float2(dV_dY.x / (2.0f*h.x), dV_dY.z / (2.0f*h.z));
+		
+		float3 shear = make_float3(dV_dY.x, dV_dY.y, dV_dY.z) / h;
 
-		return fabsf(sqrtf(dot(ShearStress, ShearStress)));
+		//return magnitude(shear);
+		
+		return shear.x;
+
+		//return fabsf(sqrtf(dot(ShearStress, ShearStress)));
 
 	}
+
+	__device__ static float3 GradientAtXYZ_Tex(cudaTextureObject_t tex, const float3 & position, const float3 & gridDiameter, const int3 & gridSize)
+	{
+		float3 h = gridDiameter / gridSize;
+		float3 gradient = { 0,0,0 };
+
+
+		gradient.x += ValueAtXYZ_derived(tex, make_float3(position.x + 1, position.y, position.z), gridDiameter, gridSize);
+		gradient.y += ValueAtXYZ_derived(tex, make_float3(position.x, position.y + 1, position.z), gridDiameter, gridSize);
+		gradient.z += ValueAtXYZ_derived(tex, make_float3(position.x, position.y, position.z + 1), gridDiameter, gridSize);
+
+		gradient.x -= ValueAtXYZ_derived(tex, make_float3(position.x - 1, position.y, position.z), gridDiameter, gridSize);
+		gradient.y -= ValueAtXYZ_derived(tex, make_float3(position.x, position.y - 1, position.z), gridDiameter, gridSize);
+		gradient.z -= ValueAtXYZ_derived(tex, make_float3(position.x, position.y, position.z - 1), gridDiameter, gridSize);
+
+		return  gradient / (2.0f * h);
+	}
 };
+
 
 struct Lambda2 : public Measure<Lambda2>
 {

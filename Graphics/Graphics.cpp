@@ -4,6 +4,7 @@
 #include <dxgi1_3.h>
 #include <wincodec.h>
 #include "GraphicsHelper.h"
+#include "../Timer/Timer.h"
 
 
 bool Graphics::InitializeCamera()
@@ -79,11 +80,11 @@ void Graphics::RenderFrame()
 	if (renderImGuiOptions.saveScreenshot)
 	{
 		// Create RT and RTV
-		createTexture(2560, 1377, device.Get(), texture_screenshot.GetAddressOf());
+		createTexture(windowWidth, windowHeight, device.Get(), texture_screenshot.GetAddressOf());
 		this->device->CreateRenderTargetView(texture_screenshot.Get(), NULL, rtv_Screenshot.GetAddressOf());
 		
 		// Create Depth Stencil and Depth Stencil View
-		createTexture(2560, 1377, device.Get(), depthStencilBuffer_Screenshot.GetAddressOf(), D3D11_BIND_DEPTH_STENCIL, { 4,0 }, DXGI_FORMAT_D24_UNORM_S8_UINT);
+		createTexture(windowWidth, windowHeight, device.Get(), depthStencilBuffer_Screenshot.GetAddressOf(), D3D11_BIND_DEPTH_STENCIL, { 4,0 }, DXGI_FORMAT_D24_UNORM_S8_UINT);
 		this->device->CreateDepthStencilView(this->depthStencilBuffer_Screenshot.Get(), NULL, this->depthStencilView_Screenshot.GetAddressOf());
 		this->deviceContext->ClearRenderTargetView(this->rtv_Screenshot.Get(), renderingOptions.bgColor);
 		this->deviceContext->ClearDepthStencilView(this->depthStencilView_Screenshot.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
@@ -125,10 +126,12 @@ void Graphics::RenderFrame()
 
 	if (!renderImGuiOptions.pauseRendering)
 	{
+	
 		streamlineRenderer.show(&renderImGuiOptions);		// Streamline rendering
 		streaklineRenderer.show(&renderImGuiOptions);		// Streakline rendering
 		pathlineRenderer.show(&renderImGuiOptions);			// Pathline rendering
-		fluctuationHeightfield.show(&renderImGuiOptions);	// Fluctuation Heightfield
+	
+
 	}
 
 
@@ -165,10 +168,10 @@ void Graphics::RenderFrame()
 
 	}
 
+	Timer timer;
+	fluctuationHeightfield.show(&renderImGuiOptions);	// Fluctuation Heightfield
 
-
-
-
+	raycasting.show(&renderImGuiOptions);					// Raycasting 
 
 
 	if (this->renderImGuiOptions.showStreaklines)
@@ -207,6 +210,7 @@ void Graphics::RenderFrame()
 	}
 
 
+
 	if (this->renderImGuiOptions.showStreamlines)
 	{
 		switch (renderingOptions.renderingMode)
@@ -224,7 +228,7 @@ void Graphics::RenderFrame()
 		}
 	}
 
-	raycasting.show(&renderImGuiOptions);					// Raycasting 
+
 
 	if (renderImGuiOptions.saveScreenshot)
 	{
@@ -326,7 +330,7 @@ void Graphics::RenderFrame()
 
 
 	// Present the backbuffer
-	this->swapchain->Present(2, NULL);
+	this->swapchain->Present(1, NULL);
 
 	
 
@@ -583,7 +587,8 @@ bool Graphics::InitializeResources()
 		this->adapter,
 		this->deviceContext.Get(),
 		&this->dispersionOptions,
-		&this->spaceTimeOptions
+		&this->spaceTimeOptions,
+		this->fieldOptions
 	);
 
 	dispersionTracer.setResources

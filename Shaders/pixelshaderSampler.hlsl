@@ -30,7 +30,7 @@ PS_OUT main(PS_INPUT input)
 
 
 	
-	output.color = float4(color.xyz, 1);
+	output.color = float4(color.xyz, 1 - transparency);
 	//output.color = float4(1,0,1, 1);
 	output.depth = input.inPos.z;
 

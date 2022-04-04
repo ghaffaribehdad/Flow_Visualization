@@ -262,6 +262,12 @@ public:
 		PS_constantBuffer.data.maxColor = DirectX::XMFLOAT4(renderingOptions->maxColor);
 		PS_constantBuffer.data.condition = solverOptions->usingTransparency;
 
+		PS_constantBuffer.data.Ka = renderingOptions->Ka;
+		PS_constantBuffer.data.Kd = renderingOptions->Kd;
+		PS_constantBuffer.data.Ks = renderingOptions->Ks;
+		PS_constantBuffer.data.shininessVal = renderingOptions->shininess;
+
+
 
 		// Update Constant Buffer
 		GS_constantBuffer.ApplyChanges();

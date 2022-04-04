@@ -241,7 +241,6 @@ __host__ void Heightfield::rendering()
 	dim3 thread = { maxBlockDim,maxBlockDim,1 };
 	blocks = static_cast<unsigned int>((this->rays % (thread.x * thread.y) == 0 ? rays / (thread.x * thread.y) : rays / (thread.x * thread.y) + 1));
  
-	
 
 	// Depending on the Rendering mode choose the terrain Rendering function
 	CudaTerrainRenderer_Marching_extra<< < blocks, thread >> >
@@ -252,6 +251,7 @@ __host__ void Heightfield::rendering()
 			this->raycastingOptions->samplingRate_0,
 			this->raycastingOptions->tolerance_0,
 			*dispersionOptions,
+			*renderingOptions,
 			solverOptions->lastIdx - solverOptions->firstIdx
 			);
 

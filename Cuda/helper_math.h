@@ -1483,3 +1483,31 @@ __device__  inline float3 colorCode(const float* minColor, const float*maxColor,
 
 
 
+__device__  inline float3 colorCodeRange(const float* minColor, const float*maxColor, const float & value, const float & min_val, const float& max_val)
+{
+	float3 rgb_min =
+	{
+		minColor[0],
+		minColor[1],
+		minColor[2],
+	};
+
+	float3 rgb_max =
+	{
+		maxColor[0],
+		maxColor[1],
+		maxColor[2],
+	};
+
+	float3 rgb = { 0,0,0 };
+	float val_saturated = 0.0f;
+		
+	val_saturated = saturate((value - min_val) / (max_val - min_val));
+	rgb = (1 - val_saturated) * rgb_min +val_saturated * rgb_max;
+
+
+	return rgb;
+}
+
+
+

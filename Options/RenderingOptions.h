@@ -78,6 +78,7 @@ struct RenderingOptions
 
 	bool isRaycasting = false;
 	float bgColor[4] = {1.0f,1.0f,1.0f,1.0f };
+	float lightColor[4] = {1.0f,1.0f,1.0f,1.0f };
 
 	bool showSeedBox = true;
 	bool showStreakBox = false;
@@ -93,6 +94,6 @@ struct RenderingOptions
 	float Kd1 = 0.76f;
 	float Ks = 0.34f;
 	float Ks1 = 0.34f;
-	float shininessVal = 20;
+	float shininess = 2;
 
 };

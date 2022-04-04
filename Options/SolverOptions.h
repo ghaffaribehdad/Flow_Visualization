@@ -78,7 +78,7 @@ public:
 	float volumeDiameter[3] = { 0.4f,2.0f,7.0f };
 
 	float seedBox[3] = { 0.4f,2.0f,7.0f };					//KIT3
-	float streakBox[3] = { 0.0f,2.0f,7.0f };					//KIT3
+	float streakBox[3] = { 0.4f,2.0f,7.0f };					//KIT3
 	float streakBoxPos[3] = { 0.0f, 0.0f, 0.0f };
 	float seedBoxPos[3] = { 0.0f, 0.0f, 0.0f }; 
 
@@ -140,6 +140,7 @@ public:
 
 	size_t maxSize = 64000000;
 
-	float timeDim = 5;
+
+	float timeDim = 5.0f;
 };
 

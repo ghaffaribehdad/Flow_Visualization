@@ -70,7 +70,7 @@ public:
 
 	// Instances of the option structures
 	SolverOptions					solverOptions;
-	FieldOptions					fieldOptions[5];
+	FieldOptions					fieldOptions[2];
 	RenderingOptions				renderingOptions;
 	RaycastingOptions				raycastingOptions;
 	DispersionOptions				dispersionOptions;

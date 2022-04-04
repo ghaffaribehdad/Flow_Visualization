@@ -10,7 +10,7 @@
 #include "../Options/SolverOptions.h"
 #include "../Options/RaycastingOptions.h"
 #include "../Options/DispresionOptions.h"
-#include "../Options/fluctuationheightfieldOptions.h"
+#include "../Options/SpaceTimeOptions.h"
 #include "../Options/RenderingOptions.h"
 #include "../Options/CrossSectionOptions.h"
 #include "../Options/TurbulentMixingOptions.h"
@@ -41,7 +41,7 @@ private:
 	RaycastingOptions*				raycastingOptions;
 	DispersionOptions*				dispersionOptions;
 	CrossSectionOptions*			crossSectionOptions;
-	SpaceTimeOptions*		fluctuationOptions;
+	SpaceTimeOptions*				spaceTimeOptions;
 	TurbulentMixingOptions*			turbulentMixingOptions;
 	TimeSpace3DOptions*				timeSpace3DOptions;
 
@@ -67,7 +67,7 @@ public:
 		SolverOptions * _solverOptions,
 		RaycastingOptions * _raycastingOptions,
 		DispersionOptions * _dispersionOptions,
-		SpaceTimeOptions * _fluctuationheightfieldOptions,
+		SpaceTimeOptions * _spaceTimeOptions,
 		CrossSectionOptions * _crossSectionOptions,
 		TurbulentMixingOptions* _turbulentMixingOptions,
 		TimeSpace3DOptions * _timeSpace3DOptions,
@@ -81,7 +81,7 @@ public:
 		this->solverOptions			= _solverOptions;
 		this->raycastingOptions		= _raycastingOptions;
 		this->dispersionOptions		= _dispersionOptions;
-		this->fluctuationOptions	= _fluctuationheightfieldOptions;
+		this->spaceTimeOptions	= _spaceTimeOptions;
 		this->crossSectionOptions	= _crossSectionOptions;
 		this->turbulentMixingOptions = _turbulentMixingOptions;
 		this->timeSpace3DOptions = _timeSpace3DOptions;

@@ -3,7 +3,7 @@
 #include <math.h>
 #include "../Particle/Particle.h"
 #include "../Options/SolverOptions.h"
-#include "../Options/fluctuationheightfieldOptions.h"
+#include "../Options/SpaceTimeOptions.h"
 #include "..//Graphics/Vertex.h"
 #include "..//Cuda/helper_math.h"
 #include "cuda_runtime.h"
