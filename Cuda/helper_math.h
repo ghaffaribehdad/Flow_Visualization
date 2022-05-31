@@ -1054,6 +1054,7 @@ inline __device__  float3 world2Tex(float3 position, float3 dimension, const int
 	{
 		return (position / dimension);
 	}
+
 	float3 pos = (position / dimension) * make_int3(size.x - 1, size.y - 1, size.z - 1) + make_float3(0.5f, 0.5f, 0.5f);
 
 
@@ -1088,6 +1089,7 @@ inline __device__  float3 world2Tex(float3 position, float3 dimension, const int
 		}
 
 	}
+
 	return pos;
 }
 
@@ -1170,6 +1172,37 @@ inline __device__ float4 cubicTex3DSimple(cudaTextureObject_t tex, float3 coord)
 	}
 	return result;
 }
+
+inline __device__ float4 irregularTex3DSimple(cudaTextureObject_t tex, float3 coord)
+{
+	// transform the coordinate from [0,extent] to [-0.5, extent-0.5]
+	const float3 coord_grid = coord - 0.5f;
+	float3 index = floor(coord_grid);
+	const float3 fraction = coord_grid - index;
+	index = index + 0.5f;  //move from [-0.5, extent-0.5] to [0, extent]
+
+	float4 result = { 0.0f,0.0f,0.0f,0.0f };
+	for (float z = -1; z < 2.5f; z++)  //range [-1, 2]
+	{
+		float bsplineZ = bspline(z - fraction.z);
+		float w = index.z + z;
+		for (float y = -1; y < 2.5f; y++)
+		{
+			float bsplineYZ = bspline(y - fraction.y) * bsplineZ;
+			float v = index.y + y;
+			for (float x = -1; x < 2.5f; x++)
+			{
+				float bsplineXYZ = bspline(x - fraction.x) * bsplineYZ;
+				float u = index.x + x;
+
+				result = result + bsplineXYZ * tex3D<float4>(tex, u, v, w);
+
+			}
+		}
+	}
+	return result;
+}
+
 
 
 

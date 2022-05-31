@@ -13,5 +13,4 @@ struct FieldOptions
 	int lastIdx = 0;
 	float dt = 0;
 	size_t fileSizeMaxByte = 0;
-
 };

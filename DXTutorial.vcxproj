@@ -304,6 +304,7 @@
     <ClInclude Include="TopologicalAnalysis\TopologyFieldGen.h" />
     <ClInclude Include="TurbulentMixing\TurbulentMixing.h" />
     <ClInclude Include="TurbulentMixing\TurbulentMixingHelper.h" />
+    <ClInclude Include="VisitationMap\VisitationMap.h" />
     <ClInclude Include="VolumeIO\BinaryWriter.h" />
     <ClInclude Include="VolumeIO\Compression.h" />
     <ClInclude Include="VolumeIO\Volume_IO.h" />

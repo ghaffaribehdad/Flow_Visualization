@@ -147,6 +147,9 @@
     <Filter Include="Source Files\Topology">
       <UniqueIdentifier>{ccff015f-93e0-443a-bb14-bcd84937becd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\VisitationMap">
+      <UniqueIdentifier>{1203c7b3-bf3e-4019-9506-47572cd6c909}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -621,6 +624,9 @@
     </ClInclude>
     <ClInclude Include="Options\SpaceTimeOptions.h">
       <Filter>Header Files\Options</Filter>
+    </ClInclude>
+    <ClInclude Include="VisitationMap\VisitationMap.h">
+      <Filter>Header Files\VisitationMap</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
