@@ -1,6 +1,7 @@
 #include "CudaHelperFunctions.h"
 #include <random>
 #include "helper_math.h"
+#include "../Options/SolverOptions.h"
 
 __device__ float3 RK4
 (
@@ -593,3 +594,5 @@ __device__ float3 binarySearch_X
 	return position;
 
 };
+
+

@@ -116,6 +116,11 @@ public:
 		return this->cuArray;
 	}
 
+	cudaExtent getExtent()
+	{
+		return extent;
+	}
+
 	cudaArray_t & getArrayRef()
 	{
 		return cuArray;

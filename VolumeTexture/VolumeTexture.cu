@@ -179,7 +179,7 @@ bool VolumeTexture3D::initialize_array
 	texDesc.addressMode[1] = addressMode_y;
 	texDesc.addressMode[2] = addressMode_z;
 	texDesc.readMode = cudaReadModeElementType;
-
+	 
 
 
 	// Create the texture and bind it to the array
@@ -203,7 +203,7 @@ void VolumeTexture3D::release()
 		}
 	}
 	
-
+	this->internalArray = false;
 	this->initialized = false;
 
 

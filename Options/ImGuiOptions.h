@@ -15,7 +15,7 @@ enum SeedingPattern
 static const char* const HeightfieldRenderingMode[] =
 {
 	"Single",
-	"Double"
+	"Double",
 };
 
 
@@ -47,6 +47,7 @@ namespace Dataset
 		KIT3_TIME_SPACE_1000_TZY,
 		KIT3_TIME_SPACE_1000_TYX,
 		RBC,
+		RBC_VIS_OF,
 		RBC_AVG,
 		RBC_AVG_20,
 		RBC_AVG_50,
@@ -67,7 +68,15 @@ namespace Dataset
 		TUM_MEAN_REAMOVED,
 		TUM_L1,
 		TUM_L2,
-		COUNT
+		SMOKE_00050_ENSEMBLE,
+		GRAND_ENSEMBLE_TIME,
+		GRAND_ENSEMBLE_OF_VIS_262,
+		GRAND_ENSEMBLE_OF_VIS_263,
+		GRAND_ENSEMBLE_OF_VIS_264,
+		GRAND_ENSEMBLE_OF_AVG_262,
+		GRAND_ENSEMBLE_OF_AVG_263,
+		GRAND_ENSEMBLE_OF_AVG_264,
+		COUNT,
 	};
 
 	static const char* datasetList[]
@@ -93,6 +102,7 @@ namespace Dataset
 		"KIT3 Time-Space TZY",
 		"KIT3 Time-Space TYX",
 		"RBC",
+		"RBC Vis OF",
 		"RBC_AVG",
 		"RBC_AVG_20",
 		"RBC_AVG_50",
@@ -112,7 +122,15 @@ namespace Dataset
 		"TUM",
 		"TUM Fluc",
 		"TUM L1",
-		"TUM L2"
+		"TUM L2",
+		"Smoke Ensemble 50",
+		"Grand Ensemble Time",
+		"Grand Ensemble OF vis 262",
+		"Grand Ensemble OF vis 263",
+		"Grand Ensemble OF vis 264",
+		"Grand Ensemble OF avg 262",
+		"Grand Ensemble OF avg 263",
+		"Grand Ensemble OF avg 264",
 	};
 
 }
@@ -152,7 +170,7 @@ namespace ColorMode
 		W_VELOCITY,
 		CURVATURE,
 		DISTANCE_STREAK,
-		COUNT
+		COUNT,
 	};
 }
 
@@ -169,7 +187,20 @@ namespace LineRenderingMode
 		STREAMLINES,
 		PATHLINES,
 		STREAKLINES,
-		COUNT
+		COUNT,
+	};
+}
+
+namespace VisitationMode
+{
+	static const char* const VisitationModeList[] =
+	{
+		"Mean-diff"
+	};
+	enum VisitationMode
+	{
+		MEAN_DIFF = 0,
+		COUNT,
 	};
 }
 
@@ -184,7 +215,7 @@ static const char* const ColorCode_DispersionList[] =
 	"Dev_XZ",
 	"Advection Dist.",
 	"Advection Dist. Proj.",
-	"Quadrant Dev"
+	"Quadrant Dev",
 };
 
 
@@ -192,7 +223,7 @@ static const char* const CrossSectionMode[] =
 {
 	"XY",
 	"XZ",
-	"YZ"
+	"YZ",
 };
 
 
@@ -200,7 +231,7 @@ static const char* const spanMode[] =
 {
 	"Wall-Normal",
 	"Time",
-	"3D Vol"
+	"3D Vol",
 };
 
 
@@ -210,14 +241,14 @@ static const char* const ColorCode_fluctuationField[] =
 	"None",
 	"Vx_fluctuation",
 	"Vy_fluctuation",
-	"Vz_fluctuation"
+	"Vz_fluctuation",
 };
 
 static const char* const SeedPatternList[] = 
 {
 	"Random",
 	"Grid Points",
-	"Tilted Plane"
+	"Tilted Plane",
 };
 
 
@@ -228,13 +259,13 @@ static const char* const FieldMode[] =
 {
 	"ff (Vx,Vy)",
 	"ff (Vz,Vy)",
-	"fi (Vx,Vy)"
+	"fi (Vx,Vy)",
 };
 
 static const char* const heightMode[] =
 {
 	"Height",
-	"FTLE"
+	"FTLE",
 };
 
 
@@ -247,7 +278,7 @@ namespace Projection
 		"XZ-Plane",
 		"XY-Plane",
 		"Streak Proj.",
-		"Streak Proj. Fix"
+		"Streak Proj. Fix",
 	};
 
 	enum Projection
@@ -258,6 +289,6 @@ namespace Projection
 		XY_PROJECTION,
 		STREAK_PROJECTION,
 		STREAK_PROJECTION_FIX,
-		COUNT
+		COUNT,
 	};
 }

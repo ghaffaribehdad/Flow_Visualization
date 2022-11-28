@@ -115,7 +115,7 @@ void Graphics::RenderFrame()
 */
 
 
-	volumeBox.show(&renderImGuiOptions, solverOptions.gridDiameter);
+	volumeBox.show(&renderImGuiOptions, fieldOptions[0].gridDiameter);
 	seedBox.show(&renderImGuiOptions, solverOptions.seedBox, solverOptions.seedBoxPos);
 	clipBox.show(&renderImGuiOptions, raycastingOptions.clipBox, raycastingOptions.clipBoxCenter);
 	streakBox.show(&renderImGuiOptions, solverOptions.streakBox, solverOptions.streakBoxPos);
@@ -170,6 +170,8 @@ void Graphics::RenderFrame()
 
 	Timer timer;
 	fluctuationHeightfield.show(&renderImGuiOptions);	// Fluctuation Heightfield
+
+	visitationMap.show(&renderImGuiOptions);
 
 	raycasting.show(&renderImGuiOptions);					// Raycasting 
 
@@ -265,7 +267,6 @@ void Graphics::RenderFrame()
 		{
 			streamlineRenderer.release();
 			this->renderImGuiOptions.releaseStreamlines = false;
-			this->solverOptions.fileLoaded = false;
 		}
 
 		if (this->renderImGuiOptions.releasePathlines)
@@ -315,7 +316,6 @@ void Graphics::RenderFrame()
 			solverOptions.currentIdx++;
 			renderImGuiOptions.updateRaycasting = true;
 			renderImGuiOptions.updateStreamlines = true;
-			raycastingOptions.fileChanged = true;
 			solverOptions.fileChanged = true;
 			solverOptions.loadNewfile = true;
 		}
@@ -459,8 +459,9 @@ bool Graphics::InitializeResources()
 #endif
 	streamlineRenderer.setResources
 	(
-		this->renderingOptions,
-		this->solverOptions,
+		&this->renderingOptions,
+		&this->solverOptions,
+		&this->fieldOptions[0],
 		this->deviceContext.Get(),
 		this->device.Get(),
 		this->adapter,
@@ -470,8 +471,9 @@ bool Graphics::InitializeResources()
 
 	streaklineRenderer.setResources
 	(
-		this->renderingOptions,
-		this->solverOptions,
+		&this->renderingOptions,
+		&this->solverOptions,
+		&this->fieldOptions[0],
 		this->deviceContext.Get(),
 		this->device.Get(),
 		this->adapter
@@ -480,8 +482,9 @@ bool Graphics::InitializeResources()
 
 	pathlineRenderer.setResources
 	(
-		this->renderingOptions,
-		this->solverOptions,
+		&this->renderingOptions,
+		&this->solverOptions,
+		&this->fieldOptions[0],
 		this->deviceContext.Get(),
 		this->device.Get(),
 		this->adapter
@@ -489,8 +492,9 @@ bool Graphics::InitializeResources()
 
 	volumeBox.setResources
 	(
-		this->renderingOptions,
-		this->solverOptions,
+		&this->renderingOptions,
+		&this->solverOptions,
+		&this->fieldOptions[0],
 		this->deviceContext.Get(),
 		this->device.Get(),
 		this->adapter
@@ -498,8 +502,9 @@ bool Graphics::InitializeResources()
 
 	seedBox.setResources
 	(
-		this->renderingOptions,
-		this->solverOptions,
+		&this->renderingOptions,
+		&this->solverOptions,
+		&this->fieldOptions[0],
 		this->deviceContext.Get(),
 		this->device.Get(),
 		this->adapter
@@ -507,8 +512,9 @@ bool Graphics::InitializeResources()
 
 	clipBox.setResources
 	(
-		this->renderingOptions,
-		this->solverOptions,
+		&this->renderingOptions,
+		&this->solverOptions,
+		&this->fieldOptions[0],
 		this->deviceContext.Get(),
 		this->device.Get(),
 		this->adapter
@@ -516,8 +522,9 @@ bool Graphics::InitializeResources()
 
 	streakBox.setResources
 	(
-		this->renderingOptions,
-		this->solverOptions,
+		&this->renderingOptions,
+		&this->solverOptions,
+		&this->fieldOptions[0],
 		this->deviceContext.Get(),
 		this->device.Get(),
 		this->adapter
@@ -525,8 +532,9 @@ bool Graphics::InitializeResources()
 
 	streakPlane.setResources
 	(
-		this->renderingOptions,
-		this->solverOptions,
+		&this->renderingOptions,
+		&this->solverOptions,
+		&this->fieldOptions[0],
 		this->deviceContext.Get(),
 		this->device.Get(),
 		this->adapter
@@ -589,6 +597,20 @@ bool Graphics::InitializeResources()
 		&this->dispersionOptions,
 		&this->spaceTimeOptions,
 		this->fieldOptions
+	);
+
+	visitationMap.setResources
+	(
+		&this->camera,
+		&this->windowWidth,
+		&this->windowHeight,
+		&this->solverOptions,
+		&this->raycastingOptions,
+		&this->renderingOptions,
+		this->device.Get(),
+		this->adapter,
+		this->deviceContext.Get(),
+		&this->visitationOptions
 	);
 
 	dispersionTracer.setResources
@@ -664,6 +686,9 @@ bool Graphics::InitializeResources()
 		return false;
 
 	if (!fluctuationHeightfield.initializeBuffers())
+		return false;
+
+	if (!visitationMap.initializeBuffers())
 		return false;
 
 	return true;
@@ -822,7 +847,8 @@ bool Graphics::InitializeImGui(HWND hwnd)
 			&crossSectionOptions,
 			&turbulentMixingOptions,
 			&timeSpace3DOptions,
-			fieldOptions
+			&fieldOptions[0],
+			&visitationOptions
 		);
 
 

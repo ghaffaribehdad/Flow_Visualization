@@ -30,7 +30,7 @@ public:
 		if (renderImGuiOptions->showPathlines)
 		{
 
-			if (!pathlinesolver.checkFile(solverOptions))
+			if (!pathlinesolver.checkFile())
 			{
 				ErrorLogger::Log("Cannot locate the file!");
 				renderImGuiOptions->showPathlines = false;
@@ -47,7 +47,6 @@ public:
 						this->updateSceneRealtime();
 						renderImGuiOptions->updateRaycasting = true;
 						renderImGuiOptions->updatefluctuation = true;
-						renderImGuiOptions->fileChanged = true;
 					}
 
 					if (renderImGuiOptions->updatePathlines)
@@ -127,7 +126,7 @@ public:
 		}
 		else
 		{
-			this->pathlinesolver.Reinitialize();
+			this->pathlinesolver.ReinitializeCUDA();
 		}
 		this->pathlinesolver.solveRealtime(pathCounter);
 		this->pathlinesolver.FinalizeCUDA();
@@ -148,7 +147,7 @@ public:
 	void updateBuffers() override
 	{
 
-		this->pathlinesolver.Initialize(solverOptions);
+		this->pathlinesolver.Initialize(solverOptions,fieldOptions);
 		this->pathlinesolver.solve();
 		this->pathlinesolver.FinalizeCUDA();
 
@@ -236,14 +235,14 @@ public:
 		GS_constantBuffer.data.tubeRadius = renderingOptions->tubeRadius;
 		GS_constantBuffer.data.viewDir = camera.GetViewVector();
 		GS_constantBuffer.data.projection = solverOptions->projection;
-		GS_constantBuffer.data.gridDiameter.x = solverOptions->gridDiameter[0];
-		GS_constantBuffer.data.gridDiameter.y = solverOptions->gridDiameter[1];
-		GS_constantBuffer.data.gridDiameter.z = solverOptions->gridDiameter[2];
+		GS_constantBuffer.data.gridDiameter.x = fieldOptions->gridDiameter[0];
+		GS_constantBuffer.data.gridDiameter.y = fieldOptions->gridDiameter[1];
+		GS_constantBuffer.data.gridDiameter.z = fieldOptions->gridDiameter[2];
 		GS_constantBuffer.data.periodicity = solverOptions->periodic;
 		GS_constantBuffer.data.particlePlanePos = streakProjectionPlane();
 		GS_constantBuffer.data.transparencyMode = solverOptions->transparencyMode;
-		GS_constantBuffer.data.timDim = solverOptions->lastIdx - solverOptions->firstIdx + 1 ;
-		GS_constantBuffer.data.currentTime = solverOptions->currentIdx - solverOptions->firstIdx;
+		GS_constantBuffer.data.timDim = fieldOptions->lastIdx - fieldOptions->firstIdx + 1 ;
+		GS_constantBuffer.data.currentTime = solverOptions->currentIdx - fieldOptions->firstIdx;
 		GS_constantBuffer.data.usingThreshold = solverOptions->usingThreshold;
 		GS_constantBuffer.data.threshold = solverOptions->transparencyThreshold;
 

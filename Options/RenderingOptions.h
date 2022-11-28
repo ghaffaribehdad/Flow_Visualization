@@ -89,11 +89,11 @@ struct RenderingOptions
 	float boxRadius = 0.005f;
 	int lineLength = 1;
 
-	float Ka = 0.2f;
-	float Kd = 0.76f;
-	float Kd1 = 0.76f;
-	float Ks = 0.34f;
-	float Ks1 = 0.34f;
+	float Ka	= 0.0f;
+	float Kd	= 1.0f;
+	float Kd1	= 1.0f;
+	float Ks	= 0.0f;
+	float Ks1	= 0.0f;
 	float shininess = 2;
 
 };

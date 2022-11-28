@@ -61,12 +61,26 @@ namespace IsoMeasure
 
 }
 
+namespace Visitation
+{
+	enum RaycastingMode
+	{
+		DVR_VISITATION = 0,
+		COUNT
+	};
+
+	static const char* const RaycastingModeList[] =
+	{
+		"DVR visitation"
+	};
+}
 
 namespace RaycastingMode
 {
 	enum Mode
 	{
 		SINGLE = 0,
+		SINGLE_COLORCODED,
 		DOUBLE,
 		DOUBLE_SEPARATE,
 		DOUBLE_ADVANCED,
@@ -83,9 +97,11 @@ namespace RaycastingMode
 
 	};
 
+
 	static const char* const modeList[] =
 	{
 		"Single",
+		"Single Color-coded",
 		"Double",
 		"Double Separate",
 		"Double Advanced",
@@ -99,9 +115,8 @@ namespace RaycastingMode
 		"Projection Average",
 		"Projection Length"
 	};
-
-
 }
+
 
 
 
@@ -119,14 +134,19 @@ public:
 		
 	float planeThinkness = 0.008f;
 
-	bool fileLoaded = false;
-	bool fileChanged = false;
 	bool Raycasting = false;
 	bool initialized = false;
 	bool planarRaycasting = false;
 	bool multiScaleRaycasting = false;
 	bool doubleIso = false;
 	bool binarySearch = false;
+	bool ColorCodingRange = false;
+	bool secondaryRaycasting = false;
+	bool adaptiveSampling = false;
+	bool insideOnly = false;
+	bool resize = false;
+	bool normalCurves = false;
+	bool secondaryOnly = false;
 
 	int maxIteration = 10;
 	int projectionPlane = IsoMeasure::ProjectionPlane::YZPLANE;
@@ -141,7 +161,6 @@ public:
 
 	float reflectionCoefficient = 0.8f;
 
-	//int isoMeasure_2 = IsoMeasure::VelocityMagnitude;
 	float brightness = 0.8f;
 
 	float clipBox[3] = { 1.0f,1.0f,1.0f };
@@ -162,13 +181,9 @@ public:
 	float transparency_0 = 0.0f;
 	float transparency_1 = 0.3f;
 
-	bool adaptiveSampling = false;
-	bool insideOnly = false;
-	bool resize = false;
-	bool normalCurves = false;
-	bool secondaryOnly = false;
+
 
 	int timestep = 1;
-	int raycastingMode = RaycastingMode::Mode::DOUBLE_TRANSPARENCY;
+	int raycastingMode = RaycastingMode::Mode::SINGLE;
 
 };

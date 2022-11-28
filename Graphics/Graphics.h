@@ -32,6 +32,7 @@
 #include "../Heightfield/HightfieldFTLE.h"
 #include "../Options/FieldOptions.h"
 #include "../VisitationMap/VisitationMap.h"
+#include "../Options/VisitationOptions.h"
 
 // OIT implemented using https://github.com/QianMo/GPU-Pro-Books-Source-Code/tree/9899ba26f6dc60c843cea93a0de64ff8d97a8b36/GPU-Pro-2/07%20GPGPU/02%20-%20Order-Independent%20Transparency%20Using%20Per-Pixel%20Linked%20Lists%20in%20DirectX%2011/OIT11LinkedLists
 
@@ -71,7 +72,7 @@ public:
 
 	// Instances of the option structures
 	SolverOptions					solverOptions;
-	FieldOptions					fieldOptions[2];
+	FieldOptions					fieldOptions[4];
 	RenderingOptions				renderingOptions;
 	RaycastingOptions				raycastingOptions;
 	DispersionOptions				dispersionOptions;
@@ -80,6 +81,7 @@ public:
 	SpaceTimeOptions				spaceTimeOptions;
 	TurbulentMixingOptions			turbulentMixingOptions;
 	FSLEOptions						fsleOptions;
+	VisitationOptions				visitationOptions;
 
 	// Getter Functions
 	IDXGIAdapter* GetAdapter();
@@ -209,7 +211,7 @@ private:
 	TurbulentMixing			turbulentMixing;
 	HeightfieldFTLE			heightfieldFTLE;
 	TimeSpaceField			timeSpacefield;
-
+	VisitationMap			visitationMap;
 
 
 

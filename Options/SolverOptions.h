@@ -45,6 +45,7 @@ public:
 
 	std::string  fileName ="FieldP";
 	std::string  filePath = "G:\\KIT3MipMapL1\\";
+	std::string  subpath = "";
 	bool usingOIT = true;
 
 	float seedWallNormalDist = 0.1f;
@@ -98,6 +99,10 @@ public:
 
 	int firstIdx = 1;
 	int lastIdx = 600;
+
+	int firstMemberIdx = 0;
+	int lastMemberIdx = 0;
+	int memberIdx = 1;
 	int currentIdx =1;
 	int timeSteps = lastIdx - firstIdx + 1;
 	int currentSegment = 0;
@@ -135,6 +140,8 @@ public:
 	bool periodic = false;
 
 	bool compressed = false;
+	bool isEnsemble = false;
+	bool fixedLines = false;
 
 	bool drawComplete = false;
 

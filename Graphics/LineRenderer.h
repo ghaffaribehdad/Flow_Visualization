@@ -9,6 +9,7 @@
 #include <d3d11.h>
 #include "../Options/RenderingOptions.h"
 #include "../Options/SolverOptions.h"
+#include "../Options/FieldOptions.h"
 #include <Windows.h>
 #include "Camera.h"
 #include "../Graphics/RenderImGuiOptions.h"
@@ -65,6 +66,7 @@ protected:
 	// Reference of resources
 	RenderingOptions	* renderingOptions;
 	SolverOptions		* solverOptions;
+	FieldOptions		* fieldOptions;
 
 
 
@@ -102,7 +104,7 @@ public:
 	float streakProjectionPlane_Stream();
 															// need to be called at the initilization of this object 
 	//=> To Do: Move it to the constructor
-	virtual void setResources(RenderingOptions& _renderingOptions, SolverOptions& _solverOptions, ID3D11DeviceContext* _deviceContext, ID3D11Device* _device, IDXGIAdapter* pAdapter, const int & width = 0, const int & height = 0);
+	virtual void setResources(RenderingOptions* _renderingOptions, SolverOptions* _solverOptions, FieldOptions* _fieldOptions, ID3D11DeviceContext* _deviceContext, ID3D11Device* _device, IDXGIAdapter* pAdapter, const int & width = 0, const int & height = 0);
 	
 	virtual bool initializeShaders();				// Create GS,VS and PS 
 

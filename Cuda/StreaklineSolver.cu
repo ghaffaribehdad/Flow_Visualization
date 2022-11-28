@@ -20,8 +20,8 @@ __host__ bool StreaklineSolver::initializeRealtime(SolverOptions * p_solverOptio
 
 	this->solverOptions = p_solverOptions;
 	this->InitializeCUDA();
-	this->volume_IO.Initialize(p_solverOptions);
-	this->initializeParticles(this->solverOptions->seedingPattern);
+	this->volume_IO.Initialize(fieldOptions);
+	this->initializeParticles();
 
 
 
@@ -44,10 +44,10 @@ __host__ bool StreaklineSolver::solve()
 	int timeSteps = solverOptions->lastIdx - solverOptions->currentIdx;
 
 	// Initialize Volume IO (Save file path and file names)
-	this->volume_IO.Initialize(this->solverOptions);
+	this->volume_IO.Initialize(this->fieldOptions);
 
 	// Initialize Particles and upload it to GPU
-	this->initializeParticles(solverOptions->seedingPattern);
+	this->initializeParticles();
 
 	// Number of threads based on the number of lines
 	dim3 thread = { maxBlockDim,maxBlockDim,1 };
@@ -156,26 +156,26 @@ __host__ bool StreaklineSolver::solveRealtime(int & streakCounter)
 
 	// First Step
 
-	switch (solverOptions->compressed)
+	switch (fieldOptions->isCompressed)
 	{
 
 	case true: // Compressed Data
 	{
 		if (streakCounter == 0)
 		{
-			loadTextureCompressed(solverOptions, volumeTexture_0, solverOptions->firstIdx);
-			loadTextureCompressed(solverOptions, volumeTexture_1, solverOptions->firstIdx + 1);
+			loadTextureCompressed( volumeTexture_0, solverOptions->firstIdx);
+			loadTextureCompressed( volumeTexture_1, solverOptions->firstIdx + 1);
 		}
 		else if (streakCounter % 2 == 0) // => EVEN
 		{
 			this->volumeTexture_1.release();
-			loadTextureCompressed(solverOptions, volumeTexture_1, solverOptions->firstIdx + streakCounter + 1);
+			loadTextureCompressed( volumeTexture_1, solverOptions->firstIdx + streakCounter + 1);
 			odd = false;
 		}
 		else if (streakCounter % 2 != 0) // => ODD
 		{
 			this->volumeTexture_0.release();
-			loadTextureCompressed(solverOptions, volumeTexture_0, solverOptions->firstIdx + streakCounter + 1);
+			loadTextureCompressed( volumeTexture_0, solverOptions->firstIdx + streakCounter + 1);
 			odd = true;
 
 		}
@@ -187,20 +187,20 @@ __host__ bool StreaklineSolver::solveRealtime(int & streakCounter)
 	{
 		if (streakCounter == 0)
 		{
-			loadTexture(solverOptions, volumeTexture_0, solverOptions->firstIdx);
-			loadTexture(solverOptions, volumeTexture_1, solverOptions->firstIdx + 1);
+			loadTexture( volumeTexture_0, solverOptions->firstIdx);
+			loadTexture( volumeTexture_1, solverOptions->firstIdx + 1);
 		}
 		else if (streakCounter % 2 == 0) // => EVEN
 		{
 			this->volumeTexture_1.release();
-			loadTexture(solverOptions, volumeTexture_1, solverOptions->firstIdx + streakCounter + 1);
+			loadTexture( volumeTexture_1, solverOptions->firstIdx + streakCounter + 1);
 			odd = false;
 
 		}
 		else if (streakCounter % 2 != 0) // => ODD
 		{
 			this->volumeTexture_0.release();
-			loadTexture(solverOptions, volumeTexture_0, solverOptions->firstIdx + streakCounter + 1);
+			loadTexture( volumeTexture_0, solverOptions->firstIdx + streakCounter + 1);
 			odd = true;
 		}
 		break;

@@ -150,6 +150,9 @@
     <Filter Include="Header Files\VisitationMap">
       <UniqueIdentifier>{1203c7b3-bf3e-4019-9506-47572cd6c909}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\VisitationMap">
+      <UniqueIdentifier>{b53c37a8-65ee-4ae9-9c95-46a2669492dd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -628,6 +631,9 @@
     <ClInclude Include="VisitationMap\VisitationMap.h">
       <Filter>Header Files\VisitationMap</Filter>
     </ClInclude>
+    <ClInclude Include="Options\VisitationOptions.h">
+      <Filter>Header Files\Options</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\geometryshaderLineTube.hlsl">
@@ -783,6 +789,9 @@
     </CudaCompile>
     <CudaCompile Include="Raycaster\CallerFunctions.cu">
       <Filter>Source Files\Raycasting</Filter>
+    </CudaCompile>
+    <CudaCompile Include="VisitationMap\VisitationMap.cu">
+      <Filter>Source Files\VisitationMap</Filter>
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>

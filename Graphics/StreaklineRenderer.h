@@ -35,7 +35,7 @@ public:
 		if (renderImGuiOptions->showStreaklines)
 		{
 
-			if (!streaklineSolver.checkFile(solverOptions))
+			if (!streaklineSolver.checkFile())
 			{
 				ErrorLogger::Log("Cannot locate the file!");
 				renderImGuiOptions->showStreaklines = false;
@@ -53,7 +53,6 @@ public:
 					{
 						this->updateSceneRealtime();
 						renderImGuiOptions->updateRaycasting = true;
-						renderImGuiOptions->fileChanged = true;
 					}
 					if (renderImGuiOptions->updateStreaklines)
 					{
@@ -110,7 +109,7 @@ public:
 	{
 		solverOptions->p_vertexBuffer = this->vertexBuffer.Get();
 
-		this->streaklineSolver.Initialize(solverOptions);
+		this->streaklineSolver.Initialize(solverOptions, fieldOptions);
 		this->streaklineSolver.solve();
 		this->streaklineSolver.FinalizeCUDA();
 
@@ -125,7 +124,7 @@ public:
 		}
 		else
 		{
-			this->streaklineSolver.Reinitialize();
+			this->streaklineSolver.ReinitializeCUDA();
 		}
 		this->streaklineSolver.solveRealtime(streakCounter);
 		this->streaklineSolver.FinalizeCUDA();
@@ -239,9 +238,9 @@ public:
 		GS_constantBuffer.data.tubeRadius = renderingOptions->tubeRadius;
 		GS_constantBuffer.data.viewDir = camera.GetViewVector();
 		GS_constantBuffer.data.projection = solverOptions->projection;
-		GS_constantBuffer.data.gridDiameter.x = solverOptions->gridDiameter[0];
-		GS_constantBuffer.data.gridDiameter.y = solverOptions->gridDiameter[1];
-		GS_constantBuffer.data.gridDiameter.z = solverOptions->gridDiameter[2];
+		GS_constantBuffer.data.gridDiameter.x = fieldOptions->gridDiameter[0];
+		GS_constantBuffer.data.gridDiameter.y = fieldOptions->gridDiameter[1];
+		GS_constantBuffer.data.gridDiameter.z = fieldOptions->gridDiameter[2];
 		GS_constantBuffer.data.periodicity = solverOptions->periodic;
 		if (solverOptions->projection == Projection::STREAK_PROJECTION)
 		{

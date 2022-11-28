@@ -39,7 +39,7 @@ bool FluctuationHeightfield::initialize
 	this->rays = (*this->width) * (*this->height);				// Set number of rays based on the number of pixels
 
 	// initialize volume Input Output
-	this->volume_IO_Primary.Initialize(this->solverOptions);
+	this->volume_IO_Primary.Initialize(this->fieldOptions);
 
 
 	// Initialize Height Field as an empty CUDA array 3D
@@ -79,7 +79,7 @@ void  FluctuationHeightfield::generateTimeSpaceField3D(SpaceTimeOptions * timeSp
 	{
 		
 		// First Read the Compressed file and move it to GPU
-		if (solverOptions->compressed)
+		if (fieldOptions->isCompressed)
 		{
 			TIMELAPSE(this->volume_IO_Primary.readVolume_Compressed(t + solverOptions->firstIdx, Array2Int3(solverOptions->gridSize)), "read volume compress");
 			std::printf("\n\n");

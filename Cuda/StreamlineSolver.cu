@@ -11,20 +11,19 @@
 
 __host__ bool StreamlineSolver::loadVolumeTexture()
 {
-	switch (solverOptions->compressed)
+	switch (fieldOptions->isCompressed)
 	{
 	case true: // Compressed
 	{
-		// Initialize Volume IO (Save file path and file names)
-		//this->volume_IO.Initialize(this->solverOptions);
-		loadTextureCompressed(solverOptions, volumeTexture, solverOptions->currentIdx);
+
+		loadTextureCompressed(volumeTexture, solverOptions->currentIdx);
 
 		break;
 	}
 	case false: // Uncompressed
 	{
 		//this->volume_IO.Initialize(solverOptions);
-		this->loadTexture(solverOptions, volumeTexture, solverOptions->currentIdx);
+		this->loadTexture(volumeTexture, solverOptions->currentIdx);
 
 		break;
 	}
@@ -65,11 +64,11 @@ __host__ bool StreamlineSolver::solve()
 {
 	timer.Start();
 
-	this->initializeParticles(static_cast<SeedingPattern>(solverOptions->seedingPattern));
+	this->initializeParticles();
 	timer.Stop();
 	dim3 thread = { maxBlockDim,maxBlockDim,1 };
 	int blocks = BLOCK_THREAD(solverOptions->lines_count);
-	ParticleTracing::TracingStream << <blocks, thread >> > (this->d_Particles, volumeTexture.getTexture(), *solverOptions, reinterpret_cast<Vertex*>(this->p_VertexBuffer));
+	ParticleTracing::TracingStream << <blocks, thread >> > (this->d_Particles, volumeTexture.getTexture(), *solverOptions,*fieldOptions, reinterpret_cast<Vertex*>(this->p_VertexBuffer));
 	cudaDeviceSynchronize();
 	
 	std::printf("time to trace particles takes %f ms \n", timer.GetMilisecondsElapsed());

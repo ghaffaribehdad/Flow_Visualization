@@ -78,11 +78,12 @@ private:
 
 public:
 
-	virtual void setResources(RenderingOptions& _renderingOptions, SolverOptions& _solverOptions, ID3D11DeviceContext* _deviceContext, ID3D11Device* _device, IDXGIAdapter * _adapter, const int & _width, const int & _height) override
+	virtual void setResources(RenderingOptions* _renderingOptions, SolverOptions* _solverOptions, FieldOptions* _fieldOptions, ID3D11DeviceContext* _deviceContext, ID3D11Device* _device, IDXGIAdapter * _adapter, const int & _width, const int & _height) override
 	{
-		this->solverOptions = &_solverOptions;
+		this->solverOptions = _solverOptions;
+		this->fieldOptions = _fieldOptions;
 		this->solverOptions->p_Adapter = _adapter;
-		this->renderingOptions = &_renderingOptions;
+		this->renderingOptions = _renderingOptions;
 		this->device = _device;
 		this->deviceContext = _deviceContext;
 		this->width = _width;
@@ -101,20 +102,14 @@ public:
 		{
 			updateOIT = renderImGuiOptions->updateOIT;
 
-			if (!streamlineSolver.checkFile(solverOptions))
+	
+		
+			if (renderImGuiOptions->updateStreamlines && !solverOptions->fixedLines)
 			{
-				ErrorLogger::Log("Cannot locate the file!");
-				renderImGuiOptions->showStreamlines = false;
-			}
-			else
-			{
-				if (renderImGuiOptions->updateStreamlines)
-				{
 					this->updateScene();
 					renderImGuiOptions->updateStreamlines = false;
-				}
 			}
-
+			
 		}
 
 	}
@@ -148,16 +143,15 @@ public:
 	void updateBuffers() override
 	{
 		
-		if (solverOptions->loadNewfile && !solverOptions->updatePause)
+		if (solverOptions->loadNewfile && !solverOptions->updatePause )
 		{
 
 
 			if (solverOptions->fileLoaded)
 			{
 				this->streamlineSolver.releaseVolumeTexture();
-
 			}
-			this->streamlineSolver.Initialize(solverOptions);
+			this->streamlineSolver.Initialize(solverOptions,fieldOptions);
 			this->streamlineSolver.loadVolumeTexture();
 
 			solverOptions->fileLoaded = true;
@@ -165,13 +159,12 @@ public:
 		}
 		else // do not load a new file
 		{
-			this->streamlineSolver.Reinitialize();
+			this->streamlineSolver.ReinitializeCUDA();
 		}
 		
 
 		this->streamlineSolver.solve();
 		this->streamlineSolver.FinalizeCUDA();
-		//this->streamlineSolver.releaseVolumeIO();
 
 		
 	}

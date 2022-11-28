@@ -58,11 +58,12 @@ void LineRenderer::updateConstantBuffer(Camera& camera)
 
 
 
-void LineRenderer::setResources(RenderingOptions& _renderingOptions, SolverOptions& _solverOptions,ID3D11DeviceContext* _deviceContext, ID3D11Device* _device, IDXGIAdapter * _adapter , const int & _width, const int & _height)
+void LineRenderer::setResources(RenderingOptions* _renderingOptions, SolverOptions* _solverOptions, FieldOptions* _fieldOptions, ID3D11DeviceContext* _deviceContext, ID3D11Device* _device, IDXGIAdapter * _adapter , const int & _width, const int & _height)
 {
-	this->solverOptions = &_solverOptions;
+	this->solverOptions = _solverOptions;
 	this->solverOptions->p_Adapter = _adapter;
-	this->renderingOptions = &_renderingOptions;
+	this->fieldOptions = _fieldOptions;
+	this->renderingOptions = _renderingOptions;
 	this->device = _device;
 	this->deviceContext = _deviceContext;
 	this->width = _width;

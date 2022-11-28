@@ -246,7 +246,7 @@ struct ShearStress : public Measure<ShearStress>
 
 		//float2 ShearStress = make_float2(dV_dY.x / (2.0f*h.x), dV_dY.z / (2.0f*h.z));
 		
-		float3 shear = make_float3(dV_dY.x, dV_dY.y, dV_dY.z) / h;
+		float3 shear = make_float3(dV_dY.x, dV_dY.y, dV_dY.z) / (2.0f * h);
 
 		//return magnitude(shear);
 		

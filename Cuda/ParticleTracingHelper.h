@@ -2,6 +2,7 @@
 
 #include "../Particle/Particle.h"
 #include "../Options/SolverOptions.h"
+#include "../Options/FieldOptions.h"
 #include "..//Graphics/Vertex.h"
 #include "cuda_runtime.h"
 
@@ -23,6 +24,7 @@ namespace ParticleTracing
 		Particle* d_particles,
 		cudaTextureObject_t t_VelocityField,
 		SolverOptions solverOptions,
+		FieldOptions fieldOptions,
 		Vertex* p_VertexBuffer
 	);
 

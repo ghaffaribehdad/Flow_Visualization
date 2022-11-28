@@ -7,21 +7,21 @@ __global__ void ParticleTracing::TracingStream
 	Particle* d_particles,
 	cudaTextureObject_t t_VelocityField,
 	SolverOptions solverOptions,
+	FieldOptions fieldOptions,
 	Vertex* p_VertexBuffer
 )
 {
 
 	unsigned int particleIdx = CUDA_INDEX;
-
 	if (particleIdx < solverOptions.lines_count)
 	{
 
 		int vertexIdx = particleIdx * solverOptions.lineLength;
 
-		float dt = solverOptions.dt;
+		float dt = fieldOptions.dt;
 
-		float3 gridDiameter = Array2Float3(solverOptions.gridDiameter);
-		int3 gridSize = Array2Int3(solverOptions.gridSize);
+		float3 gridDiameter = Array2Float3(fieldOptions.gridDiameter);
+		int3 gridSize = Array2Int3(fieldOptions.gridSize);
 		float3 init_pos = *d_particles[particleIdx].getPosition();
 		float streakPos = (solverOptions.projectPos / gridSize.x) * gridDiameter.x;
 		float3 upDir = make_float3(0.0f, 1.0f, 0.0f);
@@ -56,7 +56,7 @@ __global__ void ParticleTracing::TracingStream
 			p_VertexBuffer[vertexIdx + i].LineID = particleIdx;
 			p_VertexBuffer[vertexIdx + i].time = i;
 			//updates velocity and position of the particle 
-			ParticleTracing::RK4Stream(t_VelocityField, &d_particles[particleIdx], gridDiameter, Array2Int3(solverOptions.gridSize), dt, Array2Float3(solverOptions.velocityScalingFactor));
+			ParticleTracing::RK4Stream(t_VelocityField, &d_particles[particleIdx], gridDiameter, gridSize, dt, Array2Float3(solverOptions.velocityScalingFactor));
 
 			switch (solverOptions.colorMode)
 			{

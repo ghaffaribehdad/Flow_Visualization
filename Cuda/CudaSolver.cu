@@ -10,16 +10,17 @@ CUDASolver::CUDASolver()
 }
 
 // Initilize the solver
-bool CUDASolver::Initialize(SolverOptions * _solverOptions)
+bool CUDASolver::Initialize(SolverOptions * _solverOptions, FieldOptions * _fieldOptions)
 {
 	this->solverOptions = _solverOptions;
+	this->fieldOptions = _fieldOptions;
 	this->InitializeCUDA();
-	this->volume_IO.Initialize(_solverOptions);
-	
+	this->volume_IO.Initialize(_fieldOptions);
+
 	return true;
 }
 
-bool CUDASolver::Reinitialize()
+bool CUDASolver::ReinitializeCUDA()
 {
 	this->InitializeCUDA();
 
@@ -79,13 +80,13 @@ bool CUDASolver::InitializeCUDA()
 
 
 
-void CUDASolver::initializeParticles(SeedingPattern seedingPattern)
+void CUDASolver::initializeParticles()
 {
 
 	// Create an array of particles
 	Particle * h_Particles = new Particle[solverOptions->lines_count];
 
-	switch (seedingPattern)
+	switch (solverOptions->seedingPattern)
 	{
 
 
@@ -140,7 +141,6 @@ void CUDASolver::initializeParticles(SeedingPattern seedingPattern)
 
 void CUDASolver::loadTexture
 (
-	SolverOptions * solverOptions,
 	VolumeTexture3D & volumeTexture,
 	const int & idx,
 	cudaTextureAddressMode addressModeX ,
@@ -164,7 +164,6 @@ void CUDASolver::loadTexture
 
 void CUDASolver::loadTextureCompressed
 (
-	SolverOptions * solverOptions,
 	VolumeTexture3D & volumeTexture,
 	const int & idx,
 	cudaTextureAddressMode addressModeX,
@@ -178,13 +177,13 @@ void CUDASolver::loadTextureCompressed
 	Timer timer;
 
 	// Read current volume
-	this->volume_IO.readVolume_Compressed(idx, Array2Int3(solverOptions->gridSize));
+	this->volume_IO.readVolume_Compressed(idx, Array2Int3(fieldOptions->gridSize));
 	// Return a pointer to volume on device
 	float * d_VelocityField = this->volume_IO.getField_float_GPU();
 	// set the pointer to the volume texture
 	volumeTexture.setField(d_VelocityField);
 	// initialize the volume texture
-	TIMELAPSE(volumeTexture.initialize_devicePointer(Array2Int3(solverOptions->gridSize), nomralize, addressModeX, addressModeY, addressModeZ),"Initialize Texture including DDCopy");
+	TIMELAPSE(volumeTexture.initialize_devicePointer(Array2Int3(fieldOptions->gridSize), nomralize, addressModeX, addressModeY, addressModeZ),"Initialize Texture including DDCopy");
 	// release device memory
 	cudaFree(d_VelocityField);
 }

@@ -35,7 +35,7 @@ bool FieldGenerator3D::initialize
 	// set the number of rays = number of pixels
 	this->rays = (*this->width) * (*this->height);
 
-	volume_IO_Primary.Initialize(this->solverOptions);
+	volume_IO_Primary.Initialize(this->fieldOptions);
 
 	generateVolumetricField();
 

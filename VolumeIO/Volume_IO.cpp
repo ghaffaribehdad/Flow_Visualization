@@ -14,22 +14,26 @@
 #include "../Options/FieldOptions.h"
 
 // Read a velocity volume
-bool VolumeIO::Volume_IO::readVolume(const unsigned int & idx)
+bool VolumeIO::Volume_IO::readVolume(const unsigned int & time, const int & member_idx)
 {
 	// Generate absolute path of the file
-	
-	this->fullName = m_filePath + m_fileName + std::to_string(idx) + ".bin";
-
+	if(!isEnsemble)
+		this->fullName = m_filePath + m_fileName + std::to_string(time) + ".bin";
+	else
+		this->fullName = m_filePath + m_subPath + std::to_string(time) +"\\"+ m_fileName + std::to_string(member_idx) + ".bin";
 	// Read volume into the buffer
 
 	return Read();
 }
 
 
-bool VolumeIO::Volume_IO::readVolume_Compressed(const unsigned int & idx, const int3 & gridSize)
+bool VolumeIO::Volume_IO::readVolume_Compressed(const unsigned int & time, const int3 & gridSize, const int & member_idx)
 {
 	// Generate absolute path of the file
-	this->fullName = m_filePath + m_fileName + std::to_string(idx) + ".bin";
+	if (!isEnsemble)
+		this->fullName = m_filePath + m_fileName + std::to_string(time) + ".bin";
+	else
+		this->fullName = m_filePath + m_subPath + std::to_string(time) +"\\" + m_fileName + std::to_string(member_idx) + ".bin";
 
 	// Read volume into the buffer
 	return Read_Compressed(gridSize);
@@ -55,10 +59,11 @@ float* VolumeIO::Volume_IO::getField_float_GPU()
 
 void VolumeIO::Volume_IO::release()
 {
-	if (m_compressed )
+	if (isCompressed )
 	{
 		this->decompressResources.releaseDecompressionResources();
 		this->compressResourceInitialized = false;
+		this->isCompressed = false;
 	}
 	this->buffer.clear();
 	this->p_field = nullptr;
@@ -228,37 +233,46 @@ void VolumeIO::Volume_IO::setFilePath(std::string _filePath)
 {
 	this->m_filePath = _filePath;
 }
-
-
-
-
-void VolumeIO::Volume_IO::Initialize(SolverOptions* _solverOptions)
+void VolumeIO::Volume_IO::setFileSubpath(std::string _fileSubpath)
 {
-
-	this->m_fileName = _solverOptions->fileName;
-	this->m_filePath = _solverOptions->filePath;
-	this->m_compressed = _solverOptions->compressed;
-
-	if (m_compressed && !compressResourceInitialized)
-	{
-		TIMELAPSE((this->buffer_compressed).resize(_solverOptions->maxSize), "Resizing Buffer");
-		this->decompressResources.initializeDecompressionResources(_solverOptions, reinterpret_cast<uint*>(&(buffer_compressed.at(0))));
-		compressResourceInitialized = true;
-		
-	};
-
-
+	this->m_subPath = _fileSubpath;
 }
+
+
+
+
+//void VolumeIO::Volume_IO::Initialize(SolverOptions* _solverOptions)
+//{
+//
+//	this->m_fileName		= _solverOptions->fileName;
+//	this->m_filePath		= _solverOptions->filePath;
+//	this->m_subPath			= _solverOptions->subpath;
+//	this->m_isCompressed	= _solverOptions->compressed;
+//	this->m_isEnsemble		= _solverOptions->isEnsemble;
+//	
+//
+//	if (m_isCompressed && !compressResourceInitialized)
+//	{
+//		TIMELAPSE((this->buffer_compressed).resize(_solverOptions->maxSize), "Resizing Buffer");
+//		this->decompressResources.initializeDecompressionResources(_solverOptions, reinterpret_cast<uint*>(&(buffer_compressed.at(0))));
+//		compressResourceInitialized = true;
+//		
+//	};
+//
+//
+//}
 
 
 void VolumeIO::Volume_IO::Initialize(FieldOptions* _fieldOptions)
 {
 
-	this->m_fileName = _fieldOptions->fileName;
-	this->m_filePath = _fieldOptions->filePath;
-	this->m_compressed = _fieldOptions->compressed;
+	this->m_fileName		= _fieldOptions->fileName;
+	this->m_filePath		= _fieldOptions->filePath;
+	this->isCompressed		= _fieldOptions->isCompressed;
+	this->m_subPath			= _fieldOptions->subpath;
+	this->isEnsemble		= _fieldOptions->isEnsemble;
 
-	if (m_compressed && !compressResourceInitialized)
+	if (isCompressed && !compressResourceInitialized)
 	{
 		TIMELAPSE((this->buffer_compressed).resize(_fieldOptions->fileSizeMaxByte), "Resizing Buffer");
 		this->decompressResources.initializeDecompressionResources(_fieldOptions, reinterpret_cast<uint*>(&(buffer_compressed.at(0))));
@@ -281,11 +295,11 @@ void VolumeIO::Volume_IO::Initialize
 )
 {
 
-	this->m_fileName = _fileName;
-	this->m_filePath = _filePath;
-	this->m_compressed = _compressed;
+	this->m_fileName		= _fileName;
+	this->m_filePath		= _filePath;
+	this->isCompressed	= _compressed;
 
-	if (m_compressed && !_compressResourceInitialized)
+	if (isCompressed && !_compressResourceInitialized)
 	{
 		TIMELAPSE((this->buffer_compressed).resize(_maxSize), "Resizing Buffer");
 		this->decompressResources.initializeDecompressionResources(_maxSize,gridSize, reinterpret_cast<uint*>(&(buffer_compressed.at(0))));
@@ -296,13 +310,6 @@ void VolumeIO::Volume_IO::Initialize
 
 }
 
-
-
-void VolumeIO::Volume_IO::InitializeBufferRealTime(SolverOptions * solverOptions)
-{
-	
-
-}
 
 
 

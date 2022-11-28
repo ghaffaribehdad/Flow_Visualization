@@ -47,7 +47,7 @@ bool TurbulentMixing::initalize()
 
 
 
-	volumeIO.Initialize(this->solverOptions);
+	volumeIO.Initialize(this->fieldOptions);
 
 	if (!volumeIO.readVolumePlane(this->solverOptions->firstIdx, VolumeIO::readPlaneMode::YZ, turbulentMixingOptions->streamwisePlane))
 		return false;

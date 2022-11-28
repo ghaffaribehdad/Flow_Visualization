@@ -307,7 +307,7 @@ void Heightfield::gradient3D_Single()
 bool Heightfield::singleSurfaceInitialization()
 {
 	// initialize volume Input Output
-	volume_IO_Primary.Initialize(this->solverOptions);
+	volume_IO_Primary.Initialize(this->fieldOptions);
 
 
 

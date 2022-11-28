@@ -9,6 +9,7 @@
 #include "IsosurfaceHelperFunctions.h"
 #include "CallerFunctions.h"
 #include "../Options/RenderingOptions.h"
+#include "../Options/VisitationOptions.h"
 
 extern __constant__	BoundingBox d_boundingBox; // constant memory variable
 extern __constant__	BoundingBox d_boundingBox_spacetime;
@@ -32,6 +33,26 @@ __global__ void CudaIsoSurfacRenderer_Single
 	RaycastingOptions raycastingOptions,
 	RenderingOptions renderingOptions
 	);
+
+__global__ void CudaDVR_VISITATION
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field0,
+	cudaTextureObject_t field1,
+	int rays,
+	RaycastingOptions raycastingOptions,
+	RenderingOptions renderingOptions,
+	VisitationOptions	visitationOptions
+);
+
+__global__ void CudaIsoSurfacRenderer_Single_ColorCoded
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field1,
+	int rays,
+	RaycastingOptions raycastingOptions,
+	RenderingOptions renderingOptions
+);
 
 __global__ void CudaIsoSurfacRenderer_Projection
 (
@@ -78,9 +99,6 @@ __global__ void CudaIsoSurfacRenderer_Projection_Length
 	RaycastingOptions raycastingOptions,
 	RenderingOptions renderingOptions
 );
-
-
-
 
 
 __global__ void CudaIsoSurfacRenderer_Double
@@ -238,4 +256,23 @@ __device__ float distanceToNormalCurves(
 	int3 gridSize,
 	float3 gridDiameter,
 	float samplingStep
+);
+
+
+__global__ void visitationMapGenerator
+(
+	SolverOptions solverOptions,
+	RaycastingOptions raycastingOptions,
+	VisitationOptions visitationOptions,
+	cudaTextureObject_t t_velocityField,
+	cudaSurfaceObject_t	s_textureMap
+);
+
+__global__ void visitationMap_Diff
+(
+	SolverOptions solverOptions,
+	RaycastingOptions raycastingOptions,
+	VisitationOptions visitationOptions,
+	cudaTextureObject_t t_velocityField,
+	cudaSurfaceObject_t	s_textureMap
 );

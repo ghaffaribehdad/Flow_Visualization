@@ -140,9 +140,10 @@ protected:
 		SolverOptions * solverOptions,
 		VolumeTexture3D & volumeTexture,
 		const int & idx,
-		cudaTextureAddressMode addressModeX,
-		cudaTextureAddressMode addressModeY,
-		cudaTextureAddressMode addressModeZ
+		const int & memberIdx = 0,
+		cudaTextureAddressMode addressModeX = cudaAddressModeBorder,
+		cudaTextureAddressMode addressModeY = cudaAddressModeBorder,
+		cudaTextureAddressMode addressModeZ = cudaAddressModeBorder
 	);
 
 
@@ -151,9 +152,10 @@ protected:
 		int3 & gridSize,
 		VolumeTexture3D & volumeTexture,
 		const int & idx,
-		cudaTextureAddressMode addressModeX,
-		cudaTextureAddressMode addressModeY,
-		cudaTextureAddressMode addressModeZ
+		const int & memberIdx = 0,
+		cudaTextureAddressMode addressModeX = cudaAddressModeBorder,
+		cudaTextureAddressMode addressModeY = cudaAddressModeBorder,
+		cudaTextureAddressMode addressModeZ = cudaAddressModeBorder
 	);
 
 	void loadTexture
@@ -162,9 +164,10 @@ protected:
 		VolumeTexture3D & volumeTexture,
 		Volume_IO_Z_Major & volumeIO,
 		const int & idx,
-		cudaTextureAddressMode addressModeX,
-		cudaTextureAddressMode addressModeY,
-		cudaTextureAddressMode addressModeZ
+		const int & memberIdx = 0,
+		cudaTextureAddressMode addressModeX = cudaAddressModeBorder,
+		cudaTextureAddressMode addressModeY = cudaAddressModeBorder,
+		cudaTextureAddressMode addressModeZ = cudaAddressModeBorder
 	);
 
 	void loadTextureCompressed
@@ -172,9 +175,10 @@ protected:
 		int3 & gridSize,
 		VolumeTexture3D & volumeTexture,
 		const int & idx,
-		cudaTextureAddressMode addressModeX,
-		cudaTextureAddressMode addressModeY,
-		cudaTextureAddressMode addressModeZ
+		const int & memberIdx = 0,
+		cudaTextureAddressMode addressModeX = cudaTextureAddressMode::cudaAddressModeBorder,
+		cudaTextureAddressMode addressModeY = cudaTextureAddressMode::cudaAddressModeBorder,
+		cudaTextureAddressMode addressModeZ = cudaTextureAddressMode::cudaAddressModeBorder
 	);
 
 	void loadTextureCompressed
@@ -183,9 +187,10 @@ protected:
 		VolumeTexture3D & volumeTexture,
 		Volume_IO_Z_Major & volumeIO,
 		const int & idx,
-		cudaTextureAddressMode addressModeX,
-		cudaTextureAddressMode addressModeY,
-		cudaTextureAddressMode addressModeZ
+		const int & memberIdx = 0,
+		cudaTextureAddressMode addressModeX = cudaTextureAddressMode::cudaAddressModeBorder,
+		cudaTextureAddressMode addressModeY = cudaTextureAddressMode::cudaAddressModeBorder,
+		cudaTextureAddressMode addressModeZ = cudaTextureAddressMode::cudaAddressModeBorder
 	);
 
 	void loadTextureCompressed_double
@@ -262,7 +267,7 @@ public:
 		return this->raycastingTexture.Get();
 	}
 
-	__host__ void setResources
+	__host__ virtual void setResources
 	(
 		Camera* _camera,
 		int * _width,
@@ -333,10 +338,9 @@ public:
 					this->initialize_Single();
 				}
 
-				if (raycastingOptions->fileChanged || renderImGuiOptions->fileChanged)
+				if (solverOptions->fileChanged)
 				{
 					this->updateFile_Single();
-					renderImGuiOptions->fileChanged = false;
 				}
 				if (renderImGuiOptions->updateRaycasting)
 				{
@@ -359,10 +363,10 @@ public:
 					this->initialize_Double();
 				}
 
-				if (raycastingOptions->fileChanged || renderImGuiOptions->fileChanged)
+				if (solverOptions->fileChanged)
 				{
 					this->updateFile_Double();
-					renderImGuiOptions->fileChanged = false;
+
 				}
 				if (renderImGuiOptions->updateRaycasting)
 				{
@@ -383,10 +387,9 @@ public:
 					this->initialize_Multiscale();
 				}
 
-				if (raycastingOptions->fileChanged || renderImGuiOptions->fileChanged)
+				if (solverOptions->fileChanged)
 				{
 					this->updateFile_MultiScale();
-					renderImGuiOptions->fileChanged = false;
 				}
 				if (renderImGuiOptions->updateRaycasting)
 				{
@@ -407,10 +410,10 @@ public:
 					this->initialize_Multiscale();
 				}
 
-				if (raycastingOptions->fileChanged || renderImGuiOptions->fileChanged)
+				if (solverOptions->fileChanged)
 				{
 					this->updateFile_MultiScale();
-					renderImGuiOptions->fileChanged = false;
+
 				}
 				if (renderImGuiOptions->updateRaycasting)
 				{
@@ -435,10 +438,11 @@ public:
 					this->initialize_Single();
 				}
 
-				if (raycastingOptions->fileChanged || renderImGuiOptions->fileChanged)
+				if (solverOptions->fileChanged)
 				{
 					this->updateFile_Single();
-					renderImGuiOptions->fileChanged = false;
+
+
 				}
 				if (renderImGuiOptions->updateRaycasting)
 				{

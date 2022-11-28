@@ -3,8 +3,8 @@
 #include "IsosurfaceHelperFunctions.h"
 
 
-__device__ float callerValueAtTex(int i, cudaTextureObject_t tex, float3 position, float3  gridDiameter, int3 gridSize) {
-	switch (i)
+__device__ float callerValueAtTex(int channel, cudaTextureObject_t tex, float3 position, float3  gridDiameter, int3 gridSize) {
+	switch (channel)
 	{
 	case IsoMeasure::VELOCITY_X:
 		return Channel_X::ValueAtXYZ(tex, position);

@@ -25,7 +25,7 @@ bool CrossSection::initialize
 	// set the number of rays = number of pixels
 	this->rays = size_t(*this->width) * size_t(*this->height);
 
-	volume_IO_Primary.Initialize(this->solverOptions);
+	volume_IO_Primary.Initialize(this->fieldOptions);
 
 	if (this->crossSectionOptions->mode == CrossSectionOptionsMode::SpanMode::WALL_NORMAL)
 	{

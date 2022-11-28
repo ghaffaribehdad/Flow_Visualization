@@ -23,10 +23,10 @@ __host__ bool PathlineSolver::solve()
 	int timeSteps = solverOptions->lineLength;
 
 	// Initialize Volume IO (Save file path and file names)
-	this->volume_IO.Initialize(this->solverOptions);
+	this->volume_IO.Initialize(this->fieldOptions);
 
 	// Initialize Particles and upload it to GPU
-	this->initializeParticles(solverOptions->seedingPattern);
+	this->initializeParticles();
 
 	dim3 thread = { maxBlockDim,maxBlockDim,1 };
 	int blocks = BLOCK_THREAD(this->solverOptions->lines_count);
@@ -41,15 +41,15 @@ __host__ bool PathlineSolver::solve()
 	{
 		// First Step
 
-		switch (solverOptions->compressed)
+		switch (fieldOptions->isCompressed)
 		{
 
 			case true: // Compressed Data
 			{
 				if (step == 0)
 				{
-					loadTextureCompressed(solverOptions, volumeTexture_0, solverOptions->firstIdx);
-					loadTextureCompressed(solverOptions, volumeTexture_1, solverOptions->firstIdx + 1);
+					loadTextureCompressed( volumeTexture_0, solverOptions->firstIdx);
+					loadTextureCompressed( volumeTexture_1, solverOptions->firstIdx + 1);
 				}
 				else if (step == 1)
 				{
@@ -58,13 +58,13 @@ __host__ bool PathlineSolver::solve()
 				else if (step % 2 == 0) // => EVEN
 				{
 					this->volumeTexture_0.release();
-					loadTextureCompressed(solverOptions, volumeTexture_0, solverOptions->firstIdx + step);
+					loadTextureCompressed( volumeTexture_0, solverOptions->firstIdx + step);
 					odd = false;
 				}
 				else if (step % 2 != 0) // => ODD
 				{
 					this->volumeTexture_1.release();
-					loadTextureCompressed(solverOptions, volumeTexture_1, solverOptions->firstIdx + step);
+					loadTextureCompressed( volumeTexture_1, solverOptions->firstIdx + step);
 					odd = true;
 
 				}
@@ -76,8 +76,8 @@ __host__ bool PathlineSolver::solve()
 			{
 				if (step == 0)
 				{
-					loadTexture(solverOptions, volumeTexture_0, solverOptions->firstIdx);
-					loadTexture(solverOptions, volumeTexture_1, solverOptions->firstIdx + 1);
+					loadTexture( volumeTexture_0, solverOptions->firstIdx);
+					loadTexture( volumeTexture_1, solverOptions->firstIdx + 1);
 				}
 				else if (step == 1)
 				{
@@ -86,14 +86,14 @@ __host__ bool PathlineSolver::solve()
 				else if (step % 2 == 0) // => EVEN
 				{
 					this->volumeTexture_0.release();
-					loadTexture(solverOptions, volumeTexture_0, solverOptions->firstIdx + step);
+					loadTexture( volumeTexture_0, solverOptions->firstIdx + step);
 					odd = false;
 
 				}
 				else if (step % 2 != 0) // => ODD
 				{
 					this->volumeTexture_1.release();
-					loadTexture(solverOptions, volumeTexture_1, solverOptions->firstIdx + step);
+					loadTexture( volumeTexture_1, solverOptions->firstIdx + step);
 					odd = true;
 				}
 				break;
@@ -116,8 +116,8 @@ __host__ bool PathlineSolver::initializeRealtime(SolverOptions * p_solverOptions
 
 	this->solverOptions = p_solverOptions;
 	this->InitializeCUDA();
-	this->volume_IO.Initialize(p_solverOptions);
-	this->initializeParticles(this->solverOptions->seedingPattern);
+	this->volume_IO.Initialize(fieldOptions);
+	this->initializeParticles();
 	
 	return true;
 }
@@ -141,15 +141,15 @@ __host__ bool PathlineSolver::solveRealtime(int & pathCounter)
 
 	// First Step
 
-	switch (solverOptions->compressed)
+	switch (fieldOptions->isCompressed)
 	{
 
 	case true: // Compressed Data
 	{
 		if (pathCounter == 0)
 		{
-			loadTextureCompressed(solverOptions, volumeTexture_0, solverOptions->firstIdx);
-			loadTextureCompressed(solverOptions, volumeTexture_1, solverOptions->firstIdx + 1);
+			loadTextureCompressed( volumeTexture_0, solverOptions->firstIdx);
+			loadTextureCompressed( volumeTexture_1, solverOptions->firstIdx + 1);
 		}
 		else if (pathCounter == 1)
 		{
@@ -158,13 +158,13 @@ __host__ bool PathlineSolver::solveRealtime(int & pathCounter)
 		else if (pathCounter % 2 == 0) // => EVEN
 		{
 			this->volumeTexture_1.release();
-			loadTextureCompressed(solverOptions, volumeTexture_1, solverOptions->firstIdx + pathCounter + 1);
+			loadTextureCompressed( volumeTexture_1, solverOptions->firstIdx + pathCounter + 1);
 			odd = false;
 		}
 		else if (pathCounter % 2 != 0) // => ODD
 		{
 			this->volumeTexture_0.release();
-			loadTextureCompressed(solverOptions, volumeTexture_0, solverOptions->firstIdx + pathCounter + 1);
+			loadTextureCompressed( volumeTexture_0, solverOptions->firstIdx + pathCounter + 1);
 			odd = true;
 
 		}
@@ -176,8 +176,8 @@ __host__ bool PathlineSolver::solveRealtime(int & pathCounter)
 	{
 		if (pathCounter == 0)
 		{
-			loadTexture(solverOptions, volumeTexture_0, solverOptions->firstIdx);
-			loadTexture(solverOptions, volumeTexture_1, solverOptions->firstIdx + 1);
+			loadTexture( volumeTexture_0, solverOptions->firstIdx);
+			loadTexture( volumeTexture_1, solverOptions->firstIdx + 1);
 		}
 		else if (pathCounter == 1)
 		{
@@ -186,14 +186,14 @@ __host__ bool PathlineSolver::solveRealtime(int & pathCounter)
 		else if (pathCounter % 2 == 0) // => EVEN
 		{
 			this->volumeTexture_1.release();
-			loadTexture(solverOptions, volumeTexture_1, solverOptions->firstIdx + pathCounter + 1);
+			loadTexture(volumeTexture_1, solverOptions->firstIdx + pathCounter + 1);
 			odd = false;
 
 		}
 		else if (pathCounter % 2 != 0) // => ODD
 		{
 			this->volumeTexture_0.release();
-			loadTexture(solverOptions, volumeTexture_0, solverOptions->firstIdx + pathCounter + 1);
+			loadTexture(volumeTexture_0, solverOptions->firstIdx + pathCounter + 1);
 			odd = true;
 		}
 		break;

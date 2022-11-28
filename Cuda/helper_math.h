@@ -263,6 +263,32 @@ inline __host__ __device__ float2 operator+(float2 a, float2 b)
 	return make_float2(a.x + b.x, a.y + b.y);
 }
 
+inline __host__ __device__ float3 operator+(const float3& a, const float3& b)
+{
+	return make_float3(a.x + b.x, a.y + b.y, a.z + b.z);
+}
+
+inline __host__ __device__ float4 operator+(const float4& a, const float4& b)
+{
+	return make_float4(a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w);
+}
+
+inline __host__ __device__ float4 operator+(const float4& a, const float& b)
+{
+	return make_float4(a.x + b, a.y + b, a.z + b, a.w + b);
+}
+
+inline __host__ __device__ float3 operator+(float3 a, float b)
+{
+	return make_float3(a.x + b, a.y + b, a.z + b);
+}
+
+inline __host__ __device__ int3 operator+(int3 a, float b)
+{
+	return make_int3(static_cast<int>(a.x + b), static_cast<int>(a.y + b), static_cast<int>(a.z + b));
+}
+
+
 inline __host__ __device__ float2 operator*(float2 a, float b)
 {
 	return make_float2(a.x * b, a.y * b);
@@ -289,10 +315,6 @@ inline __host__ __device__ float4 operator*(const float4& a ,const float & b)
 	return make_float4(a.x * b, a.y * b, a.z * b,a.w * b);
 }
 
-inline __host__ __device__ float4 operator+(const float4& a, const float& b)
-{
-	return make_float4(a.x + b, a.y + b, a.z + b, a.w + b);
-}
 
 inline __host__ __device__ float3 operator/(float3 a, float3 b)
 {
@@ -337,15 +359,6 @@ inline __host__ __device__ float2 operator/(const float2& a, const float2& b)
 }
 
 
-inline __host__ __device__ float3 operator+(const float3& a, const float3& b)
-{
-	return make_float3(a.x + b.x, a.y + b.y, a.z + b.z);
-}
-
-inline __host__ __device__ float4 operator+(const float4& a, const float4& b)
-{
-	return make_float4(a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w);
-}
 
 inline __host__ __device__ float3 cross(const float3& a, const float3& b)
 {
@@ -1028,10 +1041,6 @@ __device__ __host__ inline double eigenValueMax(dMat3X3 & J)
 	}
 
 	return eig.x;
-}
-inline __host__ __device__ float3 operator+(float3 a, float b)
-{
-	return make_float3(a.x + b, a.y + b, a.z + b);
 }
 
 

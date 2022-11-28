@@ -45,13 +45,17 @@ void Raycasting::loadTexture
 	SolverOptions * solverOptions,
 	VolumeTexture3D & volumeTexture,
 	const int & idx,
+	const int & memberIdx,
 	cudaTextureAddressMode addressModeX,
 	cudaTextureAddressMode addressModeY,
 	cudaTextureAddressMode addressModeZ
 )
 {
 	// Read current volume
-	this->volume_IO_Primary.readVolume(idx);
+	if (!solverOptions->isEnsemble)
+		this->volume_IO_Primary.readVolume(idx);
+	else
+		this->volume_IO_Primary.readVolume(idx, memberIdx);
 	// Return a pointer to volume
 	float * h_VelocityField = this->volume_IO_Primary.getField_float();
 	// set the pointer to the volume texture
@@ -70,13 +74,17 @@ void Raycasting::loadTexture
 	int3 & gridSize,
 	VolumeTexture3D & volumeTexture,
 	const int & idx,
+	const int & memberIdx,
 	cudaTextureAddressMode addressModeX,
 	cudaTextureAddressMode addressModeY,
 	cudaTextureAddressMode addressModeZ
 )
 {
 	// Read current volume
-	this->volume_IO_Primary.readVolume(idx);
+	if (!solverOptions->isEnsemble)
+		this->volume_IO_Primary.readVolume(idx);
+	else
+		this->volume_IO_Primary.readVolume(idx, memberIdx);
 	// Return a pointer to volume
 	float * h_VelocityField = this->volume_IO_Primary.getField_float();
 	// set the pointer to the volume texture
@@ -93,13 +101,17 @@ void Raycasting::loadTexture
 	VolumeTexture3D & volumeTexture,
 	Volume_IO_Z_Major & volume_IO,
 	const int & idx,
+	const int & memberIdx,
 	cudaTextureAddressMode addressModeX,
 	cudaTextureAddressMode addressModeY,
 	cudaTextureAddressMode addressModeZ
 )
 {
 	// Read current volume
-	volume_IO.readVolume(idx);
+	if(!solverOptions->isEnsemble)
+		volume_IO.readVolume(idx);
+	else
+		volume_IO.readVolume(idx,memberIdx);
 	// Return a pointer to volume
 	float * h_VelocityField = volume_IO.getField_float();
 	// set the pointer to the volume texture
@@ -116,6 +128,7 @@ void Raycasting::loadTextureCompressed
 	int3 & gridSize,
 	VolumeTexture3D & volumeTexture,
 	const int & idx,
+	const int & memberIdx,
 	cudaTextureAddressMode addressModeX,
 	cudaTextureAddressMode addressModeY,
 	cudaTextureAddressMode addressModeZ)
@@ -141,6 +154,7 @@ void Raycasting::loadTextureCompressed
 	VolumeTexture3D & volumeTexture,
 	Volume_IO_Z_Major & volumeIO,
 	const int & idx,
+	const int & memberIdx,
 	cudaTextureAddressMode addressModeX,
 	cudaTextureAddressMode addressModeY,
 	cudaTextureAddressMode addressModeZ)
@@ -216,10 +230,10 @@ __host__ bool Raycasting::initialize_Single
 
 	this->rays = (*this->width) * (*this->height);	
 
-	this->volume_IO_Primary.Initialize(this->solverOptions);
+	this->volume_IO_Primary.Initialize(this->fieldOptions);
 	int3 gridSize = Array2Int3(solverOptions->gridSize);
 
-	switch (solverOptions->compressed)
+	switch (fieldOptions->isCompressed)
 	{
 
 	case true: // Compressed Data
@@ -236,7 +250,7 @@ __host__ bool Raycasting::initialize_Single
 
 	}
 
-	this->raycastingOptions->fileLoaded = true;
+
 	this->b_initialized = true;
 
 	return true;
@@ -261,13 +275,13 @@ __host__ bool Raycasting::initialize_Double
 
 	this->rays = (*this->width) * (*this->height);
 
-	this->volume_IO_Primary.Initialize(this->solverOptions);
+	this->volume_IO_Primary.Initialize(this->fieldOptions);
 	this->volume_IO_Secondary.Initialize(&fieldOptions[1]);
 
 
 	int3 gridSize = Array2Int3(solverOptions->gridSize);
 
-	switch (solverOptions->compressed)
+	switch (fieldOptions->isCompressed)
 	{
 
 	case true: // Compressed Data
@@ -287,7 +301,6 @@ __host__ bool Raycasting::initialize_Double
 
 	}
 
-	this->raycastingOptions->fileLoaded = true;
 	this->b_initialized = true;
 
 	return true;
@@ -310,10 +323,10 @@ __host__ bool Raycasting::initialize_Multiscale
 
 	// set the number of rays = number of pixels
 	this->rays = (*this->width) * (*this->height);	// Set number of rays based on the number of pixels
-	this->volume_IO_Primary.Initialize(this->solverOptions);
+	this->volume_IO_Primary.Initialize(this->fieldOptions);
 	int3 gridSize = Array2Int3(solverOptions->gridSize);
 
-	switch (solverOptions->compressed)
+	switch (fieldOptions->isCompressed)
 	{
 
 	case true: // Compressed Data
@@ -339,7 +352,7 @@ __host__ bool Raycasting::initialize_Multiscale
 	volumeTexture_L2.setArray(a_mipmap_L2.getArrayRef());
 	volumeTexture_L2.initialize_array(false, addressMode_X, addressMode_Y, addressMode_Z);
 
-	this->raycastingOptions->fileLoaded = true;
+
 	this->b_initialized = true;
 
 	return true;
@@ -376,7 +389,7 @@ void Raycasting::updateFile_Single
 {
 	this->volumeTexture_0.release();
 
-	switch (solverOptions->compressed)
+	switch (fieldOptions->isCompressed)
 	{
 
 	case true: // Compressed Data
@@ -395,7 +408,7 @@ void Raycasting::updateFile_Single
 	}
 
 	}
-	this->raycastingOptions->fileChanged = false;
+
 }
 
 
@@ -411,7 +424,7 @@ void Raycasting::updateFile_Double
 	this->volumeTexture_1.release();
 	int3 gridSize = Array2Int3(solverOptions->gridSize);
 
-	switch (solverOptions->compressed)
+	switch (fieldOptions->isCompressed)
 	{
 
 	case true: // Compressed Data
@@ -425,7 +438,6 @@ void Raycasting::updateFile_Double
 		break;
 	}
 
-	this->raycastingOptions->fileChanged = false;
 }
 
 
@@ -443,7 +455,7 @@ void Raycasting::updateFile_MultiScale
 	this->volumeTexture_L2.release();
 
 
-	switch (solverOptions->compressed)
+	switch (fieldOptions->isCompressed)
 	{
 
 	case true: // Compressed Data
@@ -471,7 +483,6 @@ void Raycasting::updateFile_MultiScale
 	volumeTexture_L2.setArray(a_mipmap_L2.getArrayRef());
 	volumeTexture_L2.initialize_array(false, addressMode_X, addressMode_Y, addressMode_Z);
 
-	this->raycastingOptions->fileChanged = false;
 }
 
 __host__ void Raycasting::rendering()
@@ -491,6 +502,19 @@ __host__ void Raycasting::rendering()
 	case RaycastingMode::Mode::SINGLE:
 
 		CudaIsoSurfacRenderer_Single << < blocks, thread >> >
+			(
+				this->raycastingSurface.getSurfaceObject(),
+				this->volumeTexture_0.getTexture(),
+				int(this->rays),
+				*this->raycastingOptions,
+				*this->renderingOptions
+				);
+
+		break;
+
+	case RaycastingMode::Mode::SINGLE_COLORCODED:
+
+		CudaIsoSurfacRenderer_Single_ColorCoded << < blocks, thread >> >
 			(
 				this->raycastingSurface.getSurfaceObject(),
 				this->volumeTexture_0.getTexture(),

@@ -115,6 +115,247 @@ __global__ void CudaIsoSurfacRenderer_Single
 
 
 
+__global__ void CudaDVR_VISITATION
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field0,
+	cudaTextureObject_t field1,
+	int rays,
+	RaycastingOptions raycastingOptions,
+	RenderingOptions renderingOptions,
+	VisitationOptions visitationOptions
+)
+{
+	int index = CUDA_INDEX;
+
+	if (index < rays)
+	{
+
+		// determine pixel position based on the index of the thread
+		int2 pixel = index2pixel(index, d_boundingBox.m_width);
+		float3 pixelPos = pixelPosition(d_boundingBox, pixel.x, pixel.y);
+		int3 gridInterval = make_int3(d_boundingBox.gridSize.x - 1, d_boundingBox.gridSize.y - 1, d_boundingBox.gridSize.z - 1);
+		float3 cellSize = d_boundingBox.gridDiameter / gridInterval;
+		float3 dir = normalize(pixelPos - d_boundingBox.m_eyePos);
+		float2 NearFar = findEnterExit(pixelPos, dir, d_boundingBox.boxFaces);
+
+
+
+		// if inside the bounding box
+		if (NearFar.y != -1)
+		{
+
+			float3 rayDir = normalize(pixelPos - d_boundingBox.m_eyePos);
+
+			float3 gridDiameter = d_boundingBox.gridDiameter;
+			int3 gridSize = d_boundingBox.gridSize;
+
+			// near and far plane
+			float n = renderingOptions.nearField;
+			float f = renderingOptions.farField;
+
+			// Add the offset to the eye position
+			float3 eyePos = d_boundingBox.m_eyePos + gridDiameter / 2.0;
+			float t = NearFar.x;
+
+			float alpha = 0;
+			float3 rgb_in = make_float3(1,1,1); // in color
+			float3 rgb= make_float3(0,0,0); // out color
+			float depth = 0;
+			bool hit = false;
+			while (t < NearFar.y && alpha < 1)
+			{
+				// Position of the isosurface
+				float3 position = pixelPos + (rayDir * t);
+
+				// Adds an offset to position while the center of the grid is at gridDiamter/2
+				position += gridDiameter / 2.0;
+
+				//Relative position calculates the position of the point on the CUDA texture
+				float3 texPos = world2Tex(position, gridDiameter, gridSize);
+				float ensembleValue = callerValueAtTex(visitationOptions.visitationField, field0, texPos, gridDiameter, gridSize);
+				float memberValue = 0;
+
+
+				if (ensembleValue > visitationOptions.threshold)
+				{
+					hit = true;
+					float alpha_c = 0;
+					float3 gradient = gradientTrilinear(visitationOptions.visitationField, texPos, field0, gridSize, gridDiameter);
+					
+					switch (visitationOptions.visitationField)
+					{
+					case VisitationField::VISITATION:
+						if (callerValueAtTex(0, field1, texPos, gridDiameter, gridSize) > visitationOptions.visitationThreshold)
+							alpha_c = visitationOptions.amplitude*expf(-fabs(memberValue - ensembleValue) / visitationOptions.relax);
+						break;
+
+					case VisitationField::MEAN_VISITATION:
+						if (callerValueAtTex(0, field1, texPos, gridDiameter, gridSize) > visitationOptions.visitationThreshold)
+							alpha_c = visitationOptions.amplitude*expf(-fabs(memberValue - ensembleValue) / visitationOptions.relax) + visitationOptions.opacityOffset;
+							memberValue = 0.5f;
+						break;
+
+					case VisitationField::MEAN_VALUE:
+						memberValue = callerValueAtTex(0, field1, texPos, gridDiameter, gridSize);
+						alpha_c = visitationOptions.amplitude*expf(-fabs(memberValue - ensembleValue) / visitationOptions.relax);
+						break;
+					}
+
+
+					
+					
+					float3 color_value = colorCodeRange(raycastingOptions.minColor,raycastingOptions.maxColor, memberValue, raycastingOptions.minVal,raycastingOptions.maxVal);
+					float3 color_c = (color_value ^ raycastingOptions.brightness) * max(dot(normalize(gradient), d_boundingBox.m_viewDir), 0.0f);
+					rgb = rgb + color_c * alpha_c*(1 - alpha);
+					alpha = alpha + alpha_c * (1 - alpha);
+					depth = depthfinder(position, eyePos, d_boundingBox.m_viewDir, f, n);
+					
+					
+
+
+				}
+	
+				if (raycastingOptions.adaptiveSampling)
+				{
+					float gridStep = findExitPoint3D(position, dir, cellSize);
+					t += gridStep;
+				}
+				else
+				{
+					t = t + raycastingOptions.samplingRate_0;
+				}
+
+				
+
+			}
+			
+			if (hit)
+			{
+				depth = depthfinder(pixelPos + (rayDir * NearFar.x) + gridDiameter / 2.0, eyePos, d_boundingBox.m_viewDir, f, n);
+				rgb = rgb + make_float3(1, 1, 1)*(1 - alpha);
+
+				float4 rgba = make_float4(rgb.x, rgb.y, rgb.z, depth);
+				// write back color and depth into the texture (surface)
+				// stride size of 4 * floats for each texel
+				surf2Dwrite(rgba, raycastingSurface, 4 * sizeof(float) * pixel.x, pixel.y);
+			}
+
+		}
+	}
+}
+
+
+
+__global__ void CudaIsoSurfacRenderer_Single_ColorCoded
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field0,
+	int rays,
+	RaycastingOptions raycastingOptions,
+	RenderingOptions renderingOptions
+)
+{
+	int index = CUDA_INDEX;
+
+	if (index < rays)
+	{
+
+		// determine pixel position based on the index of the thread
+		int2 pixel = index2pixel(index, d_boundingBox.m_width);
+		float3 pixelPos = pixelPosition(d_boundingBox, pixel.x, pixel.y);
+		int3 gridInterval = make_int3(d_boundingBox.gridSize.x - 1, d_boundingBox.gridSize.y - 1, d_boundingBox.gridSize.z - 1);
+		float3 cellSize = d_boundingBox.gridDiameter / gridInterval;
+		float3 dir = normalize(pixelPos - d_boundingBox.m_eyePos);
+		float2 NearFar = findEnterExit(pixelPos, dir, d_boundingBox.boxFaces);
+
+
+
+		// if inside the bounding box
+		if (NearFar.y != -1)
+		{
+
+			float3 rayDir = normalize(pixelPos - d_boundingBox.m_eyePos);
+
+			float3 gridDiameter = d_boundingBox.gridDiameter;
+			int3 gridSize = d_boundingBox.gridSize;
+
+			// near and far plane
+			float n = renderingOptions.nearField;
+			float f = renderingOptions.farField;
+
+			// Add the offset to the eye position
+			float3 eyePos = d_boundingBox.m_eyePos + gridDiameter / 2.0;
+			float t = NearFar.x;
+			while (t < NearFar.y)
+			{
+				// Position of the isosurface
+				float3 position = pixelPos + (rayDir * t);
+
+				// Adds an offset to position while the center of the grid is at gridDiamter/2
+				position += gridDiameter / 2.0;
+
+				//Relative position calculates the position of the point on the CUDA texture
+				float3 texPos = world2Tex(position, gridDiameter, gridSize);
+				float value = callerValueAtTex(raycastingOptions.isoMeasure_0, field0, texPos, gridDiameter, gridSize);
+
+
+
+				if (value > raycastingOptions.isoValue_0)
+				{
+					float3 samplingVector = rayDir * raycastingOptions.samplingRate_0;
+
+					if (raycastingOptions.binarySearch)
+					{
+						position = binarySearch(field0, position, d_boundingBox.gridDiameter, d_boundingBox.gridSize, raycastingOptions.isoValue_0, samplingVector, raycastingOptions.isoMeasure_0, raycastingOptions.tolerance_0, raycastingOptions.maxIteration);
+						texPos = world2Tex(position, d_boundingBox.gridDiameter, d_boundingBox.gridSize);
+					}
+
+
+
+
+					// calculates gradient
+					float3 gradient = gradientTrilinear(raycastingOptions.isoMeasure_0, texPos, field0, gridSize, gridDiameter);
+					//float3 gradient = callerGradientAtTex(raycastingOptions.isoMeasure_0, field0, texPos,gridDiameter, gridSize);
+
+
+					// shading (no ambient)
+					float diffuse = max(dot(normalize(gradient), d_boundingBox.m_viewDir), 0.0f);
+					float3 raycastingColor = colorCodeRange(renderingOptions.minColor, renderingOptions.maxColor, value, renderingOptions.minMeasure, renderingOptions.maxMeasure);
+
+					float3 rgb = raycastingColor * diffuse;
+
+					float depth = depthfinder(position, eyePos, d_boundingBox.m_viewDir, f, n);
+
+					float4 rgba = { rgb.x, rgb.y, rgb.z, depth };
+
+					// write back color and depth into the texture (surface)
+					// stride size of 4 * floats for each texel
+					surf2Dwrite(rgba, raycastingSurface, 4 * sizeof(float) * pixel.x, pixel.y);
+					break;
+
+				}
+
+				if (raycastingOptions.adaptiveSampling)
+				{
+					float gridStep = findExitPoint3D(position, dir, cellSize);
+					t += gridStep;
+				}
+				else
+				{
+					t = t + raycastingOptions.samplingRate_0;
+				}
+			}
+
+
+		}
+
+	}
+
+
+}
+
+
 __global__ void CudaIsoSurfacRenderer_Projection
 (
 	cudaSurfaceObject_t raycastingSurface,
@@ -2811,7 +3052,13 @@ __global__ void CudaIsoSurfacRenderer_Planar
 					float value = callerValueAtTex(raycastingOptions.isoMeasure_0, field0, relativePos, d_boundingBox.gridDiameter, gridSize);
 					float depth = depthfinder(position, eyePos, d_boundingBox.m_viewDir, f, n);
 					float3 rgb = { 0,0,0 };
-					rgb = colorCode(raycastingOptions.minColor, raycastingOptions.maxColor, value, raycastingOptions.minVal, raycastingOptions.maxVal);
+					if (raycastingOptions.ColorCodingRange)
+					{
+						rgb = colorCodeRange(raycastingOptions.minColor, raycastingOptions.maxColor, value, raycastingOptions.minVal, raycastingOptions.maxVal);
+					}
+					else
+						rgb = colorCode(raycastingOptions.minColor, raycastingOptions.maxColor, value, raycastingOptions.minVal, raycastingOptions.maxVal);
+
 					float4 rgba = { rgb.x, rgb.y, rgb.z, depth };
 					
 					// write back color and depth into the texture (surface)
@@ -3132,14 +3379,14 @@ __device__ float3 gradientTrilinear(int isoMeasure, float3 texPos, cudaTextureOb
 
 	float3 values[8] = 
 	{
-		callerGradientAtTex(isoMeasure, field0, make_float3(floor(texPos.x - .5) + .5f		, floor(texPos.y - .5) + .5		, floor(texPos.z - .5) + .5f), gridDiameter, gridSize),
-		callerGradientAtTex(isoMeasure, field0, make_float3(floor(texPos.x - .5) + .5 +	1.0f, floor(texPos.y - .5) + .5		, floor(texPos.z - .5) + .5f), gridDiameter, gridSize),
-		callerGradientAtTex(isoMeasure, field0, make_float3(floor(texPos.x - .5) + .5		, floor(texPos.y - .5) + .5 + 1.0f , floor(texPos.z - .5) + .5f), gridDiameter, gridSize),
-		callerGradientAtTex(isoMeasure, field0, make_float3(floor(texPos.x - .5) + .5 + 1.0f, floor(texPos.y - .5) + .5 + 1.0f , floor(texPos.z - .5) + .5f), gridDiameter, gridSize),
-		callerGradientAtTex(isoMeasure, field0, make_float3(floor(texPos.x - .5) + .5		, floor(texPos.y - .5) + .5		, floor(texPos.z - .5) + .5 + 1.0f), gridDiameter, gridSize),
-		callerGradientAtTex(isoMeasure, field0, make_float3(floor(texPos.x - .5) + .5 + 1.0f, floor(texPos.y - .5) + .5		, floor(texPos.z - .5) + .5 + 1.0f), gridDiameter, gridSize),
-		callerGradientAtTex(isoMeasure, field0, make_float3(floor(texPos.x - .5) + .5		, floor(texPos.y - .5) + .5 + 1.0f , floor(texPos.z - .5) + .5 + 1.0f), gridDiameter, gridSize),
-		callerGradientAtTex(isoMeasure, field0, make_float3(floor(texPos.x - .5) + .5 + 1.0f, floor(texPos.y - .5) + .5 + 1.0f , floor(texPos.z - .5) + .5 + 1.0f), gridDiameter, gridSize)
+		callerGradientAtTex(isoMeasure, field0, make_float3(floor(texPos.x - .5) + .5f		, floor(texPos.y - .5) + .5			, floor(texPos.z - .5) + .5f)		, gridDiameter, gridSize),
+		callerGradientAtTex(isoMeasure, field0, make_float3(floor(texPos.x - .5) + .5 +	1.0f, floor(texPos.y - .5) + .5			, floor(texPos.z - .5) + .5f)		, gridDiameter, gridSize),
+		callerGradientAtTex(isoMeasure, field0, make_float3(floor(texPos.x - .5) + .5		, floor(texPos.y - .5) + .5 + 1.0f	, floor(texPos.z - .5) + .5f)		, gridDiameter, gridSize),
+		callerGradientAtTex(isoMeasure, field0, make_float3(floor(texPos.x - .5) + .5 + 1.0f, floor(texPos.y - .5) + .5 + 1.0f	, floor(texPos.z - .5) + .5f)		, gridDiameter, gridSize),
+		callerGradientAtTex(isoMeasure, field0, make_float3(floor(texPos.x - .5) + .5		, floor(texPos.y - .5) + .5			, floor(texPos.z - .5) + .5 + 1.0f)	, gridDiameter, gridSize),
+		callerGradientAtTex(isoMeasure, field0, make_float3(floor(texPos.x - .5) + .5 + 1.0f, floor(texPos.y - .5) + .5			, floor(texPos.z - .5) + .5 + 1.0f)	, gridDiameter, gridSize),
+		callerGradientAtTex(isoMeasure, field0, make_float3(floor(texPos.x - .5) + .5		, floor(texPos.y - .5) + .5 + 1.0f	, floor(texPos.z - .5) + .5 + 1.0f)	, gridDiameter, gridSize),
+		callerGradientAtTex(isoMeasure, field0, make_float3(floor(texPos.x - .5) + .5 + 1.0f, floor(texPos.y - .5) + .5 + 1.0f	, floor(texPos.z - .5) + .5 + 1.0f)	, gridDiameter, gridSize)
 	};
 
 	return trilinearInterpolation<float3>(values, texPos);
@@ -3237,4 +3484,95 @@ __device__ float distanceToNormalCurves(
 
 	return iteration * samplingStep;
 
+}
+
+
+
+__global__ void visitationMapGenerator
+(
+	SolverOptions solverOptions,
+	RaycastingOptions raycastingOptions,
+	VisitationOptions visitationOptions,
+	cudaTextureObject_t t_velocityField,
+	cudaSurfaceObject_t	s_textureMap
+)
+{
+	int index = CUDA_INDEX;
+
+	float textureOffset = 0.5;
+	int3 gridSize = Array2Int3(solverOptions.gridSize);
+
+	if (index < solverOptions.gridSize[2])
+	{
+		for (int i = 0; i < gridSize.x; i++)
+		{
+			for (int j = 0; j < gridSize.y; j++)
+			{
+
+				int3	surface_position = make_int3(i, j, index);
+				float3	texture_position = make_float3(i, j, index) + textureOffset;
+		
+
+				float value = callerValueAtTex(IsoMeasure::VELOCITY_X, t_velocityField, texture_position);
+				float4 visitation = make_float4(0, 0, 0, 0);
+				surf3Dread(&visitation, s_textureMap, surface_position.x * sizeof(float4), surface_position.y, surface_position.z);
+				if (value > visitationOptions.visitationThreshold)
+				{		
+					visitation.x += 1;
+					visitation.y += 1.0f/(solverOptions.lastMemberIdx - solverOptions.firstMemberIdx + 1);
+				}
+				visitation.z += value / (solverOptions.lastMemberIdx - solverOptions.firstMemberIdx + 1);
+				surf3Dwrite(visitation, s_textureMap, surface_position.x * sizeof(float4), surface_position.y, surface_position.z);
+						
+			}
+		}
+
+	}
+}
+
+__global__ void visitationMap_Diff
+(
+	SolverOptions solverOptions,
+	RaycastingOptions raycastingOptions,
+	VisitationOptions visitationOptions,
+	cudaTextureObject_t t_velocityField,
+	cudaSurfaceObject_t	s_textureMap
+)
+{
+	int index = CUDA_INDEX;
+
+	float textureOffset = 0.5;
+	int3 gridSize = Array2Int3(solverOptions.gridSize);
+
+	//Visitation Diff
+	if (index < solverOptions.gridSize[2])
+	{
+		for (int i = 0; i < gridSize.x; i++)
+		{
+			for (int j = 0; j < gridSize.y; j++)
+			{
+
+				int3	surface_position = make_int3(i, j, index);
+				float3	texture_position = make_float3(i, j, index) + textureOffset;
+
+
+				float value = callerValueAtTex(raycastingOptions.isoMeasure_0, t_velocityField, texture_position);
+				float4 visitation = make_float4(0, 0, 0, 0);
+				surf3Dread(&visitation, s_textureMap, surface_position.x * sizeof(float4), surface_position.y, surface_position.z);
+				float4 newValue = make_float4(0, 0, 0, 0);
+				if (value > visitationOptions.threshold && visitation.x > 0)
+				{
+					newValue.x = 1;
+					surf3Dwrite(newValue, s_textureMap, surface_position.x * sizeof(float4), surface_position.y, surface_position.z);
+				}
+				else
+				{
+					newValue.x = 0;
+					surf3Dwrite(newValue, s_textureMap, surface_position.x * sizeof(float4), surface_position.y, surface_position.z);
+
+				}
+			}
+		}
+
+	}
 }

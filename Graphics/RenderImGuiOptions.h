@@ -16,6 +16,7 @@
 #include "../Options/TurbulentMixingOptions.h"
 #include "../Options/TimeSpace3DOptions.h"
 #include "../Options/FieldOptions.h"
+#include "../Options/VisitationOptions.h"
 
 #include "Camera.h"
 #include "../Timer/Timer.h"
@@ -36,7 +37,7 @@ private:
 
 	// Pointers to the Option structures
 	SolverOptions*					solverOptions;
-	FieldOptions *					fieldOptions;
+	FieldOptions *					fieldOptions[4];
 	RenderingOptions*				renderingOptions;
 	RaycastingOptions*				raycastingOptions;
 	DispersionOptions*				dispersionOptions;
@@ -44,48 +45,61 @@ private:
 	SpaceTimeOptions*				spaceTimeOptions;
 	TurbulentMixingOptions*			turbulentMixingOptions;
 	TimeSpace3DOptions*				timeSpace3DOptions;
+	VisitationOptions*				visitationOptions;
 
 	Dataset::Dataset dataset_0 = Dataset::Dataset::NONE;
 	Dataset::Dataset dataset_1 = Dataset::Dataset::NONE;
+	Dataset::Dataset dataset_2 = Dataset::Dataset::NONE;
+	Dataset::Dataset dataset_3 = Dataset::Dataset::NONE;
 	Dataset::Dataset raycastyingDataset = Dataset::Dataset::NONE;
 
 public:
 
 	template<typename T>
-	void static setArray(T* source ,const T  &x, const T &y, const T &z)
+	void static setArray(T* dest ,const T  &x, const T &y, const T &z)
 	{
-		source[0] = x;
-		source[1] = y;
-		source[2] = z;
+		dest[0] = x;
+		dest[1] = y;
+		dest[2] = z;
+	}
+
+	template<typename T>
+	void static setArray(T* dest, T* src)
+	{
+		dest[0] = src[0];
+		dest[1] = src[1];
+		dest[2] = src[2];
 	}
 
 	void setResources
 	(
-		Camera* _camera,
-		Timer * _fpsTimer, 
-		RenderingOptions * _renderingOptions,
-		SolverOptions * _solverOptions,
-		RaycastingOptions * _raycastingOptions,
-		DispersionOptions * _dispersionOptions,
-		SpaceTimeOptions * _spaceTimeOptions,
-		CrossSectionOptions * _crossSectionOptions,
-		TurbulentMixingOptions* _turbulentMixingOptions,
-		TimeSpace3DOptions * _timeSpace3DOptions,
-		FieldOptions * _fieldOptions
+		Camera					*_camera,
+		Timer					*_fpsTimer, 
+		RenderingOptions		*_renderingOptions,
+		SolverOptions			*_solverOptions,
+		RaycastingOptions		*_raycastingOptions,
+		DispersionOptions		*_dispersionOptions,
+		SpaceTimeOptions		*_spaceTimeOptions,
+		CrossSectionOptions		*_crossSectionOptions,
+		TurbulentMixingOptions	*_turbulentMixingOptions,
+		TimeSpace3DOptions	 	*_timeSpace3DOptions,
+		FieldOptions			*_fieldOptions,
+		VisitationOptions		*_visitationOptions
 	)
 	{
-		this->camera	= _camera;
-		this->fpsTimer	= _fpsTimer;
+		this->camera				= _camera;
+		this->fpsTimer				= _fpsTimer;
 	
 		this->renderingOptions		= _renderingOptions;
 		this->solverOptions			= _solverOptions;
 		this->raycastingOptions		= _raycastingOptions;
 		this->dispersionOptions		= _dispersionOptions;
-		this->spaceTimeOptions	= _spaceTimeOptions;
+		this->spaceTimeOptions		= _spaceTimeOptions;
 		this->crossSectionOptions	= _crossSectionOptions;
 		this->turbulentMixingOptions = _turbulentMixingOptions;
-		this->timeSpace3DOptions = _timeSpace3DOptions;
-		this->fieldOptions = _fieldOptions;
+		this->timeSpace3DOptions	= _timeSpace3DOptions;
+		this->fieldOptions[0]		= _fieldOptions;
+		this->visitationOptions		= _visitationOptions;
 	}
 
 	bool updateRaycasting		= false;
@@ -101,12 +115,11 @@ public:
 	bool updateCrossSection		= false;
 	bool updateTurbulentMixing	= false;
 	bool updateTimeSpaceField	= false;
-	bool updateOIT	=			false;
-	bool updateShaders = false;
+	bool updateOIT				= false;
+	bool updateShaders			= false;
+	bool updateVisitationMap	= false;
 
 	bool hideOptions = false;
-	bool fileChanged = false;
-
 
 	bool pauseRendering = false;
 	
@@ -119,6 +132,7 @@ public:
 	bool showFTLE						= false;
 	bool showTurbulentMixing			= false;
 	bool showFluctuationHeightfield		= false;
+	bool showVisitationMap				= false;
 	bool showTimeSpaceField				= false;
 
 
@@ -140,16 +154,18 @@ public:
 
 	void drawOptionWindows()
 	{
+		// first reinitialize values
+		solverOptions->fileChanged = false;
+		solverOptions->viewChanged = false;
+
 		this->drawImguiOptions();
 		this->drawSolverOptions();	
 		this->drawLog();								
 		this->drawLineRenderingOptions();			
-		this->drawRaycastingOptions();				
-		//this->drawDispersionOptions();				
+		this->drawRaycastingOptions();		
+		this->drawVisitationMapOptions();
+		this->drawFieldOptions();
 		this->drawTimeSpaceOptions();	
-		//this->drawCrossSectionOptions();			
-		//this->drawTurbulentMixingOptions();
-		//this->drawTimeSpaceField();
 		this->drawDataset();
 	}
 
@@ -161,6 +177,7 @@ public:
 	float eyePos[3] = { 0,0,0 };
 	float viewDir[3] = { 0,0,0 };
 	float upDir[3] = { 0,0,0 };
+	int nFields = 1;
 
 	// Screenshot Options
 	int screenshotRange = 1;
@@ -171,6 +188,7 @@ private:
 	void drawSolverOptions();					// draw the solver option window
 	void drawLog();								// draw Log window
 	void drawLineRenderingOptions();			// draw options of stream/pathline rendering
+	void drawFieldOptions();					// draw options of fields (datasets)
 	void drawRaycastingOptions();				// draw options of isosurface rendering (raycasting)
 	void drawDispersionOptions();				// draw options of dispersion calculation
 	void drawTimeSpaceOptions();				// draw options of heightfield of fluctuation 
@@ -178,6 +196,7 @@ private:
 	void drawTimeSpaceField();
 	void drawTurbulentMixingOptions();
 	void drawDataset();
+	void drawVisitationMapOptions();
 
 	bool b_drawSolverOptions		= true;
 	bool b_drawLog					= false;
@@ -185,6 +204,7 @@ private:
 	bool b_drawRaycastingOptions	= false;
 	bool b_drawDispersionOptions	= false;
 	bool b_drawTimeSpaceOptions		= false;
+	bool b_drawVisitationOptions	= true;
 	bool b_drawCrossSectionOptions	= false;
 	bool b_drawTimeSpaceField		= false;
 	bool b_drawDataset				= true;

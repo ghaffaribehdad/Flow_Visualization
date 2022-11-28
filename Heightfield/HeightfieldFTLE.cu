@@ -250,7 +250,7 @@ bool HeightfieldFTLE::singleSurfaceInitialization()
 {
 	
 	// initialize volume Input Output
-	volume_IO_Primary.Initialize(this->solverOptions);
+	volume_IO_Primary.Initialize(this->fieldOptions);
 	gridSize = { dispersionOptions->gridSize_2D[0],	dispersionOptions->gridSize_2D[1],	solverOptions->lastIdx - solverOptions->firstIdx };
 
 	// Initialize Height Field as an empty cuda array 3D

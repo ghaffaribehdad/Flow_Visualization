@@ -471,10 +471,12 @@ void StreamlineRenderer::updateConstantBuffer(Camera & camera)
 
 	GS_constantBuffer.data.tubeRadius = renderingOptions->tubeRadius;
 	GS_constantBuffer.data.projection = solverOptions->projection;
-	GS_constantBuffer.data.gridDiameter.x = solverOptions->gridDiameter[0];
-	GS_constantBuffer.data.gridDiameter.y = solverOptions->gridDiameter[1];
-	GS_constantBuffer.data.gridDiameter.z = solverOptions->gridDiameter[2];
 	GS_constantBuffer.data.periodicity = solverOptions->periodic;
+
+
+	GS_constantBuffer.data.gridDiameter.x = fieldOptions->gridDiameter[0];
+	GS_constantBuffer.data.gridDiameter.y = fieldOptions->gridDiameter[1];
+	GS_constantBuffer.data.gridDiameter.z = fieldOptions->gridDiameter[2];
 
 
 	if (solverOptions->projection == Projection::STREAK_PROJECTION)
@@ -487,7 +489,7 @@ void StreamlineRenderer::updateConstantBuffer(Camera & camera)
 		GS_constantBuffer.data.particlePlanePos = 0;
 	}
 
-	GS_constantBuffer.data.streakPos = solverOptions->projectPos * (solverOptions->gridDiameter[0] / solverOptions->gridSize[0]);
+	GS_constantBuffer.data.streakPos = solverOptions->projectPos * (fieldOptions->gridDiameter[0] / fieldOptions->gridSize[0]);
 	GS_constantBuffer.data.transparencyMode = solverOptions->transparencyMode;
 	GS_constantBuffer.data.timDim = solverOptions->lineLength;
 	GS_constantBuffer.data.currentTime = solverOptions->firstIdx - solverOptions->currentIdx;

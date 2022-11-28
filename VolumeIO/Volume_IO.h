@@ -26,8 +26,10 @@ namespace VolumeIO
 
 		std::string m_fileName = "";
 		std::string m_filePath = "";
+		std::string m_subPath = "";
 		std::string fullName = "";
-		bool m_compressed = false;
+		bool isCompressed = false;
+		bool isEnsemble = false;
 		bool compressResourceInitialized = false;
 		DecompressResources decompressResources;
 		std::vector<unsigned int> index;
@@ -37,7 +39,7 @@ namespace VolumeIO
 		float * dp_field = nullptr; 	// Stores a pointer to the field on the Device
 		float* planeBuffer = nullptr;
 		size_t buffer_size = 0;
-		SolverOptions* m_solverOptions = nullptr;
+		SolverOptions* solverOptions = nullptr;
 
 		bool Read(std::streampos begin, size_t size);
 
@@ -66,7 +68,7 @@ namespace VolumeIO
 		Timer timer;
 		// Setter and getter functions
 
-		void Initialize(SolverOptions* _solverOptions);
+		//void Initialize(SolverOptions* _solverOptions);
 		void Initialize(FieldOptions * _fieldOptions);
 		void Initialize( 
 			std::string & _fileName,
@@ -80,11 +82,12 @@ namespace VolumeIO
 
 		void setFileName(std::string _fileName);
 		void setFilePath(std::string _filePath);
+		void setFileSubpath(std::string _fileSubpath);
 		//bool isEmpty();
 
 		
-		bool readVolume(const unsigned int & idx);
-		bool readVolume_Compressed(const unsigned int & idx, const int3 & gridSize);	// Generic: Read binary file with a certain index
+		bool readVolume(const unsigned int & idx , const int & member_idx = 0);
+		bool readVolume_Compressed(const unsigned int & idx, const int3 & gridSize, const int & member_idx = 0);	// Generic: Read binary file with a certain index
 
 
 		// Read a single plane of a volumetric file in binary
@@ -112,7 +115,7 @@ namespace VolumeIO
 		}
 		void setSolverOptions(SolverOptions * _solverOptions)
 		{
-			this->m_solverOptions = _solverOptions;
+			this->solverOptions = _solverOptions;
 		}
 
 		// Clear the vector
