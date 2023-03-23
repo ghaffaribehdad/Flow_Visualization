@@ -96,20 +96,23 @@ public:
 
 
 
-	virtual void show(RenderImGuiOptions* renderImGuiOptions) 
+	virtual void show(RenderImGuiOptions* renderImGuiOptions)
 	{
 		if (renderImGuiOptions->showStreamlines)
 		{
 			updateOIT = renderImGuiOptions->updateOIT;
 
-	
-		
+
+
 			if (renderImGuiOptions->updateStreamlines && !solverOptions->fixedLines)
 			{
-					this->updateScene();
-					renderImGuiOptions->updateStreamlines = false;
+				this->updateScene();
 			}
-			
+
+		}
+		if (renderImGuiOptions->releaseStreamlines)
+		{
+			release();
 		}
 
 	}
@@ -146,11 +149,6 @@ public:
 		if (solverOptions->loadNewfile && !solverOptions->updatePause )
 		{
 
-
-			if (solverOptions->fileLoaded)
-			{
-				this->streamlineSolver.releaseVolumeTexture();
-			}
 			this->streamlineSolver.Initialize(solverOptions,fieldOptions);
 			this->streamlineSolver.loadVolumeTexture();
 

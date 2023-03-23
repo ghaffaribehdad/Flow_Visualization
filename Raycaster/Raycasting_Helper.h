@@ -22,8 +22,33 @@ __device__ float findExitPoint3D(const float3 & entery, const float3 & dir, cons
 __device__ float3 pixelPosition(const BoundingBox  boundingBox, const int i, const int j);
 __device__ uchar4 rgbaFloatToUChar(float4 rgba);
 
+__global__ void CudaDVR
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field0,
+	int rays,
+	RaycastingOptions raycastingOptions,
+	RenderingOptions renderingOptions
+);
+__global__ void CudaDVR_Double
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field0,
+	cudaTextureObject_t field1,
+	int rays,
+	RaycastingOptions raycastingOptions,
+	RenderingOptions renderingOptions
+);
 
-
+__global__ void CudaDVR_Double_Within
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field0,
+	cudaTextureObject_t field1,
+	int rays,
+	RaycastingOptions raycastingOptions,
+	RenderingOptions renderingOptions
+);
 
 __global__ void CudaIsoSurfacRenderer_Single
 (
@@ -33,6 +58,27 @@ __global__ void CudaIsoSurfacRenderer_Single
 	RaycastingOptions raycastingOptions,
 	RenderingOptions renderingOptions
 	);
+
+__global__ void CudaIsoSurfacRenderer_Single
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field1,
+	int rays,
+	RaycastingOptions raycastingOptions,
+	RenderingOptions renderingOptions,
+	PathSpaceTimeOptions pathSpaceTimeOptions
+);
+
+__global__ void CudaIsoSurfacRenderer_Double_Modes
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field0,
+	cudaTextureObject_t field1,
+	int rays,
+	RaycastingOptions raycastingOptions,
+	RenderingOptions renderingOptions
+
+);
 
 __global__ void CudaDVR_VISITATION
 (
@@ -167,16 +213,6 @@ __global__ void CudaIsoSurfacRenderer_Double_Advanced
 	RenderingOptions renderingOptions
 );
 
-//__global__ void CudaIsoSurfacRenderer_Double_Transparency
-//(
-//	cudaSurfaceObject_t raycastingSurface,
-//	cudaTextureObject_t field0,
-//	cudaTextureObject_t field1,
-//	int rays,
-//	RaycastingOptions raycastingOptions,
-//	RenderingOptions renderingOptions
-//);
-
 __global__ void CudaIsoSurfacRenderer_Double_Transparency_noglass
 (
 	cudaSurfaceObject_t raycastingSurface,
@@ -196,9 +232,6 @@ __global__ void CudaIsoSurfacRenderer_Double_Transparency_noglass_multiLevel
 	RaycastingOptions raycastingOptions,
 	RenderingOptions renderingOptions
 );
-
-
-
 
 __device__ float callerValueAtTexLOD
 (
@@ -224,6 +257,25 @@ __device__ float3 callerGradientAtTexLOD
 __global__ void CudaIsoSurfacRenderer_Planar
 (
 	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field1,
+	int rays,
+	RaycastingOptions raycastingOptions,
+	RenderingOptions renderingOptions
+);
+
+__global__ void CudaIsoSurfacRenderer_Planar_PathSpace
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field0,
+	int rays,
+	PathSpaceTimeOptions pathSpaceTimeOptions,
+	RaycastingOptions raycastingOptions,
+	RenderingOptions renderingOptions);
+
+__global__ void CudaIsoSurfacRenderer_Planar_Double
+(
+	cudaSurfaceObject_t raycastingSurface,
+	cudaTextureObject_t field0,
 	cudaTextureObject_t field1,
 	int rays,
 	RaycastingOptions raycastingOptions,
@@ -258,6 +310,16 @@ __device__ float distanceToNormalCurves(
 	float samplingStep
 );
 
+__device__ float3 nextNormalCurves(
+	int & isoMeasure,
+	float & isoValue,
+	float3 position,
+	cudaTextureObject_t field0,
+	int3 gridSize,
+	float3 gridDiameter,
+	float samplingStep
+);
+
 
 __global__ void visitationMapGenerator
 (
@@ -275,4 +337,14 @@ __global__ void visitationMap_Diff
 	VisitationOptions visitationOptions,
 	cudaTextureObject_t t_velocityField,
 	cudaSurfaceObject_t	s_textureMap
+);
+
+__global__ void copyTextureToSurface
+(
+	int streamwisePos,
+	int time,
+	SolverOptions solverOptions,
+	SpaceTimeOptions spaceTimeOptions,
+	cudaTextureObject_t t_velocityField,
+	cudaSurfaceObject_t	s_velocityField
 );

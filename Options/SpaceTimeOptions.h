@@ -100,7 +100,13 @@ struct SpaceTimeOptions
 	int sliderBackground = SliderBackground::SliderBackground::NONE;
 	int bandSize = 10;
 
-	int heightMode = SpaceTimeRendering::HeightMode::V_Y_FLUCTUATION;
+	int heightMode = IsoMeasure::VELOCITY_X;
+
+	int spaceTimeMode_0 = IsoMeasure::VELOCITY_X;
+	int spaceTimeMode_1 = IsoMeasure::VELOCITY_Y;
+	int spaceTimeMode_2 = IsoMeasure::VELOCITY_Z;
+	int spaceTimeMode_3 = IsoMeasure::KINETIC_ENERGY;
+
 
 	bool additionalRaycasting = false;
 	bool additionalLoading = true;

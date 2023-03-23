@@ -2,7 +2,6 @@
 #include <random>
 #include "helper_math.h"
 #include "../Options/SolverOptions.h"
-
 __device__ float3 RK4
 (
 	cudaTextureObject_t t_VelocityField_0,
@@ -425,7 +424,79 @@ __global__ void TracingPath(Particle* d_particles, cudaTextureObject_t t_Velocit
 
 
 
+__global__ void TracingPathSurface(
+	cudaTextureObject_t t_VelocityField_0,
+	cudaTextureObject_t t_VelocityField_1,
+	cudaSurfaceObject_t s_PathSpaceTime,
+	SolverOptions solverOptions,
+	PathSpaceTimeOptions pathSpaceTimeOptions,
+	int step){
 
+	int index = CUDA_INDEX;
+
+	int3 particleIndex = indexto3D(Array2Int3(pathSpaceTimeOptions.seedGrid), index);
+	float3 position3 = make_float3(0, 0, 0);
+	int time_length = pathSpaceTimeOptions.lastIdx - pathSpaceTimeOptions.firstIdx;
+	int time_batch = time_length / pathSpaceTimeOptions.timeGrid;
+	int t_step = int(step / time_batch);
+
+	if (index < pathSpaceTimeOptions.seedGrid[0] * pathSpaceTimeOptions.seedGrid[1] * pathSpaceTimeOptions.seedGrid[2]) {
+
+		// line_index indicates the line segment index
+		float3 gridDiameter = Array2Float3(solverOptions.gridDiameter);
+		int3 gridSize = Array2Int3(solverOptions.gridSize);
+
+		// Fetch initial position
+		float4 position4 = make_float4(0, 0, 0, 0);
+
+		if (step == 0) {
+			surf3Dread(&position4, s_PathSpaceTime, particleIndex.x * sizeof(float4), particleIndex.y, particleIndex.z + (t_step)* pathSpaceTimeOptions.seedGrid[2]);
+		} else  if (step % time_batch == 0) {
+			surf3Dread(&position4, s_PathSpaceTime, particleIndex.x * sizeof(float4), particleIndex.y, particleIndex.z + (t_step - 1)* pathSpaceTimeOptions.seedGrid[2]);
+		} else {
+			surf3Dread(&position4, s_PathSpaceTime, particleIndex.x * sizeof(float4), particleIndex.y, particleIndex.z + (t_step)* pathSpaceTimeOptions.seedGrid[2]);
+		}
+
+		position3 = make_float3(position4.x,position4.y,position4.z);
+		// trace particle in field
+		if(step % 2 == 0)
+			position3 = RK4(t_VelocityField_0, t_VelocityField_1, position3, gridDiameter, gridSize, solverOptions.dt);
+		else
+			position3 = RK4(t_VelocityField_1, t_VelocityField_0, position3, gridDiameter, gridSize, solverOptions.dt);
+
+		// write back the new position
+		position4 =make_float4(position3.x, position3.y, position3.z,0);
+		surf3Dwrite(position4, s_PathSpaceTime, sizeof(float4) * particleIndex.x, particleIndex.y, particleIndex.z + t_step * pathSpaceTimeOptions.seedGrid[2]);
+
+	}
+}
+
+
+
+
+__global__ void initializePathSpaceTime(Particle * d_particle, cudaSurfaceObject_t s_pathSpaceTime, PathSpaceTimeOptions pathSpaceTimeOptions){
+	
+	int index = CUDA_INDEX;
+	int3 particleIndex = indexto3D(Array2Int3(pathSpaceTimeOptions.seedGrid), index);
+	float4 position4 = { 0,0,0,0 };
+	float3 position3 = { 0,0,0 };
+	int3 seedGrid = Array2Int3(pathSpaceTimeOptions.seedGrid);
+
+	if (index < seedGrid.x * seedGrid.y* seedGrid.z){
+
+		int linear_index = particleIndex.x * seedGrid.y * seedGrid.z + particleIndex.y * seedGrid.z + particleIndex.z;
+		position3 = *d_particle[linear_index].getPosition();
+		position4 = make_float4(position3.x, position3.y, position3.z, 0);
+		surf3Dwrite(position4, s_pathSpaceTime, sizeof(float4) * particleIndex.x, particleIndex.y, particleIndex.z);
+		//printf("particle %d is at (%3f,%3f,%3f) and index are:  (%d,%d,%d) \n", index, position4.x, position4.y, position4.z, particleIndex.x, particleIndex.y, particleIndex.z);
+
+	}
+
+}
+				
+				
+
+				
 
 
 

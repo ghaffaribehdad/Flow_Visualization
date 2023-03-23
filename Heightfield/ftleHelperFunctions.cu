@@ -85,7 +85,7 @@ __global__ void  traceDispersion3D_path_FTLE
 			break;
 
 		case FTLE_Direction::BACKWARD_FTLE:
-			extraTexel = ValueAtXYZ_Surface_float4(heightFieldSurface3D_extra, make_int3(index_x, index_y, timestep));
+			//extraTexel = ValueAtXYZ_Surface_float4(heightFieldSurface3D_extra, make_int3(index_x, index_y, timestep));
 			extraTexel.y = ftle;
 			surf3Dwrite(extraTexel, heightFieldSurface3D_extra, sizeof(float4) * index_x, index_y, timestep);
 

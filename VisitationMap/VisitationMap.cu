@@ -16,9 +16,8 @@ bool VisitationMap::initialization()
 		return false;
 
 	// initialize volume Input Output
-	this->volume_IO_Primary.Initialize(this->fieldOptions);
+	this->volume_IO.Initialize(this->fieldOptions);
 	//this->updateFile_Single();
-
 	a_visitationMap.initialize(gridSize.x, gridSize.y, gridSize.z);
 	s_visitationMap.setInputArray(a_visitationMap.getArrayRef());
 	s_visitationMap.initializeSurface();
@@ -79,18 +78,10 @@ bool VisitationMap::generateVisitationMap()
 	dim3 thread = { maxBlockDim,maxBlockDim,1 };
 	blocks = BLOCK_THREAD(solverOptions->gridSize[2]); // Kernel calls are based on the Spanwise gridSize
 	int3 gridSize = Array2Int3(solverOptions->gridSize);
-	for (int memberIdx = solverOptions->firstMemberIdx; memberIdx < solverOptions->lastMemberIdx+1; memberIdx++)
+	for (int memberIdx = fieldOptions[0].firstMemberIdx; memberIdx < fieldOptions[0].lastMemberIdx+1; memberIdx++)
 	{
-		if (fieldOptions->isCompressed == true)
-		{
-			
-			loadTextureCompressed(gridSize, this->volumeTexture_0, solverOptions->currentIdx, memberIdx);
-
-		}
-		else
-		{
-			loadTexture(solverOptions, this->volumeTexture_0, solverOptions->currentIdx, memberIdx);
-		}
+	
+		loadTexture(gridSize, this->volumeTexture_0, volume_IO, solverOptions->currentIdx, fieldOptions->isCompressed);
 
 		visitationMapGenerator << < blocks, thread >> > (*solverOptions, *raycastingOptions, *visitationOptions, volumeTexture_0.getTexture(), s_visitationMap.getSurfaceObject());
 		this->volumeTexture_0.release();
@@ -143,16 +134,7 @@ void VisitationMap::updateEnsembleMember()
 
 	int3 gridSize = Array2Int3(solverOptions->gridSize);
 	this->volumeTexture_1.release();
-	if (fieldOptions->isCompressed == true)
-	{
-
-		loadTextureCompressed(gridSize, this->volumeTexture_1, visitationOptions->ensembleMember);
-
-	}
-	else
-	{
-		loadTexture(solverOptions, this->volumeTexture_1,solverOptions->currentIdx, solverOptions->memberIdx);
-	}
+	loadTexture(gridSize, this->volumeTexture_1,this->volume_IO,solverOptions->currentIdx,solverOptions->memberIdx,fieldOptions->isCompressed);
 
 }
 

@@ -33,7 +33,6 @@ void seedParticle_ZY_Plane_FTLE
 ); 
 
 
-
+void seedParticleGridPoints(Particle* particle, float * gridDiameter, float * seedBox, float * seedBoxCenter, int * seedGrid);
 void seedParticleGridPoints(Particle* particle, const SolverOptions* solverOptions);
-
 void  seedParticleRandom(Particle* particle, const SolverOptions* solverOptions);

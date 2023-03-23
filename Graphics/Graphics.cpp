@@ -170,9 +170,8 @@ void Graphics::RenderFrame()
 
 	Timer timer;
 	fluctuationHeightfield.show(&renderImGuiOptions);	// Fluctuation Heightfield
-
+	pathSpaceTime.show(&renderImGuiOptions);
 	visitationMap.show(&renderImGuiOptions);
-
 	raycasting.show(&renderImGuiOptions);					// Raycasting 
 
 
@@ -656,6 +655,21 @@ bool Graphics::InitializeResources()
 		&this->timeSpace3DOptions
 	);
 
+	pathSpaceTime.setResources
+	(
+		&this->camera,
+		&this->windowWidth,
+		&this->windowHeight,
+		&this->solverOptions,
+		&this->raycastingOptions,
+		&this->renderingOptions,
+		this->device.Get(),
+		this->adapter,
+		this->deviceContext.Get(),
+		&this->pathSpaceTimeOptions,
+		fieldOptions
+	);
+
 	heightfieldFTLE.fsleOptions = &fsleOptions;
 	
 	if (!streamlineRenderer.initializeBuffers())
@@ -686,6 +700,9 @@ bool Graphics::InitializeResources()
 		return false;
 
 	if (!fluctuationHeightfield.initializeBuffers())
+		return false;
+
+	if (!pathSpaceTime.initializeBuffers())
 		return false;
 
 	if (!visitationMap.initializeBuffers())
@@ -848,7 +865,8 @@ bool Graphics::InitializeImGui(HWND hwnd)
 			&turbulentMixingOptions,
 			&timeSpace3DOptions,
 			&fieldOptions[0],
-			&visitationOptions
+			&visitationOptions,
+			&pathSpaceTimeOptions
 		);
 
 

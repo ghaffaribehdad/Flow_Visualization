@@ -79,7 +79,7 @@ public:
 	}
 
 	bool retrace();
-	virtual void gradient3D_Single();
+	//virtual void gradient3D_Single();
 
 protected:
 
@@ -98,7 +98,7 @@ protected:
 
 
 	virtual bool InitializeParticles();
-	virtual bool singleSurfaceInitialization();
+	//virtual bool singleSurfaceInitialization();
 
 	virtual bool InitializeHeightSurface3D();
 

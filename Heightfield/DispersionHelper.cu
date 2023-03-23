@@ -5,26 +5,26 @@
 #include "../Raycaster/IsosurfaceHelperFunctions.h"
 
 //Explicit Instantiation
-template __global__ void heightFieldGradient3D<struct FetchTextureSurface::Channel_X>\
-(\
-	cudaSurfaceObject_t heightFieldSurface,\
-	DispersionOptions dispersionOptions,\
-	SolverOptions	solverOptions\
-);
-
-template __global__ void fluctuationfieldGradient3D<struct FetchTextureSurface::Channel_X>\
-(\
-	cudaSurfaceObject_t heightFieldSurface3D,
-	SolverOptions solverOptions,
-	SpaceTimeOptions fluctuationOptions
-);
-
-template __global__ void fluctuationfieldGradient3D<struct FetchTextureSurface::Channel_Y>\
-(\
-	cudaSurfaceObject_t heightFieldSurface3D,
-	SolverOptions solverOptions,
-	SpaceTimeOptions fluctuationOptions
-	);
+//template __global__ void heightFieldGradient3D<struct FetchTextureSurface::Channel_X>\
+//(\
+//	cudaSurfaceObject_t heightFieldSurface,\
+//	DispersionOptions dispersionOptions,\
+//	SolverOptions	solverOptions\
+//);
+//
+//template __global__ void fluctuationfieldGradient3D<struct FetchTextureSurface::Channel_X>\
+//(\
+//	cudaSurfaceObject_t heightFieldSurface3D,
+//	SolverOptions solverOptions,
+//	SpaceTimeOptions fluctuationOptions
+//);
+//
+//template __global__ void fluctuationfieldGradient3D<struct FetchTextureSurface::Channel_Y>\
+//(\
+//	cudaSurfaceObject_t heightFieldSurface3D,
+//	SolverOptions solverOptions,
+//	SpaceTimeOptions fluctuationOptions
+//	);
 
 
 __global__ void traceDispersion
@@ -214,10 +214,10 @@ __global__ void heightFieldGradient3D
 			
 
 			float4 texel = { 0,0,0,0 };
-			texel.x = ValueAtXYZ_Surface_float4(heightFieldSurface3D, make_int3(index_x, index_y,time)).x;
+			texel.x = 0;// ValueAtXYZ_Surface_float4(heightFieldSurface3D, make_int3(index_x, index_y, time)).x;
 			texel.y = gradient.x;
 			texel.z = gradient.y;
-			texel.w = ValueAtXYZ_Surface_float4(heightFieldSurface3D, make_int3(index_x, index_y, time)).w;
+			texel.w = 0;//ValueAtXYZ_Surface_float4(heightFieldSurface3D, make_int3(index_x, index_y, time)).w;
 
 			surf3Dwrite(texel, heightFieldSurface3D, sizeof(float4) * index_x, index_y,time);
 
@@ -229,50 +229,50 @@ __global__ void heightFieldGradient3D
 
 
 
-__global__ void heightFieldGradient3DFTLE
-(
-	cudaSurfaceObject_t heightFieldSurface3D,
-	DispersionOptions dispersionOptions,
-	SolverOptions solverOptions
-)
-{
-	int index = CUDA_INDEX;
-
-	int gridPoints = dispersionOptions.gridSize_2D[0] * dispersionOptions.gridSize_2D[1];
-	
-
-	if (index < gridPoints)
-	{
-		int3 gridSize = { dispersionOptions.gridSize_2D[0] , dispersionOptions.gridSize_2D[1], solverOptions.lastIdx - solverOptions.firstIdx - 1 };
-		FetchTextureSurface::Channel_X fetchSurface;
-		for (int time = 1; time < solverOptions.lastIdx - solverOptions.firstIdx-1; time++)
-		{
-			int index_y = index / dispersionOptions.gridSize_2D[1];
-			int index_x = index - (index_y * dispersionOptions.gridSize_2D[1]);
-
-			float3 gradient = fetchSurface.GradientAtXYZ_Surf
-			(
-				heightFieldSurface3D, make_int3(index_x, index_y, time),
-				ARRAYTOFLOAT3(solverOptions.gridDiameter),
-				gridSize
-			);
-			
-			gradient = normalize(gradient);
-		
-
-			float4 texel = { 0,0,0,0 };
-			texel.x = ValueAtXYZ_Surface_float4(heightFieldSurface3D, make_int3(index_x, index_y, time)).x;
-			texel.y = gradient.x;
-			texel.z = gradient.y;
-			texel.w = gradient.z;
-
-			surf3Dwrite(texel, heightFieldSurface3D, sizeof(float4) * index_x, index_y, time);
-
-		}
-
-
-	}
-}
+//__global__ void heightFieldGradient3DFTLE
+//(
+//	cudaSurfaceObject_t heightFieldSurface3D,
+//	DispersionOptions dispersionOptions,
+//	SolverOptions solverOptions
+//)
+//{
+//	int index = CUDA_INDEX;
+//
+//	int gridPoints = dispersionOptions.gridSize_2D[0] * dispersionOptions.gridSize_2D[1];
+//	
+//
+//	if (index < gridPoints)
+//	{
+//		int3 gridSize = { dispersionOptions.gridSize_2D[0] , dispersionOptions.gridSize_2D[1], solverOptions.lastIdx - solverOptions.firstIdx - 1 };
+//		FetchTextureSurface::Channel_X fetchSurface;
+//		for (int time = 1; time < solverOptions.lastIdx - solverOptions.firstIdx-1; time++)
+//		{
+//			int index_y = index / dispersionOptions.gridSize_2D[1];
+//			int index_x = index - (index_y * dispersionOptions.gridSize_2D[1]);
+//
+//			float3 gradient = fetchSurface.GradientAtXYZ_Surf
+//			(
+//				heightFieldSurface3D, make_int3(index_x, index_y, time),
+//				ARRAYTOFLOAT3(solverOptions.gridDiameter),
+//				gridSize
+//			);
+//			
+//			gradient = normalize(gradient);
+//		
+//
+//			float4 texel = { 0,0,0,0 };
+//			texel.x = ValueAtXYZ_Surface_float4(heightFieldSurface3D, make_int3(index_x, index_y, time)).x;
+//			texel.y = gradient.x;
+//			texel.z = gradient.y;
+//			texel.w = gradient.z;
+//
+//			surf3Dwrite(texel, heightFieldSurface3D, sizeof(float4) * index_x, index_y, time);
+//
+//		}
+//
+//
+//	}
+//}
 
 
 
@@ -303,7 +303,7 @@ __global__ void fluctuationfieldGradient3D
 			{
 				float3 gradient = { 0.0f,0.0f,0.0f };
 
-				float4 texel = ValueAtXYZ_Surface_float4(heightFieldSurface3D, make_int3(index, y, t));
+				float4 texel = { 0.0f,0.0f,0.0f , 0.0f};// ValueAtXYZ_Surface_float4(heightFieldSurface3D, make_int3(index, y, t));
 
 				gradient = observable.GradientAtXYZ_Surf(heightFieldSurface3D, make_int3(index,y, t), ARRAYTOFLOAT3(solverOptions.gridDiameter), gridSize);
 				float sum = sqrt((gradient.x * gradient.x) + (gradient.z * gradient.z));
@@ -328,55 +328,55 @@ __global__ void fluctuationfieldGradient3D
 
 
 
-__global__ void fetch_ftle_height
-(
-	cudaTextureObject_t t_height,
-	cudaTextureObject_t t_ftle,
-	float * d_height,
-	float * d_ftle,
-	SolverOptions solverOptions,
-	DispersionOptions dispersionOptions,
-	int timestep
-)
-{
-	int index = CUDA_INDEX;
+//__global__ void fetch_ftle_height
+//(
+//	cudaTextureObject_t t_height,
+//	cudaTextureObject_t t_ftle,
+//	float * d_height,
+//	float * d_ftle,
+//	SolverOptions solverOptions,
+//	DispersionOptions dispersionOptions,
+//	int timestep
+//)
+//{
+//	int index = CUDA_INDEX;
+//
+//
+//	if (index < dispersionOptions.gridSize_2D[0] * dispersionOptions.gridSize_2D[1])
+//	{	
+//		int2 dim = make_int2(dispersionOptions.gridSize_2D[0], dispersionOptions.gridSize_2D[1]);
+//		int2 pixel = { 0,0 };
+//		pixel = IndexToPixel(index,dim);
+//
+//
+//		d_height[index] = ValueAtXYZ_float4(t_height, make_float3(pixel.x, pixel.y, timestep)).x;
+//		d_ftle[index] = ValueAtXYZ_float4(t_ftle, make_float3(pixel.x, pixel.y, timestep)).x;
+//
+//	}
+//}
 
-
-	if (index < dispersionOptions.gridSize_2D[0] * dispersionOptions.gridSize_2D[1])
-	{	
-		int2 dim = make_int2(dispersionOptions.gridSize_2D[0], dispersionOptions.gridSize_2D[1]);
-		int2 pixel = { 0,0 };
-		pixel = IndexToPixel(index,dim);
-
-
-		d_height[index] = ValueAtXYZ_float4(t_height, make_float3(pixel.x, pixel.y, timestep)).x;
-		d_ftle[index] = ValueAtXYZ_float4(t_ftle, make_float3(pixel.x, pixel.y, timestep)).x;
-
-	}
-}
-
-__global__ void fetch_ftle
-(
-	cudaTextureObject_t t_height,
-	cudaTextureObject_t t_ftle,
-	float * d_ftle,
-	SolverOptions solverOptions,
-	DispersionOptions dispersionOptions,
-	int timestep
-)
-{
-	int index = CUDA_INDEX;
-
-
-	if (index < dispersionOptions.gridSize_2D[0] * dispersionOptions.gridSize_2D[1])
-	{
-		int2 dim = make_int2(dispersionOptions.gridSize_2D[0], dispersionOptions.gridSize_2D[1]);
-		int2 pixel = { 0,0 };
-		pixel = IndexToPixel(index, dim);
-
-		d_ftle[index] = ValueAtXYZ_float4(t_ftle, make_float3(pixel.x, pixel.y, timestep)).x;
-	}
-}
+//__global__ void fetch_ftle
+//(
+//	cudaTextureObject_t t_height,
+//	cudaTextureObject_t t_ftle,
+//	float * d_ftle,
+//	SolverOptions solverOptions,
+//	DispersionOptions dispersionOptions,
+//	int timestep
+//)
+//{
+//	int index = CUDA_INDEX;
+//
+//
+//	if (index < dispersionOptions.gridSize_2D[0] * dispersionOptions.gridSize_2D[1])
+//	{
+//		int2 dim = make_int2(dispersionOptions.gridSize_2D[0], dispersionOptions.gridSize_2D[1]);
+//		int2 pixel = { 0,0 };
+//		pixel = IndexToPixel(index, dim);
+//
+//		d_ftle[index] = ValueAtXYZ_float4(t_ftle, make_float3(pixel.x, pixel.y, timestep)).x;
+//	}
+//}
 
 
 
@@ -403,8 +403,8 @@ __global__ void textureMean(
 		for(int time = 0; time < solverOptions.timeSteps; time++)
 		{
 			// extract the values
-			height = ValueAtXYZ_float4(t_height, make_float3(index_x, index_y, time)).x;
-			ftle = ValueAtXYZ_float4(t_ftle, make_float3(index_x, index_y, solverOptions.timeSteps - 1)).x;
+			//height = ValueAtXYZ_float4(t_height, make_float3(index_x, index_y, time)).x;
+			//ftle = ValueAtXYZ_float4(t_ftle, make_float3(index_x, index_y, solverOptions.timeSteps - 1)).x;
 
 			// add them to the mean values
 			atomicAdd_system(&d_mean_height[time], height / (float)gridPoints);
@@ -443,9 +443,9 @@ __global__ void pearson_terms(
 		for (int time = 0; time < solverOptions.timeSteps; time++)
 		{
 			// calculate terms of pearson
-			covariance = (ValueAtXYZ_float4(t_height, make_float3(index_x, index_y, time)).x - d_mean_height[time]) * (ValueAtXYZ_float4(t_ftle, make_float3(index_x, index_y, solverOptions.timeSteps - 1)).x - d_mean_ftle[time]);
-			variance_height =powf( ValueAtXYZ_float4(t_height, make_float3(index_x, index_y, time)).x - d_mean_height[time], 2.0f);
-			variance_ftle =powf( ValueAtXYZ_float4(t_ftle, make_float3(index_x, index_y, solverOptions.timeSteps - 1)).x - d_mean_ftle[time],2.0f);
+			covariance = 0; //(ValueAtXYZ_float4(t_height, make_float3(index_x, index_y, time)).x - d_mean_height[time]) * (ValueAtXYZ_float4(t_ftle, make_float3(index_x, index_y, solverOptions.timeSteps - 1)).x - d_mean_ftle[time]);
+			variance_height = 0; //powf( ValueAtXYZ_float4(t_height, make_float3(index_x, index_y, time)).x - d_mean_height[time], 2.0f);
+			variance_ftle = 0;//powf( ValueAtXYZ_float4(t_ftle, make_float3(index_x, index_y, solverOptions.timeSteps - 1)).x - d_mean_ftle[time],2.0f);
 			
 
 			atomicAdd_system(&d_pearson_cov[time], covariance);

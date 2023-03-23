@@ -42,7 +42,7 @@ struct SolverOptions
 {
 public:
 
-
+	int nField = 0;
 	std::string  fileName ="FieldP";
 	std::string  filePath = "G:\\KIT3MipMapL1\\";
 	std::string  subpath = "";

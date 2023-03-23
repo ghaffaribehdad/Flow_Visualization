@@ -25,7 +25,7 @@ bool CrossSection::initialize
 	// set the number of rays = number of pixels
 	this->rays = size_t(*this->width) * size_t(*this->height);
 
-	volume_IO_Primary.Initialize(this->fieldOptions);
+	volume_IO.Initialize(this->fieldOptions);
 
 	if (this->crossSectionOptions->mode == CrossSectionOptionsMode::SpanMode::WALL_NORMAL)
 	{
@@ -45,11 +45,11 @@ bool CrossSection::initialize
 void CrossSection::retraceCrossSectionField()
 {
 	this->t_volumeTexture.release();
-	this->volume_IO_Primary.readVolume(solverOptions->currentIdx);		// Read a velocity volume
-	t_volumeTexture.setField(volume_IO_Primary.getField_float());	// Pass a pointer to the Cuda volume texture
+	this->volume_IO.readVolume(solverOptions->currentIdx);		// Read a velocity volume
+	t_volumeTexture.setField(volume_IO.getField_float());	// Pass a pointer to the Cuda volume texture
 	t_volumeTexture.initialize(Array2Int3(solverOptions->gridSize), true, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);					// Initilize the Cuda texture
 
-	volume_IO_Primary.release();										// Release velocity volume from host memory
+	volume_IO.release();										// Release velocity volume from host memory
 }
 
 
@@ -160,12 +160,12 @@ template <> void CrossSection::traceCrossSectionField< CrossSectionOptionsMode::
 {
 
 	
-	this->volume_IO_Primary.readVolume(solverOptions->currentIdx);		// Read a velocity volume
-	t_volumeTexture.setField(volume_IO_Primary.getField_float());	// Pass a pointer to the Cuda volume texture
+	this->volume_IO.readVolume(solverOptions->currentIdx);		// Read a velocity volume
+	t_volumeTexture.setField(volume_IO.getField_float());	// Pass a pointer to the Cuda volume texture
 	
 	t_volumeTexture.initialize(ARRAYTOINT3(solverOptions->gridSize), true, cudaAddressModeBorder, cudaAddressModeBorder, cudaAddressModeBorder);								// Initilize the Cuda texture
 
-	volume_IO_Primary.release();
+	volume_IO.release();
 
 
 }
@@ -192,10 +192,10 @@ template <> void CrossSection::traceCrossSectionField< CrossSectionOptionsMode::
 
 			for (int i = 0; i < solverOptions->gridSize[2] * 4; i++)
 			{
-				h_velocity[i + pass] = volume_IO_Primary.getField_float()[i];
+				h_velocity[i + pass] = volume_IO.getField_float()[i];
 			}
 			pass += solverOptions->gridSize[2] * 4;
-			volume_IO_Primary.release();
+			volume_IO.release();
 		}
 
 	}

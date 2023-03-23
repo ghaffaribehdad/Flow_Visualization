@@ -56,7 +56,7 @@ private:
 	virtual bool InitializeParticles() override;
 	virtual void trace3D_path_Single() override;
 	virtual void rendering() override;
-	virtual bool singleSurfaceInitialization() override;
+	//virtual bool singleSurfaceInitialization() override;
 	void gradient3D(cudaSurfaceObject_t cudaSurface);
 	void correlation();
 	virtual bool initializeBoundingBox() override;

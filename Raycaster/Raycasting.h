@@ -30,10 +30,6 @@
 #include "../Graphics/RenderImGuiOptions.h"
 #include "../Cuda/CudaArray.h"
 
-
-
-
-
 class Raycasting
 {
 
@@ -54,7 +50,7 @@ protected:
 	float distImagePlane = 0.01f;
 	unsigned int maxBlockDim = 16;
 
-	bool b_initialized = false;
+	bool initialized = false;
 	bool b_updateScene = false;
 
 	int* width = nullptr;
@@ -75,7 +71,6 @@ protected:
 
 	VertexShader vertexshader;
 	PixelShader pixelshader;
-
 	VertexBuffer<TexCoordVertex> vertexBuffer;
 
 	ConstantBuffer<CB_pixelShader_Sampler>				PS_constantBuffer;
@@ -95,9 +90,7 @@ protected:
 	CudaSurface s_mipmapped;
 	Interoperability interoperatibility;
 
-	Volume_IO_Z_Major volume_IO_Primary;
-	Volume_IO_Z_Major volume_IO_Secondary;
-
+	Volume_IO_Z_Major volume_IO;
 
 	__host__ virtual bool initializeBoundingBox(); // Create and copy a Boundingbox in the Device constant memory
 	__host__ virtual bool initializeShaders();
@@ -112,7 +105,7 @@ protected:
 
 	__host__ bool initializeSamplerstate();
 	__host__ void setShaders();
-	__host__ void updateFile_Single
+	__host__ void updateFile
 	(
 		cudaTextureAddressMode addressMode_X = cudaAddressModeBorder,
 		cudaTextureAddressMode addressMode_Y = cudaAddressModeBorder,
@@ -134,29 +127,7 @@ protected:
 	);
 
 
-
-	void loadTexture
-	(
-		SolverOptions * solverOptions,
-		VolumeTexture3D & volumeTexture,
-		const int & idx,
-		const int & memberIdx = 0,
-		cudaTextureAddressMode addressModeX = cudaAddressModeBorder,
-		cudaTextureAddressMode addressModeY = cudaAddressModeBorder,
-		cudaTextureAddressMode addressModeZ = cudaAddressModeBorder
-	);
-
-
-	void loadTexture
-	(
-		int3 & gridSize,
-		VolumeTexture3D & volumeTexture,
-		const int & idx,
-		const int & memberIdx = 0,
-		cudaTextureAddressMode addressModeX = cudaAddressModeBorder,
-		cudaTextureAddressMode addressModeY = cudaAddressModeBorder,
-		cudaTextureAddressMode addressModeZ = cudaAddressModeBorder
-	);
+	
 
 	void loadTexture
 	(
@@ -164,29 +135,7 @@ protected:
 		VolumeTexture3D & volumeTexture,
 		Volume_IO_Z_Major & volumeIO,
 		const int & idx,
-		const int & memberIdx = 0,
-		cudaTextureAddressMode addressModeX = cudaAddressModeBorder,
-		cudaTextureAddressMode addressModeY = cudaAddressModeBorder,
-		cudaTextureAddressMode addressModeZ = cudaAddressModeBorder
-	);
-
-	void loadTextureCompressed
-	(
-		int3 & gridSize,
-		VolumeTexture3D & volumeTexture,
-		const int & idx,
-		const int & memberIdx = 0,
-		cudaTextureAddressMode addressModeX = cudaTextureAddressMode::cudaAddressModeBorder,
-		cudaTextureAddressMode addressModeY = cudaTextureAddressMode::cudaAddressModeBorder,
-		cudaTextureAddressMode addressModeZ = cudaTextureAddressMode::cudaAddressModeBorder
-	);
-
-	void loadTextureCompressed
-	(
-		int3 & gridSize,
-		VolumeTexture3D & volumeTexture,
-		Volume_IO_Z_Major & volumeIO,
-		const int & idx,
+		bool compressed = false,
 		const int & memberIdx = 0,
 		cudaTextureAddressMode addressModeX = cudaTextureAddressMode::cudaAddressModeBorder,
 		cudaTextureAddressMode addressModeY = cudaTextureAddressMode::cudaAddressModeBorder,
@@ -215,7 +164,7 @@ public:
 
 	
 
-	__host__ virtual bool initialize_Single
+	__host__ virtual bool initialize
 	(
 		cudaTextureAddressMode addressMode_X = cudaAddressModeBorder,
 		cudaTextureAddressMode addressMode_Y = cudaAddressModeBorder,
@@ -317,144 +266,45 @@ public:
 
 	__host__ virtual void show(RenderImGuiOptions* renderImGuiOptions)
 	{
-		if (b_initialized && !renderImGuiOptions->showRaycasting)
+		if (renderImGuiOptions->releaseRaycasting)
 		{
-			this->volumeTexture_0.release();
-			this->volumeTexture_1.release();
-			this->raycastingTexture.Reset();
-			this->volume_IO_Primary.release();
-			this->volume_IO_Secondary.release();
-			this->b_initialized = false;
+			this->release();
 		}
 		if (renderImGuiOptions->showRaycasting)
 		{
-
 			switch (raycastingOptions->raycastingMode)
 			{
 			case RaycastingMode::Mode::SINGLE:
-
-				if (!b_initialized)
-				{
-					this->initialize_Single();
-				}
-
-				if (solverOptions->fileChanged)
-				{
-					this->updateFile_Single();
-				}
-				if (renderImGuiOptions->updateRaycasting)
-				{
-					this->updateScene();
-					renderImGuiOptions->updateRaycasting = false;
-
-				}
-
-				this->draw();
-
-				break;
-
+			case RaycastingMode::Mode::DVR:
+			case RaycastingMode::Mode::DVR_DOUBLE:
 			case RaycastingMode::Mode::DOUBLE:
 			case RaycastingMode::Mode::DOUBLE_SEPARATE:
 			case RaycastingMode::Mode::DOUBLE_ADVANCED:
 			case RaycastingMode::Mode::DOUBLE_TRANSPARENCY:
-
-				if (!b_initialized)
-				{
-					this->initialize_Double();
-				}
-
-				if (solverOptions->fileChanged)
-				{
-					this->updateFile_Double();
-
-				}
+			case RaycastingMode::Mode::PLANAR:
+			case RaycastingMode::Mode::PLANAR_DOUBLE:
+			case RaycastingMode::Mode::PROJECTION_BACKWARD:
+			case RaycastingMode::Mode::PROJECTION_FORWARD:
+			case RaycastingMode::Mode::PROJECTION_AVERAGE:
+			case RaycastingMode::Mode::PROJECTION_LENGTH:
+				this->initialize();
+				if (renderImGuiOptions->updateFile[raycastingOptions->raycastingField_0] || renderImGuiOptions->updateFile[raycastingOptions->raycastingField_1])
+					this->updateFile();
 				if (renderImGuiOptions->updateRaycasting)
-				{
 					this->updateScene();
-					renderImGuiOptions->updateRaycasting = false;
-
-				}
-
 				this->draw();
-
 				break;
-
-			case  RaycastingMode::Mode::MULTISCALE:
+			case RaycastingMode::Mode::MULTISCALE:
 			case RaycastingMode::Mode::MULTISCALE_TEMP:
-
-				if (!b_initialized)
-				{
+			case RaycastingMode::Mode::MULTISCALE_DEFECT:
+				if (!initialized)
 					this->initialize_Multiscale();
-				}
-
 				if (solverOptions->fileChanged)
-				{
 					this->updateFile_MultiScale();
-				}
 				if (renderImGuiOptions->updateRaycasting)
-				{
 					this->updateScene();
-					renderImGuiOptions->updateRaycasting = false;
-
-				}
-
 				this->draw();
-
 				break;
-
-
-			case  RaycastingMode::Mode::MULTISCALE_DEFECT:
-
-				if (!b_initialized)
-				{
-					this->initialize_Multiscale();
-				}
-
-				if (solverOptions->fileChanged)
-				{
-					this->updateFile_MultiScale();
-
-				}
-				if (renderImGuiOptions->updateRaycasting)
-				{
-					this->updateScene();
-					renderImGuiOptions->updateRaycasting = false;
-
-				}
-
-				this->draw();
-
-				break;
-
-
-			case  RaycastingMode::Mode::PLANAR:
-			case RaycastingMode::Mode::PROJECTION_BACKWARD:   
-			case RaycastingMode::Mode::PROJECTION_FORWARD:   
-			case RaycastingMode::Mode::PROJECTION_AVERAGE:   
-			case RaycastingMode::Mode::PROJECTION_LENGTH:   
-
-				if (!b_initialized)
-				{
-					this->initialize_Single();
-				}
-
-				if (solverOptions->fileChanged)
-				{
-					this->updateFile_Single();
-
-
-				}
-				if (renderImGuiOptions->updateRaycasting)
-				{
-					this->updateScene();
-					renderImGuiOptions->updateRaycasting = false;
-
-				}
-
-				this->draw();
-
-				break;
-
 
 			}
 		}
@@ -505,8 +355,6 @@ __global__ void CudaCrossSectionRenderer
 );
 
 
-
-template <typename Observable>
 __global__ void CudaTerrainRenderer
 (
 	cudaSurfaceObject_t raycastingSurface,
@@ -515,6 +363,7 @@ __global__ void CudaTerrainRenderer
 	float samplingRate,
 	float IsosurfaceTolerance,
 	DispersionOptions dispersionOptions,
+	RenderingOptions renderingOptions,
 	int traceTime
 );
 
@@ -605,7 +454,6 @@ __global__ void CudaTerrainRenderer_height_isoProjection
 (
 	cudaSurfaceObject_t raycastingSurface,
 	cudaTextureObject_t heightField,
-	cudaTextureObject_t field,
 	int rays,
 	float samplingRate,
 	float IsosurfaceTolerance,

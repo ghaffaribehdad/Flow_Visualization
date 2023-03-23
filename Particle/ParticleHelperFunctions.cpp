@@ -116,6 +116,45 @@ void seedParticle_ZY_Plane_FTLE
 }
 
 
+ void seedParticleGridPoints(Particle* particle, float * gridDiameter, float * seedBox, float * seedBoxCenter, int * seedGrid)
+ {
+	 float3 gridMeshSize =
+	 {
+		 seedBox[0] / ((float)seedGrid[0]),
+		 seedBox[1] / ((float)seedGrid[1]),
+		 seedBox[2] / ((float)seedGrid[2]),
+	 };
+
+	 for (int x = 0; x < seedGrid[0]; x++)
+	 {
+		 for (int y = 0; y < seedGrid[1]; y++)
+		 {
+			 for (int z = 0; z < seedGrid[2]; z++)
+			 {
+				 int index = x * seedGrid[1] * seedGrid[2] + y * seedGrid[2] + z;
+				 particle[index].m_position =
+				 {
+
+					 gridDiameter[0] / 2.0f -
+					 seedBox[0] / 2.0f + seedBoxCenter[0] + (float)(x)* gridMeshSize.x,
+
+					 gridDiameter[1] / 2.0f -
+					 seedBox[1] / 2.0f +
+					 seedBoxCenter[1] + (float)(y)* gridMeshSize.y,
+
+					 gridDiameter[2] / 2.0f -
+					 seedBox[2] / 2.0f +
+					 seedBoxCenter[2] + (float)(z)* gridMeshSize.z
+				 };
+
+			 }
+		 }
+	 }
+
+ }
+
+
+
 __host__ void seedParticleRandom(Particle* particle, const SolverOptions* solverOptions)
 {
 

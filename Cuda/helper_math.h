@@ -58,6 +58,11 @@ static __host__ __device__ __inline__ double sign(float v) { return ::fsign(v); 
 	 return make_float2(a.x, a.y);
  }
 
+ inline __host__ __device__ float3 FLOAT4XYZ(const float4& a)
+ {
+	 return make_float3(a.x, a.y,a.z);
+ }
+
  inline __host__ __device__ int2 INT3XY(const int3& a)
  {
 	 return make_int2(a.x, a.y);
@@ -228,6 +233,31 @@ inline __host__ __device__ float3 operator/(float3 a, int3 b)
 	);
 }
 
+inline __host__ __device__ int minIndex(int * x, const size_t & size)
+{
+	int minimumDim = 0;
+	for (int i = 1; i < size; i++) {
+		if (x[i] < x[minimumDim])
+			minimumDim = i;
+	}
+
+	return minimumDim;
+}
+
+inline __host__ __device__ int minDim(int3 x)
+{
+	int minimumDim = 0;
+	if (x.y < x.x)
+		minimumDim = 1;
+	if (minimumDim == 1 && x.z < x.y)
+		return 2;
+	if (minimumDim == 0 && x.z < x.x)
+		return 2;
+	return minimumDim;
+}
+
+
+
 inline __host__ __device__ float2 operator/(float2 a, int2 b)
 {
 	return make_float2
@@ -325,6 +355,17 @@ inline __host__ __device__ float3 operator/(float3 a, float3 b)
 inline __host__ __device__ float2 operator*(float a, float2 b)
 {
 	return make_float2(a * b.x, a * b.y);
+}
+
+inline __host__ __device__ int3 operator*(int3 a, int3 b)
+{
+	return make_int3(a.x * b.x, a.y * b.y,a.z*b.z);
+}
+
+
+inline __host__ __device__ float3 operator+(float3 a, int3 b)
+{
+	return make_float3(a.x + b.x, a.y + b.y, a.z + b.z);
 }
 
 inline __host__ __device__ float2 operator*(float a, int2 b)
@@ -1036,7 +1077,7 @@ __device__ __host__ inline double eigenValueMax(dMat3X3 & J)
 		// the eigenvalues satisfy eig3 <= eig2 <= eig1
 		eig.x = q + 2.0 * p * cos(phi);
 		eig.z = q + 2.0 * p * cos(phi + (2.0 * CUDA_PI_D / 3.0));
-		eig.y = 3.0 * q - eig.x - eig.z; // % since trace(A) = eig1 + eig2 + eig3;
+		eig.y = 3.0 * q - eig.x - eig.z; // since trace(A) = eig1 + eig2 + eig3;
 
 	}
 
@@ -1099,6 +1140,14 @@ inline __device__  float3 world2Tex(float3 position, float3 dimension, const int
 
 	}
 
+	return pos;
+}
+
+
+inline __device__  float3 world2TexReshape(float3 position, float3 & dimension,int3 & gridSize, int3 & offset)
+{
+	float3 pos = (position / dimension)	* make_int3(gridSize.x - 1,  gridSize.y - 1, gridSize.z - 1) + make_float3(0.5f, 0.5f, 0.5f);	
+	pos = pos + (offset);
 	return pos;
 }
 

@@ -83,6 +83,23 @@ public:
 		return true;
 	}
 
+	bool initialize(const int3 & _extent)
+	{
+
+		this->extent = make_cudaExtent(_extent.x, _extent.y, _extent.z);
+
+		// Create Format description based on the template typename
+		this->channelFormatDesc = cudaCreateChannelDesc<T>();
+
+		// Allocate 3D Array
+		gpuErrchk(cudaMalloc3DArray(&this->cuArray, &channelFormatDesc, extent))
+
+			// set initialization status to true
+			this->initialized = true;
+
+		return true;
+	}
+
 	bool memoryCopy(float * h_field)
 	{
 		if (this->initialized == true)

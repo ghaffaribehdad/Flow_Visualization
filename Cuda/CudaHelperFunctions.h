@@ -4,6 +4,7 @@
 #include "../Particle/Particle.h"
 #include "../Options/SolverOptions.h"
 #include "../Options/SpaceTimeOptions.h"
+#include "../Options/pathSpaceTimeOptions.h"
 #include "..//Graphics/Vertex.h"
 #include "..//Cuda/helper_math.h"
 #include "cuda_runtime.h"
@@ -46,7 +47,6 @@ __device__ Particle RK4Streak
 
 
 
-
 __global__ void TracingPath
 (
 	Particle* d_particles,
@@ -59,6 +59,24 @@ __global__ void TracingPath
 );
 
 
+__global__ void TracingPathSurface
+(
+	cudaTextureObject_t t_VelocityField_0,
+	cudaTextureObject_t t_VelocityField_1,
+	cudaSurfaceObject_t s_particles,
+	SolverOptions solverOptions,
+	PathSpaceTimeOptions pathSpaceTimeOptions,
+	int step
+);
+
+__global__ void initializePathSpaceTime
+(
+	Particle* d_particle,
+	cudaSurfaceObject_t s_pathSpaceTime,
+	PathSpaceTimeOptions pathSpaceTimeOptions
+);
+
+
 
 __global__ void InitializeVertexBufferStreaklines
 (
@@ -67,45 +85,7 @@ __global__ void InitializeVertexBufferStreaklines
 	Vertex* p_VertexBuffer
 );
 
-template <typename T1, typename T2, typename T3, typename T4>
-__global__ void copyTextureToSurface
-(
-	int streamwisePos,
-	int time,
-	SolverOptions solverOptions,
-	cudaTextureObject_t t_velocityField,
-	cudaSurfaceObject_t	s_velocityField
-)
-{
-	int index = CUDA_INDEX; // The Spanwise Position
 
-	float textureOffset = 0.5;
-
-	if (index < solverOptions.gridSize[2])
-	{
-
-		for (int y = 0; y < solverOptions.gridSize[1]; y++)
-		{
-			T1 measure1;
-			T2 measure2;
-			T3 measure3;
-			T4 measure4;
-
-			float3 pos = make_float3(streamwisePos + textureOffset, y + textureOffset, index + textureOffset);
-			float value1 = measure1.ValueAtXYZ_Tex(t_velocityField, pos);
-			float value2 = measure2.ValueAtXYZ_Tex(t_velocityField, pos);
-			float value3 = measure3.ValueAtXYZ_Tex(t_velocityField, pos);
-			float value4 = measure4.ValueAtXYZ_Tex(t_velocityField, pos);
-
-			float4 value = make_float4(value1, value2, value3, value4);
-
-			surf3Dwrite(value, s_velocityField, 4 * sizeof(float) * time, y,  index);
-
-		}
-	}
-
-
-}
 
 //__global__ void applyGaussianFilter
 //(
@@ -275,6 +255,15 @@ inline __device__ __host__ int2 index2pixel(const int& index, const int& width)
 	return pixel;
 };
 
+
+inline __device__ __host__ int3 indexto3D(int3 gridSize, int index) {
+	int3 index3D = make_int3(0, 0, 0);
+	index3D.x = int(index / (gridSize.y * gridSize.z));
+	index3D.y = int((index - index3D.x*gridSize.y*gridSize.z) / gridSize.z);
+	index3D.z = index - index3D.x*gridSize.y*gridSize.z - index3D.y*gridSize.z;
+
+	return index3D;
+};
 
 
 inline __device__ __host__ float depthfinder(const float3& position, const float3& eyePos, const float3& viwDir, const float& f, const float& n)

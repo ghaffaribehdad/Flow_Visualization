@@ -634,6 +634,12 @@
     <ClInclude Include="Options\VisitationOptions.h">
       <Filter>Header Files\Options</Filter>
     </ClInclude>
+    <ClInclude Include="Heightfield\pathSpaceTime.h">
+      <Filter>Header Files\Heightfield</Filter>
+    </ClInclude>
+    <ClInclude Include="Options\pathSpaceTimeOptions.h">
+      <Filter>Header Files\Options</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\geometryshaderLineTube.hlsl">
@@ -792,6 +798,9 @@
     </CudaCompile>
     <CudaCompile Include="VisitationMap\VisitationMap.cu">
       <Filter>Source Files\VisitationMap</Filter>
+    </CudaCompile>
+    <CudaCompile Include="Heightfield\pathSpaceTime.cu">
+      <Filter>Source Files\Heightfield</Filter>
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>

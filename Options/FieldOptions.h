@@ -10,6 +10,9 @@ struct FieldOptions
 	float gridDiameter[3] = { 0,0,0 };
 	bool isCompressed = false;
 	bool isEnsemble = false;
+	int firstMemberIdx = 0;
+	int lastMemberIdx = 0;
+	int currentIdx = 1;
 	int firstIdx = 0;
 	int lastIdx = 0;
 	float dt = 0;
@@ -63,6 +66,8 @@ struct FieldOptions
 		float _gridDiameterZ,
 		int _firstIdx,
 		int _lastIdx,
+		int _firstMemberIdX,
+		int _lastMemberIdX,
 		float _dt,
 		bool _isCompressed = false,
 		size_t _fileSizeMaxByte = 0
@@ -70,6 +75,8 @@ struct FieldOptions
 	{
 		setField(_fileName, _filePath, _gridSizeX, _gridSizeY, _gridSizeZ, _gridDiameterX, _gridDiameterY, _gridDiameterZ, _firstIdx, _lastIdx, _dt,_isCompressed,_fileSizeMaxByte);
 		subpath = _subPath;
+		firstMemberIdx = _firstMemberIdX;
+		lastMemberIdx = _lastMemberIdX;
 		isEnsemble = true;
 	}
 

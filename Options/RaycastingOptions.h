@@ -15,6 +15,16 @@ namespace IsoMeasure
 		SHEAR_STRESS,
 		KINETIC_ENERGY,
 		LAMBDA2,
+		DIFFERENCE_X,
+		DIFFERENCE_Y,
+		DIFFERENCE_Z,
+		DIFFERENCE_W,
+		AVERAGE_DOUBLE,
+		MAXIMUM_DOUBLE,
+		MINIMUM_DOUBLE,
+		NORMAL_CURVES,
+		IMPORTANCE_DIFF_LESS,
+		Finite_TIME,
 		COUNT
 	};
 
@@ -27,7 +37,17 @@ namespace IsoMeasure
 		"Velocity W",
 		"Shear Stress",
 		"Kinetic Energy",
-		"lambda2"
+		"lambda2",
+		"Difference X",
+		"Difference Y",
+		"Difference Z",
+		"Difference W",
+		"Average Double",
+		"Minimum Double",
+		"Maximum Double",
+		"Gradient Length",
+		"Importance diff less",
+		"FTLE",
 	};
 
 	enum ProjectionPlane
@@ -80,6 +100,8 @@ namespace RaycastingMode
 	enum Mode
 	{
 		SINGLE = 0,
+		DVR,
+		DVR_DOUBLE,
 		SINGLE_COLORCODED,
 		DOUBLE,
 		DOUBLE_SEPARATE,
@@ -89,6 +111,7 @@ namespace RaycastingMode
 		MULTISCALE_TEMP,
 		MULTISCALE_DEFECT,
 		PLANAR,
+		PLANAR_DOUBLE,
 		PROJECTION_FORWARD,
 		PROJECTION_BACKWARD,
 		PROJECTION_AVERAGE,
@@ -101,6 +124,8 @@ namespace RaycastingMode
 	static const char* const modeList[] =
 	{
 		"Single",
+		"DVR",
+		"DVR Double",
 		"Single Color-coded",
 		"Double",
 		"Double Separate",
@@ -110,6 +135,7 @@ namespace RaycastingMode
 		"Multi-scale-temp",
 		"Multi-scale Defect",
 		"Planar",
+		"Planar Double",
 		"Projection Forward",
 		"Projection Backward",
 		"Projection Average",
@@ -145,8 +171,11 @@ public:
 	bool adaptiveSampling = false;
 	bool insideOnly = false;
 	bool resize = false;
-	bool normalCurves = false;
+
+	bool diffImportance = false;
+	float limit_difference = 0.1f;
 	bool secondaryOnly = false;
+	bool within = false;
 
 	int maxIteration = 10;
 	int projectionPlane = IsoMeasure::ProjectionPlane::YZPLANE;
@@ -158,6 +187,8 @@ public:
 	int fieldLevel_1 = IsoMeasure::FieldLevel::L1;
 	int fieldLevel_2 = IsoMeasure::FieldLevel::L2;
 
+	int raycastingField_0 = 0;
+	int raycastingField_1 = 1;
 
 	float reflectionCoefficient = 0.8f;
 
@@ -181,7 +212,11 @@ public:
 	float transparency_0 = 0.0f;
 	float transparency_1 = 0.3f;
 
+	float amplitude = 1.0f;
+	float relax = 1.0f;
 
+	bool normalCurves = false;
+	float max_distance = 0;
 
 	int timestep = 1;
 	int raycastingMode = RaycastingMode::Mode::SINGLE;

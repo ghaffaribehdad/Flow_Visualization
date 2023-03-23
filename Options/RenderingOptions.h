@@ -76,7 +76,6 @@ struct RenderingOptions
 	float minMeasure = 0.0f;
 
 
-	bool isRaycasting = false;
 	float bgColor[4] = {1.0f,1.0f,1.0f,1.0f };
 	float lightColor[4] = {1.0f,1.0f,1.0f,1.0f };
 

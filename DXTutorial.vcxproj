@@ -224,6 +224,7 @@
     <ClCompile Include="Graphics\StreamlineRenderer.cpp" />
     <ClCompile Include="Includes\ScreenGrab11.cpp" />
     <ClCompile Include="Particle\ParticleHelperFunctions.cpp" />
+    <CudaCompile Include="Heightfield\pathSpaceTime.cu" />
     <CudaCompile Include="Raycaster\CallerFunctions.cu" />
     <CudaCompile Include="Raycaster\FieldGenerator3D.cu" />
     <CudaCompile Include="Raycaster\TimeSpaceField.cu">
@@ -286,10 +287,12 @@
     <ClInclude Include="Heightfield\ftleHelperFunctions.h" />
     <ClInclude Include="Heightfield\HightfieldFTLE.h" />
     <ClInclude Include="FSLE\FSLE.h" />
+    <ClInclude Include="Heightfield\pathSpaceTime.h" />
     <ClInclude Include="Includes\ScreenGrab11.h" />
     <ClInclude Include="Options\CrossSectionOptions.h" />
     <ClInclude Include="Options\DispresionOptions.h" />
     <ClInclude Include="Options\FieldOptions.h" />
+    <ClInclude Include="Options\pathSpaceTimeOptions.h" />
     <ClInclude Include="Options\SpaceTimeOptions.h" />
     <ClInclude Include="Options\FSLEOptions.h" />
     <ClInclude Include="Options\RenderingOptions.h" />

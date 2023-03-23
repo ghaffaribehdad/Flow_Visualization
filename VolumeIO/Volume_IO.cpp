@@ -17,12 +17,11 @@
 bool VolumeIO::Volume_IO::readVolume(const unsigned int & time, const int & member_idx)
 {
 	// Generate absolute path of the file
-	if(!isEnsemble)
+	if (!isEnsemble)
 		this->fullName = m_filePath + m_fileName + std::to_string(time) + ".bin";
 	else
-		this->fullName = m_filePath + m_subPath + std::to_string(time) +"\\"+ m_fileName + std::to_string(member_idx) + ".bin";
+		this->fullName = m_filePath + m_subPath + std::to_string(time) + "\\" + m_fileName + std::to_string(member_idx) + ".bin";
 	// Read volume into the buffer
-
 	return Read();
 }
 

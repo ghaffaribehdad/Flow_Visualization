@@ -12,6 +12,7 @@ CUDASolver::CUDASolver()
 // Initilize the solver
 bool CUDASolver::Initialize(SolverOptions * _solverOptions, FieldOptions * _fieldOptions)
 {
+	this->volumeTexture.release();
 	this->solverOptions = _solverOptions;
 	this->fieldOptions = _fieldOptions;
 	this->InitializeCUDA();

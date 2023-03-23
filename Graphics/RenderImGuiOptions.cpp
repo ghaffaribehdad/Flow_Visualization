@@ -7,7 +7,12 @@ void RenderImGuiOptions::drawSolverOptions()
 	if (this->b_drawSolverOptions)
 	{
 		// Solver Options
+		ImGui::Begin("Solver Options");
 
+		if (ImGui::Combo("Select Field", &solverOptions->nField, ActiveField::ActiveFieldList, nFields))
+		{
+
+		}
 
 		if (ImGui::Combo("Line Rendering Mode", &solverOptions->lineRenderingMode, LineRenderingMode::LineRenderingModeList, LineRenderingMode::LineRenderingMode::COUNT))
 		{
@@ -288,6 +293,8 @@ void RenderImGuiOptions::drawSolverOptions()
 			this->updateStreamlines = true;
 			solverOptions->loadNewfile = true;
 			this->solverOptions->fileChanged = true;
+			this->updateFile[0] = true;
+
 
 			this->updateTimeSpaceField = true;
 			this->updateRaycasting = true;
@@ -537,7 +544,7 @@ void RenderImGuiOptions::drawSolverOptions()
 
 		}
 
-
+		ImGui::SameLine();
 		if (ImGui::Button("Bottom", ImVec2(80, 25)))
 		{
 			this->camera->SetPosition(0, 0, -10);
@@ -549,7 +556,7 @@ void RenderImGuiOptions::drawSolverOptions()
 			this->updateFTLE = true;
 
 		}
-		ImGui::SameLine();
+
 		if (ImGui::Button("Side", ImVec2(80, 25)))
 		{
 			this->camera->SetPosition(6.7f, 3.40f, 9.3f);
@@ -574,7 +581,7 @@ void RenderImGuiOptions::drawSolverOptions()
 			this->updateFTLE = true;
 
 		}
-
+		ImGui::SameLine();
 		if (ImGui::Button("Top Zoom", ImVec2(80, 25)))
 		{
 			this->camera->SetPosition(0, 1, 0);
@@ -586,7 +593,7 @@ void RenderImGuiOptions::drawSolverOptions()
 			this->updateFTLE = true;
 
 		}
-
+		ImGui::SameLine();
 		if (ImGui::Button("Edge View Positive", ImVec2(80, 25)))
 		{
 			this->camera->SetPosition(-5.18f, 5.71f, -8.42f);
@@ -610,46 +617,192 @@ void RenderImGuiOptions::drawFieldOptions()
 	ImGui::Begin("Field Options");
 
 
+	if (ImGui::Button("Set Default", ImVec2(100, 30)))
+	{
+		setArray<float>(&this->solverOptions->seedBox[0], &fieldOptions[0].gridDiameter[0]);
+		setArray<float>(&this->raycastingOptions->clipBox[0], &fieldOptions[0].gridDiameter[0]);
+
+		this->solverOptions->gridDiameter[0] = fieldOptions[0].gridDiameter[0];
+		this->solverOptions->gridDiameter[1] = fieldOptions[0].gridDiameter[1];
+		this->solverOptions->gridDiameter[2] = fieldOptions[0].gridDiameter[2];
+		this->solverOptions->gridSize[0] = fieldOptions[0].gridSize[0];
+		this->solverOptions->gridSize[1] = fieldOptions[0].gridSize[1];
+		this->solverOptions->gridSize[2] = fieldOptions[0].gridSize[2];
+		this->solverOptions->firstIdx = fieldOptions[0].firstIdx;
+		this->solverOptions->lastIdx = fieldOptions[0].lastIdx;
+	}
+
+	ImGui::SameLine();
+
+	if (ImGui::Button("Add Fields", ImVec2(100, 30)))
+	{
+		if (nFields < 4)
+		{
+			this->nFields++;
+		}
+	}
+	ImGui::SameLine();
+	if (ImGui::Button("Remove Fields", ImVec2(100, 30)))
+	{
+		if (nFields > 1)
+		{
+			this->nFields--;
+		}
+	}
+
 	for (int i = 0; i < nFields; i++)
 	{
+
+			if (ImGui::Combo((std::string("Dataset") + std::to_string(i)).c_str(), reinterpret_cast<int*>(&this->dataset[i]), Dataset::datasetList, Dataset::Dataset::COUNT))
+			{
+				updateFile[i] = true;
+
+				switch (dataset[i])
+				{
+
+				case Dataset::Dataset::KIT2REF_COMP:
+					this->fieldOptions[i].setField("Comp_FieldP", "G:\\Dataset_Compressed\\KIT2\\Comp_Ref\\", 192, 192, 192, 7.854f, 2.0f, 3.1415f, 1, 1000, 0.001f, true, 7000000);
+					break;
+				case Dataset::Dataset::KIT2OW_COMP:
+					this->fieldOptions[i].setField("Comp_FieldP", "G:\\Dataset_Compressed\\KIT2\\Comp_OW\\", 192, 192, 192, 7.854f, 2.0f, 3.1415f, 1, 1000, 0.001f, true, 7000000);
+					break;
+				case Dataset::Dataset::KIT2BF_COMP:
+					this->fieldOptions[i].setField("Comp_FieldP", "G:\\Dataset_Compressed\\KIT2\\Comp_Ref\\", 192, 192, 192, 7.854f, 2.0f, 3.1415f, 1, 1000, 0.001f, true, 7000000);
+					break;
+				case Dataset::Dataset::GRAND_ENSEMBLE_OF_AVG_262:
+					this->fieldOptions[i].setField("OF_temperature_dt_avg_262_", "F:\\Grand_ensemble\\", 651, 716, 65, 2.0f, 2.0f, 2.0f, 1, 23, 0.001f);
+					break;
+				case Dataset::Dataset::GRAND_ENSEMBLE_OF_AVG_263:
+					this->fieldOptions[i].setField("OF_temperature_dt_avg_263_", "F:\\Grand_ensemble\\", 651, 716, 65, 2.0f, 2.0f, 2.0f, 1, 23, 0.001f);
+					break;
+				case Dataset::Dataset::GRAND_ENSEMBLE_OF_AVG_264:
+					this->fieldOptions[i].setField("OF_temperature_dt_avg_264_", "F:\\Grand_ensemble\\", 651, 716, 65, 2.0f, 2.0f, 2.0f, 1, 23, 0.001f);
+					break;
+				case Dataset::Dataset::GRAND_ENSEMBLE_OF_VIS_262:
+					this->fieldOptions[i].setField("OF_temperature_dt_vis_262_", "F:\\Grand_ensemble\\", 651, 716, 65, 2.0f, 2.0f, 2.0f, 1, 23, 0.001f);
+					break;
+				case Dataset::Dataset::GRAND_ENSEMBLE_OF_VIS_263:
+					this->fieldOptions[i].setField("OF_temperature_dt_vis_263_", "F:\\Grand_ensemble\\", 651, 716, 65, 2.0f, 2.0f, 2.0f, 1, 23, 0.001f);
+					break;
+				case Dataset::Dataset::GRAND_ENSEMBLE_OF_VIS_264:
+					this->fieldOptions[i].setField("OF_temperature_dt_vis_264_", "F:\\Grand_ensemble\\", 651, 716, 65, 2.0f, 2.0f, 2.0f, 1, 23, 0.001f);
+					break;
+				case Dataset::Dataset::GRAND_ENSEMBLE_TIME:
+					this->fieldOptions[i].setFieldEnsemble("member_", "F:\\Grand_ensemble\\", "time_", 651, 716, 65, 2.0f, 2.0f, 2.0f, 1, 23, 1, 20, 0.001f);
+					break;
+				case Dataset::Dataset::MUTUAL_INFO:
+					this->fieldOptions[i].setField("mi_", "E:\\MutualInfoField\\", 250, 20, 352, 3.0f, 2.0f, 3.0f,0, 1, 0.001f);
+					break;
+				case Dataset::Dataset::MUTUAL_INFO_1:
+					this->fieldOptions[i].setField("mi_", "E:\\MutualInfoField\\", 250, 20, 352, 3.0f, 2.0f, 3.0f, 1, 1, 0.001f);
+					break;
+				case Dataset::Dataset::KIT3_COMPRESSED:
+					this->fieldOptions[i].setField("Fluc_Comp_", "G:\\Dataset_Compressed\\KIT3\\Comp_Fluc\\", 64, 503, 2048, 0.4f, 2.0f, 7.0f, 500, 1000, 0.001f, true, 64000000);
+					break;
+				case Dataset::Dataset::KIT3_RAW:
+					this->fieldOptions[i].setField("FieldP", "G:\\KIT3\\Initial\\", 64, 503, 2048, 0.4f, 2.0f, 7.0f, 500, 1000, 0.001f);
+					break;
+				case Dataset::Dataset::RBC_AVG:
+					this->fieldOptions[i].setField("Field_AVG", "E:\\TUI_RBC_Small\\timeAVG\\", 1024, 32, 1024, 5.0f, 0.2f, 5.0f, 1, 50, 0.001f);
+					break;
+				case Dataset::Dataset::RBC_AVG_50:
+					this->fieldOptions[i].setField("FieldAVG_50_", "Y:\\RBC\\AVG50\\", 1024, 32, 1024, 5.0f, 0.2f, 5.0f, 1, 50, 0.001f);
+					break;
+				case Dataset::Dataset::RBC_AVG_20:
+					this->fieldOptions[i].setField("FieldAVG_20_", "Y:\\RBC\\AVG20\\", 1024, 32, 1024, 5.0f, 0.2f, 5.0f, 1, 50, 0.001f);
+					break;
+				case Dataset::Dataset::RBC_AVG_100:
+					this->fieldOptions[i].setField("FieldAVG_100_", "Y:\\RBC\\AVG100\\", 1024, 32, 1024, 5.0f, 0.2f, 5.0f, 1, 50, 0.001f);
+					break;
+				case Dataset::Dataset::RBC_AVG_OF_20:
+					this->fieldOptions[i].setField("AVG20_OF_", "Y:\\RBC\\AVG20_OF\\", 1024, 32, 1024, 5.0f, 0.2f, 5.0f, 1, 50, 0.001f);
+					break;
+				case Dataset::Dataset::RBC_AVG_OF_50:
+					this->fieldOptions[i].setField("AVG50_OF_", "Y:\\RBC\\AVG50_OF\\", 1024, 32, 1024, 5.0f, 0.2f, 5.0f, 1, 50, 0.001f);
+					break;
+				case Dataset::Dataset::RBC_AVG_OF_100:
+					this->fieldOptions[i].setField("AVG100_OF_", "Y:\\RBC\\AVG100_OF\\", 1024, 32, 1024, 5.0f, 0.2f, 5.0f, 1, 50, 0.001f);
+					break;
+				case Dataset::Dataset::RBC_OF:
+					this->fieldOptions[i].setField("OF_temperature", "E:\\TUI_RBC_Small\\OF\\", 1024, 32, 1024, 5.0f, 0.2f, 5.0f, 1, 50, 0.001f);
+					break;
+				case Dataset::Dataset::RBC_AVG_OF_600:
+					this->fieldOptions[i].setField("Field_OF_AVG600_", "E:\\TUI_RBC_Small\\timeAVG\\", 1024, 32, 1024, 5.0f, 0.2f, 5.0f, 1, 50, 0.001f);
+					break;
+				case Dataset::Dataset::RBC_AVG500:
+					this->fieldOptions[i].setField("Field_OF_AVG600_", "E:\\TUI_RBC_Small\\timeAVG\\", 1024, 32, 1024, 5.0f, 0.2f, 5.0f, 1, 50, 0.001f);
+					break;
+				case Dataset::Dataset::SMOKE_00050_ENSEMBLE:
+					this->fieldOptions[i].setField("denisty50_padded_", "G:\\Smoke_ensembleData\\density_bin_000050\\", 100, 178, 100, 2.0f, 3.56f, 2.0f, 1, 31, 0.001f);
+					break;
+				case Dataset::Dataset::KIT3_CC:
+					this->fieldOptions[i].setField("FieldP_CC_Decomp_", "E:\\Compression_Report\\SingleKIT3\\ParticleTracing\\", 64, 503, 2048, 0.4f, 2.0f, 7.0f, 800, 800, 0.001f);
+					break;
+				case Dataset::Dataset::KIT3_CUSZ:
+					this->fieldOptions[i].setField("FieldP_CCSZ_Decomp_", "E:\\Compression_Report\\SingleKIT3\\ParticleTracing\\", 64, 503, 2048, 0.4f, 2.0f, 7.0f, 800, 800, 0.001f);
+					break;
+				}
+
+				if (i == 0)
+				{
+					setArray<float>(&this->solverOptions->seedBox[0], &fieldOptions[0].gridDiameter[0]);
+					setArray<float>(&this->raycastingOptions->clipBox[0], &fieldOptions[0].gridDiameter[0]);
+
+					this->solverOptions->gridDiameter[0] = fieldOptions[0].gridDiameter[0];
+					this->solverOptions->gridDiameter[1] = fieldOptions[0].gridDiameter[1];
+					this->solverOptions->gridDiameter[2] = fieldOptions[0].gridDiameter[2];
+					this->solverOptions->gridSize[0] = fieldOptions[0].gridSize[0];
+					this->solverOptions->gridSize[1] = fieldOptions[0].gridSize[1];
+					this->solverOptions->gridSize[2] = fieldOptions[0].gridSize[2];
+					this->solverOptions->firstIdx = fieldOptions[0].firstIdx;
+					this->solverOptions->lastIdx = fieldOptions[0].lastIdx;
+					this->solverOptions->currentIdx = fieldOptions[0].firstIdx;
+				}
+			}
 		
-		if (ImGui::Checkbox((std::string("Is Compressed ") + std::to_string(i)).c_str(), &fieldOptions[i]->isCompressed))
+		if (ImGui::DragInt((std::string("Current index ") + std::to_string(i)).c_str(), &fieldOptions[i].currentIdx,1, fieldOptions[i].firstIdx, fieldOptions[i].lastIdx))
+		{
+			updateFile[i] = true;
+		}
+
+		if (ImGui::Checkbox((std::string("Is Compressed ") + std::to_string(i)).c_str(), &fieldOptions[i].isCompressed))
 		{
 		}
 
-		if (ImGui::Checkbox((std::string("Is Ensemble ") + std::to_string(i)).c_str(), &fieldOptions[i]->isEnsemble))
+		if (ImGui::Checkbox((std::string("Is Ensemble ") + std::to_string(i)).c_str(), &fieldOptions[i].isEnsemble))
 		{
 		}
 
-		if (ImGui::InputText((std::string("File Path ") + std::to_string(i)).c_str(), &fieldOptions[i]->filePath[0], 100 * sizeof(char)))
+		if (ImGui::InputText((std::string("File Path ") + std::to_string(i)).c_str(), &fieldOptions[i].filePath[0], 100 * sizeof(char)))
 		{
 		}
 
-		if (ImGui::InputText((std::string("File Name ") + std::to_string(i)).c_str(), &fieldOptions[i]->fileName[0], 100 * sizeof(char)))
+		if (ImGui::InputText((std::string("File Name ") + std::to_string(i)).c_str(), &fieldOptions[i].fileName[0], 100 * sizeof(char)))
 		{
 		}
 
 		if (solverOptions->isEnsemble)
 		{
-			if (ImGui::InputText((std::string("Subpath ") + std::to_string(i)).c_str(), &fieldOptions[i]->subpath[0], 100 * sizeof(char)))
+			if (ImGui::InputText((std::string("Subpath ") + std::to_string(i)).c_str(), &fieldOptions[i].subpath[0], 100 * sizeof(char)))
 			{
 			}
 		}
 
-		if (ImGui::InputInt3((std::string("Grid Size ") + std::to_string(i)).c_str(), fieldOptions[i]->gridSize, sizeof(&fieldOptions[i]->gridSize)))
+		if (ImGui::InputInt3((std::string("Grid Size ") + std::to_string(i)).c_str(), fieldOptions[i].gridSize, sizeof(&fieldOptions[i].gridSize)))
 		{
 			this->updateSeedBox = true;
 			this->updateStreamlines = true;
 			this->updatePathlines = true;
 			this->updateStreaklines = true;
 		}
-		if (ImGui::InputFloat3((std::string("Grid Diameter ") + std::to_string(i)).c_str(), fieldOptions[i]->gridDiameter, sizeof(&fieldOptions[i]->gridDiameter)))
+		if (ImGui::InputFloat3((std::string("Grid Diameter ") + std::to_string(i)).c_str(), fieldOptions[i].gridDiameter, sizeof(&fieldOptions[i].gridDiameter)))
 		{
 			this->updateVolumeBox = true;
 			this->updateRaycasting = true;
 			this->updateStreamlines = true;
 			this->updatePathlines = true;
 		}
+		ImGui::NewLine();
 	}
 
 
@@ -657,14 +810,40 @@ void RenderImGuiOptions::drawFieldOptions()
 	ImGui::End();
 }
 
+void RenderImGuiOptions::drawPathSpaceTime()
+{
+	ImGui::Begin("Path-Surface Options");
+
+	if (pathSpaceTimeOptions->lastIdx - pathSpaceTimeOptions->firstIdx > 2)
+	{
+		if (ImGui::Checkbox("Enable Path Space-Time", &this->showPathSpaceTime))
+		{
+			this->updatePathSpaceTime = true;
+		}
+	}
+
+
+	if (ImGui::Checkbox("Color-coding path surface", &pathSpaceTimeOptions->colorCoding))
+	{
+		this->updatePathSpaceTime = true;
+	}
+	if (ImGui::DragInt("time position", &pathSpaceTimeOptions->timeStep,1,0, pathSpaceTimeOptions->timeGrid - 1))
+	{
+		this->updatePathSpaceTime = true;
+	}
+
+	if (ImGui::DragFloat("sigma", &pathSpaceTimeOptions->sigma, 0.01, 0.0f, 10.0f, "%3f"))
+	{
+		this->updatePathSpaceTime = true;
+	}
+	ImGui::End();
+}
 void RenderImGuiOptions::drawLog()
 {
 
 	if (b_drawLog)
 	{
 		ImGui::Begin("Log");
-
-
 
 		// calculatin FPS
 		static int fpsCounter = 0;
@@ -731,8 +910,6 @@ void RenderImGuiOptions::drawLog()
 }
 
 
-
-
 void RenderImGuiOptions::render()
 {
 
@@ -744,7 +921,6 @@ void RenderImGuiOptions::render()
 
 
 }
-
 
 void RenderImGuiOptions::drawLineRenderingOptions()
 {
@@ -916,16 +1092,43 @@ void RenderImGuiOptions::drawRaycastingOptions()
 
 	if (b_drawRaycastingOptions)
 	{
-
-
 		ImGui::Begin("Raycasting Options");
 
 		if (ImGui::Checkbox("Enable Raycasintg", &this->showRaycasting))
 		{
-			this->renderingOptions->isRaycasting = this->showRaycasting;
 			this->updateRaycasting = true;
+			if (!this->showRaycasting)
+			{
+				this->releaseRaycasting = true;
+			}
 		}
 
+
+		if (ImGui::Combo("Isosurface field 0", &raycastingOptions->raycastingField_0, ActiveField::ActiveFieldList, nFields))
+		{
+			this->updateRaycasting = true;
+			this->updateTimeSpaceField = true;
+			this->updateFile[0];
+		}
+
+		if (raycastingOptions->raycastingMode == RaycastingMode::DOUBLE ||
+			raycastingOptions->raycastingMode == RaycastingMode::PLANAR_DOUBLE ||
+			raycastingOptions->raycastingMode == RaycastingMode::MULTISCALE ||
+			raycastingOptions->raycastingMode == RaycastingMode::MULTISCALE_TEMP ||
+			raycastingOptions->raycastingMode == RaycastingMode::DOUBLE_SEPARATE ||
+			raycastingOptions->raycastingMode == RaycastingMode::DOUBLE_ADVANCED ||
+			raycastingOptions->raycastingMode == RaycastingMode::DVR_DOUBLE ||
+			raycastingOptions->raycastingMode == RaycastingMode::DOUBLE_TRANSPARENCY ||
+			raycastingOptions->raycastingMode == RaycastingMode::MULTISCALE_DEFECT
+
+			)
+		{
+			if (ImGui::Combo("Isosurface field 1", &raycastingOptions->raycastingField_1, ActiveField::ActiveFieldList, nFields))
+			{
+				this->updateRaycasting = true;
+				this->updateTimeSpaceField = true;
+			}
+		}
 
 
 		if (ImGui::Combo("Mode", &raycastingOptions->raycastingMode, RaycastingMode::modeList, RaycastingMode::Mode::COUNT))
@@ -975,10 +1178,38 @@ void RenderImGuiOptions::drawRaycastingOptions()
 			this->updateRaycasting = true;
 		}
 
+		if (ImGui::Checkbox("within", &this->raycastingOptions->within))
+		{
+			this->updateRaycasting = true;
+		}
+
+		if (ImGui::Checkbox("diff importance", &this->raycastingOptions->diffImportance))
+		{
+			this->updateRaycasting = true;
+
+
+		}
+		if (raycastingOptions->diffImportance)
+		{
+			if (ImGui::SliderFloat("diff limit", &raycastingOptions->limit_difference, 0,20))
+			{
+				this->updateRaycasting = true;
+			}
+		}
+
+
 		if (ImGui::Checkbox("Enable Normal Curves", &this->raycastingOptions->normalCurves))
 		{
 			this->updateRaycasting = true;
 		}
+		if (raycastingOptions->normalCurves)
+		{
+			if (ImGui::DragFloat("max distance", &raycastingOptions->max_distance,0.001f, 0, 1))
+			{
+				this->updateRaycasting = true;
+			}
+		}
+
 
 		if (ImGui::Checkbox("Secondary Only", &this->raycastingOptions->secondaryOnly))
 		{
@@ -1002,8 +1233,11 @@ void RenderImGuiOptions::drawRaycastingOptions()
 
 		}
 
+
 		if (raycastingOptions->raycastingMode == RaycastingMode::DOUBLE ||
 			raycastingOptions->raycastingMode == RaycastingMode::MULTISCALE ||
+			raycastingOptions->raycastingMode == RaycastingMode::DVR_DOUBLE ||
+			raycastingOptions->raycastingMode == RaycastingMode::PLANAR_DOUBLE ||
 			raycastingOptions->raycastingMode == RaycastingMode::MULTISCALE_TEMP ||
 			raycastingOptions->raycastingMode == RaycastingMode::DOUBLE_SEPARATE ||
 			raycastingOptions->raycastingMode == RaycastingMode::DOUBLE_ADVANCED ||
@@ -1018,8 +1252,9 @@ void RenderImGuiOptions::drawRaycastingOptions()
 				this->updateTimeSpaceField = true;
 			}
 
-
 		}
+
+
 
 		if (raycastingOptions->raycastingMode == RaycastingMode::MULTISCALE ||
 			raycastingOptions->raycastingMode == RaycastingMode::MULTISCALE_DEFECT)
@@ -1043,10 +1278,15 @@ void RenderImGuiOptions::drawRaycastingOptions()
 
 		}
 
-
-
-
 		if (ImGui::SliderFloat("Transparency 0", &raycastingOptions->transparency_0,0,1.0f))
+		{
+			this->updateRaycasting = true;
+		}
+		if (ImGui::DragFloat("Amplitude 0", &raycastingOptions->amplitude,0.001f,0.0001f,10.0f))
+		{
+			this->updateRaycasting = true;
+		}
+		if (ImGui::DragFloat("Relax 0", &raycastingOptions->relax, 0.001f, 0.0001f, 5.0f))
 		{
 			this->updateRaycasting = true;
 		}
@@ -1058,13 +1298,9 @@ void RenderImGuiOptions::drawRaycastingOptions()
 
 		if (ImGui::DragFloat("Sampling Rate Projection", &raycastingOptions->samplingRate_projection, 0.001f, 0.001f, 1.0f, "%.3f"))
 		{
-
 			this->updateRaycasting = true;
 			this->updateDispersion = true;
 			this->updateFTLE = true;
-
-
-
 		}
 
 		if (ImGui::DragFloat("Sampling Rate 0", &raycastingOptions->samplingRate_0, 0.00001f, 0.0001f, 1.0f, "%.5f"))
@@ -1126,6 +1362,7 @@ void RenderImGuiOptions::drawRaycastingOptions()
 		{
 			this->updateRaycasting = true;
 			this->updateTimeSpaceField = true;
+			this->updatePathSpaceTime = true;
 		}
 
 		if (ImGui::DragFloat("Isovalue 1", &raycastingOptions->isoValue_1, 0.001f))
@@ -1186,59 +1423,56 @@ void RenderImGuiOptions::drawRaycastingOptions()
 			ImGui::Text("File is not loaded yet!");
 		}
 
-		if (raycastingOptions->raycastingMode == RaycastingMode::PLANAR ||
-			raycastingOptions->raycastingMode == RaycastingMode::SINGLE_COLORCODED)
+
+
+		if (ImGui::Checkbox("Color Coding Range", &this->raycastingOptions->ColorCodingRange))
 		{
-
-			if (ImGui::Checkbox("Color Coding Range", &this->raycastingOptions->ColorCodingRange))
-			{
-				this->updateRaycasting = true;
-			}
-
-
-			if (ImGui::Combo("Projection Plane", &raycastingOptions->projectionPlane, IsoMeasure::ProjectionPlaneList, IsoMeasure::COUNT_PLANE))
-			{
-				this->updateRaycasting = true;
-			}
-
-			if (ImGui::InputFloat("Min Value", (float*)&raycastingOptions->minVal, 0.001f, 0.1f))
-			{
-				this->updateRaycasting = true;
-
-			}
-
-			if (ImGui::InputFloat("max Value", (float*)&raycastingOptions->maxVal, 0.001f, 0.1f))
-			{
-				this->updateRaycasting = true;
-
-			}
-
-			if (ImGui::InputFloat("plane Thickness", (float*)& raycastingOptions->planeThinkness, 0.001f, 0.01f))
-			{
-				this->updateRaycasting = true;
-			}
-
-			if (ImGui::InputFloat("Planar Probe Position", &raycastingOptions->planeProbePosition, 0.01f, 0.1f))
-			{
-				if (raycastingOptions->planeProbePosition > 1.0f)
-				{
-					raycastingOptions->planeProbePosition = 1.0f;
-				}
-				else if (raycastingOptions->planeProbePosition < 0.0f)
-				{
-					raycastingOptions->planeProbePosition = 0.0f;
-				}
-
-				this->updateRaycasting = true;
-			}
+			this->updateRaycasting = true;
 		}
+
+
+		if (ImGui::Combo("Projection Plane", &raycastingOptions->projectionPlane, IsoMeasure::ProjectionPlaneList, IsoMeasure::COUNT_PLANE))
+		{
+			this->updateRaycasting = true;
+		}
+
+		if (ImGui::InputFloat("Min Value", (float*)&raycastingOptions->minVal, 0.001f, 0.1f))
+		{
+			this->updateRaycasting = true;
+
+		}
+
+		if (ImGui::InputFloat("max Value", (float*)&raycastingOptions->maxVal, 0.001f, 0.1f))
+		{
+			this->updateRaycasting = true;
+
+		}
+
+		if (ImGui::InputFloat("plane Thickness", (float*)& raycastingOptions->planeThinkness, 0.001f, 0.01f))
+		{
+			this->updateRaycasting = true;
+		}
+
+		if (ImGui::InputFloat("Planar Probe Position", &raycastingOptions->planeProbePosition, 0.01f, 0.1f))
+		{
+			if (raycastingOptions->planeProbePosition > 1.0f)
+			{
+				raycastingOptions->planeProbePosition = 1.0f;
+			}
+			else if (raycastingOptions->planeProbePosition < 0.0f)
+			{
+				raycastingOptions->planeProbePosition = 0.0f;
+			}
+
+			this->updateRaycasting = true;
+		}
+		
 
 
 
 		ImGui::End();
 	}
 }
-
 
 void RenderImGuiOptions::drawDispersionOptions()
 {
@@ -1254,7 +1488,7 @@ void RenderImGuiOptions::drawDispersionOptions()
 	{
 		if (ImGui::Checkbox("Enable Terrain Rendering", &this->showDispersion))
 		{
-			this->renderingOptions->isRaycasting = this->showDispersion;
+			
 			this->updateDispersion = true;
 			this->dispersionOptions->released = false;
 		}
@@ -1265,7 +1499,6 @@ void RenderImGuiOptions::drawDispersionOptions()
 	{
 		if (ImGui::Checkbox("Enable FTLE rendering", &this->showFTLE))
 		{
-			this->renderingOptions->isRaycasting = this->showFTLE;
 			this->updateFTLE = true;
 			this->dispersionOptions->released = false;
 		}
@@ -1291,6 +1524,8 @@ void RenderImGuiOptions::drawDispersionOptions()
 		this->dispersionOptions->retrace = true;
 
 	}
+
+
 
 	if (ImGui::DragFloat("height scale", &dispersionOptions->scale,0.0001f,0.00001f,100.0f,"%5f"))
 	{
@@ -1414,7 +1649,6 @@ void RenderImGuiOptions::drawDispersionOptions()
 }
 
 
-
 void RenderImGuiOptions::drawTimeSpaceOptions()
 {
 	if (b_drawTimeSpaceOptions)
@@ -1484,9 +1718,9 @@ void RenderImGuiOptions::drawTimeSpaceOptions()
 		{
 			if (ImGui::Checkbox("Enable Rendering", &this->showFluctuationHeightfield))
 			{
-				this->renderingOptions->isRaycasting = this->showFluctuationHeightfield;
 				this->updatefluctuation = true;
 			}
+			
 		}
 
 		if (ImGui::Checkbox("Shift projection plane", &spaceTimeOptions->shiftProjection))
@@ -1504,7 +1738,7 @@ void RenderImGuiOptions::drawTimeSpaceOptions()
 			this->updatefluctuation = true;
 		}
 
-		if (ImGui::Combo("Height Mode", &spaceTimeOptions->heightMode, SpaceTimeRendering::HeightModeList, SpaceTimeRendering::HeightMode::COUNT))
+		if (ImGui::Combo("Height Mode", &spaceTimeOptions->heightMode, IsoMeasure::IsoMeasureModes, IsoMeasure::COUNT))
 		{
 			this->updatefluctuation=true;
 		}
@@ -1634,10 +1868,6 @@ void RenderImGuiOptions::drawTimeSpaceOptions()
 }
 
 
-
-
-
-
 void RenderImGuiOptions::drawCrossSectionOptions()
 {
 	ImGui::Begin("Cross-Section");
@@ -1732,9 +1962,6 @@ void RenderImGuiOptions::drawCrossSectionOptions()
 }
 
 
-
-
-
 void RenderImGuiOptions::drawTurbulentMixingOptions()
 {
 
@@ -1779,7 +2006,7 @@ void RenderImGuiOptions::drawVisitationMapOptions()
 
 		}
 
-		if (ImGui::DragFloat("Amplitude", &visitationOptions->amplitude, 0.00001f))
+		if (ImGui::DragFloat("Amplitude", &visitationOptions->amplitude, 0.001f))
 		{
 			this->updateRaycasting = true;
 			this->updateTimeSpaceField = true;
@@ -1842,6 +2069,7 @@ void RenderImGuiOptions::drawVisitationMapOptions()
 
 }
 
+
 void RenderImGuiOptions::drawImguiOptions()
 {
 	ImGui_ImplDX11_NewFrame();
@@ -1883,49 +2111,13 @@ void RenderImGuiOptions::drawImguiOptions()
 	ImGui::End();
 }
 
+
 void RenderImGuiOptions::drawDataset()
 {
 	
 	ImGui::Begin("Datasets");
+	
 
-	for (int i = 0; i < nFields; i++)
-	{
-
-		if (ImGui::Combo((std::string("Dataset") + std::to_string(i)).c_str(), reinterpret_cast<int*>(&this->dataset_0), Dataset::datasetList, Dataset::Dataset::COUNT))
-		{
-			switch (dataset_0)
-			{
-
-			case Dataset::Dataset::GRAND_ENSEMBLE_OF_VIS_262:
-				this->fieldOptions[i]->setField("OF_temperature_dt_vis_262_", "F:\\Grand_ensemble\\", 651, 716, 65, 2.0f, 2.0f, 2.0f, 1, 23, 0.001f);
-				break;
-
-			case Dataset::Dataset::KIT2REF_COMP:
-				this->fieldOptions[i]->setField("Comp_FieldP", "G:\\Dataset_Compressed\\KIT2\\Comp_Ref\\", 192, 192, 192, 7.854f, 2.0f, 3.1415f, 1, 1000, 0.001f, true, 7000000);
-				break;
-			
-			}
-
-			this->solverOptions->gridDiameter[0] = fieldOptions[0]->gridDiameter[0];
-			this->solverOptions->gridDiameter[1] = fieldOptions[0]->gridDiameter[1];
-			this->solverOptions->gridDiameter[2] = fieldOptions[0]->gridDiameter[2];
-			this->solverOptions->gridSize[0] = fieldOptions[0]->gridSize[0];
-			this->solverOptions->gridSize[1] = fieldOptions[0]->gridSize[1];
-			this->solverOptions->gridSize[2] = fieldOptions[0]->gridSize[2];
-
-		}
-
-		if (ImGui::Button("Set Default Dimensions", ImVec2(80, 25)))
-		{
-			setArray<float>(&this->solverOptions->seedBox[0],&fieldOptions[i]->gridDiameter[0]);
-			setArray<float>(&this->raycastingOptions->clipBox[0], &fieldOptions[i]->gridDiameter[0]);
-
-		}
-
-
-
-
-	}
 	/*if (ImGui::Combo("Dataset 0", reinterpret_cast<int*>(&this->dataset_0),Dataset::datasetList, Dataset::Dataset::COUNT))
 	{
 		this->updateStreamlines = true;
@@ -2034,23 +2226,7 @@ void RenderImGuiOptions::drawDataset()
 				break;
 			}
 
-			case Dataset::Dataset::KIT3_RAW:
-			{
-				this->solverOptions->fileName = "FieldP";
-				this->solverOptions->filePath = "G:\\KIT3\\Initial\\";
 
-
-				setArray<float>(&this->solverOptions->gridDiameter[0], 0.4f, 2.0f, 7.0f);
-				setArray<float>(&this->solverOptions->seedBox[0], 0.4f, 2.0f, 7.0f);
-				setArray<float>(&this->raycastingOptions->clipBox[0], 0.4f, 2.0f, 7.0f);
-				setArray<int>(&this->solverOptions->gridSize[0], 64, 503, 2048);
-
-
-
-				this->solverOptions->dt = 0.001f;
-				break;
-
-			}
 
 
 			case Dataset::Dataset::KIT3_FLUC:
@@ -2098,27 +2274,7 @@ void RenderImGuiOptions::drawDataset()
 			}
 
 		
-			case Dataset::Dataset::KIT3_COMPRESSED:
-			{
-				this->solverOptions->fileName = "Fluc_Comp_";
-				this->solverOptions->filePath = "G:\\Dataset_Compressed\\KIT3\\Comp_Fluc\\";
 
-
-				setArray<float>(&this->solverOptions->gridDiameter[0], 0.4f, 2.0f, 7.0f);
-				setArray<float>(&this->solverOptions->seedBox[0], 0.4f, 2.0f, 7.0f);
-				setArray<float>(&this->raycastingOptions->clipBox[0], 5.0f, 2.0f, 7.0f);
-				setArray<int>(&this->solverOptions->gridSize[0], 64, 503, 2048);
-
-				this->solverOptions->firstIdx = 500;
-				this->solverOptions->lastIdx = 1000;
-				this->solverOptions->currentIdx = 500;
-				this->solverOptions->dt = 0.001f;
-				this->solverOptions->periodic = true;
-				this->solverOptions->compressed = true;
-				this->solverOptions->maxSize = 64000000;
-				break;
-
-			}
 
 
 			case Dataset::Dataset::KIT3_OF_AVG50_COMPRESSED:
@@ -2397,247 +2553,6 @@ void RenderImGuiOptions::drawDataset()
 			}
 
 
-			case Dataset::Dataset::RBC_AVG:
-			{
-				this->solverOptions->fileName = "Field_AVG";
-				this->solverOptions->filePath = "E:\\TUI_RBC_Small\\timeAVG\\";
-
-
-				setArray<float>(&this->solverOptions->gridDiameter[0], 5.0f, 0.2f, 5.0f);
-				setArray<float>(&this->solverOptions->seedBox[0], 5.0f, 0.2f, 5.0f);
-				setArray<float>(&this->raycastingOptions->clipBox[0], 5.0f, 0.2f, 5.0f);
-				setArray<int>(&this->solverOptions->gridSize[0], 1024, 32, 1024);
-
-
-				this->solverOptions->dt = 0.01f;
-				this->solverOptions->periodic = false;
-				this->solverOptions->compressed = false;
-
-				break;
-
-			}
-
-			case Dataset::Dataset::RBC_AVG_20:
-			{
-				this->solverOptions->fileName = "FieldAVG_20_";
-				this->solverOptions->filePath = "Y:\\RBC\\AVG20\\";
-
-
-				setArray<float>(&this->solverOptions->gridDiameter[0], 5.0f, 0.2f, 5.0f);
-				setArray<float>(&this->solverOptions->seedBox[0], 5.0f, 0.2f, 5.0f);
-				setArray<float>(&this->raycastingOptions->clipBox[0], 5.0f, 0.2f, 5.0f);
-				setArray<int>(&this->solverOptions->gridSize[0], 1024, 32, 1024);
-
-				this->solverOptions->dt = 0.01f;
-				this->solverOptions->periodic = false;
-				this->solverOptions->compressed = false;
-
-				break;
-
-			}
-
-			case Dataset::Dataset::RBC_AVG_50:
-			{
-				this->solverOptions->fileName = "FieldAVG_50_";
-				this->solverOptions->filePath = "Y:\\RBC\\AVG50\\";
-
-
-				setArray<float>(&this->solverOptions->gridDiameter[0], 5.0f, 0.2f, 5.0f);
-				setArray<float>(&this->solverOptions->seedBox[0], 5.0f, 0.2f, 5.0f);
-				setArray<float>(&this->raycastingOptions->clipBox[0], 5.0f, 0.2f, 5.0f);
-				setArray<int>(&this->solverOptions->gridSize[0], 1024, 32, 1024);
-
-
-				this->solverOptions->dt = 0.01f;
-				this->solverOptions->periodic = false;
-				this->solverOptions->compressed = false;
-
-				break;
-
-			}
-
-			case Dataset::Dataset::RBC_AVG_100:
-			{
-				this->solverOptions->fileName = "FieldAVG_100_";
-				this->solverOptions->filePath = "Y:\\RBC\\AVG100\\";
-
-
-				setArray<float>(&this->solverOptions->gridDiameter[0], 5.0f, 0.2f, 5.0f);
-				setArray<float>(&this->solverOptions->seedBox[0], 5.0f, 0.2f, 5.0f);
-				setArray<float>(&this->raycastingOptions->clipBox[0], 5.0f, 0.2f, 5.0f);
-				setArray<int>(&this->solverOptions->gridSize[0], 1024, 32, 1024);
-
-
-				this->solverOptions->dt = 0.01f;
-				this->solverOptions->periodic = false;
-				this->solverOptions->compressed = false;
-
-				break;
-
-			}
-
-			case Dataset::Dataset::RBC_AVG_OF_20:
-			{
-				this->solverOptions->fileName = "AVG20_OF_";
-				this->solverOptions->filePath = "Y:\\RBC\\AVG20_OF\\";
-
-
-				setArray<float>(&this->solverOptions->gridDiameter[0], 5.0f, 0.2f, 5.0f);
-				setArray<float>(&this->solverOptions->seedBox[0], 5.0f, 0.2f, 5.0f);
-				setArray<float>(&this->raycastingOptions->clipBox[0], 5.0f, 0.2f, 5.0f);
-				setArray<int>(&this->solverOptions->gridSize[0], 1024, 32, 1024);
-
-
-				this->solverOptions->dt = 0.01f;
-				this->solverOptions->periodic = false;
-				this->solverOptions->compressed = false;
-
-				break;
-
-			}
-
-			case Dataset::Dataset::RBC_AVG_OF_50:
-			{
-				this->solverOptions->fileName = "AVG50_OF_";
-				this->solverOptions->filePath = "Y:\\RBC\\AVG50_OF\\";
-
-
-				setArray<float>(&this->solverOptions->gridDiameter[0], 5.0f, 0.2f, 5.0f);
-				setArray<float>(&this->solverOptions->seedBox[0], 5.0f, 0.2f, 5.0f);
-				setArray<float>(&this->raycastingOptions->clipBox[0], 5.0f, 0.2f, 5.0f);
-				setArray<int>(&this->solverOptions->gridSize[0], 1024, 32, 1024);
-
-
-				this->solverOptions->dt = 0.01f;
-				this->solverOptions->periodic = false;
-				this->solverOptions->compressed = false;
-
-				break;
-
-			}
-
-			case Dataset::Dataset::RBC_AVG_OF_100:
-			{
-				this->solverOptions->fileName = "AVG100_OF_";
-				this->solverOptions->filePath = "Y:\\RBC\\AVG100_OF\\";
-
-
-				setArray<float>(&this->solverOptions->gridDiameter[0], 5.0f, 0.2f, 5.0f);
-				setArray<float>(&this->solverOptions->seedBox[0], 5.0f, 0.2f, 5.0f);
-				setArray<float>(&this->raycastingOptions->clipBox[0], 5.0f, 0.2f, 5.0f);
-				setArray<int>(&this->solverOptions->gridSize[0], 1024, 32, 1024);
-
-
-				this->solverOptions->dt = 0.01f;
-				this->solverOptions->periodic = false;
-				this->solverOptions->compressed = false;
-
-				break;
-
-			}
-
-			case Dataset::Dataset::RBC_OF:
-			{
-				this->solverOptions->fileName = "OF_temperature";
-				this->solverOptions->filePath = "E:\\TUI_RBC_Small\\OF\\";
-
-
-				setArray<float>(&this->solverOptions->gridDiameter[0], 5.0f, 0.2f, 5.0f);
-				setArray<float>(&this->solverOptions->seedBox[0], 5.0f, 0.2f, 5.0f);
-				setArray<float>(&this->raycastingOptions->clipBox[0], 5.0f, 0.2f, 5.0f);
-				setArray<int>(&this->solverOptions->gridSize[0], 1024, 32, 1024);
-
-
-				this->solverOptions->dt = 0.01f;
-				this->solverOptions->periodic = false;
-				this->solverOptions->compressed = false;
-
-				break;
-
-			}
-
-
-			case Dataset::Dataset::RBC_AVG_OF_600:
-			{
-				this->solverOptions->fileName = "Field_OF_AVG600_";
-				this->solverOptions->filePath = "E:\\TUI_RBC_Small\\timeAVG\\";
-
-
-				setArray<float>(&this->solverOptions->gridDiameter[0], 5.0f, 0.2f, 5.0f);
-				setArray<float>(&this->solverOptions->seedBox[0], 5.0f, 0.2f, 5.0f);
-				setArray<float>(&this->raycastingOptions->clipBox[0], 5.0f, 0.2f, 5.0f);
-				setArray<int>(&this->solverOptions->gridSize[0], 1024, 32, 1024);
-
-
-				this->solverOptions->dt = 0.01f;
-				this->solverOptions->periodic = false;
-				this->solverOptions->compressed = false;
-
-				break;
-
-			}
-
-			case Dataset::Dataset::RBC_AVG500:
-			{
-				this->solverOptions->fileName = "Field_AVG500_";
-				this->solverOptions->filePath = "E:\\TUI_RBC_Small\\timeAVG\\";
-
-
-				setArray<float>(&this->solverOptions->gridDiameter[0], 5.0f, 0.2f, 5.0f);
-				setArray<float>(&this->solverOptions->seedBox[0], 5.0f, 0.2f, 5.0f);
-				setArray<float>(&this->raycastingOptions->clipBox[0], 5.0f, 0.2f, 5.0f);
-				setArray<int>(&this->solverOptions->gridSize[0], 1024, 32, 1024);
-
-
-				this->solverOptions->dt = 0.01f;
-				this->solverOptions->periodic = false;
-				this->solverOptions->compressed = false;
-
-				break;
-
-			}
-			case Dataset::Dataset::TEST_FIELD:
-			{
-
-
-				this->solverOptions->fileName = "Comp_FieldP";
-				this->solverOptions->filePath = ".\\testData\\";
-
-				setArray<float>(&this->solverOptions->gridDiameter[0], 5.0f, 0.2f, 5.0f);
-				setArray<float>(&this->solverOptions->seedBox[0], 5.0f, 0.2f, 5.0f);
-				setArray<float>(&this->raycastingOptions->clipBox[0], 5.0f, 0.2f, 5.0f);
-				setArray<int>(&this->solverOptions->gridSize[0], 1024, 32, 1024);
-
-				this->solverOptions->dt = 0.001f;
-				this->solverOptions->firstIdx = 1;
-				this->solverOptions->lastIdx = 20;
-				this->solverOptions->compressed = true;
-				this->solverOptions->maxSize = 9000000;
-				break;
-
-				break;
-
-			}
-
-			case Dataset::Dataset::TUM:
-			{
-
-				this->solverOptions->fileName = "TUM";
-				this->solverOptions->filePath = "Y:\\KIT4\\TUM\\";
-
-				setArray<float>(&this->solverOptions->gridDiameter[0], 3.6f, 1.0f, 1.2f);
-				setArray<float>(&this->solverOptions->seedBox[0], 3.6f, 1.0f, 2.1f);
-				setArray<float>(&this->raycastingOptions->clipBox[0], 3.6f, 1.0f, 1.2f);
-				setArray<int>(&this->solverOptions->gridSize[0], 3072, 257, 1152);
-
-				this->solverOptions->dt = 0.001f;
-				this->solverOptions->firstIdx = 1;
-				this->solverOptions->lastIdx = 1;
-				this->solverOptions->compressed = false;
-
-				break;
-			}	
-
 			case Dataset::Dataset::KIT4_L1:
 			{
 
@@ -2730,315 +2645,21 @@ void RenderImGuiOptions::drawDataset()
 				break;
 			}
 
-			case Dataset::Dataset::TUM_MEAN_REAMOVED:
-			{
-
-				this->solverOptions->fileName = "TUM_meanRemoved";
-				this->solverOptions->filePath = "Y:\\KIT4\\TUM\\";
-
-				setArray<float>(&this->solverOptions->gridDiameter[0], 3.6f, 1.0f, 1.2f);
-				setArray<float>(&this->solverOptions->seedBox[0], 3.6f, 1.0f, 1.2f);
-				setArray<float>(&this->raycastingOptions->clipBox[0], 3.6f, 1.0f, 1.2f);
-				setArray<int>(&this->solverOptions->gridSize[0], 3072, 257, 1152);
-
-				this->solverOptions->dt = 0.001f;
-				this->solverOptions->firstIdx = 1;
-				this->solverOptions->lastIdx = 1;
-				this->solverOptions->compressed = false;
-
-				break;
-			}
-
-			case Dataset::Dataset::TUM_L1:
-			{
-
-				this->solverOptions->fileName = "TUM_L1";
-				this->solverOptions->filePath = "Y:\\KIT4\\TUM\\";
-
-				setArray<float>(&this->solverOptions->gridDiameter[0], 3.6f, 1.0f, 1.2f);
-				setArray<float>(&this->solverOptions->seedBox[0], 3.6f, 1.0f, 1.2f);
-				setArray<float>(&this->raycastingOptions->clipBox[0], 3.6f, 1.0f, 1.2f);
-				setArray<int>(&this->solverOptions->gridSize[0], 1536, 128, 576);
-
-				this->solverOptions->dt = 0.001f;
-				this->solverOptions->firstIdx = 1;
-				this->solverOptions->lastIdx = 1;
-				this->solverOptions->compressed = false;
-
-				break;
-			}
 
 
 
-			case Dataset::Dataset::TUM_L2:
-				this->solverOptions->fileName = "TUM_L2";
-				this->solverOptions->filePath = "Y:\\KIT4\\TUM\\";
-
-				setArray<float>(&this->solverOptions->gridDiameter[0], 3.6f, 1.0f, 1.2f);
-				setArray<float>(&this->solverOptions->seedBox[0], 3.6f, 1.0f, 1.2f);
-				setArray<float>(&this->raycastingOptions->clipBox[0], 3.6f, 1.0f, 1.2f);
-				setArray<int>(&this->solverOptions->gridSize[0], 768, 64, 288);
-
-				this->solverOptions->dt = 0.001f;
-				this->solverOptions->firstIdx = 1;
-				this->solverOptions->lastIdx = 1;
-				this->solverOptions->compressed = false;
-				break;
-
-			case Dataset::Dataset::SMOKE_00050_ENSEMBLE:
-				this->solverOptions->fileName = "denisty50_padded_";
-				this->solverOptions->filePath = "G:\\Smoke_ensembleData\\density_bin_000050\\";
-
-				setArray<float>(&this->solverOptions->gridDiameter[0], 2.0f, 3.56f, 2.0f);
-				setArray<float>(&this->solverOptions->seedBox[0], 2.0f, 3.56f, 2.0f);
-				setArray<float>(&this->raycastingOptions->clipBox[0], 2.0f, 3.56f, 2.0f);
-				setArray<int>(&this->solverOptions->gridSize[0], 100, 178, 100);
-
-				this->solverOptions->dt = 0.001f;
-				this->solverOptions->firstIdx = 1;
-				this->solverOptions->lastIdx = 31;
-				this->solverOptions->compressed = false;
-				break;
-
-			case Dataset::Dataset::GRAND_ENSEMBLE_TIME:
-				this->solverOptions->fileName = "member_";
-				this->solverOptions->filePath = "F:\\Grand_ensemble\\";
-				this->solverOptions->subpath = "time_";
-
-				this->solverOptions->isEnsemble = true;
-				setArray<float>(&this->solverOptions->gridDiameter[0], 2.0f, 2.0f, 2.0f);
-				setArray<float>(&this->solverOptions->seedBox[0], &this->solverOptions->gridDiameter[0]);
-				setArray<float>(&this->raycastingOptions->clipBox[0], &this->solverOptions->gridDiameter[0]);
-				setArray<int>(&this->solverOptions->gridSize[0], 651, 716, 65);
-
-				this->solverOptions->firstMemberIdx = 1;
-				this->solverOptions->lastMemberIdx = 20;
-				this->solverOptions->dt = 0.001f;
-				this->solverOptions->firstIdx = 1;
-				this->solverOptions->lastIdx = 24;
-				this->solverOptions->compressed = false;
-				break;
-
-			case Dataset::Dataset::GRAND_ENSEMBLE_OF_VIS_263:
-				this->solverOptions->fileName = "OF_temperature_dt_vis_263_";
-				this->solverOptions->filePath = "F:\\Grand_ensemble\\";
-
-				this->solverOptions->isEnsemble = false;
-				setArray<float>(&this->solverOptions->gridDiameter[0], 2.0f, 2.0f, 2.0f);
-				setArray<float>(&this->solverOptions->seedBox[0], &this->solverOptions->gridDiameter[0]);
-				setArray<float>(&this->raycastingOptions->clipBox[0], &this->solverOptions->gridDiameter[0]);
-				setArray<int>(&this->solverOptions->gridSize[0], 651, 716, 65);
-
-				this->solverOptions->dt = 0.001f;
-				this->solverOptions->firstIdx = 1;
-				this->solverOptions->lastIdx = 23;
-				this->solverOptions->compressed = false;
-				break;
-
-			case Dataset::Dataset::GRAND_ENSEMBLE_OF_VIS_264:
-				this->solverOptions->fileName = "OF_temperature_dt_vis_264_";
-				this->solverOptions->filePath = "F:\\Grand_ensemble\\";
-
-				this->solverOptions->isEnsemble = false;
-				setArray<float>(&this->solverOptions->gridDiameter[0], 2.0f, 2.0f, 2.0f);
-				setArray<float>(&this->solverOptions->seedBox[0], &this->solverOptions->gridDiameter[0]);
-				setArray<float>(&this->raycastingOptions->clipBox[0], &this->solverOptions->gridDiameter[0]);
-				setArray<int>(&this->solverOptions->gridSize[0], 651, 716, 65);
-
-				this->solverOptions->dt = 0.001f;
-				this->solverOptions->firstIdx = 1;
-				this->solverOptions->lastIdx = 23;
-				this->solverOptions->compressed = false;
-				break;
-
-			case Dataset::Dataset::GRAND_ENSEMBLE_OF_AVG_262:
-				this->solverOptions->fileName = "OF_temperature_dt_avg_262_";
-				this->solverOptions->filePath = "F:\\Grand_ensemble\\";
-
-				setArray<float>(&this->solverOptions->gridDiameter[0], 2.0f, 2.0f, 2.0f);
-				setArray<float>(&this->solverOptions->seedBox[0], &this->solverOptions->gridDiameter[0]);
-				setArray<float>(&this->raycastingOptions->clipBox[0], &this->solverOptions->gridDiameter[0]);
-				setArray<int>(&this->solverOptions->gridSize[0], 651, 716, 65);
-
-				this->solverOptions->dt = 0.001f;
-				this->solverOptions->firstIdx = 1;
-				this->solverOptions->lastIdx = 23;
-				this->solverOptions->compressed = false;
-				break;
-
-			case Dataset::Dataset::GRAND_ENSEMBLE_OF_AVG_263:
-				this->solverOptions->fileName = "OF_temperature_dt_avg_263_";
-				this->solverOptions->filePath = "F:\\Grand_ensemble\\";
-
-				setArray<float>(&this->solverOptions->gridDiameter[0], 2.0f, 2.0f, 2.0f);
-				setArray<float>(&this->solverOptions->seedBox[0], &this->solverOptions->gridDiameter[0]);
-				setArray<float>(&this->raycastingOptions->clipBox[0], &this->solverOptions->gridDiameter[0]);
-				setArray<int>(&this->solverOptions->gridSize[0], 651, 716, 65);
-
-				this->solverOptions->dt = 0.001f;
-				this->solverOptions->firstIdx = 1;
-				this->solverOptions->lastIdx = 23;
-				this->solverOptions->compressed = false;
-				break;
-
-			case Dataset::Dataset::GRAND_ENSEMBLE_OF_AVG_264:
-				this->solverOptions->fileName = "OF_temperature_dt_avg_264_";
-				this->solverOptions->filePath = "F:\\Grand_ensemble\\";
-
-				setArray<float>(&this->solverOptions->gridDiameter[0], 2.0f, 2.0f, 2.0f);
-				setArray<float>(&this->solverOptions->seedBox[0], &this->solverOptions->gridDiameter[0]);
-				setArray<float>(&this->raycastingOptions->clipBox[0], &this->solverOptions->gridDiameter[0]);
-				setArray<int>(&this->solverOptions->gridSize[0], 651, 716, 65);
-
-				this->solverOptions->dt = 0.001f;
-				this->solverOptions->firstIdx = 1;
-				this->solverOptions->lastIdx = 23;
-				this->solverOptions->compressed = false;
-				break;
 
 
 		}
 	}*/
 
 
-	//if (ImGui::Combo("Dataset 1", reinterpret_cast<int*>(&this->dataset_1), Dataset::datasetList, Dataset::Dataset::COUNT))
-	//{
-	//	this->updateStreamlines = true;
-	//	this->updatePathlines = true;
-	//	this->updateStreaklines = true;
-	//	this->updateRaycasting = true;
 
-	//	this->solverOptions->fileChanged = true;
-	//	solverOptions->loadNewfile = true;
+	
 
-
-	//	switch (dataset_1)
-	//	{
-
-	//		case Dataset::Dataset::KIT2OW_COMP:
-	//		
-	//			this->fieldOptions[1].fileName = "Comp_FieldP";
-	//			this->fieldOptions[1].filePath = "G:\\KIT2\\Comp_OW\\";
-
-	//			setArray<float>(&this->fieldOptions[1].gridDiameter[0], 7.854f, 2.0f, 3.1415f);
-	//			setArray<int>(&this->fieldOptions[1].gridSize[0], 192, 192, 192);
-
-	//			this->fieldOptions[1].dt = 0.001f;
-	//			this->fieldOptions[1].firstIdx = 1;
-	//			this->fieldOptions[1].lastIdx = 1000;
-	//			this->fieldOptions[1].isCompressed = true;
-	//			this->fieldOptions[1].fileSizeMaxByte = 7000000;
-	//			break;
-	//		
-	//		case Dataset::Dataset::KIT3_AVG_COMPRESSED_50:
-	//		
-	//			this->fieldOptions[1].fileName = "Field_AVG_Comp_";
-	//			this->fieldOptions[1].filePath = "G:\\KIT3\\Comp_TimeAVG50\\";
-
-	//			setArray<float>(&this->fieldOptions[1].gridDiameter[0], 0.4f, 2.0f, 7.0f);
-	//			setArray<int>(&this->fieldOptions[1].gridSize[0], 64, 503, 2048);
-
-	//			this->fieldOptions[1].firstIdx = 500;
-	//			this->fieldOptions[1].lastIdx = 900;
-	//			this->fieldOptions[1].dt = 0.001f;
-	//			this->fieldOptions[1].periodic = true;
-	//			this->fieldOptions[1].isCompressed = true;
-	//			this->fieldOptions[1].fileSizeMaxByte = 70000000;
-
-	//			break;
-
-
-	//		case Dataset::Dataset::KIT3_COMPRESSED:
-	//		
-	//			this->fieldOptions[1].fileName = "Fluc_Comp_";
-	//			this->fieldOptions[1].filePath = "G:\\KIT3\\Comp_Fluc\\";
-
-
-	//			setArray<float>(&this->fieldOptions[1].gridDiameter[0], 0.4f, 2.0f, 7.0f);
-	//			setArray<int>(&this->fieldOptions[1].gridSize[0], 64, 503, 2048);
-
-	//			this->fieldOptions[1].firstIdx = 500;
-	//			this->fieldOptions[1].lastIdx = 1000;
-	//			this->fieldOptions[1].dt = 0.001f;
-	//			this->fieldOptions[1].periodic = true;
-	//			this->fieldOptions[1].isCompressed = true;
-	//			this->fieldOptions[1].fileSizeMaxByte = 64000000;
-	//			break;
-
-	//		case Dataset::Dataset::RBC_AVG_20:
-	//		
-	//			this->fieldOptions[1].fileName = "FieldAVG_20_";
-	//			this->fieldOptions[1].filePath = "Y:\\RBC\\AVG20\\";
-
-
-	//			setArray<float>(&this->fieldOptions[1].gridDiameter[0], 5.0f, 0.2f, 5.0f);
-	//			setArray<int>(&this->fieldOptions[1].gridSize[0], 1024, 32, 1024);
-
-
-	//			this->fieldOptions[1].firstIdx = 1;
-	//			this->fieldOptions[1].lastIdx = 50;
-	//			this->fieldOptions[1].dt = 0.001f;
-	//			this->fieldOptions[1].periodic = true;
-	//			this->fieldOptions[1].isCompressed = false;
-
-	//			break;
-
-	//		
-
-	//		case Dataset::Dataset::RBC_AVG_50:
-	//		
-	//			this->fieldOptions[1].fileName = "FieldAVG_50_";
-	//			this->fieldOptions[1].filePath = "Y:\\RBC\\AVG50\\";
-
-
-	//			setArray<float>(&this->fieldOptions[1].gridDiameter[0], 5.0f, 0.2f, 5.0f);
-	//			setArray<int>(&this->fieldOptions[1].gridSize[0], 1024, 32, 1024);
-
-
-	//			this->fieldOptions[1].firstIdx = 1;
-	//			this->fieldOptions[1].lastIdx = 50;
-	//			this->fieldOptions[1].dt = 0.001f;
-	//			this->fieldOptions[1].periodic = true;
-	//			this->fieldOptions[1].isCompressed = false;
-
-	//			break;
-
-	//		
-
-	//		case Dataset::Dataset::RBC_AVG_100:
-	//		
-	//			this->fieldOptions[1].fileName = "FieldAVG_100_";
-	//			this->fieldOptions[1].filePath = "Y:\\RBC\\AVG100\\";
-
-
-	//			setArray<float>(&this->fieldOptions[1].gridDiameter[0], 5.0f, 0.2f, 5.0f);
-	//			setArray<int>(&this->fieldOptions[1].gridSize[0], 1024, 32, 1024);
-
-
-	//			this->fieldOptions[1].firstIdx = 1;
-	//			this->fieldOptions[1].lastIdx = 50;
-	//			this->fieldOptions[1].dt = 0.001f;
-	//			this->fieldOptions[1].periodic = true;
-	//			this->fieldOptions[1].isCompressed = false;
-	//			break;
-
-
-	//		case Dataset::Dataset::GRAND_ENSEMBLE_OF_VIS_262:
-	//			this->fieldOptions[1].setField("OF_temperature_dt_vis_262_", "F:\\Grand_ensemble\\", 651, 716, 65, 2.0f, 2.0f, 2.0f, 1, 23, 0.001f);
-	//			break;
-	//		
-//		}
-
-
-
-
-//	}
 ImGui::End();
 
 }
-
-
-
 
 
 void RenderImGuiOptions::drawTimeSpaceField()

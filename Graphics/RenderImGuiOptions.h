@@ -17,6 +17,7 @@
 #include "../Options/TimeSpace3DOptions.h"
 #include "../Options/FieldOptions.h"
 #include "../Options/VisitationOptions.h"
+#include "../Options/pathSpaceTimeOptions.h"
 
 #include "Camera.h"
 #include "../Timer/Timer.h"
@@ -37,16 +38,18 @@ private:
 
 	// Pointers to the Option structures
 	SolverOptions*					solverOptions;
-	FieldOptions *					fieldOptions[4];
+	FieldOptions *					fieldOptions;
 	RenderingOptions*				renderingOptions;
 	RaycastingOptions*				raycastingOptions;
 	DispersionOptions*				dispersionOptions;
 	CrossSectionOptions*			crossSectionOptions;
 	SpaceTimeOptions*				spaceTimeOptions;
+	PathSpaceTimeOptions*			pathSpaceTimeOptions;
 	TurbulentMixingOptions*			turbulentMixingOptions;
 	TimeSpace3DOptions*				timeSpace3DOptions;
 	VisitationOptions*				visitationOptions;
 
+	int dataset[4] = { Dataset::Dataset::NONE ,Dataset::Dataset::NONE ,Dataset::Dataset::NONE ,Dataset::Dataset::NONE };
 	Dataset::Dataset dataset_0 = Dataset::Dataset::NONE;
 	Dataset::Dataset dataset_1 = Dataset::Dataset::NONE;
 	Dataset::Dataset dataset_2 = Dataset::Dataset::NONE;
@@ -84,22 +87,23 @@ public:
 		TurbulentMixingOptions	*_turbulentMixingOptions,
 		TimeSpace3DOptions	 	*_timeSpace3DOptions,
 		FieldOptions			*_fieldOptions,
-		VisitationOptions		*_visitationOptions
+		VisitationOptions		*_visitationOptions,
+		PathSpaceTimeOptions	*_pathSpaceTimeOptions
 	)
 	{
-		this->camera				= _camera;
-		this->fpsTimer				= _fpsTimer;
-	
-		this->renderingOptions		= _renderingOptions;
-		this->solverOptions			= _solverOptions;
-		this->raycastingOptions		= _raycastingOptions;
-		this->dispersionOptions		= _dispersionOptions;
-		this->spaceTimeOptions		= _spaceTimeOptions;
-		this->crossSectionOptions	= _crossSectionOptions;
-		this->turbulentMixingOptions = _turbulentMixingOptions;
-		this->timeSpace3DOptions	= _timeSpace3DOptions;
-		this->fieldOptions[0]		= _fieldOptions;
-		this->visitationOptions		= _visitationOptions;
+		this->camera					= _camera;
+		this->fpsTimer					= _fpsTimer;
+		this->renderingOptions			= _renderingOptions;
+		this->solverOptions				= _solverOptions;
+		this->raycastingOptions			= _raycastingOptions;
+		this->dispersionOptions			= _dispersionOptions;
+		this->spaceTimeOptions			= _spaceTimeOptions;
+		this->crossSectionOptions		= _crossSectionOptions;
+		this->turbulentMixingOptions	= _turbulentMixingOptions;
+		this->timeSpace3DOptions		= _timeSpace3DOptions;
+		this->fieldOptions				= _fieldOptions;
+		this->visitationOptions			= _visitationOptions;
+		this->pathSpaceTimeOptions		= _pathSpaceTimeOptions;
 	}
 
 	bool updateRaycasting		= false;
@@ -118,6 +122,9 @@ public:
 	bool updateOIT				= false;
 	bool updateShaders			= false;
 	bool updateVisitationMap	= false;
+	bool updatePathSpaceTime	= false;
+	bool updateFile[4]			= { false,false,false,false };
+
 
 	bool hideOptions = false;
 
@@ -134,14 +141,19 @@ public:
 	bool showFluctuationHeightfield		= false;
 	bool showVisitationMap				= false;
 	bool showTimeSpaceField				= false;
-
+	bool showPathSpaceTime				= false;
 
 	bool releaseStreamlines = false;
 	bool releaseStreaklines = false;
 	bool releasePathlines = false;
-
-
+	bool releaseRaycasting = false;
+	bool releaseCrossSection = false;
+	bool releaseDispersion = false;
+	bool releaseFTLE = false;
 	bool releaseTurbulentMixing = false;
+	bool releaseFluctuationHeightfield = false;
+	bool releaseVisitationMap = false;
+	bool releaseTimeSpaceField = false;
 
 	bool streamlineRendering	= true;
 	bool pathlineRendering		= false;
@@ -158,6 +170,39 @@ public:
 		solverOptions->fileChanged = false;
 		solverOptions->viewChanged = false;
 
+		updateRaycasting = false;
+		updateLineRendering = false;
+		updateSeedBox = false;
+		updateVolumeBox = false;
+		updateStreamlines = false;
+		updateStreaklines = false;
+		updatePathlines = false;
+		updateDispersion = true;
+		updateFTLE = true;
+		updatefluctuation = false;
+		updateCrossSection = false;
+		updateTurbulentMixing = false;
+		updateTimeSpaceField = false;
+		updateOIT = false;
+		updateShaders = false;
+		updateVisitationMap = false;
+		updateFile[0] = false; updateFile[1] = false; updateFile[2] = false; updateFile[3] = false;
+		updatePathSpaceTime = false;
+		
+
+		releaseStreamlines = false;
+		releaseStreaklines = false;
+		releasePathlines = false;
+		releaseRaycasting = false;
+		releaseCrossSection = false;
+		releaseDispersion = false;
+		releaseFTLE = false;
+		releaseTurbulentMixing = false;
+		releaseFluctuationHeightfield = false;
+		releaseVisitationMap = false;
+		releaseTimeSpaceField = false;
+
+
 		this->drawImguiOptions();
 		this->drawSolverOptions();	
 		this->drawLog();								
@@ -165,12 +210,11 @@ public:
 		this->drawRaycastingOptions();		
 		this->drawVisitationMapOptions();
 		this->drawFieldOptions();
-		this->drawTimeSpaceOptions();	
-		this->drawDataset();
+		this->drawPathSpaceTime();
 	}
 
-
-	void render();								// render Dear ImGui
+	// render Dear ImGui
+	void render();	
 
 	// Log pointer
 	char* log = new char[1000];
@@ -189,6 +233,7 @@ private:
 	void drawLog();								// draw Log window
 	void drawLineRenderingOptions();			// draw options of stream/pathline rendering
 	void drawFieldOptions();					// draw options of fields (datasets)
+	void drawPathSpaceTime();				// draw options of surface options
 	void drawRaycastingOptions();				// draw options of isosurface rendering (raycasting)
 	void drawDispersionOptions();				// draw options of dispersion calculation
 	void drawTimeSpaceOptions();				// draw options of heightfield of fluctuation 
@@ -198,13 +243,13 @@ private:
 	void drawDataset();
 	void drawVisitationMapOptions();
 
-	bool b_drawSolverOptions		= true;
+	bool b_drawSolverOptions		= false;
 	bool b_drawLog					= false;
 	bool b_drawLineRenderingOptions = true;
-	bool b_drawRaycastingOptions	= false;
+	bool b_drawRaycastingOptions	= true;
 	bool b_drawDispersionOptions	= false;
 	bool b_drawTimeSpaceOptions		= false;
-	bool b_drawVisitationOptions	= true;
+	bool b_drawVisitationOptions	= false;
 	bool b_drawCrossSectionOptions	= false;
 	bool b_drawTimeSpaceField		= false;
 	bool b_drawDataset				= true;

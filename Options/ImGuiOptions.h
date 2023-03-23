@@ -76,6 +76,10 @@ namespace Dataset
 		GRAND_ENSEMBLE_OF_AVG_262,
 		GRAND_ENSEMBLE_OF_AVG_263,
 		GRAND_ENSEMBLE_OF_AVG_264,
+		MUTUAL_INFO,
+		MUTUAL_INFO_1,
+		KIT3_CC,
+		KIT3_CUSZ,
 		COUNT,
 	};
 
@@ -131,6 +135,10 @@ namespace Dataset
 		"Grand Ensemble OF avg 262",
 		"Grand Ensemble OF avg 263",
 		"Grand Ensemble OF avg 264",
+		"Mutual Information",
+		"Mutual Information 1",
+		"KIT3 CC",
+		"KIT3 CUSZ",
 	};
 
 }
@@ -191,6 +199,17 @@ namespace LineRenderingMode
 	};
 }
 
+
+namespace ActiveField
+{
+	static const char* const ActiveFieldList[] =
+	{
+		"0",
+		"1",
+		"2",
+		"3",
+	};
+}
 namespace VisitationMode
 {
 	static const char* const VisitationModeList[] =
