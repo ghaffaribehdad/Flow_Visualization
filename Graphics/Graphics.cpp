@@ -130,11 +130,10 @@ void Graphics::RenderFrame()
 		streamlineRenderer.show(&renderImGuiOptions);		// Streamline rendering
 		streaklineRenderer.show(&renderImGuiOptions);		// Streakline rendering
 		pathlineRenderer.show(&renderImGuiOptions);			// Pathline rendering
-	
 
 	}
 
-
+	raycasting.show(&renderImGuiOptions);					// Raycasting 
 	/*
 	##############################################################
 	##															##
@@ -172,7 +171,7 @@ void Graphics::RenderFrame()
 	fluctuationHeightfield.show(&renderImGuiOptions);	// Fluctuation Heightfield
 	pathSpaceTime.show(&renderImGuiOptions);
 	visitationMap.show(&renderImGuiOptions);
-	raycasting.show(&renderImGuiOptions);					// Raycasting 
+
 
 
 	if (this->renderImGuiOptions.showStreaklines)

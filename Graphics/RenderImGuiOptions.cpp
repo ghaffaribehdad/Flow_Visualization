@@ -663,6 +663,9 @@ void RenderImGuiOptions::drawFieldOptions()
 				case Dataset::Dataset::KIT2REF_COMP:
 					this->fieldOptions[i].setField("Comp_FieldP", "G:\\Dataset_Compressed\\KIT2\\Comp_Ref\\", 192, 192, 192, 7.854f, 2.0f, 3.1415f, 1, 1000, 0.001f, true, 7000000);
 					break;
+				case Dataset::Dataset::KIT2REF:
+					this->fieldOptions[i].setField("FieldP", "Q:\\Dataset\\KIT1&2\\Reference\\ref\\Binary_z_Major\\Padded\\", 192, 192, 192, 7.854f, 2.0f, 3.1415f, 1, 1000, 0.001f);
+					break;
 				case Dataset::Dataset::KIT2OW_COMP:
 					this->fieldOptions[i].setField("Comp_FieldP", "G:\\Dataset_Compressed\\KIT2\\Comp_OW\\", 192, 192, 192, 7.854f, 2.0f, 3.1415f, 1, 1000, 0.001f, true, 7000000);
 					break;
@@ -702,6 +705,10 @@ void RenderImGuiOptions::drawFieldOptions()
 				case Dataset::Dataset::KIT3_RAW:
 					this->fieldOptions[i].setField("FieldP", "G:\\KIT3\\Initial\\", 64, 503, 2048, 0.4f, 2.0f, 7.0f, 500, 1000, 0.001f);
 					break;
+				case Dataset::Dataset::KIT3_FLUC:
+					this->fieldOptions[i].setField("FieldP", "F:\\KIT3\\Fluc\\", 64, 503, 2048, 0.4f, 2.0f, 7.0f, 1, 1000, 0.001f);
+					break;
+
 				case Dataset::Dataset::RBC_AVG:
 					this->fieldOptions[i].setField("Field_AVG", "E:\\TUI_RBC_Small\\timeAVG\\", 1024, 32, 1024, 5.0f, 0.2f, 5.0f, 1, 50, 0.001f);
 					break;
@@ -736,10 +743,25 @@ void RenderImGuiOptions::drawFieldOptions()
 					this->fieldOptions[i].setField("denisty50_padded_", "G:\\Smoke_ensembleData\\density_bin_000050\\", 100, 178, 100, 2.0f, 3.56f, 2.0f, 1, 31, 0.001f);
 					break;
 				case Dataset::Dataset::KIT3_CC:
-					this->fieldOptions[i].setField("FieldP_CC_Decomp_", "E:\\Compression_Report\\SingleKIT3\\ParticleTracing\\", 64, 503, 2048, 0.4f, 2.0f, 7.0f, 800, 800, 0.001f);
+					this->fieldOptions[i].setField("FieldP_Decomp", "E:\\Compression_Report\\SingleKIT3\\r_27.68\\", 64, 503, 2048, 0.4f, 2.0f, 7.0f, 800, 800, 0.001f);
 					break;
 				case Dataset::Dataset::KIT3_CUSZ:
-					this->fieldOptions[i].setField("FieldP_CCSZ_Decomp_", "E:\\Compression_Report\\SingleKIT3\\ParticleTracing\\", 64, 503, 2048, 0.4f, 2.0f, 7.0f, 800, 800, 0.001f);
+					this->fieldOptions[i].setField("FieldP_Decomp_CUSZ", "E:\\Compression_Report\\SingleKIT3\\r_27.68\\", 64, 503, 2048, 0.4f, 2.0f, 7.0f, 800, 800, 0.001f);
+					break;				
+				case Dataset::Dataset::EJECTA:
+					this->fieldOptions[i].setField("snapshot_padded_", "E:\\Compression_Report\\isosurface_compare\\", 256, 256, 256, 3.0f, 3.0f, 3.0f, 80, 80, 0.001f);
+					break;
+				case Dataset::Dataset::EJECTA_CUSZ:
+					this->fieldOptions[i].setField("snapshot_080_padded_", "E:\\Compression_Report\\isosurface_compare\\", 256, 256, 256, 3.0f, 3.0f, 3.0f, 2, 46, 0.001f);
+					break;
+				case Dataset::Dataset::EJECTA_CC:
+					this->fieldOptions[i].setField("FieldP_Decomp_80_padded_", "E:\\Compression_Report\\isosurface_compare\\", 256, 256, 256, 3.0f, 3.0f, 3.0f, 1, 6, 0.001f);
+					break;
+				case Dataset::Dataset::MIRANDA:
+					this->fieldOptions[i].setField("viscosity_1_padded_", "Q:\\Datasets_Compression_Report\\Miranda\\", 384, 384, 256, 3.0f, 3.0f, 3.0f, 1, 1, 0.001f);
+					break;
+				case Dataset::Dataset::MESHKOV:
+					this->fieldOptions[i].setField("ppm_t0_padded", "Q:\\Datasets_Compression_Report\\Meshkov\\", 256, 256, 256, 3.0f, 3.0f, 3.0f, 52, 55, 0.001f);
 					break;
 				}
 
@@ -827,12 +849,12 @@ void RenderImGuiOptions::drawPathSpaceTime()
 	{
 		this->updatePathSpaceTime = true;
 	}
-	if (ImGui::DragInt("time position", &pathSpaceTimeOptions->timeStep,1,0, pathSpaceTimeOptions->timeGrid - 1))
+	if (ImGui::InputInt("time position", &pathSpaceTimeOptions->timeStep,1,2))
 	{
 		this->updatePathSpaceTime = true;
 	}
 
-	if (ImGui::DragFloat("sigma", &pathSpaceTimeOptions->sigma, 0.01, 0.0f, 10.0f, "%3f"))
+	if (ImGui::InputFloat("sigma", &pathSpaceTimeOptions->sigma, 0.01, 0.001f))
 	{
 		this->updatePathSpaceTime = true;
 	}

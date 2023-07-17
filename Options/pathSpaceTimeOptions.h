@@ -2,7 +2,7 @@
 
 struct PathSpaceTimeOptions{
 
-	int seedGrid[3] = { 1024,1024,100 };
+	int seedGrid[3] = { 1024,1024,10 };
 	int timeGrid = 20;
 	int firstIdx = 1;
 	int lastIdx = 601;

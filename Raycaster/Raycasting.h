@@ -289,7 +289,10 @@ public:
 			case RaycastingMode::Mode::PROJECTION_LENGTH:
 				this->initialize();
 				if (renderImGuiOptions->updateFile[raycastingOptions->raycastingField_0] || renderImGuiOptions->updateFile[raycastingOptions->raycastingField_1])
+				{
 					this->updateFile();
+					//this->updateScene();
+				}
 				if (renderImGuiOptions->updateRaycasting)
 					this->updateScene();
 				this->draw();

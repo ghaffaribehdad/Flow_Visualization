@@ -22,9 +22,6 @@ public:
 	SolverOptions * solverOptions;
 	FieldOptions * fieldOptions;
 
-
-	virtual bool initializeRealtime(SolverOptions * p_solverOptions) { return true; };
-	virtual bool resetRealtime() { return true; };
 	virtual bool solve() { return true; }
 
 	bool Initialize(SolverOptions * _solverOptions, FieldOptions * fieldOptions);

@@ -21,8 +21,8 @@ public:
 
 	__host__ bool solve();
 	__host__ bool solveRealtime(int & Pathcounter);
-	__host__ bool initializeRealtime(SolverOptions * p_solverOptions) override;
-	__host__ bool resetRealtime() override;
+	__host__ bool initializeRealtime(SolverOptions * p_solverOptions, FieldOptions * p_fieldOptions);
+	__host__ bool resetRealtime();
 	__host__ bool release() override;
 
 private:

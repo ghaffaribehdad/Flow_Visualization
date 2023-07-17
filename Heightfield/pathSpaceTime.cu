@@ -139,6 +139,7 @@ void PathSpaceTime::generatePathField3D()
 			}
 			else if (tStep % 2 == 0) // => EVEN
 			{
+
 				t_velocityField_1.release();
 				this->volume_IO.readVolume_Compressed(t + 1, Array2Int3(fieldOptions->gridSize));
 				float * d_VelocityField = this->volume_IO.getField_float_GPU();
@@ -161,12 +162,47 @@ void PathSpaceTime::generatePathField3D()
 		
 
 		case false: // Uncompressed Data
-			assert(false);
+			if (tStep == 0)
+			{
+				TIMELAPSE(this->volume_IO.readVolume(t), "read volume");
+				float * h_VelocityField = this->volume_IO.getField_float();
+				t_velocityField_0.setField(h_VelocityField);
+				t_velocityField_0.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
+				volume_IO.release();
+
+				TIMELAPSE(this->volume_IO.readVolume(t+1), "read volume");
+				h_VelocityField = this->volume_IO.getField_float();
+				t_velocityField_1.setField(h_VelocityField);
+				t_velocityField_1.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
+				volume_IO.release();
+
+			}
+			else if (tStep % 2 == 0) // => EVEN
+			{
+				t_velocityField_1.release();
+
+				TIMELAPSE(this->volume_IO.readVolume(t + 1), "read volume");
+				float * h_VelocityField = this->volume_IO.getField_float();
+				t_velocityField_1.setField(h_VelocityField);
+				t_velocityField_1.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
+				volume_IO.release();
+				
+			}
+			else if (tStep % 2 != 0) // => ODD
+			{
+				t_velocityField_0.release();
+				TIMELAPSE(this->volume_IO.readVolume(t + 1), "read volume");
+				float * h_VelocityField = this->volume_IO.getField_float();
+				t_velocityField_0.setField(h_VelocityField);
+				t_velocityField_0.initialize(Array2Int3(solverOptions->gridSize), false, cudaAddressModeWrap, cudaAddressModeBorder, cudaAddressModeWrap);
+				volume_IO.release();
+
+			}
 			break;
 
 		}
 
-		printf("Time step is %d",tStep);
+		printf("Time step is %d and t is %d\n",tStep,t);
 
 		TracingPathSurface << < blocks, thread >> > (
 			t_velocityField_0.getTexture(),

@@ -15,10 +15,11 @@ bool StreaklineSolver::release()
 	return true;
 }
 
-__host__ bool StreaklineSolver::initializeRealtime(SolverOptions * p_solverOptions)
+__host__ bool StreaklineSolver::initializeRealtime(SolverOptions * p_solverOptions, FieldOptions * p_fieldOptions)
 {
 
 	this->solverOptions = p_solverOptions;
+	this->fieldOptions = p_fieldOptions;
 	this->InitializeCUDA();
 	this->volume_IO.Initialize(fieldOptions);
 	this->initializeParticles();

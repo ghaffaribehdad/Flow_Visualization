@@ -460,9 +460,9 @@ __global__ void TracingPathSurface(
 		position3 = make_float3(position4.x,position4.y,position4.z);
 		// trace particle in field
 		if(step % 2 == 0)
-			position3 = RK4(t_VelocityField_0, t_VelocityField_1, position3, gridDiameter, gridSize, solverOptions.dt);
+			position3 = RK4(t_VelocityField_0, t_VelocityField_1, position3, gridDiameter, gridSize, solverOptions.dt, Array2Float3(solverOptions.velocityScalingFactor));
 		else
-			position3 = RK4(t_VelocityField_1, t_VelocityField_0, position3, gridDiameter, gridSize, solverOptions.dt);
+			position3 = RK4(t_VelocityField_1, t_VelocityField_0, position3, gridDiameter, gridSize, solverOptions.dt, Array2Float3(solverOptions.velocityScalingFactor));
 
 		// write back the new position
 		position4 =make_float4(position3.x, position3.y, position3.z,0);

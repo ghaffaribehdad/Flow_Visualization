@@ -25,57 +25,33 @@ public:
 		return true;
 	}
 
-	virtual void show(RenderImGuiOptions* renderImGuiOptions) 
+	virtual void show(RenderImGuiOptions* renderImGuiOptions)
 	{
 		if (renderImGuiOptions->showPathlines)
 		{
-
-			if (!pathlinesolver.checkFile())
+			switch (solverOptions->computationMode)
 			{
-				ErrorLogger::Log("Cannot locate the file!");
-				renderImGuiOptions->showPathlines = false;
-			}
-			else
-			{
-				switch (solverOptions->computationMode)
-				{
-				case(ComputationMode::ComputationMode::ONTHEFLY):
-				{
-
-					if (!solverOptions->drawComplete)
-					{
-						this->updateSceneRealtime();
-						renderImGuiOptions->updateRaycasting = true;
-						renderImGuiOptions->updatefluctuation = true;
-					}
-
-					if (renderImGuiOptions->updatePathlines)
-					{
-						this->resetRealtime();
-						renderImGuiOptions->updatePathlines = false;
-					}
-					break;
-
+			case(ComputationMode::ComputationMode::ONTHEFLY):
+				if (!solverOptions->drawComplete) {
+					this->updateSceneRealtime();
+					renderImGuiOptions->updateFile[0] = true;
+					renderImGuiOptions->updateRaycasting = true;
+					renderImGuiOptions->updatefluctuation = true;
 				}
-				case(ComputationMode::ComputationMode::PRECOMPUTATION):
-				{
-
-					if (renderImGuiOptions->updatePathlines)
-					{
-						this->updateScene();
-						renderImGuiOptions->updatePathlines = false;
-					}
-
-					break;
+				if (renderImGuiOptions->updatePathlines) {
+					this->resetRealtime();
+					renderImGuiOptions->updatePathlines = false;
 				}
-
+				break;
+			case(ComputationMode::ComputationMode::PRECOMPUTATION):
+				if (renderImGuiOptions->updatePathlines){
+					this->updateScene();
+					renderImGuiOptions->updatePathlines = false;
 				}
+				break;
 			}
 
-
-			
 		}
-
 	}
 
 
@@ -109,7 +85,7 @@ public:
 
 		this->solverOptions->p_vertexBuffer = this->vertexBuffer.Get();
 
-		if (!this->pathlinesolver.initializeRealtime(solverOptions))
+		if (!this->pathlinesolver.initializeRealtime(solverOptions,fieldOptions))
 		{
 			return false;
 		}
@@ -131,6 +107,7 @@ public:
 		this->pathlinesolver.solveRealtime(pathCounter);
 		this->pathlinesolver.FinalizeCUDA();
 		this->solverOptions->currentIdx = solverOptions->firstIdx + pathCounter;
+		this->fieldOptions->currentIdx = solverOptions->firstIdx + pathCounter;
 		return true;
 	}
 

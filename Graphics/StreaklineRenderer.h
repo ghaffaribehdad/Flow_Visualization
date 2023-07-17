@@ -35,49 +35,28 @@ public:
 		if (renderImGuiOptions->showStreaklines)
 		{
 
-			if (!streaklineSolver.checkFile())
-			{
-				ErrorLogger::Log("Cannot locate the file!");
-				renderImGuiOptions->showStreaklines = false;
-			}
-			else
-			{
-
-
-				switch (solverOptions->computationMode)
-				{
-				case(ComputationMode::ComputationMode::ONTHEFLY):
-				{
-
-					if (!solverOptions->drawComplete)
-					{
-						this->updateSceneRealtime();
-						renderImGuiOptions->updateRaycasting = true;
-					}
-					if (renderImGuiOptions->updateStreaklines)
-					{
-						this->resetRealtime();
-						renderImGuiOptions->updateStreaklines = false;
-					}
-					break;
+			switch (solverOptions->computationMode) {
+			case(ComputationMode::ComputationMode::ONTHEFLY):
+				if (!solverOptions->drawComplete) {
+					this->updateSceneRealtime();
+					renderImGuiOptions->updateRaycasting = true;
+					renderImGuiOptions->updateFile[0] = true;
 				}
-				case(ComputationMode::ComputationMode::PRECOMPUTATION):
-					if (renderImGuiOptions->updateStreaklines)
-					{
-						this->updateScene();
-						renderImGuiOptions->updateStreaklines = false;
-					}
-					break;
+				if (renderImGuiOptions->updateStreaklines) {
+					this->resetRealtime();
+					renderImGuiOptions->updateStreaklines = false;
 				}
+				break;
 
+			case(ComputationMode::ComputationMode::PRECOMPUTATION):
+				if (renderImGuiOptions->updateStreaklines) {
+					this->updateScene();
+					renderImGuiOptions->updateStreaklines = false;
+				}
+				break;
 			}
-			
-			
-
-
 		}
 	}
-
 
 	void resetRealtime() override
 	{
@@ -108,7 +87,6 @@ public:
 	void updateBuffers() override
 	{
 		solverOptions->p_vertexBuffer = this->vertexBuffer.Get();
-
 		this->streaklineSolver.Initialize(solverOptions, fieldOptions);
 		this->streaklineSolver.solve();
 		this->streaklineSolver.FinalizeCUDA();
@@ -146,8 +124,7 @@ public:
 
 		this->solverOptions->p_vertexBuffer = this->vertexBuffer.Get();
 
-		if (!this->streaklineSolver.initializeRealtime(solverOptions))
-		{
+		if (!this->streaklineSolver.initializeRealtime(solverOptions,fieldOptions)){
 			return false;
 		}
 

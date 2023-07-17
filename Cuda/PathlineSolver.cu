@@ -111,11 +111,12 @@ __host__ bool PathlineSolver::solve()
 	return true;
 }
 
-__host__ bool PathlineSolver::initializeRealtime(SolverOptions * p_solverOptions)
+__host__ bool PathlineSolver::initializeRealtime(SolverOptions * p_solverOptions, FieldOptions * p_fieldOptions)
 {
 
 	this->solverOptions = p_solverOptions;
 	this->InitializeCUDA();
+	this->fieldOptions = p_fieldOptions;
 	this->volume_IO.Initialize(fieldOptions);
 	this->initializeParticles();
 	
