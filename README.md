@@ -1,5 +1,6 @@
 # FLow Visualization Tool
 For more detailes check out our TSVG paper at https://ieeexplore.ieee.org/document/9999502
+
 A visualization toolset for interactive analysis of volumetical flow fields
 
 * Installation
